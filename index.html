@@ -1,0 +1,134 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Solana Raid | DEGEN_PROTOCOL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --solana-green: #14F195;
+        --solana-purple: #9945FF;
+        --solana-cyan: #00FBFF;
+      }
+      body {
+        font-family: 'JetBrains Mono', monospace;
+        background-color: #020202;
+        color: #ffffff;
+        margin: 0;
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      
+      .text-gradient-solana {
+        background: linear-gradient(90deg, var(--solana-green), var(--solana-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .bg-gradient-solana {
+        background: linear-gradient(135deg, var(--solana-purple), var(--solana-green));
+      }
+
+      /* DEGEN GAME STYLE */
+      .tech-border {
+        border: 2px solid #222;
+        box-shadow: 4px 4px 0px #000;
+        position: relative;
+        transition: all 0.1s ease;
+      }
+      .tech-border:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0px #000;
+      }
+      
+      .neon-glow-green { box-shadow: 0 0 20px rgba(20, 241, 149, 0.4); }
+      .neon-glow-purple { box-shadow: 0 0 20px rgba(153, 69, 255, 0.4); }
+      .neon-glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+
+      .scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent 50%, rgba(20, 241, 149, 0.03) 50%);
+        background-size: 100% 4px;
+        z-index: 99;
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      @keyframes scanline {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+      }
+
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+
+      @keyframes glitch-text {
+        0% { transform: translate(0); text-shadow: -2px 0 var(--solana-purple), 2px 0 var(--solana-green); }
+        25% { transform: translate(-1px, 1px); }
+        50% { transform: translate(1px, -1px); text-shadow: 2px 0 var(--solana-purple), -2px 0 var(--solana-green); }
+        75% { transform: translate(-1px, -1px); }
+        100% { transform: translate(0); }
+      }
+      .glitch-text {
+        animation: glitch-text 0.3s infinite;
+      }
+
+      .pixel-grid {
+        background-image: 
+          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
+          linear-gradient(90deg, rgba(153, 69, 255, 0.05), rgba(20, 241, 149, 0.03), rgba(0, 251, 255, 0.05));
+        background-size: 100% 2px, 3px 100%;
+        pointer-events: none;
+      }
+
+      .chromatic-aberration {
+        text-shadow: 2px 0 0 rgba(255,0,255,0.7), -2px 0 0 rgba(0,255,255,0.7);
+      }
+
+      /* Floating SR Popup Animation */
+      @keyframes float-up-sr {
+        0% { transform: translateY(0) scale(0.8); opacity: 0; }
+        20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+        100% { transform: translateY(-80px) scale(1); opacity: 0; }
+      }
+      .animate-sr-popup {
+        animation: float-up-sr 1s ease-out forwards;
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+  </head>
+  <body>
+    <div class="scanline"></div>
+    <div id="root"></div>
+  </body>
+</html>
