@@ -1,5 +1,7 @@
 {
   "name": "Copy of Solana Raid: Degen Protocol",
   "description": "A high-stakes, fast-paced Solana raiding game built for the degen ecosystem. Enter raids, manage risk, and cash out before the protocol collapses.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
