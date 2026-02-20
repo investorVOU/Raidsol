@@ -50,6 +50,8 @@ export default defineConfig(({ mode }) => {
             globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
             // Don't precache GLB models (too large, cache at runtime)
             globIgnores: ['**/*.glb'],
+            // Raise limit to cover the large React+Three.js bundle
+            maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB
             runtimeCaching: [
               {
                 urlPattern: /\.glb$/,
