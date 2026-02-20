@@ -185,12 +185,13 @@ const AppInner: React.FC = () => {
 
   // Force back to lobby if wallet disconnects while on a protected screen
   // SQUAD and RANKS are viewable without a wallet; action buttons inside guard themselves via requireWallet()
-  // PROFILE shows its own connect prompt; the remaining screens hard-redirect to Lobby
+  // Screens that hard-redirect to Lobby when wallet disconnects
   const PROTECTED_SCREENS = [
     Screen.RAID,
     Screen.MULTIPLAYER_SETUP,
     Screen.MULTIPLAYER_GAME,
     Screen.RESULT,
+    Screen.TREASURY,
   ];
   useEffect(() => {
     if (!connected && PROTECTED_SCREENS.includes(gameState.currentScreen)) {
@@ -432,9 +433,15 @@ const AppInner: React.FC = () => {
 
   const OPERATIVE_LEVEL = 10; // OPERATIVE rank minimum level
   const navigateTo = (screen: Screen) => {
-    if (screen === Screen.TREASURY && currentRank.level < OPERATIVE_LEVEL) {
-      setShowVaultLocked(true);
-      return;
+    if (screen === Screen.TREASURY) {
+      if (!connected) {
+        setVisible(true); // open wallet connect modal
+        return;
+      }
+      if (currentRank.level < OPERATIVE_LEVEL) {
+        setShowVaultLocked(true);
+        return;
+      }
     }
     setGameState(prev => ({ ...prev, currentScreen: screen }));
   };
