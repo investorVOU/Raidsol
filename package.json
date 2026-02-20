@@ -29,6 +29,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
+    "vite-plugin-node-polyfills": "^0.25.0",
     "vite-plugin-pwa": "^1.2.0"
   },
   "description": "![Solana Raid](https://img.shields.io/badge/SOLANA-NETWORK-14F195?style=for-the-badge&logo=solana&logoColor=white)\r ![Degen Protocol](https://img.shields.io/badge/PROTOCOL-DEGEN-9945FF?style=for-the-badge)\r ![PvP Enabled](https://img.shields.io/badge/MODE-PVP_LIVE-EF4444?style=for-the-badge)",
