@@ -7,11 +7,9 @@
 #        solana-keygen new -o .dapp-store/publish-keypair.json
 #      (add publish-keypair.json to .gitignore — NEVER commit it)
 #
-#   2. Fill in your deployed URL below (e.g. https://solana-raid.onrender.com)
+#   2. Add screenshots to .dapp-store/release/screenshots/ (1080×1920 PNG, max 8)
 #
-#   3. Add screenshots to .dapp-store/release/screenshots/ (1080×1920 PNG, max 8)
-#
-#   4. Run:
+#   3. Run:
 #        npx @solana-mobile/dapp-store-publish-sdk init --keypair .dapp-store/publish-keypair.json
 #        npx @solana-mobile/dapp-store-publish-sdk publish --keypair .dapp-store/publish-keypair.json
 
@@ -22,7 +20,7 @@ publish_details:
 app:
   # PWA — no Android package name needed
   type: pwa
-  pwa_url: "https://YOUR-APP.onrender.com"   # ← Replace with your Render URL
+  pwa_url: "https://solraid.app"
 
   catalog_entry:
     name: "Solana Raid"
@@ -53,21 +51,35 @@ app:
 
     developer:
       name: "Solana Raid Team"
-      website: "https://YOUR-APP.onrender.com"
+      website: "https://solraid.app"
       # email: your@email.com
 
     screenshots:
-      # Add 1080×1920 PNG screenshots to .dapp-store/release/screenshots/
-      # Uncomment and fill in after adding files:
-      # - uri: ./.dapp-store/release/screenshots/01-lobby.png
-      #   width: 1080
-      #   height: 1920
-      # - uri: ./.dapp-store/release/screenshots/02-raid.png
-      #   width: 1080
-      #   height: 1920
-      # - uri: ./.dapp-store/release/screenshots/03-pvp.png
-      #   width: 1080
-      #   height: 1920
+      # 1080×1920 PNG — add files to .dapp-store/release/screenshots/ then uncomment
+      - uri: ./.dapp-store/release/screenshots/01-lobby.png
+        width: 1080
+        height: 1920
+      - uri: ./.dapp-store/release/screenshots/02-raid.png
+        width: 1080
+        height: 1920
+      - uri: ./.dapp-store/release/screenshots/03-result.png
+        width: 1080
+        height: 1920
+      - uri: ./.dapp-store/release/screenshots/04-store.png
+        width: 1080
+        height: 1920
+      - uri: ./.dapp-store/release/screenshots/05-profile.png
+        width: 1080
+        height: 1920
+      - uri: ./.dapp-store/release/screenshots/06-leaderboard.png
+        width: 1080
+        height: 1920
+      - uri: ./.dapp-store/release/screenshots/07-pvp-setup.png
+        width: 1080
+        height: 1920
+      - uri: ./.dapp-store/release/screenshots/08-treasury.png
+        width: 1080
+        height: 1920
 
   releases:
     - version: "1.0.0"

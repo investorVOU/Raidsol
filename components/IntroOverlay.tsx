@@ -123,8 +123,8 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
     <div className="fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center overflow-hidden">
       
       {/* 3D Background - The "Face" of the Protocol */}
-      <div className="absolute inset-0 z-0 opacity-60">
-        <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+      <div className="absolute inset-0 z-0 opacity-60" style={{ pointerEvents: 'none' }}>
+        <Canvas camera={{ position: [0, 0, 5], fov: 45 }} style={{ pointerEvents: 'none' }}>
           <ambientLight intensity={0.1} />
           {/* Ominous Red Side Light */}
           <spotLight position={[5, 5, 5]} angle={0.5} penumbra={1} intensity={20} color="red" />
@@ -208,7 +208,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
           <div className="flex flex-col items-center gap-3 w-full animate-in fade-in zoom-in-90 duration-500 mt-2">
              
              {/* Age Checkbox */}
-             <label className="flex items-center gap-2 sm:gap-3 cursor-pointer group hover:opacity-100 opacity-80 transition-opacity max-w-2xl px-4">
+             <label style={{ touchAction: 'manipulation' }} className="flex items-center gap-2 sm:gap-3 cursor-pointer group hover:opacity-100 opacity-80 transition-opacity max-w-2xl px-4">
               <input
                 type="checkbox"
                 className="hidden"
@@ -224,7 +224,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
             </label>
 
             {/* Don't show again Checkbox */}
-            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer group hover:opacity-100 opacity-80 transition-opacity max-w-2xl px-4">
+            <label style={{ touchAction: 'manipulation' }} className="flex items-center gap-2 sm:gap-3 cursor-pointer group hover:opacity-100 opacity-80 transition-opacity max-w-2xl px-4">
               <input
                 type="checkbox"
                 className="hidden"
@@ -247,6 +247,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
                   onComplete();
                 }}
                 disabled={!ageConfirmed}
+                style={{ touchAction: 'manipulation' }}
                 className={`group relative px-6 sm:px-10 py-2 sm:py-3 border font-black uppercase tracking-[0.15em] transition-all duration-300 tech-border text-[10px] sm:text-xs md:text-sm ${
                     ageConfirmed
                     ? 'bg-red-600/10 border-red-600 text-red-500 hover:bg-red-600 hover:text-black cursor-pointer'
@@ -260,7 +261,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
         )}
       
       {/* Footer Version */}
-      <div className="absolute bottom-6 text-[10px] text-red-900/40 font-black uppercase tracking-[0.5em] z-20">
+      <div className="absolute bottom-6 text-[10px] text-red-900/40 font-black uppercase tracking-[0.5em] z-20 pointer-events-none">
         PROTOCOL_V5.0.2 // SECURE_CONNECTION
       </div>
       </div>

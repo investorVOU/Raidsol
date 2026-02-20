@@ -1,0 +1,9 @@
+/// <reference types="vite/client" />
+
+import type { ThreeElements } from '@react-three/fiber';
+
+declare module 'react/jsx-runtime' {
+  namespace JSX {
+    interface IntrinsicElements extends ThreeElements {}
+  }
+}
