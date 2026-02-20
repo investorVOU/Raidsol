@@ -1,20 +1,20 @@
 /**
  * process-payout
  *
- * Sends devnet SOL from the treasury to a user who has unclaimed_sol.
+ * Sends mainnet SOL from the treasury to a user who has unclaimed_sol.
  * Uses tweetnacl + raw JSON-RPC instead of @solana/web3.js to avoid
  * Deno cold-start failures caused by that package's heavy Node.js imports.
  *
  * Required Supabase secrets:
  *   TREASURY_WALLET_KEYPAIR  — JSON array of 64 bytes (Solana keypair)
- *   SOLANA_RPC_URL           — optional, defaults to devnet
+ *   SOLANA_RPC_URL           — optional, defaults to mainnet-beta
  */
 
 import nacl from 'https://esm.sh/tweetnacl@1.0.3';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/cors.ts';
 
-const RPC = Deno.env.get('SOLANA_RPC_URL') ?? 'https://api.devnet.solana.com';
+const RPC = Deno.env.get('SOLANA_RPC_URL') ?? 'https://api.mainnet-beta.solana.com';
 
 // ── E. Treasury Protection limits ─────────────────────────────────────────
 // Max SOL per single withdrawal request

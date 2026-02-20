@@ -637,7 +637,7 @@ const AppInner: React.FC = () => {
     } else if (errorMsg.includes('TREASURY_WALLET_KEYPAIR')) {
       errorMsg = 'Treasury keypair not configured.\nAdd TREASURY_WALLET_KEYPAIR to Supabase → Edge Functions → Secrets.';
     } else if (errorMsg.includes('insufficient') || errorMsg.includes('lamport')) {
-      errorMsg = 'Treasury wallet is out of devnet SOL.\nRun: solana airdrop 2 ' + (import.meta.env.VITE_TREASURY_ADDRESS ?? '<TREASURY>') + ' --url devnet';
+      errorMsg = 'Treasury wallet has insufficient SOL to process this payout.\nPlease try again later or contact support.';
     } else if (errorMsg.includes('withdrawals')) {
       errorMsg = 'withdrawals table missing — run the updated schema.sql in Supabase SQL Editor.';
     } else if (errorMsg.includes('wallet signature') || errorMsg.includes('x-wallet-')) {

@@ -1,10 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/cors.ts';
 
-const SOLANA_RPC_URL = Deno.env.get('SOLANA_RPC_URL') ?? 'https://api.devnet.solana.com';
-// Mainnet USDC: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
-// Devnet USDC:  4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
-const USDC_MINT = Deno.env.get('USDC_MINT_ADDRESS') ?? '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
+const SOLANA_RPC_URL = Deno.env.get('SOLANA_RPC_URL') ?? 'https://api.mainnet-beta.solana.com';
+const USDC_MINT = Deno.env.get('USDC_MINT_ADDRESS') ?? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 // ── B. On-chain verification constants ────────────────────────────────────
 // Reject transactions older than this many seconds (prevents tx replay from old blocks)
