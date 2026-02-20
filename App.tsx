@@ -409,6 +409,7 @@ const AppInner: React.FC = () => {
   }, [gameState.srPoints]);
 
   const [lastLevel, setLastLevel] = useState(currentRank.level);
+  const [showVaultLocked, setShowVaultLocked] = useState(false);
   useEffect(() => {
     if (currentRank.level > lastLevel) {
       setNewRank(currentRank);
@@ -429,7 +430,12 @@ const AppInner: React.FC = () => {
     setIntroComplete(true);
   };
 
+  const OPERATIVE_LEVEL = 10; // OPERATIVE rank minimum level
   const navigateTo = (screen: Screen) => {
+    if (screen === Screen.TREASURY && currentRank.level < OPERATIVE_LEVEL) {
+      setShowVaultLocked(true);
+      return;
+    }
     setGameState(prev => ({ ...prev, currentScreen: screen }));
   };
 
@@ -1366,6 +1372,40 @@ const AppInner: React.FC = () => {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-black/90 border border-[#14F195]/40 text-[#14F195] text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 animate-pulse">
           <span className="inline-block w-2 h-2 rounded-full bg-[#14F195]" />
           WAITING_FOR_OTHER_PLAYERS...
+        </div>
+      )}
+      {showVaultLocked && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm border-2 border-white/10 bg-black tech-border p-6 flex flex-col items-center gap-4 text-center">
+            <div className="text-4xl">🔒</div>
+            <h2 className="text-lg font-black uppercase tracking-widest text-white">
+              VAULT ACCESS DENIED
+            </h2>
+            <p className="text-xs text-white/50 font-black uppercase tracking-widest leading-relaxed">
+              The vault is restricted to<br />
+              <span className="text-[#00FBFF]">OPERATIVE</span> rank and above.
+            </p>
+            <div className="w-full border border-white/5 bg-white/5 p-3 flex flex-col gap-1">
+              <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em]">YOUR CURRENT RANK</p>
+              <p className="font-black uppercase tracking-widest text-sm" style={{ color: currentRank.color }}>
+                {currentRank.title}
+              </p>
+              <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">
+                {gameState.srPoints.toLocaleString()} / 3,000 SR REQUIRED
+              </p>
+            </div>
+            <p className="text-[10px] text-white/30 font-black uppercase tracking-widest leading-relaxed">
+              Keep raiding to reach OPERATIVE.<br />
+              The vault will be waiting.
+            </p>
+            <button
+              onClick={() => setShowVaultLocked(false)}
+              style={{ touchAction: 'manipulation' }}
+              className="w-full px-6 py-2 border tech-border border-cyan-500/30 text-cyan-400 text-xs font-black uppercase tracking-[0.2em] hover:bg-cyan-500/10 transition-colors"
+            >
+              ACKNOWLEDGED
+            </button>
+          </div>
         </div>
       )}
       <PWAInstallBanner />

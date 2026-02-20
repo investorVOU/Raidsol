@@ -5,7 +5,6 @@ export interface Profile {
   wallet_address: string;
   username: string;
   sr_points: number;
-  skr_balance: number;
   unclaimed_sol: number;
   equipped_avatar_id: string | null;
   equipped_gear_ids: string[];
@@ -96,7 +95,6 @@ export function useProfile(walletAddress: string | null, incomingRefCode?: strin
         wallet_address: walletAddress,
         username: defaultUsername,
         sr_points: 250,
-        skr_balance: 5000,
         unclaimed_sol: 0,
         equipped_avatar_id: null,
         equipped_gear_ids: [],
