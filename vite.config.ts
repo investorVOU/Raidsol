@@ -73,6 +73,14 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      }
+      },
+      // Strip all console.* calls and debugger statements from production bundles
+      esbuild: {
+        drop: mode === 'production' ? ['console', 'debugger'] : [],
+      },
+      build: {
+        // Warn at 1 MiB chunks (Three.js is large — expected)
+        chunkSizeWarningLimit: 1024,
+      },
     };
 });

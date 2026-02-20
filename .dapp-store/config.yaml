@@ -1,0 +1,74 @@
+# Solana Mobile dApp Store — Publishing Config
+# Tooling: https://github.com/solana-mobile/dapp-publishing
+# CLI:     npx @solana-mobile/dapp-store-publish-sdk
+#
+# Steps:
+#   1. Generate a publishing keypair:
+#        solana-keygen new -o .dapp-store/publish-keypair.json
+#      (add publish-keypair.json to .gitignore — NEVER commit it)
+#
+#   2. Fill in your deployed URL below (e.g. https://solana-raid.onrender.com)
+#
+#   3. Add screenshots to .dapp-store/release/screenshots/ (1080×1920 PNG, max 8)
+#
+#   4. Run:
+#        npx @solana-mobile/dapp-store-publish-sdk init --keypair .dapp-store/publish-keypair.json
+#        npx @solana-mobile/dapp-store-publish-sdk publish --keypair .dapp-store/publish-keypair.json
+
+publish_details:
+  network: mainnet-beta
+  # update_authority_keypair: .dapp-store/publish-keypair.json
+
+app:
+  # PWA — no Android package name needed
+  type: pwa
+  pwa_url: "https://YOUR-APP.onrender.com"   # ← Replace with your Render URL
+
+  catalog_entry:
+    name: "Solana Raid"
+    short_description: "Degen on-chain raiding game — extract or get busted."
+    long_description: |
+      Solana Raid is a provably-fair on-chain extraction game.
+      Deploy SOL, attack enemies, and cash out before the risk meter
+      triggers a BUST. Every raid outcome is verifiable on-chain via
+      SHA-256 server seed commitments. Compete in PvP rooms, climb
+      the SR leaderboard, and gear up your operative with NFT equipment.
+
+      Features:
+      • Solo & PvP raids with on-chain entry fees
+      • Provably-fair results (server seed + client seed revealed post-raid)
+      • Anti-cheat edge functions validate every result server-side
+      • Equippable gear + avatar NFTs with real stat bonuses
+      • Real-time leaderboard and activity feed
+      • Seeker-native PWA — works offline after first load
+
+    new_in_version: "v1.0.0 — Initial release"
+    category: games
+    keywords:
+      - solana
+      - gaming
+      - defi
+      - pvp
+      - nft
+
+    developer:
+      name: "Solana Raid Team"
+      website: "https://YOUR-APP.onrender.com"
+      # email: your@email.com
+
+    screenshots:
+      # Add 1080×1920 PNG screenshots to .dapp-store/release/screenshots/
+      # Uncomment and fill in after adding files:
+      # - uri: ./.dapp-store/release/screenshots/01-lobby.png
+      #   width: 1080
+      #   height: 1920
+      # - uri: ./.dapp-store/release/screenshots/02-raid.png
+      #   width: 1080
+      #   height: 1920
+      # - uri: ./.dapp-store/release/screenshots/03-pvp.png
+      #   width: 1080
+      #   height: 1920
+
+  releases:
+    - version: "1.0.0"
+      new_in_version: "Initial release on Solana Seeker dApp Store."

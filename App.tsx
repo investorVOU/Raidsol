@@ -18,6 +18,7 @@ import HowItWorksModal from './components/HowItWorksModal';
 import RaidLoadingScreen from './components/RaidLoadingScreen';
 import LevelUpModal from './components/LevelUpModal';
 import PvpWinnerModal from './components/PvpWinnerModal';
+import PWAInstallBanner from './components/PWAInstallBanner';
 import IntroOverlay from './components/IntroOverlay';
 import { SolanaWalletContext } from './components/SolanaWalletContext';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
@@ -1367,6 +1368,7 @@ const AppInner: React.FC = () => {
           WAITING_FOR_OTHER_PLAYERS...
         </div>
       )}
+      <PWAInstallBanner />
       {gameState.isRaidLoading && (
         <RaidLoadingScreen
           mode={gameState.currentScreen === Screen.MULTIPLAYER_GAME ? 'PVP' : 'SOLO'}

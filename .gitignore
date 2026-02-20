@@ -20,6 +20,10 @@ dist-ssr
 # Supabase schema (contains sensitive table structure — share via secure channel)
 supabase/schema.sql
 
+# Solana dApp Store publishing keypair — NEVER commit
+.dapp-store/publish-keypair.json
+.dapp-store/*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
