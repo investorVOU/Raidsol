@@ -14,10 +14,11 @@ interface ResultScreenProps {
   };
   entryFee: number;
   onPlayAgain: () => void;
+  onRedeploy?: () => void;  // Re-run with exact same config — optional (falls back to lobby)
   onClaim: () => void;
 }
 
-const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, onPlayAgain, onClaim }) => {
+const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, onPlayAgain, onRedeploy, onClaim }) => {
   
   const handleShareToX = () => {
     const text = `MISSION SUCCESS 🏴‍☠️\n\nI just extracted ${result.solAmount.toFixed(4)} $SOL from the Protocol.\n\nRisk: CRITICAL\nStatus: LEGEND\n\nCan you survive the drain?\n\n@solana @solanamobile #Solana #DegenRaid`;
@@ -105,8 +106,8 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, onPlayAga
                 </div>
                  <div className="flex justify-between items-center">
                    <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">TX_SIG</span>
-                   <a 
-                     href={`https://solscan.io/tx/${result.txSignature}`} 
+                   <a
+                     href={`https://solscan.io/tx/${result.txSignature}?cluster=devnet`}
                      target="_blank"
                      rel="noopener noreferrer"
                      className="mono text-xs text-cyan-400 underline hover:text-cyan-300 truncate w-32 text-right"
@@ -122,11 +123,11 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, onPlayAga
       <div className="py-6 sm:py-8 space-y-4 shrink-0">
         {result.success ? (
           <>
-             <button 
+             <button
                onClick={onClaim}
                className="w-full bg-green-500 text-black py-5 sm:py-6 tech-border font-black uppercase tracking-tight text-xl sm:text-2xl shadow-[0_0_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all italic"
              >
-               CLAIM_HARVEST
+               COLLECT_HARVEST →_PROFILE
              </button>
              
              {/* SHARE BUTTON */}
@@ -141,11 +142,11 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, onPlayAga
              </button>
           </>
         ) : (
-          <button 
-            onClick={onPlayAgain}
+          <button
+            onClick={onRedeploy ?? onPlayAgain}
             className="w-full bg-red-600 text-white py-5 sm:py-6 tech-border font-black uppercase tracking-tight text-xl sm:text-2xl active:scale-95 transition-all italic shadow-[0_0_20px_rgba(239,68,68,0.2)]"
           >
-            RETRY_REDEPLOY
+            {onRedeploy ? 'RETRY_SAME_CONFIG' : 'RETRY_REDEPLOY'}
           </button>
         )}
         <button 

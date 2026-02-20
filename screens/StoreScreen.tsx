@@ -7,7 +7,7 @@ interface StoreScreenProps {
   usdcBalance: number;
   skrBalance: number;
   ownedItemIds: string[];
-  onPurchase: (itemId: string, price: number, currency: Currency) => boolean;
+  onPurchase: (itemId: string, price: number, currency: Currency) => boolean | Promise<boolean>;
   currentLevel: number;
 }
 
@@ -25,21 +25,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
 
   const filteredItems = activeTab === 'GEAR' ? GEAR_ITEMS : AVATAR_ITEMS;
 
-  const handleBuy = (itemId: string, solPrice: number, minLevel: number = 0) => {
+  const handleBuy = async (itemId: string, solPrice: number, minLevel: number = 0) => {
     if (currentLevel < minLevel) return;
-    
+
     // Calculate price in selected currency
     const finalPrice = solPrice * CURRENCY_RATES[selectedCurrency];
-    const roundedPrice = selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice); // Round up for non-SOL
+    const roundedPrice = selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice);
 
-    const success = onPurchase(itemId, roundedPrice, selectedCurrency);
+    const success = await onPurchase(itemId, roundedPrice, selectedCurrency);
     if (success) {
       const srReward = Math.max(50, Math.floor(solPrice * 1000));
       const id = Date.now();
-      
-      const x = Math.floor(Math.random() * 100) - 50; 
+      const x = Math.floor(Math.random() * 100) - 50;
       const y = Math.floor(Math.random() * 60) - 30;
-      
       setPopups(prev => [...prev, { id, val: srReward, x, y }]);
       setTimeout(() => {
         setPopups(prev => prev.filter(p => p.id !== id));
@@ -172,17 +170,20 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   <div className={`relative w-24 h-24 md:w-28 md:h-28 bg-black border ${isOwned ? 'border-green-500/50' : rarityStyle.border} flex items-center justify-center shrink-0 overflow-hidden`}>
                     {/* Image with Fallback and Ownership Overlay */}
                     <div className="w-full h-full relative">
-                        {item.image ? (
-                        <img 
-                            src={item.image} 
-                            alt={item.name} 
-                            className={`w-full h-full p-2 transition-all duration-500 ${activeTab === 'GEAR' ? 'object-contain' : 'object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100'}`} 
+                        {item.image && !item.image.startsWith('http') ? (
+                        // Emoji icon — render as text (no broken-image risk)
+                        <div className="w-full h-full flex items-center justify-center select-none">
+                          <span className="text-4xl leading-none">{item.image}</span>
+                        </div>
+                        ) : item.image ? (
+                        // URL-based image (avatars use DiceBear SVGs)
+                        <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover transition-all duration-500"
                             style={{ imageRendering: 'pixelated' }}
                             onError={(e) => {
-                                // Fallback to a generic crate or icon if load fails
-                                e.currentTarget.src = activeTab === 'GEAR' 
-                                    ? 'https://img.icons8.com/arcade/64/open-box.png' 
-                                    : 'https://api.dicebear.com/7.x/pixel-art/svg?seed=fallback';
+                                e.currentTarget.style.display = 'none';
                             }}
                         />
                         ) : (

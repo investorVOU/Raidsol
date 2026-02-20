@@ -5,10 +5,11 @@ import { Room, Opponent } from '../types';
 interface MultiplayerRaidScreenProps {
   room: Room;
   equippedGearIds: string[];
+  walletAddress?: string | null;
   onFinish: (success: boolean, solAmount: number, points: number) => void;
 }
 
-const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equippedGearIds, onFinish }) => {
+const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equippedGearIds, walletAddress, onFinish }) => {
   // Game State
   const [points, setPoints] = useState(0);
   const [risk, setRisk] = useState(0);
@@ -16,8 +17,10 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
   const [isEnding, setIsEnding] = useState<'WIN' | 'LOSS' | 'EXTRACTED' | null>(null);
   const [finalScore, setFinalScore] = useState(0);
   
-  // Opponent Simulation State
-  const [opponents, setOpponents] = useState<Opponent[]>(room.players.filter(p => p.id !== 'USER_ME'));
+  // Opponent Simulation State (all players except self)
+  const [opponents, setOpponents] = useState<Opponent[]>(
+    room.players.filter(p => p.id !== walletAddress)
+  );
   const [logs, setLogs] = useState<string[]>(['LINK_ESTABLISHED', 'PVP_PROTOCOL_ACTIVE']);
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -97,16 +100,17 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
 
   const finalizeGame = (result: 'LOSS' | 'EXTRACTED', myScore: number) => {
     // 1. Calculate Winner
+    const myId = walletAddress ?? 'self';
     const allScores = [
-        { id: 'USER_ME', score: result === 'LOSS' ? 0 : myScore },
+        { id: myId, score: result === 'LOSS' ? 0 : myScore },
         ...opponents.map(o => ({ id: o.id, score: o.status === 'BUSTED' ? 0 : o.score }))
     ];
-    
+
     // Sort by score descending
     allScores.sort((a, b) => b.score - a.score);
-    
+
     const winner = allScores[0];
-    const userWon = winner.id === 'USER_ME' && winner.score > 0;
+    const userWon = winner.id === myId && winner.score > 0;
     
     // Total pot calculation
     const totalPot = room.stakePerPlayer * room.maxPlayers;

@@ -71,6 +71,7 @@ export interface Room {
   code: string; // The Invite Code
   hostId: string;
   stakePerPlayer: number;
+  stakeCurrency: Currency; // SOL | USDC | SKR
   maxPlayers: number;
   players: Opponent[];
   status: 'LOBBY' | 'LOCKED' | 'ACTIVE' | 'FINISHED';
@@ -140,31 +141,38 @@ export interface Equipment {
 }
 
 export const GEAR_ITEMS: Equipment[] = [
-  // --- STANDARD GEAR (7 items) ---
-  { id: 'gear_std_1', name: 'Scrap Dagger', type: 'GEAR', rarity: 'STANDARD', description: 'Crude but effective for rapid extractions.', price: 0.05, effect: 'MULT_BOOST', benefitValue: 0.05, image: 'https://img.icons8.com/arcade/64/knife.png' },
-  { id: 'gear_std_2', name: 'Logic Wrench', type: 'GEAR', rarity: 'STANDARD', description: 'Adjusts protocol flows. -2% Risk.', price: 0.08, effect: 'RISK_REDUCTION', benefitValue: 2, image: 'https://img.icons8.com/arcade/64/wrench.png' },
-  { id: 'gear_std_3', name: 'Data Pick', type: 'GEAR', rarity: 'STANDARD', description: 'Precision tool for minor nodes. +2s Time.', price: 0.10, effect: 'TIME_BOOST', benefitValue: 2, image: 'https://img.icons8.com/arcade/64/pickaxe.png' },
-  { id: 'gear_std_4', name: 'Work Hammer', type: 'GEAR', rarity: 'STANDARD', description: 'Heavy-duty smashing tool for basic firewalls.', price: 0.12, effect: 'MULT_BOOST', benefitValue: 0.1, image: 'https://img.icons8.com/arcade/64/hammer.png' },
-  { id: 'gear_std_5', name: 'Scrap Buckler', type: 'GEAR', rarity: 'STANDARD', description: 'Improvisational shield for low-level raids.', price: 0.15, effect: 'RISK_REDUCTION', benefitValue: 4, image: 'https://img.icons8.com/arcade/64/shield.png' },
-  { id: 'gear_std_6', name: 'Rusty Axe', type: 'GEAR', rarity: 'STANDARD', description: 'Reliable for harvesting bulk data fragments.', price: 0.18, effect: 'MULT_BOOST', benefitValue: 0.12, image: 'https://img.icons8.com/arcade/64/axe.png' },
-  { id: 'gear_std_7', name: 'Short Sword', type: 'GEAR', rarity: 'STANDARD', description: 'The basic choice for any aspiring raider.', price: 0.22, effect: 'MULT_BOOST', benefitValue: 0.15, image: 'https://img.icons8.com/arcade/64/sword.png' },
+  // --- STANDARD GEAR (10 items) ---
+  { id: 'gear_std_1',  name: 'Scrap Dagger',      type: 'GEAR', rarity: 'STANDARD', description: 'Crude but effective for rapid extractions.',              price: 0.05, effect: 'MULT_BOOST',      benefitValue: 0.05, image: '🗡️' },
+  { id: 'gear_std_2',  name: 'Logic Wrench',       type: 'GEAR', rarity: 'STANDARD', description: 'Adjusts protocol flows. -2% Risk.',                     price: 0.08, effect: 'RISK_REDUCTION',   benefitValue: 2,    image: '🔧' },
+  { id: 'gear_std_3',  name: 'Data Pick',          type: 'GEAR', rarity: 'STANDARD', description: 'Precision tool for minor nodes. +2s Time.',              price: 0.10, effect: 'TIME_BOOST',      benefitValue: 2,    image: '⛏️' },
+  { id: 'gear_std_4',  name: 'Work Hammer',        type: 'GEAR', rarity: 'STANDARD', description: 'Heavy-duty smashing tool for basic firewalls.',           price: 0.12, effect: 'MULT_BOOST',      benefitValue: 0.10, image: '🔨' },
+  { id: 'gear_std_5',  name: 'Scrap Buckler',      type: 'GEAR', rarity: 'STANDARD', description: 'Improvisational shield for low-level raids. -4% Risk.',  price: 0.15, effect: 'RISK_REDUCTION',   benefitValue: 4,    image: '🛡️' },
+  { id: 'gear_std_6',  name: 'Rusty Axe',          type: 'GEAR', rarity: 'STANDARD', description: 'Reliable for harvesting bulk data fragments.',           price: 0.18, effect: 'MULT_BOOST',      benefitValue: 0.12, image: '🪓' },
+  { id: 'gear_std_7',  name: 'Short Sword',        type: 'GEAR', rarity: 'STANDARD', description: 'The basic choice for any aspiring raider.',              price: 0.22, effect: 'MULT_BOOST',      benefitValue: 0.15, image: '⚔️' },
+  { id: 'gear_std_8',  name: 'Signal Blocker',     type: 'GEAR', rarity: 'STANDARD', description: 'Scrambles perimeter sensors. -3% Risk.',                 price: 0.20, effect: 'RISK_REDUCTION',   benefitValue: 3,    image: '📡' },
+  { id: 'gear_std_9',  name: 'Clock Tap',          type: 'GEAR', rarity: 'STANDARD', description: 'Injects a small time delay into the protocol. +3s.',     price: 0.25, effect: 'TIME_BOOST',      benefitValue: 3,    image: '⏱️' },
+  { id: 'gear_std_10', name: 'Breach Kit',         type: 'GEAR', rarity: 'STANDARD', description: 'Portable entry tool for basic encryption layers.',       price: 0.30, effect: 'MULT_BOOST',      benefitValue: 0.18, image: '🔓' },
 
-  // --- LIMITED GEAR (8 items) ---
-  { id: 'gear_lim_1', name: 'Pulse Blade', type: 'GEAR', rarity: 'LIMITED', description: 'Vibrating edge cuts through encryption faster.', price: 0.45, effect: 'MULT_BOOST', benefitValue: 0.3, image: 'https://img.icons8.com/arcade/64/dagger.png', minLevel: 5 },
-  { id: 'gear_lim_2', name: 'Nano Bow', type: 'GEAR', rarity: 'LIMITED', description: 'Ranged extraction tether. +8s Raid Time.', price: 0.60, effect: 'TIME_BOOST', benefitValue: 8, image: 'https://img.icons8.com/arcade/64/bow.png', minLevel: 5 },
-  { id: 'gear_lim_3', name: 'Plasma Guard', type: 'GEAR', rarity: 'LIMITED', description: 'Energy shield for mid-layer stability. -10% Risk.', price: 0.75, effect: 'RISK_REDUCTION', benefitValue: 10, image: 'https://img.icons8.com/arcade/64/antivirus-shield.png', minLevel: 10 },
-  { id: 'gear_lim_4', name: 'Circuit Smasher', type: 'GEAR', rarity: 'LIMITED', description: 'Massive impact destabilizes security nodes.', price: 0.90, effect: 'MULT_BOOST', benefitValue: 0.45, image: 'https://img.icons8.com/arcade/64/croissant-hammer.png', minLevel: 10 },
-  { id: 'gear_lim_5', name: 'Void Katana', type: 'GEAR', rarity: 'LIMITED', description: 'Shadow-tech blade for silent extractions.', price: 1.2, effect: 'MULT_BOOST', benefitValue: 0.5, image: 'https://img.icons8.com/arcade/64/katana.png', minLevel: 12 },
-  { id: 'gear_lim_6', name: 'Flux Scythe', type: 'GEAR', rarity: 'LIMITED', description: 'Sweeps through large data pools effortlessly.', price: 1.5, effect: 'MULT_BOOST', benefitValue: 0.65, image: 'https://img.icons8.com/arcade/64/sickle.png', minLevel: 12 },
-  { id: 'gear_lim_7', name: 'Plasma Trident', type: 'GEAR', rarity: 'LIMITED', description: 'Triple extraction points for high efficiency.', price: 1.8, effect: 'MULT_BOOST', benefitValue: 0.7, image: 'https://img.icons8.com/arcade/64/trident.png', minLevel: 15 },
-  { id: 'gear_lim_8', name: 'Heavy Barrier', type: 'GEAR', rarity: 'LIMITED', description: 'Mobile firewall defense. -15% Risk.', price: 2.2, effect: 'RISK_REDUCTION', benefitValue: 15, image: 'https://img.icons8.com/arcade/64/wall.png', minLevel: 15 },
+  // --- LIMITED GEAR (10 items) ---
+  { id: 'gear_lim_1',  name: 'Pulse Blade',        type: 'GEAR', rarity: 'LIMITED', description: 'Vibrating edge cuts through encryption faster.',          price: 0.45, effect: 'MULT_BOOST',      benefitValue: 0.30, image: '🔪',  minLevel: 5 },
+  { id: 'gear_lim_2',  name: 'Nano Bow',           type: 'GEAR', rarity: 'LIMITED', description: 'Ranged extraction tether. +8s Raid Time.',               price: 0.60, effect: 'TIME_BOOST',      benefitValue: 8,    image: '🏹',  minLevel: 5 },
+  { id: 'gear_lim_3',  name: 'Plasma Guard',       type: 'GEAR', rarity: 'LIMITED', description: 'Energy shield for mid-layer stability. -10% Risk.',       price: 0.75, effect: 'RISK_REDUCTION',   benefitValue: 10,   image: '🔰',  minLevel: 10 },
+  { id: 'gear_lim_4',  name: 'Circuit Smasher',    type: 'GEAR', rarity: 'LIMITED', description: 'Massive impact destabilizes security nodes.',             price: 0.90, effect: 'MULT_BOOST',      benefitValue: 0.45, image: '💥',  minLevel: 10 },
+  { id: 'gear_lim_5',  name: 'Void Katana',        type: 'GEAR', rarity: 'LIMITED', description: 'Shadow-tech blade for silent extractions.',               price: 1.20, effect: 'MULT_BOOST',      benefitValue: 0.50, image: '🌑',  minLevel: 12 },
+  { id: 'gear_lim_6',  name: 'Flux Scythe',        type: 'GEAR', rarity: 'LIMITED', description: 'Sweeps through large data pools effortlessly.',           price: 1.50, effect: 'MULT_BOOST',      benefitValue: 0.65, image: '☄️',  minLevel: 12 },
+  { id: 'gear_lim_7',  name: 'Plasma Trident',     type: 'GEAR', rarity: 'LIMITED', description: 'Triple extraction points for high efficiency.',           price: 1.80, effect: 'MULT_BOOST',      benefitValue: 0.70, image: '🔱',  minLevel: 15 },
+  { id: 'gear_lim_8',  name: 'Heavy Barrier',      type: 'GEAR', rarity: 'LIMITED', description: 'Mobile firewall defense. -15% Risk.',                    price: 2.20, effect: 'RISK_REDUCTION',   benefitValue: 15,   image: '🧱',  minLevel: 15 },
+  { id: 'gear_lim_9',  name: 'Ghost Protocol',     type: 'GEAR', rarity: 'LIMITED', description: 'Full stealth mode — near-invisible to scanners. -12% Risk.', price: 1.60, effect: 'RISK_REDUCTION', benefitValue: 12, image: '👻', minLevel: 12 },
+  { id: 'gear_lim_10', name: 'Node Scanner',       type: 'GEAR', rarity: 'LIMITED', description: 'Maps hidden extraction routes. +10s Raid Time.',          price: 2.00, effect: 'TIME_BOOST',      benefitValue: 10,   image: '🔭',  minLevel: 15 },
 
-  // --- EXCLUSIVE GEAR (5 items) ---
-  { id: 'gear_exc_1', name: 'Omega Railgun', type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Shatters the most advanced protocol walls.', price: 5.0, effect: 'MULT_BOOST', benefitValue: 1.2, image: 'https://img.icons8.com/arcade/64/ray-gun.png', minLevel: 20 },
-  { id: 'gear_exc_2', name: 'Quantum Saber', type: 'GEAR', rarity: 'EXCLUSIVE', description: 'A blade made of pure Solana energy.', price: 8.5, effect: 'RISK_REDUCTION', benefitValue: 25, image: 'https://img.icons8.com/arcade/64/lightsaber.png', minLevel: 25 },
-  { id: 'gear_exc_3', name: 'Chainsaw_0x', type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Brute force extraction. Extremely fast yield.', price: 12.0, effect: 'MULT_BOOST', benefitValue: 1.8, image: 'https://img.icons8.com/arcade/64/chainsaw.png', minLevel: 30 },
-  { id: 'gear_exc_4', name: 'Singularity Core', type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Bends the raid clock. +30s Raid Time.', price: 15.0, effect: 'TIME_BOOST', benefitValue: 30, image: 'https://img.icons8.com/arcade/64/atomic.png', minLevel: 40 },
-  { id: 'gear_exc_5', name: 'Protocol God Axe', type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Legendary tool of the chain creators.', price: 25.0, effect: 'MULT_BOOST', benefitValue: 3.0, image: 'https://img.icons8.com/arcade/64/battle-axe.png', minLevel: 50 }
+  // --- EXCLUSIVE GEAR (7 items) ---
+  { id: 'gear_exc_1',  name: 'Omega Railgun',      type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Shatters the most advanced protocol walls.',            price: 5.0,  effect: 'MULT_BOOST',      benefitValue: 1.2,  image: '🔫',  minLevel: 20 },
+  { id: 'gear_exc_2',  name: 'Quantum Saber',      type: 'GEAR', rarity: 'EXCLUSIVE', description: 'A blade made of pure Solana energy. -25% Risk.',        price: 8.5,  effect: 'RISK_REDUCTION',   benefitValue: 25,   image: '⚡',  minLevel: 25 },
+  { id: 'gear_exc_3',  name: 'Chainsaw_0x',        type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Brute force extraction. Extremely fast yield.',          price: 12.0, effect: 'MULT_BOOST',      benefitValue: 1.8,  image: '⚙️',  minLevel: 30 },
+  { id: 'gear_exc_4',  name: 'Singularity Core',   type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Bends the raid clock. +30s Raid Time.',                 price: 15.0, effect: 'TIME_BOOST',      benefitValue: 30,   image: '🌀',  minLevel: 40 },
+  { id: 'gear_exc_5',  name: 'Protocol God Axe',   type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Legendary tool of the chain creators.',                 price: 25.0, effect: 'MULT_BOOST',      benefitValue: 3.0,  image: '🪬',  minLevel: 50 },
+  { id: 'gear_exc_6',  name: 'Neural Chip',        type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Implant-grade upgrade. Amplifies every action by 2.2x.', price: 18.0, effect: 'MULT_BOOST',     benefitValue: 2.2,  image: '🧠',  minLevel: 35 },
+  { id: 'gear_exc_7',  name: 'Blackout Charge',    type: 'GEAR', rarity: 'EXCLUSIVE', description: 'Drops all alarms for the duration. -30% Risk.',          price: 20.0, effect: 'RISK_REDUCTION',   benefitValue: 30,   image: '💣',  minLevel: 40 },
 ];
 
 export const AVATAR_ITEMS: Equipment[] = [
@@ -224,7 +232,9 @@ export interface GameState {
   activeRaidFee: number;
   activeRaidDifficulty: Difficulty;
   activeRaidBoosts: string[];
-  activeRoom?: Room; // New: For PvP
+  activeRoom?: Room;
+  activeSeedId?: string;          // provably-fair: seed DB row id
+  activeServerSeedHash?: string;  // provably-fair: shown to player pre-raid
   lastResult?: {
     success: boolean;
     solAmount: number;
@@ -234,5 +244,21 @@ export interface GameState {
     serverSeedHash: string;
     userWallet: string;
     txSignature: string;
+  };
+  isRaidLoading?: boolean;          // true while 2.5s pre-raid loading screen shows
+  pvpWinnerResult?: {               // set when all PvP players have finished
+    isWinner: boolean;
+    winnerName: string;
+    winnerWallet: string;
+    potSol: number;
+    currency: string;
+  } | null;
+  pvpWaiting?: boolean;             // true while waiting for other PvP players
+  // Remembered for the "Redeploy" button on ResultScreen
+  lastRaidConfig?: {
+    mode: Mode;
+    difficulty: Difficulty;
+    boosts: string[];
+    currency: Currency;
   };
 }

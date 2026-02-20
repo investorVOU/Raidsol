@@ -1,5 +1,5 @@
 {
-  "name": "copy-of-solana-raid:-degen-protocol",
+  "name": "solanaraid",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,19 +9,39 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "9.96.1",
+    "@react-three/fiber": "8.15.14",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.35",
+    "@solana/wallet-adapter-wallets": "^0.19.26",
+    "@solana/web3.js": "^1.98.0",
+    "@supabase/supabase-js": "^2.97.0",
+    "html5-qrcode": "2.3.8",
+    "lucide-react": "0.460.0",
+    "qrious": "4.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "lucide-react": "0.460.0",
-    "three": "0.160.0",
-    "@react-three/fiber": "8.15.14",
-    "@react-three/drei": "9.96.1",
-    "html5-qrcode": "2.3.8",
-    "qrious": "4.0.2"
+    "three": "0.160.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0"
-  }
+    "vite": "^6.2.0",
+    "vite-plugin-pwa": "^1.2.0"
+  },
+  "description": "![Solana Raid](https://img.shields.io/badge/SOLANA-NETWORK-14F195?style=for-the-badge&logo=solana&logoColor=white)\r ![Degen Protocol](https://img.shields.io/badge/PROTOCOL-DEGEN-9945FF?style=for-the-badge)\r ![PvP Enabled](https://img.shields.io/badge/MODE-PVP_LIVE-EF4444?style=for-the-badge)",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/investorVOU/Raidsol.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/investorVOU/Raidsol/issues"
+  },
+  "homepage": "https://github.com/investorVOU/Raidsol#readme"
 }

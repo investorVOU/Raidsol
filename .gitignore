@@ -8,9 +8,17 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+Readme.md
 dist
 dist-ssr
 *.local
+
+# Environment variables
+.env
+.env.local
+
+# Supabase schema (contains sensitive table structure — share via secure channel)
+supabase/schema.sql
 
 # Editor directories and files
 .vscode/*
