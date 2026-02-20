@@ -53,11 +53,11 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate }) =>
 };
 
 const NavItem: React.FC<{ label: string; active: boolean; onClick: () => void }> = ({ label, active, onClick }) => (
-  <button 
+  <button
     onClick={onClick}
-    className={`flex flex-col items-center transition-all flex-1 md:flex-none md:w-full py-2 ${active ? 'text-cyan-400' : 'text-white/20 hover:text-white/50'}`}
+    className={`flex flex-col items-center transition-all flex-1 md:flex-none md:w-full py-2 ${active ? 'text-cyan-400' : 'text-white/55 hover:text-white/80'}`}
   >
-    <span className={`text-[10px] md:text-sm font-black tracking-[0.2em] uppercase transition-colors ${active ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-white/20'}`}>
+    <span className={`text-[10px] md:text-sm font-black tracking-[0.2em] uppercase transition-colors ${active ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-white/55'}`}>
       {label}
     </span>
   </button>

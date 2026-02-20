@@ -97,6 +97,23 @@ const AppInner: React.FC = () => {
     setGameState(prev => ({ ...prev, isConnected: connected }));
   }, [connected]);
 
+  // ── Seeker domain-trust handshake ────────────────────────────────────────
+  // Seeker (Solana Mobile) requires an explicit signMessage after authorization
+  // to complete domain verification. Without this it silently blocks the session.
+  // We fire this once per wallet session; rejection / unavailability are silent.
+  const seekerHandshakeDone = useRef(false);
+  useEffect(() => {
+    if (!connected || !signMessage || seekerHandshakeDone.current) return;
+    seekerHandshakeDone.current = true;
+    const msg = new TextEncoder().encode(
+      'SolRaid: verify wallet ownership for https://solraid.app',
+    );
+    signMessage(msg).catch(() => {
+      // User declined or wallet doesn't support signMessage — not fatal
+      seekerHandshakeDone.current = false;
+    });
+  }, [connected, signMessage]);
+
   const { connection } = useConnection();
 
   // Resolve treasury public key from env

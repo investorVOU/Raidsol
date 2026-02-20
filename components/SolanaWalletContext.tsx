@@ -44,9 +44,9 @@ export const SolanaWalletContext: FC<{ children: ReactNode }> = ({ children }) =
             new SolanaMobileWalletAdapter({
                 addressSelector: createDefaultAddressSelector(),
                 appIdentity: {
-                    name: 'Solana Raid',
-                    uri: typeof window !== 'undefined' ? window.location.origin : 'https://solanaraid.app',
-                    icon: '/favicon.ico',
+                    name: 'SolRaid',
+                    uri: 'https://solraid.app',
+                    icon: 'https://solraid.app/icon-192.png',
                 },
                 authorizationResultCache: createDefaultAuthorizationResultCache(),
                 cluster: network,
