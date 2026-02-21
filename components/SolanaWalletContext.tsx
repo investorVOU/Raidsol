@@ -19,6 +19,7 @@ import {
 } from '@solana-mobile/wallet-adapter-mobile';
 
 import '@solana/wallet-adapter-react-ui/styles.css';
+import { getPrimaryRpc } from '../lib/rpc';
 
 // Clear stale MWA auth cache from devnet — runs once on module load before any React renders.
 // The default cache key used by @solana-mobile/wallet-standard-mobile.
@@ -31,15 +32,11 @@ try {
 } catch { /* localStorage unavailable — SSR or sandboxed */ }
 
 export const SolanaWalletContext: FC<{ children: ReactNode }> = ({ children }) => {
-    // Read RPC from env — set VITE_SOLANA_RPC_URL in .env for a private endpoint
-    const endpoint = useMemo(
-        () => import.meta.env.VITE_SOLANA_RPC_URL ?? 'https://api.devnet.solana.com',
-        [],
-    );
+    // Prefer Helius → Alchemy → VITE_SOLANA_RPC_URL → public mainnet (403s on browser)
+    const endpoint = useMemo(() => getPrimaryRpc(), []);
 
     const network = useMemo(() => {
-        const rpc = import.meta.env.VITE_SOLANA_RPC_URL ?? '';
-        return rpc.includes('mainnet') ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet;
+        return getPrimaryRpc().includes('mainnet') ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet;
     }, []);
 
     const connectionConfig = useMemo(() => ({

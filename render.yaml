@@ -7,6 +7,8 @@
 #   VITE_SUPABASE_URL
 #   VITE_SUPABASE_ANON_KEY
 #   VITE_TREASURY_ADDRESS
+#   VITE_HELIUS_RPC_URL   <- REQUIRED: prevents 403s from public mainnet RPC
+#   VITE_ALCHEMY_RPC_URL  <- fallback RPC (set both for redundancy)
 #   VITE_USDC_MINT      (optional — defaults to mainnet USDC)
 #   VITE_SKR_MINT       (optional — defaults to Seeker SKR mint)
 

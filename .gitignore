@@ -34,3 +34,8 @@ supabase/schema.sql
 *.njsproj
 *.sln
 *.sw?
+
+# Android APK build outputs — large binaries, no need to track in git
+twa/app/build/
+twa/*.apk
+twa/app/build/outputs/
