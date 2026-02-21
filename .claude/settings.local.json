@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebFetch(domain:docs.solanamobile.com)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Bash(bubblewrap:*)",
+      "Bash(node -e:*)",
+      "Bash(node scripts/generate-screenshots.js:*)",
+      "Bash(keytool:*)"
     ]
   }
 }

@@ -1,0 +1,56 @@
+{
+  "packageId": "app.solraid",
+  "host": "solraid.app",
+  "name": "Solana Raid",
+  "launcherName": "SolRaid",
+  "display": "standalone",
+  "themeColor": "#020202",
+  "themeColorDark": "#020202",
+  "navigationColor": "#020202",
+  "navigationColorDark": "#020202",
+  "navigationDividerColor": "#020202",
+  "navigationDividerColorDark": "#020202",
+  "backgroundColor": "#020202",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://solraid.app/icon-512.png",
+  "maskableIconUrl": "https://solraid.app/icon-512.png",
+  "monochromeIconUrl": null,
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android-keystore.jks",
+    "alias": "solraid"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 2,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://solraid.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": false
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": false,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "name": "solraid",
+      "value": "4B:CE:1B:2C:2C:55:F5:29:FF:EB:B7:FA:DB:A7:DB:37:3B:49:45:69:C6:3B:84:B6:25:86:FD:84:A5:23:FB:39"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.solraid",
+      "sha256_cert_fingerprints": [
+        "4B:CE:1B:2C:2C:55:F5:29:FF:EB:B7:FA:DB:A7:DB:37:3B:49:45:69:C6:3B:84:B6:25:86:FD:84:A5:23:FB:39"
+      ]
+    }
+  }
+]
