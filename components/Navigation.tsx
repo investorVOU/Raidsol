@@ -9,7 +9,10 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate }) => {
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-black/95 border-t-2 border-white/10 px-2 py-4 flex justify-between items-center z-50 md:relative md:w-32 md:h-full md:flex-col md:border-t-0 md:border-r-2 md:justify-start md:pt-12 md:gap-8">
+    <nav
+      className="fixed bottom-0 left-0 w-full bg-black/95 border-t-2 border-white/10 px-2 pt-4 flex justify-between items-center z-50 md:relative md:w-32 md:h-full md:flex-col md:border-t-0 md:border-r-2 md:justify-start md:pt-12 md:gap-8"
+      style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))' }}
+    >
       
       <div className="hidden md:flex mb-12 flex-col items-center">
         <span className="text-2xl font-black italic text-cyan-500 tracking-tighter">RAID</span>

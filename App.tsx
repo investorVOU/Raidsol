@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, Room, Opponent } from './types';
-import LobbyScreen from './screens/LobbyScreen';
-import RaidScreen from './screens/RaidScreen';
-import TeamScreen from './screens/TeamScreen';
-import TournamentScreen from './screens/TournamentScreen';
-import ResultScreen from './screens/ResultScreen';
-import PrivacyScreen from './screens/PrivacyScreen';
-import TermsScreen from './screens/TermsScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import StoreScreen from './screens/StoreScreen';
-import TreasuryScreen from './screens/TreasuryScreen';
-import MultiplayerSetupScreen from './screens/MultiplayerSetupScreen';
-import MultiplayerRaidScreen from './screens/MultiplayerRaidScreen';
+const LobbyScreen = lazy(() => import('./screens/LobbyScreen'));
+const RaidScreen = lazy(() => import('./screens/RaidScreen'));
+const TeamScreen = lazy(() => import('./screens/TeamScreen'));
+const TournamentScreen = lazy(() => import('./screens/TournamentScreen'));
+const ResultScreen = lazy(() => import('./screens/ResultScreen'));
+const PrivacyScreen = lazy(() => import('./screens/PrivacyScreen'));
+const TermsScreen = lazy(() => import('./screens/TermsScreen'));
+const ProfileScreen = lazy(() => import('./screens/ProfileScreen'));
+const StoreScreen = lazy(() => import('./screens/StoreScreen'));
+const TreasuryScreen = lazy(() => import('./screens/TreasuryScreen'));
+const MultiplayerSetupScreen = lazy(() => import('./screens/MultiplayerSetupScreen'));
+const MultiplayerRaidScreen = lazy(() => import('./screens/MultiplayerRaidScreen'));
 import Header from './components/Header';
 import Navigation from './components/Navigation';
-import HowItWorksModal from './components/HowItWorksModal';
+const HowItWorksModal = lazy(() => import('./components/HowItWorksModal'));
 import RaidLoadingScreen from './components/RaidLoadingScreen';
-import LevelUpModal from './components/LevelUpModal';
-import PvpWinnerModal from './components/PvpWinnerModal';
-import PWAInstallBanner from './components/PWAInstallBanner';
-import IntroOverlay from './components/IntroOverlay';
+const LevelUpModal = lazy(() => import('./components/LevelUpModal'));
+const PvpWinnerModal = lazy(() => import('./components/PvpWinnerModal'));
+const PWAInstallBanner = lazy(() => import('./components/PWAInstallBanner'));
+const IntroOverlay = lazy(() => import('./components/IntroOverlay'));
 import { SolanaWalletContext } from './components/SolanaWalletContext';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -241,6 +241,87 @@ const AppInner: React.FC = () => {
   // Stable ref for walletAddr so async callbacks don't close over a stale value
   const walletAddrRef = useRef<string | null>(null);
   useEffect(() => { walletAddrRef.current = walletAddr; }, [walletAddr]);
+
+  // ── Deep-link shortcuts: ?screen=raid|ranks|profile ─────────────────
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get('screen');
+    if (!param) return;
+    const map: Record<string, Screen> = {
+      raid:    Screen.LOBBY,
+      ranks:   Screen.TOURNAMENT,
+      profile: Screen.PROFILE,
+      store:   Screen.STORE,
+    };
+    if (map[param]) setGameState(prev => ({ ...prev, currentScreen: map[param] }));
+    // Clean URL so refreshing doesn't re-trigger
+    window.history.replaceState({}, '', window.location.pathname);
+  }, []);
+
+  // ── Wake Lock — keep screen on during active raids ───────────────────────────
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const acquireWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+      }
+    } catch (_) { /* not supported or denied */ }
+  };
+  const releaseWakeLock = () => {
+    wakeLockRef.current?.release().catch(() => {});
+    wakeLockRef.current = null;
+  };
+
+  // ── Fullscreen during raids — removes browser chrome for full immersion ──
+  const enterFullscreen = () => {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if ((el as any).webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
+  };
+  const exitFullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  };
+  // Re-acquire if page becomes visible again while raid is active
+  useEffect(() => {
+    const onVisible = () => {
+      if (gameState.currentScreen === Screen.RAID && !wakeLockRef.current) acquireWakeLock();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [gameState.currentScreen]);
+
+  // ── App Badge API — show unclaimed SOL on icon badge ─────────────────────
+  useEffect(() => {
+    if (!('setAppBadge' in navigator)) return;
+    const cents = Math.round(gameState.unclaimedBalance * 100);
+    if (cents > 0) {
+      (navigator as any).setAppBadge(cents).catch(() => {});
+    } else {
+      (navigator as any).clearAppBadge().catch(() => {});
+    }
+  }, [gameState.unclaimedBalance]);
+
+  // ── Android back button — hardware back navigates screens, blocked in raid ──
+  useEffect(() => {
+    if (gameState.currentScreen === Screen.LOBBY) {
+      history.replaceState({ solraidScreen: Screen.LOBBY }, '');
+    } else {
+      history.pushState({ solraidScreen: gameState.currentScreen }, '');
+    }
+  }, [gameState.currentScreen]);
+
+  useEffect(() => {
+    const BACK_BLOCKED = [Screen.RAID, Screen.MULTIPLAYER_GAME];
+    const onPop = () => {
+      if (BACK_BLOCKED.includes(gameState.currentScreen)) {
+        // Re-push to block back during active raid
+        history.pushState({ solraidScreen: gameState.currentScreen }, '');
+        return;
+      }
+      setGameState(prev => ({ ...prev, currentScreen: Screen.LOBBY }));
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [gameState.currentScreen]);
 
   // Realtime subscription handle for multiplayer rooms
   const roomChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -511,6 +592,7 @@ const AppInner: React.FC = () => {
     const roomCurrency = gameState.activeRoom?.stakeCurrency ?? 'SOL';
 
     // Optimistic UI update — show result immediately
+    releaseWakeLock();
     setGameState(prev => ({
       ...prev,
       currentScreen: Screen.RESULT,
@@ -1180,6 +1262,8 @@ const AppInner: React.FC = () => {
     else if (mode === Mode.TOURNAMENT) navigateTo(Screen.TOURNAMENT);
     else {
       setGameState(prev => ({ ...prev, currentScreen: Screen.RAID, isRaidLoading: true }));
+      acquireWakeLock();
+      enterFullscreen();
     }
 
     // ── Provably-fair seed fetched in background (ready before raid ends) ─
@@ -1382,7 +1466,7 @@ const AppInner: React.FC = () => {
           domainName={domainName}
         />
         <main className="flex-1 relative overflow-hidden">
-          {renderScreen()}
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center text-white/20 text-xs font-black uppercase tracking-widest animate-pulse">LOADING...</div>}>{renderScreen()}</Suspense>
         </main>
       </div>
       <HowItWorksModal

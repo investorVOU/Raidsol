@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Solana Raid | DEGEN_PROTOCOL</title>
     <!-- PWA -->
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -26,6 +26,11 @@
         --solana-green: #14F195;
         --solana-purple: #9945FF;
         --solana-cyan: #00FBFF;
+        /* Safe area insets for notches and Android gesture nav bar */
+        --sat: env(safe-area-inset-top, 0px);
+        --sar: env(safe-area-inset-right, 0px);
+        --sab: env(safe-area-inset-bottom, 0px);
+        --sal: env(safe-area-inset-left, 0px);
       }
       body {
         font-family: 'JetBrains Mono', monospace;

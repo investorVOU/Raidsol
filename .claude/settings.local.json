@@ -8,7 +8,12 @@
       "Bash(bubblewrap:*)",
       "Bash(node -e:*)",
       "Bash(node scripts/generate-screenshots.js:*)",
-      "Bash(keytool:*)"
+      "Bash(keytool:*)",
+      "Bash(/tmp/fix_sounds2.js:*)",
+      "Bash(node:*)",
+      "Bash(npm run build:*)",
+      "Bash(sort:*)",
+      "Bash(ls:*)"
     ]
   }
 }

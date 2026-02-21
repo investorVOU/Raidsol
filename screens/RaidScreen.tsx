@@ -345,7 +345,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setUserAction('Death');
     setEnemyAction('Dance');
     sounds.playBust();
-    sounds.vibrate([120, 60, 120, 60, 300]);
+    sounds.hapticBust();
     spawnSparks('#EF4444', '#ff6600', 18);
     addDmgPopup('BUSTED!', '#EF4444', true);
     setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current), 2500);
@@ -361,7 +361,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       const now = Date.now();
       if (now - lastWarnRef.current > 2500) {
         sounds.playRiskWarning();
-        sounds.vibrate(30);
+        sounds.hapticWarning();
         lastWarnRef.current = now;
       }
     }
@@ -435,7 +435,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setEnemyAction('Death');
     const solReward = (points / 2500) * 6 * entryFee;
     sounds.playCashOut();
-    sounds.vibrate([60, 30, 60, 30, 120]);
+    sounds.hapticExtract();
     spawnSparks('#14F195', '#00FBFF', 20);
     addDmgPopup('EXTRACTED!', '#14F195', true);
     const elapsedSec = Math.max(3, initialTime - timeLeft);
@@ -447,7 +447,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setHasInteracted(true);
     setConsecutiveDefends(0);
     sounds.playAttack();
-    sounds.vibrate(50);
+    sounds.hapticAttack();
 
     const riskAdded = 12 + Math.random() * 9;
     spawnSparks('#EF4444', '#f97316', 14);
@@ -460,7 +460,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       const next = Math.min(99.9, prev + riskAdded);
       if (next > 85 && Math.random() > 0.75) {
         sounds.playCritical();
-        sounds.vibrate([80, 40, 80]);
+        sounds.hapticCritical();
         addDmgPopup('CRITICAL!', '#EF4444', true);
         spawnSparks('#EF4444', '#ffffff', 20);
         addLog('CRITICAL_OVERLOAD');
@@ -489,7 +489,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     const newCount = consecutiveDefends + 1;
     setConsecutiveDefends(newCount);
     sounds.playDefend();
-    sounds.vibrate(25);
+    sounds.hapticDefend();
 
     const tiers = [
       { min: 10, max: 14, multCost: 0.10, log: 'SHIELD_STABLE'   },

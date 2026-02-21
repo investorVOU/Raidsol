@@ -198,6 +198,15 @@ export const useGameSounds = () => {
     } catch (_) {}
   };
 
+  // Semantic haptic wrappers — distinct patterns per game event
+  const hapticAttack   = () => vibrate([60, 20, 60]);
+  const hapticDefend   = () => vibrate([30, 15, 30, 15, 80]);
+  const hapticBust     = () => vibrate([80, 40, 160, 60, 320]);
+  const hapticExtract  = () => vibrate([40, 20, 80, 20, 200]);
+  const hapticWarning  = () => vibrate([25, 15, 25, 15, 25]);
+  const hapticCritical = () => vibrate([200]);
+  const hapticTick     = () => vibrate(12);
+
   return {
     playAttack,
     playDefend,
@@ -208,5 +217,12 @@ export const useGameSounds = () => {
     playCritical,
     playWinnerFanfare,
     vibrate,
+    hapticAttack,
+    hapticDefend,
+    hapticBust,
+    hapticExtract,
+    hapticWarning,
+    hapticCritical,
+    hapticTick,
   };
 };

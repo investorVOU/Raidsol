@@ -27,6 +27,11 @@ export default defineConfig(({ mode }) => {
             orientation: 'portrait',
             start_url: '/',
             scope: '/',
+            shortcuts: [
+              { name: 'Quick Raid', short_name: 'Raid', description: 'Enter the lobby and deploy', url: '/?screen=raid', icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+              { name: 'Leaderboard', short_name: 'Ranks', description: 'View the SR leaderboard', url: '/?screen=ranks', icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+              { name: 'My Profile', short_name: 'Profile', description: 'View your profile and stats', url: '/?screen=profile', icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+            ],
             icons: [
               {
                 src: 'icon-192.png',
