@@ -13,7 +13,8 @@ interface RaidScreenProps {
   difficulty: Difficulty;
   activeBoosts: string[];
   equippedAvatarId?: string;
-  ticketBoost?: boolean;  // +10% win reward when true
+  ticketBoost?: boolean;   // +10% win reward when true
+  streakBonus?: number;    // +0.15x starting multiplier per 3-win streak
 }
 
 interface Spark {
@@ -78,12 +79,40 @@ const GameStyles = `
     25%     { opacity: 0.4; }
     75%     { opacity: 0.4; }
   }
+  @keyframes golden-pulse {
+    0%,100% { box-shadow: 0 0 18px rgba(234,179,8,0.5), inset 0 0 18px rgba(234,179,8,0.05); }
+    50%     { box-shadow: 0 0 45px rgba(234,179,8,1.0), inset 0 0 30px rgba(234,179,8,0.15); }
+  }
+  @keyframes firewall-pop {
+    0%   { transform: scale(0.4) rotate(-4deg); opacity:0; }
+    25%  { transform: scale(1.25) rotate(1deg); opacity:1; }
+    60%  { transform: scale(1.0) rotate(0deg); opacity:1; }
+    100% { transform: scale(0.8); opacity:0; }
+  }
+  @keyframes hot-streak {
+    0%,100% { text-shadow: 0 0 12px #f97316, 0 0 24px #ef4444; }
+    50%     { text-shadow: 0 0 28px #fbbf24, 0 0 56px #f97316; }
+  }
+  @keyframes ambush-in {
+    0%   { opacity:0; transform: scaleY(0.2); }
+    100% { opacity:1; transform: scaleY(1); }
+  }
+  @keyframes combo-pop {
+    0%   { transform: scale(0) rotate(-10deg); opacity:0; }
+    40%  { transform: scale(1.4) rotate(3deg);  opacity:1; }
+    70%  { transform: scale(1.0) rotate(0deg);  opacity:1; }
+    100% { transform: scale(0.6); opacity:0; }
+  }
   .shake-mild     { animation: shake-mild     0.28s cubic-bezier(.36,.07,.19,.97) infinite; }
   .shake-heavy    { animation: shake-heavy    0.22s cubic-bezier(.36,.07,.19,.97) infinite; }
   .shake-critical { animation: shake-critical 0.18s cubic-bezier(.36,.07,.19,.97) infinite; }
   .spark          { position: absolute; border-radius: 50%; animation: spark-fly 0.38s ease-out forwards; pointer-events: none; }
   .dmg-popup      { position: absolute; animation: dmg-float 1.1s ease-out forwards; pointer-events: none; font-family: 'JetBrains Mono', monospace; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
   .critical-text  { animation: critical-flash 0.15s ease-in-out 3; }
+  .golden-glow    { animation: golden-pulse 0.9s ease-in-out infinite; }
+  .hot-streak-text{ animation: hot-streak 0.6s ease-in-out infinite; }
+  .firewall-pop   { animation: firewall-pop 1.2s ease-out forwards; pointer-events:none; }
+  .combo-pop      { position:absolute; animation: combo-pop 0.9s ease-out forwards; pointer-events:none; font-family:'JetBrains Mono',monospace; font-weight:900; text-transform:uppercase; }
 `;
 
 // ─── 3D Fighter ───────────────────────────────────────────────────────────────
@@ -225,7 +254,7 @@ useGLTF.preload(MODEL_URL);
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const RaidScreen: React.FC<RaidScreenProps> = ({
-  onFinish, equippedGearIds, entryFee, difficulty, activeBoosts, equippedAvatarId, ticketBoost = false,
+  onFinish, equippedGearIds, entryFee, difficulty, activeBoosts, equippedAvatarId, ticketBoost = false, streakBonus = 0,
 }) => {
   const sounds = useGameSounds();
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -257,7 +286,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
   const gearRiskFactor  = Math.max(0.4, 1 - gearStats.riskReduc / 100);
   const baseRisk        = Math.max(0, diffConfig.riskMod - gearStats.riskReduc);
-  const initialMultiplier = 1.0 + gearStats.mult + boostStats.startMultBonus;
+  const initialMultiplier = 1.0 + gearStats.mult + boostStats.startMultBonus + streakBonus;
   const initialTime     = 30 + gearStats.timeBoost;
 
   const [points,     setPoints]     = useState(0);
@@ -277,6 +306,42 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   // Anti-cheat
   const [hasInteracted,      setHasInteracted]      = useState(false);
   const [consecutiveDefends, setConsecutiveDefends] = useState(0);
+  const [defendLocked,       setDefendLocked]       = useState(false);
+  const [defendLockTimer,    setDefendLockTimer]     = useState(0);
+  const defendLockRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ─── Addictive mechanics state ────────────────────────────────────────────
+  const [attackCount,     setAttackCount]     = useState(0);
+  const [ambushed,        setAmbushed]        = useState(false);
+  const [goldenWindow,    setGoldenWindow]    = useState(false);
+  const [goldenCountdown, setGoldenCountdown] = useState(0);
+  const [hotStreak,       setHotStreak]       = useState(false);
+  const [jackpotFlash,    setJackpotFlash]    = useState(false);
+  const [firewallSave,    setFirewallSave]    = useState(false);
+  const [nearMissSOL,     setNearMissSOL]     = useState<number | null>(null);
+  const [comboPopups,     setComboPopups]     = useState<Array<{ id: number; text: string; color: string }>>([]);
+
+  const lastActionTimeRef   = useRef<number>(0);
+  const lastActionTypeRef   = useRef<'ATTACK' | 'DEFEND' | null>(null);
+  const peakMultRef         = useRef(initialMultiplier);
+  const goldenWindowRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ambushTimeoutRef    = useRef<ReturnType<typeof setTimeout>  | null>(null);
+  const goldenTriggeredRef  = useRef(false);
+  const hotStreakTimerRef   = useRef<ReturnType<typeof setTimeout>  | null>(null);
+
+  // Cleanup all intervals/timeouts on unmount
+  useEffect(() => () => {
+    if (defendLockRef.current)   clearInterval(defendLockRef.current);
+    if (goldenWindowRef.current) clearInterval(goldenWindowRef.current);
+    if (ambushTimeoutRef.current) clearTimeout(ambushTimeoutRef.current);
+    if (hotStreakTimerRef.current) clearTimeout(hotStreakTimerRef.current);
+  }, []);
+
+  const addComboPopup = useCallback((text: string, color: string) => {
+    const id = Date.now() + Math.random();
+    setComboPopups(prev => [...prev, { id, text, color }]);
+    setTimeout(() => setComboPopups(prev => prev.filter(p => p.id !== id)), 950);
+  }, []);
 
   // Fighter actions
   const [userAction,  setUserAction]  = useState('Idle');
@@ -338,6 +403,19 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const bustTimeRef = useRef(0);
   const handleBust = useCallback((reason: string = 'PROTOCOL_FAILURE') => {
     if (stateRef.current.isEnding) return;
+    // Clear all timers
+    if (defendLockRef.current)    { clearInterval(defendLockRef.current);  defendLockRef.current = null; }
+    if (goldenWindowRef.current)  { clearInterval(goldenWindowRef.current); goldenWindowRef.current = null; }
+    if (ambushTimeoutRef.current) { clearTimeout(ambushTimeoutRef.current); ambushTimeoutRef.current = null; }
+    if (hotStreakTimerRef.current) { clearTimeout(hotStreakTimerRef.current); hotStreakTimerRef.current = null; }
+    setDefendLocked(false);
+    setDefendLockTimer(0);
+    setGoldenWindow(false);
+    setAmbushed(false);
+    setHotStreak(false);
+    // Near-miss: show what they could have extracted
+    const wouldHave = (stateRef.current.points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0);
+    if (wouldHave >= entryFee * 0.4) setNearMissSOL(parseFloat(wouldHave.toFixed(4)));
     bustTimeRef.current = stateRef.current.timeLeft >= 0
       ? Math.max(3, (initialTime - stateRef.current.timeLeft))
       : initialTime;
@@ -347,10 +425,10 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setEnemyAction('Dance');
     sounds.playBust();
     sounds.hapticBust();
-    spawnSparks('#EF4444', '#ff6600', 18);
+    spawnSparks('#EF4444', '#ff6600', 22);
     addDmgPopup('BUSTED!', '#EF4444', true);
     setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current), 2500);
-  }, [onFinish, initialTime, sounds, spawnSparks, addDmgPopup]);
+  }, [onFinish, initialTime, entryFee, ticketBoost, sounds, spawnSparks, addDmgPopup]);
 
   const handleBustRef = useRef(handleBust);
   useEffect(() => { handleBustRef.current = handleBust; }, [handleBust]);
@@ -385,15 +463,77 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         return;
       }
 
+      // ── Idle risk decay: patience is a skill ─────────────────────────────
+      const idleSecs = (Date.now() - lastActionTimeRef.current) / 1000;
+      if (idleSecs > 3) {
+        setRisk(prev => Math.max(0, prev - 0.4));
+      }
+
+      // ── Hot streak visual tracking ─────────────────────────────────────
+      if (state.multiplier > peakMultRef.current * 0.85 && state.multiplier > 2.0) {
+        setHotStreak(true);
+      } else {
+        setHotStreak(false);
+      }
+
+      // ── Golden window trigger: crosses 2.5x first time ─────────────────
+      if (!goldenTriggeredRef.current && state.multiplier >= 2.5) {
+        goldenTriggeredRef.current = true;
+        let secs = 6;
+        setGoldenWindow(true);
+        setGoldenCountdown(secs);
+        addLog('GOLDEN_WINDOW_OPEN');
+        addDmgPopup('GOLDEN WINDOW! +5%', '#FFD700', true);
+        spawnSparks('#FFD700', '#14F195', 22);
+        if (goldenWindowRef.current) clearInterval(goldenWindowRef.current);
+        goldenWindowRef.current = setInterval(() => {
+          secs -= 1;
+          setGoldenCountdown(secs);
+          if (secs <= 0) {
+            clearInterval(goldenWindowRef.current!);
+            goldenWindowRef.current = null;
+            setGoldenWindow(false);
+            setGoldenCountdown(0);
+            addLog('GOLDEN_WINDOW_EXPIRED');
+            addDmgPopup('WINDOW CLOSED!', '#EF4444');
+          }
+        }, 1000);
+      }
+
+      // ── JACKPOT: 3% chance after 6s — variable reward rush ────────────
+      if (elapsedSeconds > 6 && Math.random() < 0.03 && !state.isEnding) {
+        addLog('PROTOCOL_GLITCH_DETECTED');
+        addDmgPopup('JACKPOT! +0.5x', '#FFD700', true);
+        spawnSparks('#FFD700', '#9945FF', 28);
+        setJackpotFlash(true);
+        setTimeout(() => setJackpotFlash(false), 700);
+        setMultiplier(prev => {
+          const next = prev + 0.5;
+          if (next > peakMultRef.current) peakMultRef.current = next;
+          return next;
+        });
+        sounds.hapticWarning();
+      }
+
+      // ── AMBUSH: 10% chance after 8s, throttled by ambushTimeoutRef ─────
+      if (elapsedSeconds > 8 && Math.random() < 0.10 && !ambushTimeoutRef.current && !state.isEnding) {
+        setAmbushed(true);
+        addLog('AMBUSH_DETECTED');
+        addDmgPopup('AMBUSH!', '#EF4444', true);
+        spawnSparks('#EF4444', '#f97316', 18);
+        setRisk(prev => Math.min(98, prev + 10));
+        sounds.hapticCritical();
+        ambushTimeoutRef.current = setTimeout(() => {
+          setAmbushed(false);
+          ambushTimeoutRef.current = null;
+        }, 2200);
+      }
+
       const timePenalty = (elapsedSeconds - 3) * 0.07;
-      // Harder: greed triggers earlier
       const greedFactor  = state.multiplier > 2.5 ? 2.4 : state.multiplier > 1.8 ? 1.8 : 1.0;
-      // Harder: house edge raised to 1.30 (30%)
       const houseEdge    = 1.30;
-      // Harder: base drift more aggressive
       const baseDrift    = (2.2 + (Math.random() * 2.8)) + timePenalty;
       const totalDrift   = baseDrift * diffConfig.driftMod * boostStats.driftMultiplier * greedFactor * houseEdge * gearRiskFactor;
-      // Harder: spike 4% → 7%, size 6 → 14
       const spikeRoll    = Math.random();
       const randomSpike  = spikeRoll > 0.93 ? (spikeRoll > 0.97 ? 18 : 14) : 0;
       if (randomSpike > 0 && !state.isEnding) {
@@ -403,7 +543,17 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       }
 
       const nextRisk = state.risk + totalDrift + randomSpike;
-      if (nextRisk >= 100) {
+
+      // ── LAST-SECOND SAVE: 12% chance right at 100 — heart-stopping ─────
+      if (nextRisk >= 100 && Math.random() < 0.12 && !state.isEnding) {
+        addLog('FIREWALL_ACTIVATED');
+        spawnSparks('#14F195', '#00FBFF', 32);
+        setFirewallSave(true);
+        setTimeout(() => setFirewallSave(false), 1400);
+        setRisk(72);
+        sounds.hapticCritical();
+        addDmgPopup('FIREWALL SAVED!', '#14F195', true);
+      } else if (nextRisk >= 100) {
         handleBustRef.current('RISK_OVERLOAD');
         setRisk(100);
         return;
@@ -430,33 +580,87 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   }, []); // eslint-disable-line
 
   const handleCashOut = () => {
-    if (isEnding || !hasInteracted || graceActive) return;
+    if (isEnding || !hasInteracted || graceActive || ambushed) return;
+    if (defendLockRef.current)    { clearInterval(defendLockRef.current);  defendLockRef.current = null; }
+    if (goldenWindowRef.current)  { clearInterval(goldenWindowRef.current); goldenWindowRef.current = null; }
+    if (hotStreakTimerRef.current) { clearTimeout(hotStreakTimerRef.current); hotStreakTimerRef.current = null; }
+    setDefendLocked(false);
+    setDefendLockTimer(0);
+    setGoldenWindow(false);
+    setHotStreak(false);
     setIsEnding('WIN');
     setUserAction('Dance');
     setEnemyAction('Death');
-    const solReward = (points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0);
+    const elapsedSec  = Math.max(3, initialTime - timeLeft);
+    const earlyMult   = elapsedSec < 8 ? 0.5 : 1.0;    // Rule: early exit penalty
+    const goldenMult  = goldenWindow ? 1.05 : 1.0;      // Rule: golden window bonus
+    const solReward   = (points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0) * earlyMult * goldenMult;
     sounds.playCashOut();
     sounds.hapticExtract();
-    spawnSparks('#14F195', '#00FBFF', 20);
-    addDmgPopup('EXTRACTED!', '#14F195', true);
-    const elapsedSec = Math.max(3, initialTime - timeLeft);
+    if (goldenWindow) {
+      spawnSparks('#FFD700', '#14F195', 32);
+      addDmgPopup('GOLDEN EXIT! +5%', '#FFD700', true);
+    } else if (elapsedSec < 8) {
+      spawnSparks('#f97316', '#EF4444', 14);
+      addDmgPopup('EARLY EXIT! -50%', '#f97316', true);
+    } else {
+      spawnSparks('#14F195', '#00FBFF', 22);
+      addDmgPopup('EXTRACTED!', '#14F195', true);
+    }
     setTimeout(() => onFinish(true, solReward, points, elapsedSec), 2500);
   };
 
   const handleAttack = () => {
-    if (isEnding || graceActive) return;
+    if (isEnding || graceActive || ambushed) return;
     setHasInteracted(true);
     setConsecutiveDefends(0);
+
+    const now = Date.now();
+    // Combo: defend → attack within 2.2 seconds
+    const isCombo = lastActionTypeRef.current === 'DEFEND' && (now - lastActionTimeRef.current) < 2200;
+    lastActionTimeRef.current = now;
+    lastActionTypeRef.current = 'ATTACK';
+
+    const newAttackCount = attackCount + 1;
+    setAttackCount(newAttackCount);
+
     sounds.playAttack();
     sounds.hapticAttack();
 
-    const riskAdded = 12 + Math.random() * 9;
+    // ── Combo bonus ────────────────────────────────────────────────────────
+    if (isCombo) {
+      addComboPopup('COMBO! +500', '#FFD700');
+      spawnSparks('#FFD700', '#14F195', 18);
+      addLog('COMBO_STRIKE');
+      setPoints(prev => prev + 500);
+      setRisk(prev => Math.max(0, prev - 4));
+    }
+
+    // ── Aggression surge: every 5 attacks without defending ────────────────
+    if (newAttackCount >= 5 && newAttackCount % 5 === 0) {
+      addLog('AGGRESSION_DETECTED');
+      addDmgPopup('AGGRESSION! +15', '#f97316', true);
+      spawnSparks('#f97316', '#EF4444', 12);
+      setTimeout(() => { if (!stateRef.current.isEnding) setRisk(prev => Math.min(99, prev + 15)); }, 200);
+    }
+
+    // ── Hot streak visual (2s flash when climbing) ────────────────────────
+    setHotStreak(true);
+    if (hotStreakTimerRef.current) clearTimeout(hotStreakTimerRef.current);
+    hotStreakTimerRef.current = setTimeout(() => { setHotStreak(false); hotStreakTimerRef.current = null; }, 2000);
+
+    const riskAdded = isCombo ? Math.max(6, 10 + Math.random() * 7) : 12 + Math.random() * 9;
     spawnSparks('#EF4444', '#f97316', 14);
-    addDmgPopup(`+${Math.floor(riskAdded)} RISK`, '#EF4444');
+    if (!isCombo) addDmgPopup(`+${Math.floor(riskAdded)} RISK`, '#EF4444');
     setFlash('rgba(239,68,68,0.25)');
     setTimeout(() => setFlash(null), 250);
 
-    setMultiplier(prev => prev + 0.35);
+    setMultiplier(prev => {
+      const bonus = isCombo ? 0.50 : 0.35;
+      const next = prev + bonus;
+      if (next > peakMultRef.current) peakMultRef.current = next;
+      return next;
+    });
     setRisk(prev => {
       const next = Math.min(99.9, prev + riskAdded);
       if (next > 85 && Math.random() > 0.75) {
@@ -471,7 +675,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       return next;
     });
     setPoints(prev => prev + 200);
-    addLog('ATTACK_INITIATED');
+    if (!isCombo) addLog('ATTACK_INITIATED');
 
     setUserAction('Punch');
     setTimeout(() => { if (!stateRef.current.isEnding) setUserAction('Idle'); }, 600);
@@ -485,12 +689,28 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   };
 
   const handleDefend = () => {
-    if (isEnding || graceActive) return;
+    if (isEnding || graceActive || defendLocked || ambushed) return;
     setHasInteracted(true);
     const newCount = consecutiveDefends + 1;
     setConsecutiveDefends(newCount);
+
+    const now = Date.now();
+    // Counter-combo: attack → defend within 2.2s
+    const isCounter = lastActionTypeRef.current === 'ATTACK' && (now - lastActionTimeRef.current) < 2200;
+    lastActionTimeRef.current = now;
+    lastActionTypeRef.current = 'DEFEND';
+    setAttackCount(0); // Reset aggression counter on defend
+
     sounds.playDefend();
     sounds.hapticDefend();
+
+    if (isCounter) {
+      addComboPopup('COUNTER! -10', '#9945FF');
+      spawnSparks('#9945FF', '#00FBFF', 16);
+      addLog('COUNTER_EXECUTED');
+      setPoints(prev => prev + 350);
+      setRisk(prev => Math.max(0, prev - 10));
+    }
 
     const tiers = [
       { min: 10, max: 14, multCost: 0.10, log: 'SHIELD_STABLE'   },
@@ -511,9 +731,37 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
     setUserAction('Jump');
     setTimeout(() => { if (!stateRef.current.isEnding) setUserAction('Idle'); }, 800);
+
+    // Lock defend after 2 consecutive uses — must attack first
+    if (newCount >= 2) {
+      setDefendLocked(true);
+      addDmgPopup('SHIELD OVERLOAD!', '#f97316', true);
+      sounds.hapticWarning();
+      let remaining = 3;
+      setDefendLockTimer(remaining);
+      if (defendLockRef.current) clearInterval(defendLockRef.current);
+      defendLockRef.current = setInterval(() => {
+        remaining -= 1;
+        setDefendLockTimer(remaining);
+        if (remaining <= 0) {
+          clearInterval(defendLockRef.current!);
+          defendLockRef.current = null;
+          setDefendLocked(false);
+          setDefendLockTimer(0);
+          setConsecutiveDefends(0);
+        }
+      }, 1000);
+    }
   };
 
-  const currentYield   = ((points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0)).toFixed(4);
+  const elapsedSec     = Math.max(0, initialTime - timeLeft);
+  const earlyExitWarn  = elapsedSec < 8 && hasInteracted && !graceActive;
+  const currentYield   = (
+    (points / 2500) * 6 * entryFee
+    * (ticketBoost ? 1.1 : 1.0)
+    * (earlyExitWarn ? 0.5 : 1.0)
+    * (goldenWindow  ? 1.05 : 1.0)
+  ).toFixed(4);
   const isUrgent       = timeLeft < 10;
   const isCritical     = timeLeft < 5;
 
@@ -596,24 +844,77 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       {/* LOSS OVERLAY */}
       {isEnding === 'LOSS' && (
-        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-red-950/40 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-red-950/40 backdrop-blur-sm animate-in fade-in duration-300 gap-3">
           <span className="text-5xl font-black text-red-500 glitch-text italic tracking-tighter uppercase">LINK_SEVERED</span>
-          <span className="text-xs text-red-500/60 font-black uppercase tracking-[0.6em] mt-4 animate-pulse">
+          <span className="text-xs text-red-500/60 font-black uppercase tracking-[0.6em] animate-pulse">
             {timeLeft <= 0 ? 'TIMEOUT_EXPIRED' : 'PROTOCOL_FAILURE'}
           </span>
+          {nearMissSOL !== null && (
+            <div className="mt-2 text-center px-6 py-3 border border-white/10 bg-black/60">
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 mb-1">YOU WERE THIS CLOSE</p>
+              <p className="mono text-3xl font-black text-white/70">{nearMissSOL.toFixed(4)} <span className="text-sm text-[#14F195]/60">SOL</span></p>
+              <p className="text-[8px] font-black uppercase tracking-widest text-red-500/40 mt-1">COULD HAVE EXTRACTED</p>
+            </div>
+          )}
         </div>
       )}
+
+      {/* JACKPOT FLASH */}
+      {jackpotFlash && (
+        <div className="absolute inset-0 z-[95] pointer-events-none bg-yellow-400/12 animate-pulse" />
+      )}
+
+      {/* FIREWALL SAVE */}
+      {firewallSave && (
+        <div className="absolute inset-0 z-[95] flex items-center justify-center pointer-events-none">
+          <div className="firewall-pop flex flex-col items-center gap-1">
+            <span className="text-5xl font-black text-[#14F195] italic uppercase tracking-tighter" style={{ textShadow: '0 0 40px #14F195' }}>FIREWALL</span>
+            <span className="text-sm font-black text-[#00FBFF] uppercase tracking-[0.4em]">PROTOCOL SAVED</span>
+          </div>
+        </div>
+      )}
+
+      {/* GOLDEN WINDOW BANNER */}
+      {goldenWindow && !isEnding && (
+        <div className="absolute top-0 left-0 right-0 z-[60] flex justify-center pt-1 pointer-events-none">
+          <div className="golden-glow flex items-center gap-3 px-4 py-2 bg-yellow-950/80 border border-yellow-500/80">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500">GOLDEN_WINDOW</span>
+            <span className="mono text-2xl font-black text-yellow-400">{goldenCountdown}s</span>
+            <span className="text-[9px] font-black text-yellow-600 uppercase">+5%_BONUS</span>
+          </div>
+        </div>
+      )}
+
+      {/* COMBO POPUPS */}
+      <div className="absolute inset-0 pointer-events-none z-[67]">
+        {comboPopups.map(p => (
+          <div
+            key={p.id}
+            className="combo-pop"
+            style={{
+              left: '50%', top: '35%', transform: 'translateX(-50%)',
+              color: p.color, fontSize: '32px',
+              textShadow: `0 0 20px ${p.color}, 0 0 40px ${p.color}`,
+              letterSpacing: '0.08em',
+            }}
+          >
+            {p.text}
+          </div>
+        ))}
+      </div>
 
       {/* MAIN LAYOUT */}
       <div className={`flex flex-col h-full w-full max-w-lg mx-auto z-10 p-4 transition-opacity duration-300 ${isEnding ? 'opacity-0 scale-95' : 'opacity-100'}`}>
 
         {/* ── TOP HUD ── */}
         <div className="shrink-0 flex justify-between items-center gap-2 mb-2">
-          <div className="flex-1 bg-black/80 p-2 border border-white/10 tech-border">
-            <p className="text-[9px] text-white/40 font-black uppercase tracking-widest leading-none mb-1">EXTRACT_VAL</p>
+          <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : earlyExitWarn ? 'border-orange-500/40' : 'border-white/10'}`}>
+            <p className={`text-[9px] font-black uppercase tracking-widest leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : earlyExitWarn ? 'text-orange-500/60' : 'text-white/40'}`}>
+              {goldenWindow ? 'GOLDEN_EXTRACT' : earlyExitWarn ? 'EARLY_EXIT_-50%' : 'EXTRACT_VAL'}
+            </p>
             <div className="flex items-baseline gap-2">
-              <span className={`mono text-xl font-black italic ${risk > 85 ? 'text-red-500' : 'text-white'}`}>{currentYield}</span>
-              <span className="text-[10px] text-[#14F195] font-black italic">SOL</span>
+              <span className={`mono text-xl font-black italic ${goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-red-500' : 'text-white'}`}>{currentYield}</span>
+              <span className={`text-[10px] font-black italic ${goldenWindow ? 'text-yellow-500' : 'text-[#14F195]'}`}>SOL</span>
             </div>
           </div>
           <div className={`relative w-28 px-2 py-2 bg-black/80 border tech-border flex flex-col items-center ${timerGlowClass}`}>
@@ -673,6 +974,17 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             </div>
           </div>
 
+          {/* AMBUSH OVERLAY on arena */}
+          {ambushed && !isEnding && (
+            <div className="absolute inset-0 z-[55] flex items-center justify-center" style={{ animation: 'ambush-in 0.2s ease-out' }}>
+              <div className="absolute inset-0 bg-red-950/70 backdrop-blur-[2px]" />
+              <div className="relative flex flex-col items-center gap-1">
+                <span className="text-4xl font-black text-red-500 italic uppercase tracking-tight animate-pulse" style={{ textShadow: '0 0 30px #ef4444' }}>AMBUSH!</span>
+                <span className="text-xs font-black text-red-400/70 uppercase tracking-[0.4em]">CONTROLS_LOCKED</span>
+              </div>
+            </div>
+          )}
+
           {/* Grace period countdown */}
           {graceActive && !isEnding && (
             <div className="absolute inset-0 z-[50] flex items-center justify-center pointer-events-none">
@@ -691,15 +1003,27 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
         {/* ── BOTTOM CONTROLS ── */}
         <div className="shrink-0 mt-2 space-y-2 pb-16 md:pb-4">
-          <div className="bg-black/60 backdrop-blur-sm p-2 rounded border border-white/5 flex justify-between items-end">
+          {/* Multiplier + Score row */}
+          <div className="bg-black/60 backdrop-blur-sm p-2 rounded border border-white/5 flex justify-between items-center">
             <div>
               <p className="text-[8px] text-white/30 font-black uppercase tracking-widest mb-0.5">MULT</p>
               <div className="flex items-center gap-2">
-                <p className={`mono text-2xl font-black italic ${multiplier > 3 ? 'text-[#9945FF] chromatic-aberration' : 'text-white'}`}>{multiplier.toFixed(2)}x</p>
+                <p className={`mono text-2xl font-black italic ${
+                  hotStreak ? 'hot-streak-text text-orange-400' :
+                  multiplier > 3 ? 'text-[#9945FF] chromatic-aberration' : 'text-white'
+                }`}>{multiplier.toFixed(2)}x</p>
+                {hotStreak && <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest animate-pulse">HOT</span>}
                 {activeBoosts.includes('score_mult') && (
                   <span className="px-1 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-[8px] font-black text-yellow-500 uppercase">BOOST</span>
                 )}
               </div>
+            </div>
+            <div className="text-center">
+              {attackCount >= 4 && (
+                <div className="px-2 py-0.5 bg-red-950/80 border border-red-500/40 mb-1">
+                  <span className="text-[8px] font-black text-red-400 uppercase tracking-widest">AGGRESSION {attackCount}/5</span>
+                </div>
+              )}
             </div>
             <div className="text-right">
               <p className="text-[8px] text-white/30 font-black uppercase tracking-widest mb-0.5">SCORE</p>
@@ -708,34 +1032,74 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={handleAttack} disabled={!!isEnding || graceActive}
-              className="col-span-1 bg-black/90 border border-red-600/50 p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group">
+            {/* ATTACK button */}
+            <button onClick={handleAttack} disabled={!!isEnding || graceActive || ambushed}
+              className={`col-span-1 bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
+                ambushed ? 'border-red-900/30 opacity-30' : 'border-red-600/50'
+              }`}>
               <div className="flex flex-col items-center group-active:scale-95 transition-transform">
                 <span className="text-base font-black uppercase italic tracking-tighter text-red-500">ATTACK</span>
-                <span className="text-[8px] font-bold text-red-500/40 uppercase tracking-widest">RISK ++</span>
-              </div>
-            </button>
-            <button onClick={handleDefend} disabled={!!isEnding || graceActive}
-              className="col-span-1 bg-black/90 border border-[#00FBFF]/50 p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group">
-              <div className="flex flex-col items-center group-active:scale-95 transition-transform">
-                <span className="text-base font-black uppercase italic tracking-tighter text-[#00FBFF]">DEFEND</span>
-                <span className="text-[8px] font-bold text-[#00FBFF]/40 uppercase tracking-widest">
-                  {consecutiveDefends > 1 ? (consecutiveDefends > 2 ? 'OVERHEAT!' : 'STABLE') : 'RISK --'}
+                <span className="text-[8px] font-bold text-red-500/40 uppercase tracking-widest">
+                  {attackCount >= 4 ? `RAGE_${attackCount}/5` : 'RISK ++'}
                 </span>
               </div>
             </button>
-            <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive}
-              className={`col-span-2 p-4 tech-border transition-all duration-300 disabled:opacity-80 ${
-                !hasInteracted || graceActive
+
+            {/* DEFEND button */}
+            <button onClick={handleDefend} disabled={!!isEnding || graceActive || defendLocked || ambushed}
+              className={`col-span-1 bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
+                ambushed ? 'border-cyan-900/30 opacity-30' :
+                defendLocked ? 'border-orange-500/60 bg-orange-950/20' : 'border-[#00FBFF]/50'
+              }`}>
+              <div className="flex flex-col items-center group-active:scale-95 transition-transform">
+                <span className={`text-base font-black uppercase italic tracking-tighter ${
+                  defendLocked ? 'text-orange-400 animate-pulse' : 'text-[#00FBFF]'
+                }`}>
+                  {defendLocked ? `COOLDOWN_${defendLockTimer}` : 'DEFEND'}
+                </span>
+                <span className={`text-[8px] font-bold uppercase tracking-widest ${
+                  defendLocked ? 'text-orange-500/60' : 'text-[#00FBFF]/40'
+                }`}>
+                  {defendLocked ? 'SHIELD OVERLOAD' : consecutiveDefends >= 1 ? 'CHAIN RISK' : 'RISK --'}
+                </span>
+              </div>
+            </button>
+
+            {/* CASHOUT button */}
+            <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed}
+              className={`col-span-2 p-4 tech-border transition-all duration-300 relative overflow-hidden disabled:opacity-80 ${
+                ambushed
+                  ? 'bg-red-950/40 text-red-500/40 border-red-900/20 cursor-not-allowed'
+                  : !hasInteracted || graceActive
                   ? 'bg-[#1a1a1a] text-white/20 border-white/5 cursor-not-allowed grayscale'
+                  : goldenWindow
+                  ? 'bg-yellow-500 text-black active:translate-y-1 golden-glow'
+                  : earlyExitWarn
+                  ? 'bg-orange-900/80 text-orange-300 border border-orange-600 active:translate-y-1 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
                   : `bg-[#14F195] text-black active:translate-y-1 ${multiplier > 3 ? 'shadow-[0_0_35px_rgba(20,241,149,0.6)]' : multiplier > 2 ? 'shadow-[0_0_22px_rgba(20,241,149,0.4)]' : 'shadow-[0_0_12px_rgba(20,241,149,0.2)]'}`
               }`}>
               <div className="flex flex-col items-center">
                 <span className="text-2xl font-black uppercase italic tracking-tighter leading-none">
-                  {graceActive ? 'GET_READY...' : !hasInteracted ? 'ENGAGE_TO_UNLOCK' : 'EXIT & CASH OUT'}
+                  {ambushed
+                    ? 'AMBUSH! LOCKED'
+                    : graceActive ? 'GET_READY...'
+                    : !hasInteracted ? 'ENGAGE_TO_UNLOCK'
+                    : goldenWindow ? `GOLDEN EXIT +5%`
+                    : earlyExitWarn ? 'EARLY EXIT -50%'
+                    : 'EXIT & CASH OUT'}
                 </span>
-                <span className="text-[9px] font-black uppercase mt-0.5 tracking-[0.2em] opacity-60 italic">
-                  {graceActive ? 'PROTOCOL_ARMING' : !hasInteracted ? 'PROTOCOL_IDLE' : 'SECURE_PROFITS'}
+                {hasInteracted && !graceActive && !ambushed && (
+                  <span className={`mono text-sm font-black mt-1 ${goldenWindow ? 'text-black/70' : earlyExitWarn ? 'text-orange-400' : 'text-black/70'}`}>
+                    {currentYield} SOL
+                  </span>
+                )}
+                <span className={`text-[9px] font-black uppercase mt-0.5 tracking-[0.2em] italic ${goldenWindow || earlyExitWarn ? 'opacity-80' : 'opacity-60'}`}>
+                  {ambushed ? 'WAIT_FOR_CLEAR'
+                    : graceActive ? 'PROTOCOL_ARMING'
+                    : !hasInteracted ? 'PROTOCOL_IDLE'
+                    : goldenWindow ? `${goldenCountdown}s REMAINING`
+                    : earlyExitWarn ? `${8 - elapsedSec}s TO_FULL_VALUE`
+                    : 'SECURE_PROFITS'}
                 </span>
               </div>
             </button>

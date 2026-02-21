@@ -88,6 +88,10 @@ const AppInner: React.FC = () => {
       raidTickets: 0,
       lastFreeTicketDate: null,
       ticketBoostActive: false,
+      raidStreak: 0,
+      bustTimestamps: [],
+      lastFreeRaidDate: null,
+      activeStreakBonus: 0,
     };
   });
 
@@ -621,6 +625,11 @@ const AppInner: React.FC = () => {
       walletBalance: success ? prev.walletBalance : prev.walletBalance - prev.activeRaidFee,
       unclaimedBalance: success ? prev.unclaimedBalance + solAmount : prev.unclaimedBalance,
       srPoints: prev.srPoints + localSREarned,
+      // Streak & tilt tracking
+      raidStreak: success ? prev.raidStreak + 1 : 0,
+      bustTimestamps: success
+        ? prev.bustTimestamps
+        : [...prev.bustTimestamps.filter(t => t > Date.now() - 10 * 60 * 1000), Date.now()],
       lastResult: {
         success,
         solAmount,
@@ -1271,15 +1280,35 @@ const AppInner: React.FC = () => {
       return;
     }
 
+    // ── Rage-quit cooldown: 3 busts in 10 minutes → 30s wait ────────────
+    const now = Date.now();
+    const tenMinAgo = now - 10 * 60 * 1000;
+    const recentBusts = gameState.bustTimestamps.filter(t => t > tenMinAgo);
+    if (recentBusts.length >= 3) {
+      const oldestRecent = Math.min(...recentBusts);
+      const cooldownEndsAt = oldestRecent + 10 * 60 * 1000;
+      const waitSec = Math.ceil((cooldownEndsAt - now) / 1000);
+      alert(`TILT_PROTECTION — You've busted 3 times in 10 minutes. Cooldown: ${waitSec}s. Breathe, raider.`);
+      return;
+    }
+
+    // ── Daily free raid at EASY (first of each calendar day) ─────────────
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const freeRaidToday = gameState.lastFreeRaidDate === todayStr;
+
     const applyTicket = useTicket && gameState.raidTickets > 0;
     const entryFeeBase = ENTRY_FEES[mode]; // always in SOL units
-    const entryFee = applyTicket ? entryFeeBase * 0.5 : entryFeeBase;
+    // Daily free raid: EASY mode, first raid of the day is free
+    const isFreeRaid = !freeRaidToday && difficulty === Difficulty.EASY && mode === Mode.SOLO;
+    const entryFee = isFreeRaid ? 0 : applyTicket ? entryFeeBase * 0.5 : entryFeeBase;
     let boostCost = 0;
     boosts.forEach(bId => {
       const boost = RAID_BOOSTS.find(b => b.id === bId);
       if (boost) boostCost += boost.cost;
     });
     const totalCostSol = entryFee + boostCost; // SOL equivalent
+    // Streak bonus: 3+ consecutive wins → +0.15x starting multiplier (applied via boosts passthrough)
+    const streakBonus = gameState.raidStreak >= 3 ? 0.15 : 0;
 
     // Convert to chosen currency for balance check
     const rate = CURRENCY_RATES[currency]; // SKR/USDC per SOL
@@ -1348,6 +1377,10 @@ const AppInner: React.FC = () => {
       // Ticket
       raidTickets: applyTicket ? prev.raidTickets - 1 : prev.raidTickets,
       ticketBoostActive: applyTicket,
+      // Daily free raid tracking
+      lastFreeRaidDate: isFreeRaid ? todayStr : prev.lastFreeRaidDate,
+      // Streak bonus stored (used by RaidScreen via activeRaidBoosts or multiplier — pass via dedicated state)
+      activeStreakBonus: streakBonus,
     }));
 
     if (mode === Mode.TEAM) navigateTo(Screen.TEAM);
@@ -1404,6 +1437,7 @@ const AppInner: React.FC = () => {
             activeBoosts={gameState.activeRaidBoosts}
             equippedAvatarId={gameState.equippedAvatarId}
             ticketBoost={gameState.ticketBoostActive}
+            streakBonus={gameState.activeStreakBonus}
           />
         );
       case Screen.TEAM:
