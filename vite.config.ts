@@ -51,6 +51,9 @@ export default defineConfig(({ mode }) => {
           workbox: {
             skipWaiting: true,
             clientsClaim: true,
+            // Exclude static legal pages from the SPA navigation fallback
+            // so the SW doesn't serve index.html when users visit /privacy.html etc.
+            navigateFallbackDenylist: [/^\/privacy\.html$/, /^\/terms\.html$/],
             globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
             // Don't precache GLB models (too large, cache at runtime)
             globIgnores: ['**/*.glb'],

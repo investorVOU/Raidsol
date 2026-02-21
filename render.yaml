@@ -19,8 +19,16 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
 
-    # SPA routing — all paths → index.html
+    # Routing: static legal pages served directly, everything else → SPA
     routes:
+      # Static legal pages — must appear BEFORE /* or Render rewrites them to index.html
+      - type: rewrite
+        source: /privacy.html
+        destination: /privacy.html
+      - type: rewrite
+        source: /terms.html
+        destination: /terms.html
+      # SPA catch-all — all other paths → index.html
       - type: rewrite
         source: /*
         destination: /index.html
