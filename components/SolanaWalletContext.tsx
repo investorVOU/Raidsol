@@ -15,11 +15,20 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import {
     SolanaMobileWalletAdapter,
     createDefaultAddressSelector,
-    createDefaultAuthorizationResultCache,
     createDefaultWalletNotFoundHandler,
 } from '@solana-mobile/wallet-adapter-mobile';
 
 import '@solana/wallet-adapter-react-ui/styles.css';
+
+// Clear stale MWA auth cache from devnet — runs once on module load before any React renders.
+// The default cache key used by @solana-mobile/wallet-standard-mobile.
+try {
+    const MWA_CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
+    const raw = localStorage.getItem(MWA_CACHE_KEY);
+    if (raw && (raw.includes('devnet') || raw.includes('testnet'))) {
+        localStorage.removeItem(MWA_CACHE_KEY);
+    }
+} catch { /* localStorage unavailable — SSR or sandboxed */ }
 
 export const SolanaWalletContext: FC<{ children: ReactNode }> = ({ children }) => {
     // Read RPC from env — set VITE_SOLANA_RPC_URL in .env for a private endpoint
@@ -48,7 +57,11 @@ export const SolanaWalletContext: FC<{ children: ReactNode }> = ({ children }) =
                     uri: 'https://solraid.app',
                     icon: 'https://solraid.app/icon-192.png',
                 },
-                authorizationResultCache: createDefaultAuthorizationResultCache(),
+                authorizationResultCache: {
+                    get: async () => null,   // always request fresh auth — no stale-state issues
+                    set: async () => {},
+                    clear: async () => {},
+                },
                 cluster: network,
                 onWalletNotFound: createDefaultWalletNotFoundHandler(),
             }),
