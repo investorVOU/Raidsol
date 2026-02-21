@@ -48,6 +48,51 @@ export const CURRENCY_RATES: Record<Currency, number> = {
   [Currency.SKR]: 1000 // 1 SOL = 1000 SKR
 };
 
+// ── Raid Pass (ticket system) ─────────────────────────────────────────────────
+export interface RaidPass {
+  id: string;
+  name: string;
+  tickets: number;
+  skrPrice: number;  // SKR (Seeker-native, featured)
+  solPrice: number;
+  usdcPrice: number;
+  description: string;
+  badge: string;
+}
+
+export const RAID_PASSES: RaidPass[] = [
+  {
+    id: 'pass_basic',
+    name: 'BASIC PASS',
+    tickets: 10,
+    skrPrice: 70,
+    solPrice: 0.07,
+    usdcPrice: 10,
+    description: '10 discounted entries. 50% off entry fee per ticket.',
+    badge: '🟨',
+  },
+  {
+    id: 'pass_core',
+    name: 'CORE PASS',
+    tickets: 25,
+    skrPrice: 133,
+    solPrice: 0.133,
+    usdcPrice: 20,
+    description: '25 discounted entries + 10% win boost per ticket.',
+    badge: '🟦',
+  },
+  {
+    id: 'pass_pro',
+    name: 'PRO PASS',
+    tickets: 60,
+    skrPrice: 200,
+    solPrice: 0.20,
+    usdcPrice: 30,
+    description: '60 entries. Max discount + max win boost. Degen tier.',
+    badge: '🟥',
+  },
+];
+
 export const ENTRY_FEES: Record<Mode, number> = {
   [Mode.SOLO]: 0.026,
   [Mode.TEAM]: 0.1,
@@ -261,4 +306,8 @@ export interface GameState {
     boosts: string[];
     currency: Currency;
   };
+  // RaidCore Pass ticket system
+  raidTickets: number;
+  lastFreeTicketDate: string | null;  // ISO date string "YYYY-MM-DD"
+  ticketBoostActive: boolean;          // true when current raid was entered with a ticket
 }

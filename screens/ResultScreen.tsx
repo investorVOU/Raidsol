@@ -132,7 +132,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, onPlayAga
              
              {/* SHARE BUTTON */}
              <button 
-               onClick={handleShare}
+               onClick={handleShareToX}
                className="w-full bg-black border-2 border-white/20 text-white py-4 sm:py-5 tech-border font-black uppercase tracking-tight text-lg sm:text-xl active:scale-95 transition-all italic hover:bg-white hover:text-black hover:border-white group flex items-center justify-center gap-3"
              >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">

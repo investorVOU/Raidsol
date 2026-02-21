@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { GEAR_ITEMS, AVATAR_ITEMS, Currency, CURRENCY_RATES } from '../types';
+import { GEAR_ITEMS, AVATAR_ITEMS, RAID_PASSES, Currency, CURRENCY_RATES } from '../types';
 
 interface StoreScreenProps {
   walletBalance: number;
@@ -9,6 +9,8 @@ interface StoreScreenProps {
   ownedItemIds: string[];
   onPurchase: (itemId: string, price: number, currency: Currency) => boolean | Promise<boolean>;
   currentLevel: number;
+  raidTickets?: number;
+  onBuyPass?: (passId: string, price: number, currency: Currency) => boolean | Promise<boolean>;
 }
 
 interface PurchasePopup {
@@ -18,9 +20,9 @@ interface PurchasePopup {
   y: number;
 }
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel }) => {
-  const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR'>('GEAR');
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(Currency.SOL);
+const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass }) => {
+  const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS'>('GEAR');
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(Currency.SKR);
   const [popups, setPopups] = useState<PurchasePopup[]>([]);
 
   const filteredItems = activeTab === 'GEAR' ? GEAR_ITEMS : AVATAR_ITEMS;
@@ -42,6 +44,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
       setTimeout(() => {
         setPopups(prev => prev.filter(p => p.id !== id));
       }, 1000);
+    }
+  };
+
+  const handleBuyPass = async (passId: string, passSkrPrice: number, passSolPrice: number, passUsdcPrice: number) => {
+    if (!onBuyPass) return;
+    const price = selectedCurrency === Currency.SKR ? passSkrPrice
+                : selectedCurrency === Currency.SOL ? passSolPrice
+                : passUsdcPrice;
+    const success = await onBuyPass(passId, price, selectedCurrency);
+    if (success) {
+      const id = Date.now();
+      setPopups(prev => [...prev, { id, val: 0, x: 0, y: 0 }]);
+      setTimeout(() => setPopups(prev => prev.filter(p => p.id !== id)), 1200);
     }
   };
 
@@ -78,7 +93,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
   const currencyColor = selectedCurrency === Currency.SOL ? 'text-[#14F195]' : selectedCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400';
 
   return (
-    <div className="h-full flex flex-col p-6 lg:p-12 animate-in slide-in-from-bottom-4 duration-300 overflow-y-auto scrollbar-hide pb-24 relative">
+    <div className="h-full flex flex-col p-3 sm:p-6 lg:p-12 animate-in slide-in-from-bottom-4 duration-300 overflow-y-auto scrollbar-hide pb-24 relative">
       
       {/* Popups Overlay */}
       <div className="fixed inset-0 pointer-events-none z-[100] flex items-center justify-center">
@@ -100,53 +115,150 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
       </div>
 
       <div className="w-full max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-10 gap-3 sm:gap-6">
           <div>
-            <h2 className="text-5xl lg:text-7xl font-black italic uppercase tracking-tighter text-white leading-none">
+            <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black italic uppercase tracking-tighter text-white leading-none">
               BLACK_<span className="text-gradient-solana">MARKET</span>
             </h2>
-            <p className="text-xs font-black text-white/20 uppercase tracking-[0.4em] mt-3">UNOFFICIAL_EQUIPMENT_DEPOT</p>
+            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mt-1 sm:mt-3">UNOFFICIAL_EQUIPMENT_DEPOT</p>
           </div>
-          
-          <div className="flex flex-col items-end gap-3 w-full md:w-auto">
-             <div className="bg-black/60 p-6 border border-white/10 tech-border w-full md:w-72">
-                <p className="text-[10px] text-white/20 font-black uppercase mb-1 italic">AVAILABLE_CREDITS</p>
-                <div className="flex items-baseline justify-between">
-                  <p className="mono text-3xl font-black text-white">{selectedCurrency === Currency.SOL ? currentBalance.toFixed(3) : Math.floor(currentBalance).toLocaleString()}</p>
-                  <span className={`text-sm font-black italic ${currencyColor}`}>{selectedCurrency}</span>
+
+          <div className="flex flex-col gap-2 w-full sm:w-72">
+            <div className="bg-black/60 px-3 py-2 sm:p-6 border border-white/10 tech-border w-full">
+              <p className="text-[9px] text-white/20 font-black uppercase mb-0.5 italic">CREDITS</p>
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="mono text-lg sm:text-3xl font-black text-white">{selectedCurrency === Currency.SOL ? currentBalance.toFixed(3) : Math.floor(currentBalance).toLocaleString()}</p>
+                <span className={`text-xs font-black italic ${currencyColor}`}>{selectedCurrency}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 w-full">
+              <p className="col-span-3 text-[9px] font-black text-white/20 uppercase tracking-widest mb-0.5">BUY WITH</p>
+              {[Currency.SOL, Currency.USDC, Currency.SKR].map(curr => (
+                <button
+                  key={curr}
+                  onClick={() => setSelectedCurrency(curr)}
+                  className={`py-2 text-[10px] font-black uppercase tracking-wider border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-black border-white/5 text-white/20 hover:text-white'}`}
+                >
+                  {curr}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-1.5 mb-6 sm:mb-10">
+          <button
+            onClick={() => setActiveTab('GEAR')}
+            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'GEAR' ? 'border-[#14F195] text-[#14F195] bg-[#14F195]/10' : 'border-white/5 text-white/10'}`}
+          >
+            <span className="hidden sm:inline">[ BATTLE_TOOLS ]</span>
+            <span className="sm:hidden">GEAR</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('AVATAR')}
+            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'AVATAR' ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10' : 'border-white/5 text-white/10'}`}
+          >
+            <span className="hidden sm:inline">[ IDENTITY_CORES ]</span>
+            <span className="sm:hidden">AVATAR</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('PASS')}
+            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all relative ${activeTab === 'PASS' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-white/5 text-white/10'}`}
+          >
+            <span className="hidden sm:inline">[ RAID_PASS ]</span>
+            <span className="sm:hidden">PASS</span>
+            {raidTickets > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-yellow-500 text-black text-[9px] font-black px-1.5 rounded-full min-w-[18px] text-center">
+                {raidTickets}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* ── PASS TAB ─────────────────────────────────────────────────── */}
+        {activeTab === 'PASS' && (
+          <div className="mb-10">
+            {/* Ticket balance banner */}
+            <div className="mb-6 p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/30 tech-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+              <div>
+                <p className="text-[9px] font-black text-yellow-500/60 uppercase tracking-widest">RAID_TICKETS_BALANCE</p>
+                <p className="text-2xl sm:text-3xl font-black text-yellow-400 mono leading-none mt-0.5">{raidTickets}<span className="text-xs sm:text-sm text-yellow-500/50 ml-1">x TICKETS</span></p>
+              </div>
+              <div className="flex gap-4 sm:block sm:text-right">
+                <div>
+                  <p className="text-[9px] font-black text-white/30 uppercase tracking-widest hidden sm:block">PERKS_PER_TICKET</p>
+                  <p className="text-[9px] text-yellow-500/70 font-black">🎟️ 50% OFF ENTRY</p>
+                  <p className="text-[9px] text-yellow-500/70 font-black">🎟️ +10% WIN BOOST</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-white/30 font-black mt-0 sm:mt-1">FREE TICKET FOR SEEKER HOLDERS</p>
                 </div>
               </div>
-              
-              <div className="flex gap-1 w-full md:w-72">
-                {[Currency.SOL, Currency.USDC, Currency.SKR].map(curr => (
-                  <button
-                    key={curr}
-                    onClick={() => setSelectedCurrency(curr)}
-                    className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider border tech-border transition-all ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-black border-white/5 text-white/20 hover:text-white'}`}
-                  >
-                    {curr}
-                  </button>
-                ))}
-              </div>
+            </div>
+
+            <div className="flex flex-col sm:grid sm:grid-cols-3 gap-3">
+              {RAID_PASSES.map(pass => {
+                const price = selectedCurrency === Currency.SKR ? pass.skrPrice
+                            : selectedCurrency === Currency.SOL ? pass.solPrice
+                            : pass.usdcPrice;
+                const displayPrice = selectedCurrency === Currency.SOL
+                  ? price.toFixed(3)
+                  : Math.ceil(price).toLocaleString();
+                const canAfford = currentBalance >= price;
+                const badgeColors = pass.id === 'pass_basic' ? 'border-yellow-500/30 bg-yellow-500/5'
+                                  : pass.id === 'pass_core' ? 'border-blue-500/30 bg-blue-500/5'
+                                  : 'border-red-500/30 bg-red-500/5';
+                const btnColors = pass.id === 'pass_basic' ? 'bg-yellow-500 text-black'
+                                : pass.id === 'pass_core' ? 'bg-blue-500 text-white'
+                                : 'bg-red-500 text-white';
+
+                return (
+                  <div key={pass.id} className={`border-2 tech-border p-3 sm:p-5 ${badgeColors}`}>
+                    {/* Mobile: single row layout — Desktop: stacked */}
+                    <div className="flex sm:flex-col gap-3 sm:gap-0">
+                      {/* Left / top: identity */}
+                      <div className="flex items-center gap-2 sm:justify-between sm:mb-2 shrink-0">
+                        <span className="text-lg">{pass.badge}</span>
+                        <div>
+                          <p className="text-xs font-black uppercase text-white leading-none">{pass.name}</p>
+                          <p className="text-[9px] font-black text-white/30 uppercase"><span className="text-white font-black">{pass.tickets}</span> TICKETS</p>
+                        </div>
+                      </div>
+
+                      {/* Right / bottom: perks + price + button */}
+                      <div className="flex-1 flex flex-col sm:mt-2 gap-2 min-w-0">
+                        <div className="flex gap-1.5 flex-wrap">
+                          <span className="text-[8px] font-black text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">50% OFF</span>
+                          <span className="text-[8px] font-black text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">+10% WIN</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                          <p className="text-sm font-black text-white mono leading-none shrink-0">
+                            {displayPrice} <span className={`text-[9px] ${currencyColor}`}>{selectedCurrency}</span>
+                          </p>
+                          <button
+                            onClick={() => handleBuyPass(pass.id, pass.skrPrice, pass.solPrice, pass.usdcPrice)}
+                            disabled={!canAfford || !onBuyPass}
+                            className={`shrink-0 px-3 py-2 font-black uppercase tracking-tighter text-[9px] tech-border transition-all ${
+                              !canAfford || !onBuyPass
+                                ? 'bg-white/5 text-white/10 border-white/5 cursor-not-allowed'
+                                : `${btnColors} hover:opacity-90 active:translate-y-0.5`
+                            }`}
+                          >
+                            GET PASS
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex gap-2 mb-10">
-          <button 
-            onClick={() => setActiveTab('GEAR')}
-            className={`flex-1 py-5 lg:py-6 border-2 tech-border font-black uppercase tracking-[0.3em] text-xs transition-all ${activeTab === 'GEAR' ? 'border-[#14F195] text-[#14F195] bg-[#14F195]/10' : 'border-white/5 text-white/10'}`}
-          >
-            [ BATTLE_TOOLS ]
-          </button>
-          <button 
-            onClick={() => setActiveTab('AVATAR')}
-            className={`flex-1 py-5 lg:py-6 border-2 tech-border font-black uppercase tracking-[0.3em] text-xs transition-all ${activeTab === 'AVATAR' ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10' : 'border-white/5 text-white/10'}`}
-          >
-            [ IDENTITY_CORES ]
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* ── GEAR / AVATAR GRIDS ──────────────────────────────────────── */}
+        {activeTab !== 'PASS' && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map(item => {
             const isOwned = ownedItemIds.includes(item.id);
             const levelLocked = currentLevel < (item.minLevel || 0);
@@ -264,7 +376,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
               </div>
             );
           })}
-        </div>
+        </div>}
 
         <div className="mt-16 p-8 bg-white/2 border-2 border-dashed border-white/5 tech-border text-center">
           <p className="text-xs font-black text-white/20 uppercase tracking-[0.5em] italic">__END_OF_CATALOGUE__</p>

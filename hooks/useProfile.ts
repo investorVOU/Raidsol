@@ -12,6 +12,8 @@ export interface Profile {
   referral_code: string | null;
   referred_by: string | null;
   referral_sr_earned: number;
+  raid_tickets: number;
+  last_free_ticket_date: string | null;  // "YYYY-MM-DD"
 }
 
 type ProfileUpdate = Partial<Omit<Profile, 'wallet_address'>>;

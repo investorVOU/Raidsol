@@ -13,6 +13,7 @@ interface RaidScreenProps {
   difficulty: Difficulty;
   activeBoosts: string[];
   equippedAvatarId?: string;
+  ticketBoost?: boolean;  // +10% win reward when true
 }
 
 interface Spark {
@@ -224,7 +225,7 @@ useGLTF.preload(MODEL_URL);
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const RaidScreen: React.FC<RaidScreenProps> = ({
-  onFinish, equippedGearIds, entryFee, difficulty, activeBoosts, equippedAvatarId,
+  onFinish, equippedGearIds, entryFee, difficulty, activeBoosts, equippedAvatarId, ticketBoost = false,
 }) => {
   const sounds = useGameSounds();
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -433,7 +434,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setIsEnding('WIN');
     setUserAction('Dance');
     setEnemyAction('Death');
-    const solReward = (points / 2500) * 6 * entryFee;
+    const solReward = (points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0);
     sounds.playCashOut();
     sounds.hapticExtract();
     spawnSparks('#14F195', '#00FBFF', 20);
@@ -512,7 +513,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setTimeout(() => { if (!stateRef.current.isEnding) setUserAction('Idle'); }, 800);
   };
 
-  const currentYield   = ((points / 2500) * 6 * entryFee).toFixed(4);
+  const currentYield   = ((points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0)).toFixed(4);
   const isUrgent       = timeLeft < 10;
   const isCritical     = timeLeft < 5;
 

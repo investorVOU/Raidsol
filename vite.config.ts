@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
           includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
           manifest: {
             name: 'Solana Raid',
-            short_name: 'SR_PROTOCOL',
+            short_name: 'SolRaid',
             description: 'Degen on-chain raiding game — extract or get busted.',
             theme_color: '#020202',
             background_color: '#020202',

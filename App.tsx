@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
-import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, Room, Opponent } from './types';
+import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent } from './types';
 const LobbyScreen = lazy(() => import('./screens/LobbyScreen'));
 const RaidScreen = lazy(() => import('./screens/RaidScreen'));
 const TeamScreen = lazy(() => import('./screens/TeamScreen'));
@@ -85,6 +85,9 @@ const AppInner: React.FC = () => {
       activeRaidFee: ENTRY_FEES[Mode.SOLO],
       activeRaidDifficulty: Difficulty.MEDIUM,
       activeRaidBoosts: [],
+      raidTickets: 0,
+      lastFreeTicketDate: null,
+      ticketBoostActive: false,
     };
   });
 
@@ -199,15 +202,18 @@ const AppInner: React.FC = () => {
   // Hydrate gameState from Supabase profile when it loads
   useEffect(() => {
     if (!profile) return;
+
     setGameState(prev => ({
       ...prev,
-      srPoints:         profile.sr_points,
+      srPoints:           profile.sr_points,
       // skrBalance is the on-chain Seeker token balance — fetched separately, not from profile
-      unclaimedBalance: profile.unclaimed_sol,
-      username:         profile.username,
-      ownedItemIds:     profile.owned_item_ids,
-      equippedAvatarId: profile.equipped_avatar_id ?? AVATAR_ITEMS[0].id,
-      equippedGearIds:  profile.equipped_gear_ids,
+      unclaimedBalance:   profile.unclaimed_sol,
+      username:           profile.username,
+      ownedItemIds:       profile.owned_item_ids,
+      equippedAvatarId:   profile.equipped_avatar_id ?? AVATAR_ITEMS[0].id,
+      equippedGearIds:    profile.equipped_gear_ids,
+      raidTickets:        profile.raid_tickets ?? 0,
+      lastFreeTicketDate: profile.last_free_ticket_date ?? null,
     }));
     // Silently sync lastLevel to the profile's actual rank so we don't fire
     // a level-up modal just because srPoints jumped from 0 → real value on hydration.
@@ -217,6 +223,20 @@ const AppInner: React.FC = () => {
     );
     setLastLevel(hydratedRank.level);
   }, [profile]);
+
+  // One-time free ticket for first-time Seeker users (SKR balance > 0, never had tickets before)
+  useEffect(() => {
+    if (seekerTicketGrantedRef.current) return;
+    if (!profile || !walletAddr) return;
+    if (gameState.skrBalance <= 0) return;                            // not a Seeker holder
+    if ((profile.raid_tickets ?? 0) > 0) return;                     // already has tickets
+    if (profile.last_free_ticket_date !== null) return;               // already received free ticket
+
+    seekerTicketGrantedRef.current = true;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    updateProfile({ raid_tickets: 1, last_free_ticket_date: todayStr });
+    setGameState(prev => ({ ...prev, raidTickets: 1, lastFreeTicketDate: todayStr }));
+  }, [profile, gameState.skrBalance, walletAddr]);
 
   // Force back to lobby if wallet disconnects while on a protected screen
   // SQUAD and RANKS are viewable without a wallet; action buttons inside guard themselves via requireWallet()
@@ -240,6 +260,7 @@ const AppInner: React.FC = () => {
 
   // Stable ref for walletAddr so async callbacks don't close over a stale value
   const walletAddrRef = useRef<string | null>(null);
+  const seekerTicketGrantedRef = useRef(false); // one-time free ticket for Seeker users
   useEffect(() => { walletAddrRef.current = walletAddr; }, [walletAddr]);
 
   // ── Deep-link shortcuts: ?screen=raid|ranks|profile ─────────────────
@@ -595,6 +616,7 @@ const AppInner: React.FC = () => {
     releaseWakeLock();
     setGameState(prev => ({
       ...prev,
+      ticketBoostActive: false,
       currentScreen: Screen.RESULT,
       walletBalance: success ? prev.walletBalance : prev.walletBalance - prev.activeRaidFee,
       unclaimedBalance: success ? prev.unclaimedBalance + solAmount : prev.unclaimedBalance,
@@ -834,6 +856,64 @@ const AppInner: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Purchase transaction failed:', err);
+      return false;
+    }
+  };
+
+  const handleBuyPass = async (passId: string, price: number, currency: Currency): Promise<boolean> => {
+    if (!requireWallet()) return false;
+    if (!TREASURY_PUBKEY) {
+      alert('Treasury address not configured. Set VITE_TREASURY_ADDRESS in .env');
+      return false;
+    }
+
+    if (currency === Currency.SOL  && gameState.walletBalance < price) return false;
+    if (currency === Currency.USDC && gameState.usdcBalance   < price) return false;
+    if (currency === Currency.SKR  && gameState.skrBalance    < price) return false;
+
+    const pass = RAID_PASSES.find(p => p.id === passId);
+    if (!pass) return false;
+
+    try {
+      let tx: Transaction;
+      if (currency === Currency.SOL) {
+        tx = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: publicKey!,
+            toPubkey: TREASURY_PUBKEY,
+            lamports: Math.round(price * LAMPORTS_PER_SOL),
+          }),
+        );
+      } else if (currency === Currency.USDC) {
+        const sourceATA = getAssociatedTokenAddressSync(USDC_MINT, publicKey!);
+        const destATA   = getAssociatedTokenAddressSync(USDC_MINT, TREASURY_PUBKEY);
+        tx = new Transaction().add(
+          createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(Math.round(price * 1_000_000))),
+        );
+      } else {
+        const sourceATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
+        const destATA   = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
+        tx = new Transaction().add(
+          createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(Math.round(price * Math.pow(10, SKR_DECIMALS)))),
+        );
+      }
+
+      const { sig, conn: raidConn } = await sendWithFallback(tx);
+      await raidConn.confirmTransaction(sig, 'confirmed');
+
+      // Credit tickets to profile
+      const newTickets = gameState.raidTickets + pass.tickets;
+      await updateProfile({ raid_tickets: newTickets });
+      setGameState(prev => ({
+        ...prev,
+        raidTickets:   newTickets,
+        walletBalance: currency === Currency.SOL  ? prev.walletBalance - price : prev.walletBalance,
+        usdcBalance:   currency === Currency.USDC ? prev.usdcBalance   - price : prev.usdcBalance,
+        skrBalance:    currency === Currency.SKR  ? prev.skrBalance    - price : prev.skrBalance,
+      }));
+      return true;
+    } catch (err: any) {
+      console.error('Pass purchase failed:', err);
       return false;
     }
   };
@@ -1183,6 +1263,7 @@ const AppInner: React.FC = () => {
     difficulty: Difficulty = Difficulty.MEDIUM,
     boosts: string[] = [],
     currency: Currency = Currency.SOL,
+    useTicket: boolean = false,
   ) => {
     if (!requireWallet()) return;
     if (mode === Mode.PVP) {
@@ -1190,7 +1271,9 @@ const AppInner: React.FC = () => {
       return;
     }
 
-    const entryFee = ENTRY_FEES[mode]; // always in SOL units
+    const applyTicket = useTicket && gameState.raidTickets > 0;
+    const entryFeeBase = ENTRY_FEES[mode]; // always in SOL units
+    const entryFee = applyTicket ? entryFeeBase * 0.5 : entryFeeBase;
     let boostCost = 0;
     boosts.forEach(bId => {
       const boost = RAID_BOOSTS.find(b => b.id === bId);
@@ -1243,6 +1326,12 @@ const AppInner: React.FC = () => {
       }
     }
 
+    // ── Deduct ticket if used ────────────────────────────────────────────
+    if (applyTicket) {
+      const newTickets = gameState.raidTickets - 1;
+      updateProfile({ raid_tickets: newTickets });
+    }
+
     // ── Navigate immediately after payment ──────────────────────────────
     setGameState(prev => ({
       ...prev,
@@ -1256,6 +1345,9 @@ const AppInner: React.FC = () => {
       activeServerSeedHash: undefined,
       // Remember config so "Redeploy" button reuses same settings
       lastRaidConfig: { mode, difficulty, boosts, currency },
+      // Ticket
+      raidTickets: applyTicket ? prev.raidTickets - 1 : prev.raidTickets,
+      ticketBoostActive: applyTicket,
     }));
 
     if (mode === Mode.TEAM) navigateTo(Screen.TEAM);
@@ -1299,6 +1391,7 @@ const AppInner: React.FC = () => {
             onToggleGear={handleToggleGear}
             onEquipAvatar={handleEquipAvatar}
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
+            raidTickets={gameState.raidTickets}
           />
         );
       case Screen.RAID:
@@ -1310,6 +1403,7 @@ const AppInner: React.FC = () => {
             difficulty={gameState.activeRaidDifficulty}
             activeBoosts={gameState.activeRaidBoosts}
             equippedAvatarId={gameState.equippedAvatarId}
+            ticketBoost={gameState.ticketBoostActive}
           />
         );
       case Screen.TEAM:
@@ -1384,6 +1478,8 @@ const AppInner: React.FC = () => {
             ownedItemIds={gameState.ownedItemIds}
             onPurchase={handlePurchase}
             currentLevel={currentRank.level}
+            raidTickets={gameState.raidTickets}
+            onBuyPass={handleBuyPass}
           />
         );
       case Screen.TREASURY:
@@ -1428,6 +1524,7 @@ const AppInner: React.FC = () => {
             equippedAvatarId={gameState.equippedAvatarId}
             ownedItemIds={gameState.ownedItemIds}
             onToggleGear={handleToggleGear}
+            raidTickets={gameState.raidTickets}
             onEquipAvatar={handleEquipAvatar}
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
           />
