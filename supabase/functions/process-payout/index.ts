@@ -14,7 +14,12 @@ import nacl from 'https://esm.sh/tweetnacl@1.0.3';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/cors.ts';
 
-const RPC = Deno.env.get('SOLANA_RPC_URL') ?? 'https://api.mainnet-beta.solana.com';
+const RPC_URLS: string[] = [
+  Deno.env.get('SOLANA_RPC_URL'),
+  Deno.env.get('HELIUS_RPC_URL'),
+  Deno.env.get('ALCHEMY_RPC_URL'),
+].filter((u): u is string => typeof u === 'string' && u.startsWith('http'));
+if (RPC_URLS.length === 0) RPC_URLS.push('https://api.mainnet-beta.solana.com');
 
 // ── E. Treasury Protection limits ─────────────────────────────────────────
 // Max SOL per single withdrawal request
@@ -102,14 +107,23 @@ function toBase64(bytes: Uint8Array): string {
 // ── Solana JSON-RPC ────────────────────────────────────────────────────────
 
 async function rpc<T = unknown>(method: string, params: unknown[]): Promise<T> {
-  const res = await fetch(RPC, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
-  });
-  const j = await res.json();
-  if (j.error) throw new Error(`RPC ${method}: ${JSON.stringify(j.error)}`);
-  return j.result as T;
+  let lastErr: unknown;
+  for (const url of RPC_URLS) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+      });
+      const j = await res.json();
+      if (j.error) throw new Error(`RPC ${method}: ${JSON.stringify(j.error)}`);
+      return j.result as T;
+    } catch (e) {
+      console.warn(`[RPC] ${url} failed for ${method}:`, e);
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 // ── Transaction builder ────────────────────────────────────────────────────

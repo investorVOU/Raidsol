@@ -1,24 +1,36 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/cors.ts';
 
-const SOLANA_RPC_URL = Deno.env.get('SOLANA_RPC_URL') ?? 'https://api.mainnet-beta.solana.com';
+const RPC_URLS: string[] = [
+  Deno.env.get('SOLANA_RPC_URL'),
+  Deno.env.get('HELIUS_RPC_URL'),
+  Deno.env.get('ALCHEMY_RPC_URL'),
+].filter((u): u is string => typeof u === 'string' && u.startsWith('http'));
+if (RPC_URLS.length === 0) RPC_URLS.push('https://api.mainnet-beta.solana.com');
+
 const USDC_MINT = Deno.env.get('USDC_MINT_ADDRESS') ?? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 // ── B. On-chain verification constants ────────────────────────────────────
-// Reject transactions older than this many seconds (prevents tx replay from old blocks)
 const MAX_TX_AGE_SEC = 300; // 5 minutes
 
-/**
- * Helper: raw JSON-RPC call to Solana node
- */
 async function solanaRpc(method: string, params: unknown[]): Promise<unknown> {
-  const res = await fetch(SOLANA_RPC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
-  });
-  const json = await res.json();
-  return json.result;
+  let lastErr: unknown;
+  for (const url of RPC_URLS) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(`RPC ${method}: ${JSON.stringify(json.error)}`);
+      return json.result;
+    } catch (e) {
+      console.warn(`[RPC] ${url} failed for ${method}:`, e);
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 const respond = (body: object, status = 200, corsH: Record<string, string>) =>

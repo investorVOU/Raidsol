@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, Room, Opponent } from './types';
 import LobbyScreen from './screens/LobbyScreen';
 import RaidScreen from './screens/RaidScreen';
@@ -23,7 +23,8 @@ import IntroOverlay from './components/IntroOverlay';
 import { SolanaWalletContext } from './components/SolanaWalletContext';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey, Connection } from '@solana/web3.js';
+import { getRpcList, makeConnection } from './lib/rpc';
 import { getAssociatedTokenAddressSync, createTransferInstruction } from '@solana/spl-token';
 import { useProfile } from './hooks/useProfile';
 import { useDomainName } from './hooks/useDomainName';
@@ -115,6 +116,39 @@ const AppInner: React.FC = () => {
   }, [connected, signMessage]);
 
   const { connection } = useConnection();
+
+  /**
+   * Try getLatestBlockhash + sendTransaction across all RPC endpoints in order.
+   * Wallet-rejection errors are re-thrown immediately (no retry).
+   */
+  const sendWithFallback = useCallback(
+    async (tx: Transaction): Promise<{ sig: string; conn: Connection }> => {
+      const rpcs = getRpcList();
+      let lastErr: unknown;
+      for (const url of rpcs) {
+        try {
+          const conn = makeConnection(url);
+          const { blockhash } = await conn.getLatestBlockhash('confirmed');
+          tx.recentBlockhash = blockhash;
+          tx.feePayer = publicKey!;
+          const sig = await sendTransaction(tx, conn);
+          return { sig, conn };
+        } catch (err) {
+          const msg = String(err);
+          if (
+            msg.includes('User rejected') ||
+            msg.includes('WalletSign') ||
+            msg.includes('dismissed') ||
+            msg.includes('WalletNotReady')
+          ) throw err; // wallet error — don't retry
+          console.warn('[RPC] endpoint failed, trying next:', url, err);
+          lastErr = err;
+        }
+      }
+      throw lastErr;
+    },
+    [publicKey, sendTransaction],
+  );
 
   // Resolve treasury public key from env
   const TREASURY_PUBKEY = useMemo(() => {
@@ -697,12 +731,8 @@ const AppInner: React.FC = () => {
         );
       }
 
-      const { blockhash } = await connection.getLatestBlockhash('confirmed');
-      tx.recentBlockhash = blockhash;
-      tx.feePayer = publicKey!;
-
-      const signature = await sendTransaction(tx, connection);
-      await connection.confirmTransaction(signature, 'confirmed');
+      const { sig: signature, conn: rpcConn } = await sendWithFallback(tx);
+      await rpcConn.confirmTransaction(signature, 'confirmed');
 
       // Brief pause so the RPC endpoint has time to index the transaction
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -810,11 +840,9 @@ const AppInner: React.FC = () => {
         const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
         tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
       }
-      const { blockhash } = await connection.getLatestBlockhash('confirmed');
-      tx.recentBlockhash = blockhash;
-      tx.feePayer = publicKey!;
-      stakeTxSig = await sendTransaction(tx, connection);
-      await connection.confirmTransaction(stakeTxSig, 'confirmed');
+      const { sig: _stakeSig, conn: _stakeConn } = await sendWithFallback(tx);
+      stakeTxSig = _stakeSig;
+      await _stakeConn.confirmTransaction(stakeTxSig, 'confirmed');
     } catch (err: any) {
       console.error('Stake payment failed', err);
       alert('Stake payment failed: ' + (err?.message ?? String(err)));
@@ -995,11 +1023,9 @@ const AppInner: React.FC = () => {
           const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
           tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
         }
-        const { blockhash } = await connection.getLatestBlockhash('confirmed');
-        tx.recentBlockhash = blockhash;
-        tx.feePayer = publicKey!;
-        stakeTxSig = await sendTransaction(tx, connection);
-        await connection.confirmTransaction(stakeTxSig, 'confirmed');
+        const { sig: _joinSig, conn: _joinConn } = await sendWithFallback(tx);
+        stakeTxSig = _joinSig;
+        await _joinConn.confirmTransaction(stakeTxSig, 'confirmed');
       } catch (err: any) {
         console.error('Stake payment failed', err);
         alert('Stake payment failed: ' + (err?.message ?? String(err)));
@@ -1142,11 +1168,8 @@ const AppInner: React.FC = () => {
           const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
           tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
         }
-        const { blockhash } = await connection.getLatestBlockhash('confirmed');
-        tx.recentBlockhash = blockhash;
-        tx.feePayer = publicKey!;
-        const sig = await sendTransaction(tx, connection);
-        await connection.confirmTransaction(sig, 'confirmed');
+        const { sig, conn: raidConn } = await sendWithFallback(tx);
+        await raidConn.confirmTransaction(sig, 'confirmed');
       } catch (err: any) {
         console.error('Entry fee payment failed', err);
         alert('Entry fee payment failed: ' + (err?.message ?? String(err)));
