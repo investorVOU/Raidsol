@@ -49,6 +49,8 @@ export default defineConfig(({ mode }) => {
             ],
           },
           workbox: {
+            skipWaiting: true,
+            clientsClaim: true,
             globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
             // Don't precache GLB models (too large, cache at runtime)
             globIgnores: ['**/*.glb'],
