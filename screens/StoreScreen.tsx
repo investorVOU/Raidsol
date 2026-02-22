@@ -11,6 +11,7 @@ interface StoreScreenProps {
   currentLevel: number;
   raidTickets?: number;
   onBuyPass?: (passId: string, price: number, currency: Currency) => boolean | Promise<boolean>;
+  initialTab?: 'GEAR' | 'AVATAR' | 'PASS';
 }
 
 interface PurchasePopup {
@@ -20,8 +21,8 @@ interface PurchasePopup {
   y: number;
 }
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass }) => {
-  const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS'>('GEAR');
+const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, initialTab }) => {
+  const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS'>(initialTab ?? 'GEAR');
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(Currency.SKR);
   const [popups, setPopups] = useState<PurchasePopup[]>([]);
 
@@ -133,7 +134,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             </div>
 
             <div className="grid grid-cols-3 gap-1 w-full">
-              <p className="col-span-3 text-[9px] font-black text-white/20 uppercase tracking-widest mb-0.5">BUY WITH</p>
+              <p className="col-span-3 text-[9px] font-black text-white/60 uppercase tracking-widest mb-0.5">BUY WITH</p>
               {[Currency.SOL, Currency.USDC, Currency.SKR].map(curr => (
                 <button
                   key={curr}
@@ -150,21 +151,21 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         <div className="flex gap-1.5 mb-6 sm:mb-10">
           <button
             onClick={() => setActiveTab('GEAR')}
-            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'GEAR' ? 'border-[#14F195] text-[#14F195] bg-[#14F195]/10' : 'border-white/5 text-white/10'}`}
+            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'GEAR' ? 'border-[#14F195] text-[#14F195] bg-[#14F195]/10' : 'border-white/20 text-white/50'}`}
           >
             <span className="hidden sm:inline">[ BATTLE_TOOLS ]</span>
             <span className="sm:hidden">GEAR</span>
           </button>
           <button
             onClick={() => setActiveTab('AVATAR')}
-            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'AVATAR' ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10' : 'border-white/5 text-white/10'}`}
+            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'AVATAR' ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10' : 'border-white/20 text-white/50'}`}
           >
             <span className="hidden sm:inline">[ IDENTITY_CORES ]</span>
             <span className="sm:hidden">AVATAR</span>
           </button>
           <button
             onClick={() => setActiveTab('PASS')}
-            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all relative ${activeTab === 'PASS' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-white/5 text-white/10'}`}
+            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all relative ${activeTab === 'PASS' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-white/20 text-white/50'}`}
           >
             <span className="hidden sm:inline">[ RAID_PASS ]</span>
             <span className="sm:hidden">PASS</span>

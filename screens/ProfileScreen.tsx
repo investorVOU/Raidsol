@@ -24,7 +24,7 @@ interface ProfileScreenProps {
   domainName?: string | null;
   referralCode?: string | null;
   referralSREarned?: number;
-  onNavigateStore?: () => void;
+  onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -54,6 +54,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [rightTab, setRightTab] = useState<'RAIDS' | 'WITHDRAWALS'>('RAIDS');
   const [lastWithdrawTx, setLastWithdrawTx] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [showLockTip, setShowLockTip] = useState(false);
 
   // Real raid history from Supabase
   const { history: raidHistory, loading: historyLoading } = useRaidHistory(walletAddress ?? null);
@@ -268,7 +269,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             {/* Purchase prompt when no avatar equipped */}
             {!equippedAvatar && onNavigateStore && (
               <button
-                onClick={onNavigateStore}
+                onClick={() => onNavigateStore('AVATAR')}
                 className="px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 text-[9px] font-black uppercase tracking-widest hover:bg-cyan-500/20 active:scale-95 transition-all"
               >
                 BUY AVATAR →_STORE
@@ -296,22 +297,34 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                       <button onClick={() => setIsEditing(false)} className="p-2 bg-red-500 text-white rounded hover:bg-red-400"><X size={24} /></button>
                   </div>
               ) : (
-                  <div className="flex items-center gap-4 group justify-center md:justify-start">
+                  <div className="flex flex-col gap-1.5 items-center md:items-start">
+                    <div className="flex items-center gap-4 group justify-center md:justify-start">
                       <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black uppercase italic tracking-tighter text-white leading-none">
                           {username}
                       </h2>
-                      <button 
+                      <button
                           onClick={() => {
                               if (canEditName) {
                                   setEditName(username);
                                   setIsEditing(true);
+                              } else {
+                                  setShowLockTip(prev => !prev);
                               }
                           }}
-                          className={`p-2 transition-all rounded-full border border-transparent ${canEditName ? 'text-white/20 hover:text-cyan-400 hover:border-cyan-500/30 cursor-pointer hover:bg-white/5' : 'text-white/5 cursor-not-allowed'}`}
-                          title={canEditName ? "Edit Callsign" : "Reach Level 5 (RAIDER) to edit callsign"}
+                          className={`p-2 transition-all rounded-full border ${canEditName ? 'text-white/20 hover:text-cyan-400 border-transparent hover:border-cyan-500/30 cursor-pointer hover:bg-white/5' : 'text-orange-400/70 hover:text-orange-400 border-orange-500/20 hover:border-orange-500/50 cursor-pointer hover:bg-orange-500/5'}`}
+                          title={canEditName ? 'Edit Callsign' : 'Locked — click for info'}
                       >
                           {canEditName ? <Edit size={20} /> : <Lock size={20} />}
                       </button>
+                    </div>
+                    {showLockTip && !canEditName && (
+                      <div className="flex items-start gap-2 px-3 py-2 bg-orange-500/10 border border-orange-500/30 text-left max-w-xs animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Lock size={11} className="text-orange-400 shrink-0 mt-0.5" />
+                        <p className="text-[10px] font-black text-orange-300/80 uppercase tracking-wider leading-relaxed">
+                          CALLSIGN LOCKED — Reach <span className="text-orange-400">Level 5 (RAIDER)</span> to set a custom name. Keep raiding to rank up.
+                        </p>
+                      </div>
+                    )}
                   </div>
               )}
               

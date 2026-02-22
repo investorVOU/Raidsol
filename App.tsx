@@ -1425,6 +1425,7 @@ const AppInner: React.FC = () => {
             onToggleGear={handleToggleGear}
             onEquipAvatar={handleEquipAvatar}
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
+            onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             raidTickets={gameState.raidTickets}
           />
         );
@@ -1503,7 +1504,7 @@ const AppInner: React.FC = () => {
             domainName={domainName}
             referralCode={profile?.referral_code ?? null}
             referralSREarned={profile?.referral_sr_earned ?? 0}
-            onNavigateStore={() => navigateTo(Screen.STORE)}
+            onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
           />
         );
       case Screen.STORE:
@@ -1517,6 +1518,7 @@ const AppInner: React.FC = () => {
             currentLevel={currentRank.level}
             raidTickets={gameState.raidTickets}
             onBuyPass={handleBuyPass}
+            initialTab={gameState.storeInitialTab}
           />
         );
       case Screen.TREASURY:
@@ -1564,6 +1566,7 @@ const AppInner: React.FC = () => {
             raidTickets={gameState.raidTickets}
             onEquipAvatar={handleEquipAvatar}
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
+            onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
           />
         );
     }
