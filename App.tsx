@@ -852,14 +852,20 @@ const AppInner: React.FC = () => {
       });
 
       if (data?.success) {
+        const isAvatar = AVATAR_ITEMS.some(a => a.id === itemId);
         setGameState(prev => ({
           ...prev,
-          walletBalance: currency === Currency.SOL  ? prev.walletBalance - price : prev.walletBalance,
-          usdcBalance:   currency === Currency.USDC ? prev.usdcBalance - price   : prev.usdcBalance,
-          skrBalance:    currency === Currency.SKR  ? prev.skrBalance - price    : prev.skrBalance,
-          ownedItemIds:  data.owned_item_ids ?? [...prev.ownedItemIds, itemId],
-          srPoints:      data.new_sr_points  ?? prev.srPoints,
+          walletBalance:    currency === Currency.SOL  ? prev.walletBalance - price : prev.walletBalance,
+          usdcBalance:      currency === Currency.USDC ? prev.usdcBalance - price   : prev.usdcBalance,
+          skrBalance:       currency === Currency.SKR  ? prev.skrBalance - price    : prev.skrBalance,
+          ownedItemIds:     data.owned_item_ids ?? [...prev.ownedItemIds, itemId],
+          srPoints:         data.new_sr_points  ?? prev.srPoints,
+          // Auto-equip avatar on purchase
+          ...(isAvatar ? { equippedAvatarId: itemId } : {}),
         }));
+        if (isAvatar) {
+          updateProfile({ equipped_avatar_id: itemId });
+        }
         return true;
       } else {
         // Extract actual error body from FunctionsHttpError
