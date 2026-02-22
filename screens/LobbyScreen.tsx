@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Mode, ENTRY_FEES, Difficulty, DIFFICULTY_CONFIG, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, CURRENCY_RATES } from '../types';
+import type { LivePrices } from '../hooks/usePrices';
 import { useActivityFeed } from '../hooks/useActivityFeed';
 import { useTreasuryStats } from '../hooks/useTreasuryStats';
 
@@ -23,6 +24,7 @@ interface LobbyScreenProps {
   lastFreeRaidDate?: string | null;
   drillCount?: number;
   drillWindowStart?: number;
+  currencyRates?: LivePrices['currencyRates'];
 }
 
 const LobbyScreen: React.FC<LobbyScreenProps> = ({
@@ -43,7 +45,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   lastFreeRaidDate = null,
   drillCount = 0,
   drillWindowStart = 0,
+  currencyRates,
 }) => {
+  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
   const [showModeModal, setShowModeModal] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
   const [selectedBoosts, setSelectedBoosts] = useState<string[]>([]);
@@ -55,51 +59,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
 
-  // ── Daily challenge state ──────────────────────────────────────────────────
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const dailyAvailable = isConnected && lastFreeRaidDate !== todayStr;
-
   // ── Drill cap: 3 per 6 hours ──────────────────────────────────────────────
   const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
   const drillWindowExpired = (Date.now() - drillWindowStart) >= SIX_HOURS_MS;
   const drillsUsed = drillWindowExpired ? 0 : drillCount;
   const drillsRemaining = Math.max(0, 3 - drillsUsed);
   const drillCapHit = isConnected && drillsRemaining === 0;
-
-  // ── Boss raid countdown ────────────────────────────────────────────────────
-  // Boss window opens at 00, 06, 12, 18 UTC and lasts 1h
-  const getBossState = () => {
-    const now = new Date();
-    const utcHour = now.getUTCHours();
-    const utcMin  = now.getUTCMinutes();
-    const utcSec  = now.getUTCSeconds();
-    const minuteOfDay = utcHour * 60 + utcMin;
-    const bossHours = [0, 6, 12, 18];
-    // Find current boss window
-    const inWindow = bossHours.some(h => utcHour === h && utcMin < 60);
-    if (inWindow) {
-      const secLeft = 3600 - (utcMin * 60 + utcSec);
-      return { open: true, secsUntil: secLeft };
-    }
-    // Find next window
-    const nextH = bossHours.find(h => h * 60 > minuteOfDay) ?? (bossHours[0] + 24);
-    const secsUntil = (nextH * 60 - minuteOfDay) * 60 - utcSec;
-    return { open: false, secsUntil };
-  };
-  const [bossState, setBossState] = useState(getBossState);
-  useEffect(() => {
-    const t = setInterval(() => setBossState(getBossState()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const fmtCountdown = (secs: number) => {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    const s = secs % 60;
-    return h > 0
-      ? `${h}h ${String(m).padStart(2, '0')}m`
-      : `${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
-  };
 
   const { feed } = useActivityFeed();
   const { stats } = useTreasuryStats();
@@ -135,7 +100,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     return sum + (boost ? boost.cost : 0);
   }, 0);
   const totalCostSol = entryFee + boostCost;
-  const currencyRate = CURRENCY_RATES[entryCurrency];
+  const currencyRate = rates[entryCurrency];
+  const pricesLoading = entryCurrency !== Currency.SOL && currencyRate === 0;
   const totalCostDisplay = totalCostSol * currencyRate;
   const currencySymbol = entryCurrency === Currency.SOL ? 'SOL' : entryCurrency === Currency.USDC ? 'USDC' : 'SKR';
   const currencyDecimals = entryCurrency === Currency.SOL ? 3 : entryCurrency === Currency.USDC ? 2 : 0;
@@ -328,6 +294,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     RAID PASS — 50% OFF ENTRY FEE
                   </p>
                   <p className="text-[9px] text-white/50 font-black uppercase">BUY A PASS · PLAY MORE · WIN BIGGER</p>
+                  <p className="text-[9px] text-orange-400 font-black uppercase mt-0.5">🟠 SEEKER (SKR) HOLDERS GET 50% OFF PASS PRICE</p>
                 </>
               )}
             </div>
@@ -340,73 +307,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
           </button>
 
-          {/* ── DAILY CHALLENGE ──────────────────────────────────────── */}
-          <button
-            onClick={() => isConnected
-              ? onEnterRaid(Mode.SOLO, Difficulty.EASY, [])
-              : onConnect()}
-            className={`w-full relative overflow-hidden border tech-border flex items-center gap-3 px-4 py-3 transition-all group ${
-              dailyAvailable
-                ? 'bg-cyan-500/8 border-cyan-500/40 hover:bg-cyan-500/15 hover:border-cyan-500/70'
-                : 'bg-white/3 border-white/8 opacity-60 cursor-default'
-            }`}
-            disabled={!isConnected && false /* always clickable to connect */}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
-            <span className="text-2xl shrink-0">🎯</span>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">
-                DAILY CHALLENGE
-              </p>
-              {dailyAvailable ? (
-                <p className="text-[9px] text-white/60 font-black uppercase">FREE EASY RAID — RESETS MIDNIGHT UTC · PLAY NOW</p>
-              ) : (
-                <p className="text-[9px] text-white/40 font-black uppercase">COMPLETED TODAY — RESETS AT MIDNIGHT UTC</p>
-              )}
-            </div>
-            {dailyAvailable && (
-              <span className="shrink-0 text-[10px] font-black text-cyan-400 uppercase tracking-wider">FREE →</span>
-            )}
-          </button>
-
-          {/* ── BOSS RAID COUNTDOWN ───────────────────────────────────── */}
-          <button
-            onClick={() => bossState.open && isConnected
-              ? onEnterRaid(Mode.SOLO, Difficulty.HARD, [])
-              : !isConnected ? onConnect() : undefined}
-            disabled={!bossState.open && isConnected}
-            className={`w-full relative overflow-hidden border tech-border flex items-center gap-3 px-4 py-3 transition-all group ${
-              bossState.open
-                ? 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.1)]'
-                : 'bg-white/3 border-white/8 cursor-default opacity-70'
-            }`}
-          >
-            {bossState.open && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
-            )}
-            <div className="relative shrink-0">
-              <span className="text-2xl">{bossState.open ? '💀' : '🔒'}</span>
-              {bossState.open && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-              )}
-            </div>
-            <div className="flex-1 text-left min-w-0">
-              <p className={`text-[10px] font-black uppercase tracking-widest ${bossState.open ? 'text-red-400' : 'text-white/50'}`}>
-                BOSS RAID {bossState.open ? '— WINDOW OPEN' : '— NEXT WINDOW'}
-              </p>
-              <p className="text-[9px] font-black uppercase text-white/50">
-                {bossState.open
-                  ? `CLOSES IN ${fmtCountdown(bossState.secsUntil)} · HIGH RISK HARD MODE`
-                  : `OPENS IN ${fmtCountdown(bossState.secsUntil)} · 6H SCHEDULE`}
-              </p>
-            </div>
-            {bossState.open && (
-              <span className="shrink-0 text-[10px] font-black text-red-400 uppercase tracking-wider animate-pulse">ENTER →</span>
-            )}
-            {!bossState.open && (
-              <span className="mono shrink-0 text-[11px] font-black text-white/40 tabular-nums">{fmtCountdown(bossState.secsUntil)}</span>
-            )}
-          </button>
 
         {!isConnected && (
           <div className="mt-5 text-center">
@@ -752,19 +652,18 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 <div className="min-w-0 shrink-0">
                   <p className="text-[9px] text-white/50 font-black uppercase tracking-widest mb-0.5">ENTRY_COST</p>
                   <p className="text-xl font-black mono text-white leading-none">
-                    {totalCostDisplay.toFixed(currencyDecimals)}{' '}
-                    <span className={`text-sm ${entryCurrency === Currency.SOL ? 'text-[#14F195]' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{currencySymbol}</span>
+                    {pricesLoading ? <span className="text-white/40 text-sm animate-pulse">FETCHING…</span> : <>{totalCostDisplay.toFixed(currencyDecimals)}{' '}<span className={`text-sm ${entryCurrency === Currency.SOL ? 'text-[#14F195]' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{currencySymbol}</span></>}
                   </p>
                   {applyTicket && (
                     <p className="text-[9px] text-yellow-500 font-black uppercase mt-0.5">🎟️ TICKET DISCOUNT ACTIVE</p>
                   )}
-                  {currentBalance < totalCostDisplay && totalCostSol > 0 && (
+                  {!pricesLoading && currentBalance < totalCostDisplay && totalCostSol > 0 && (
                     <p className="text-[9px] text-red-500 font-black uppercase mt-0.5">INSUFFICIENT</p>
                   )}
                 </div>
                 <button
                   onClick={handleDeploy}
-                  disabled={totalCostSol > 0 && currentBalance < totalCostDisplay}
+                  disabled={pricesLoading || (totalCostSol > 0 && currentBalance < totalCostDisplay)}
                   className="flex-1 py-4 bg-[#14F195] text-black font-black uppercase tracking-tighter text-base sm:text-xl tech-border hover:bg-[#10c479] active:translate-y-0.5 transition-all shadow-[0_0_30px_rgba(20,241,149,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:translate-y-0"
                 >
                   CONFIRM_DEPLOYMENT

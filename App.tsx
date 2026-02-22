@@ -28,6 +28,7 @@ import { getRpcList, makeConnection } from './lib/rpc';
 import { getAssociatedTokenAddressSync, createTransferInstruction } from '@solana/spl-token';
 import { useProfile } from './hooks/useProfile';
 import { useDomainName } from './hooks/useDomainName';
+import { usePrices } from './hooks/usePrices';
 import { supabase } from './lib/supabase';
 
 // USDC mint — mainnet by default (VITE_USDC_MINT), falls back to devnet Circle mint
@@ -59,6 +60,7 @@ const AppInner: React.FC = () => {
   const { profile, loading: profileLoading, updateProfile } = useProfile(walletAddr, incomingRefCode);
   // Resolved once here — passed as prop to Header + ProfileScreen to avoid duplicate API calls
   const domainName = useDomainName(walletAddr);
+  const { currencyRates: liveCurrencyRates, pricesReady } = usePrices();
 
   // Screens that are safe to restore on reload (mid-game states are excluded)
   const RESTORABLE_SCREENS = new Set<Screen>([
@@ -1361,8 +1363,14 @@ const AppInner: React.FC = () => {
     // Streak bonus: 3+ consecutive wins → +0.15x starting multiplier (applied via boosts passthrough)
     const streakBonus = gameState.raidStreak >= 3 ? 0.15 : 0;
 
+    // Prices must be loaded before paying in USDC/SKR
+    if (currency !== Currency.SOL && !pricesReady) {
+      alert('Prices still loading — please wait a moment, then try again.');
+      return;
+    }
+
     // Convert to chosen currency for balance check
-    const rate = CURRENCY_RATES[currency]; // SKR/USDC per SOL
+    const rate = liveCurrencyRates[currency]; // SKR/USDC per SOL
     const totalCostCurrency = totalCostSol * rate;
 
     if (currency === Currency.SOL  && gameState.walletBalance < totalCostSol)     { alert('INSUFFICIENT SOL FOR DEPLOYMENT');  return; }
@@ -1485,6 +1493,7 @@ const AppInner: React.FC = () => {
             lastFreeRaidDate={gameState.lastFreeRaidDate}
             drillCount={gameState.drillCount}
             drillWindowStart={gameState.drillWindowStart}
+            currencyRates={liveCurrencyRates}
           />
         );
       case Screen.RAID:
@@ -1503,9 +1512,13 @@ const AppInner: React.FC = () => {
       case Screen.TEAM:
         return (
           <TeamScreen
-            onStartRaid={() => enterRaid(Mode.TEAM, Difficulty.MEDIUM, [], Currency.SOL)}
+            onStartRaid={(currency) => enterRaid(Mode.TEAM, Difficulty.MEDIUM, [], currency)}
             username={gameState.username}
             walletAddress={walletAddr}
+            walletBalance={gameState.walletBalance}
+            usdcBalance={gameState.usdcBalance}
+            skrBalance={gameState.skrBalance}
+            currencyRates={liveCurrencyRates}
           />
         );
       case Screen.TOURNAMENT:
@@ -1519,6 +1532,7 @@ const AppInner: React.FC = () => {
             rankTitle={currentRank.title}
             srPoints={gameState.srPoints}
             onEnterRaid={enterRaid}
+            currencyRates={liveCurrencyRates}
           />
         );
       case Screen.RESULT:
@@ -1579,6 +1593,7 @@ const AppInner: React.FC = () => {
             onBuyPass={handleBuyPass}
             onForgeGear={handleForgeGear}
             initialTab={gameState.storeInitialTab}
+            currencyRates={liveCurrencyRates}
           />
         );
       case Screen.TREASURY:
@@ -1630,6 +1645,7 @@ const AppInner: React.FC = () => {
             onEquipAvatar={handleEquipAvatar}
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
+            currencyRates={liveCurrencyRates}
           />
         );
     }

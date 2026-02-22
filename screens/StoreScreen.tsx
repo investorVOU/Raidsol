@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { GEAR_ITEMS, AVATAR_ITEMS, RAID_PASSES, Currency, CURRENCY_RATES, Equipment } from '../types';
+import type { LivePrices } from '../hooks/usePrices';
 
 interface StoreScreenProps {
   walletBalance: number;
@@ -13,6 +14,7 @@ interface StoreScreenProps {
   onBuyPass?: (passId: string, price: number, currency: Currency) => boolean | Promise<boolean>;
   onForgeGear?: (item1Id: string, item2Id: string) => Promise<string | null>;
   initialTab?: 'GEAR' | 'AVATAR' | 'PASS' | 'FORGE';
+  currencyRates?: LivePrices['currencyRates'];
 }
 
 interface PurchasePopup {
@@ -22,9 +24,11 @@ interface PurchasePopup {
   y: number;
 }
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, onForgeGear, initialTab }) => {
+const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, onForgeGear, initialTab, currencyRates }) => {
+  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
   const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS' | 'FORGE'>(initialTab ?? 'GEAR');
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(Currency.SKR);
+  const pricesLoading = selectedCurrency !== Currency.SOL && rates[selectedCurrency] === 0;
   const [popups, setPopups] = useState<PurchasePopup[]>([]);
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
 
@@ -38,8 +42,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
   const handleBuy = async (itemId: string, solPrice: number, minLevel: number = 0) => {
     if (currentLevel < minLevel) return;
     if (loadingItemId) return;
+    if (pricesLoading) return;
 
-    const finalPrice = solPrice * CURRENCY_RATES[selectedCurrency];
+    const finalPrice = solPrice * rates[selectedCurrency];
     const roundedPrice = selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice);
 
     setLoadingItemId(itemId);
@@ -62,12 +67,21 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
     }
   };
 
-  const handleBuyPass = async (passId: string, passSkrPrice: number, passSolPrice: number, passUsdcPrice: number) => {
+  const handleBuyPass = async (passId: string, passUsdPrice: number) => {
     if (!onBuyPass) return;
     if (loadingItemId) return;
-    const price = selectedCurrency === Currency.SKR ? passSkrPrice
-                : selectedCurrency === Currency.SOL ? passSolPrice
-                : passUsdcPrice;
+    const solUsd = rates[Currency.USDC];
+    if (solUsd === 0) return; // prices not loaded yet
+    let price: number;
+    if (selectedCurrency === Currency.USDC) {
+      price = passUsdPrice;
+    } else if (selectedCurrency === Currency.SOL) {
+      price = passUsdPrice / solUsd;
+    } else {
+      // SKR: 50% off for Seeker holders
+      const skrPerUsd = rates[Currency.SKR] / solUsd;
+      price = Math.ceil(passUsdPrice * skrPerUsd * 0.5);
+    }
     setLoadingItemId(passId);
     try {
       const success = await onBuyPass(passId, price, selectedCurrency);
@@ -249,24 +263,48 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
               <div className="flex gap-4 sm:block sm:text-right">
                 <div>
                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest hidden sm:block">PERKS_PER_TICKET</p>
-                  <p className="text-[9px] text-yellow-500/70 font-black">🎟️ 50% OFF ENTRY</p>
+                  <p className="text-[9px] text-yellow-500/70 font-black">🎟️ 50% OFF ENTRY FEE</p>
                   <p className="text-[9px] text-yellow-500/70 font-black">🎟️ +10% WIN BOOST</p>
                 </div>
-                <div>
-                  <p className="text-[9px] text-white/50 font-black mt-0 sm:mt-1">FREE TICKET FOR SEEKER HOLDERS</p>
+                <div className="mt-0 sm:mt-2 flex items-center gap-1">
+                  <span className="text-orange-400 text-[10px]">🟠</span>
+                  <p className="text-[9px] text-orange-400 font-black uppercase tracking-wide">PAY WITH SKR = 50% OFF PASS PRICE</p>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col sm:grid sm:grid-cols-3 gap-3">
               {RAID_PASSES.map(pass => {
-                const price = selectedCurrency === Currency.SKR ? pass.skrPrice
-                            : selectedCurrency === Currency.SOL ? pass.solPrice
-                            : pass.usdcPrice;
-                const displayPrice = selectedCurrency === Currency.SOL
-                  ? price.toFixed(3)
-                  : Math.ceil(price).toLocaleString();
-                const canAfford = currentBalance >= price;
+                // Passes are USD-denominated — convert via live rates
+                // rates[USDC] = solUsd, rates[SKR] = solUsd/skrUsd
+                const solUsd = rates[Currency.USDC];
+                const passesLoading = solUsd === 0; // need live price for ALL currencies
+
+                const skrDiscount = selectedCurrency === Currency.SKR;
+                let finalPrice: number;
+                let fullPrice: number | null = null; // pre-discount price for strikethrough
+                if (passesLoading) {
+                  finalPrice = 0;
+                } else if (selectedCurrency === Currency.USDC) {
+                  finalPrice = pass.usdPrice;
+                } else if (selectedCurrency === Currency.SOL) {
+                  finalPrice = pass.usdPrice / solUsd;
+                } else {
+                  // SKR: usdPrice / skrUsd, then 50% off for Seeker holders
+                  const skrPerUsd = rates[Currency.SKR] / solUsd; // SKR per $1
+                  fullPrice = pass.usdPrice * skrPerUsd;
+                  finalPrice = fullPrice * 0.5;
+                }
+
+                const displayPrice = passesLoading ? '---'
+                  : selectedCurrency === Currency.SOL ? finalPrice.toFixed(4)
+                  : Math.ceil(finalPrice).toLocaleString();
+                const displayFull = fullPrice && !passesLoading
+                  ? Math.ceil(fullPrice).toLocaleString()
+                  : null;
+                const priceValue = passesLoading ? Infinity : (selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice));
+                const canAfford = !passesLoading && currentBalance >= priceValue;
+                const isLoading = passesLoading;
                 const badgeColors = pass.id === 'pass_basic' ? 'border-yellow-500/30 bg-yellow-500/5'
                                   : pass.id === 'pass_core' ? 'border-blue-500/30 bg-blue-500/5'
                                   : 'border-red-500/30 bg-red-500/5';
@@ -283,22 +321,32 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         <span className="text-lg">{pass.badge}</span>
                         <div>
                           <p className="text-xs font-black uppercase text-white leading-none">{pass.name}</p>
-                          <p className="text-[9px] font-black text-white/50 uppercase"><span className="text-white font-black">{pass.tickets}</span> TICKETS</p>
+                          <p className="text-[9px] font-black text-white/50 uppercase"><span className="text-white font-black">{pass.tickets}</span> TICKETS · <span className="text-white/40">${pass.usdPrice}</span></p>
                         </div>
                       </div>
 
                       {/* Right / bottom: perks + price + button */}
                       <div className="flex-1 flex flex-col sm:mt-2 gap-2 min-w-0">
                         <div className="flex gap-1.5 flex-wrap">
-                          <span className="text-[8px] font-black text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">50% OFF</span>
+                          <span className="text-[8px] font-black text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">50% OFF ENTRY</span>
                           <span className="text-[8px] font-black text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">+10% WIN</span>
+                          {skrDiscount && (
+                            <span className="text-[8px] font-black text-orange-400 bg-orange-500/10 px-1.5 py-0.5 border border-orange-400/30 whitespace-nowrap animate-pulse">SKR −50% PRICE</span>
+                          )}
                         </div>
                         <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
-                          <p className="text-sm font-black text-white mono leading-none shrink-0">
-                            {displayPrice} <span className={`text-[9px] ${currencyColor}`}>{selectedCurrency}</span>
-                          </p>
+                          <div className="shrink-0">
+                            {displayFull && (
+                              <p className="text-[9px] font-black text-white/30 mono line-through leading-none">
+                                {displayFull} <span className="text-[7px]">{selectedCurrency}</span>
+                              </p>
+                            )}
+                            <p className={`text-sm font-black mono leading-none ${isLoading ? 'text-white/30 animate-pulse' : skrDiscount ? 'text-orange-400' : 'text-white'}`}>
+                              {displayPrice} <span className={`text-[9px] ${skrDiscount ? 'text-orange-400' : currencyColor}`}>{selectedCurrency}</span>
+                            </p>
+                          </div>
                           <button
-                            onClick={() => handleBuyPass(pass.id, pass.skrPrice, pass.solPrice, pass.usdcPrice)}
+                            onClick={() => handleBuyPass(pass.id, pass.usdPrice)}
                             disabled={!canAfford || !onBuyPass || loadingItemId !== null}
                             className={`shrink-0 px-3 py-2 font-black uppercase tracking-tighter text-[9px] tech-border transition-all min-w-[80px] flex items-center justify-center gap-1 ${
                               !canAfford || !onBuyPass || (loadingItemId !== null && loadingItemId !== pass.id)
@@ -461,11 +509,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             const levelLocked = currentLevel < (item.minLevel || 0);
             
             // Calculate price in selected currency
-            const rawPrice = item.price * CURRENCY_RATES[selectedCurrency];
-            const displayPrice = selectedCurrency === Currency.SOL ? rawPrice.toFixed(2) : Math.ceil(rawPrice).toLocaleString();
-            const priceValue = selectedCurrency === Currency.SOL ? rawPrice : Math.ceil(rawPrice);
-            
-            const canAfford = currentBalance >= priceValue;
+            const rawPrice = item.price * rates[selectedCurrency];
+            const displayPrice = pricesLoading ? '---'
+              : selectedCurrency === Currency.SOL ? rawPrice.toFixed(2)
+              : Math.ceil(rawPrice).toLocaleString();
+            const priceValue = pricesLoading ? Infinity : (selectedCurrency === Currency.SOL ? rawPrice : Math.ceil(rawPrice));
+
+            const canAfford = !pricesLoading && currentBalance >= priceValue;
             const srReward = Math.max(50, Math.floor(item.price * 1000));
             const rarityStyle = getRarityStyles(item.rarity);
 

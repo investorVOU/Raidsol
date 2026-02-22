@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { ENTRY_FEES, Mode, Difficulty, Currency, CURRENCY_RATES } from '../types';
+import type { LivePrices } from '../hooks/usePrices';
 import { useLeaderboard, LeaderboardPeriod } from '../hooks/useLeaderboard';
 
 interface TournamentScreenProps {
@@ -12,6 +13,7 @@ interface TournamentScreenProps {
   rankTitle: string;
   srPoints: number;
   walletAddress?: string;
+  currencyRates?: LivePrices['currencyRates'];
 }
 
 const PERIOD_TABS: { id: LeaderboardPeriod; label: string; srLabel: string }[] = [
@@ -77,7 +79,9 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
   rankTitle,
   srPoints,
   walletAddress,
+  currencyRates,
 }) => {
+  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
   const [period,      setPeriod]      = useState<LeaderboardPeriod>('alltime');
   const [showEntry,   setShowEntry]   = useState(false);
   const [currency,    setCurrency]    = useState<Currency>(Currency.SOL);
@@ -88,14 +92,15 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
   const rest    = entries.slice(3);
 
   // Entry fee in selected currency
-  const feeInCurrency = TOURNAMENT_FEE * CURRENCY_RATES[currency];
+  const feeInCurrency = TOURNAMENT_FEE * rates[currency];
+  const pricesLoading = currency !== Currency.SOL && rates[currency] === 0;
   const balanceMap: Record<Currency, number> = {
     [Currency.SOL]:  walletBalance,
     [Currency.USDC]: usdcBalance,
     [Currency.SKR]:  skrBalance,
   };
   const currentBalance = balanceMap[currency];
-  const canAfford       = currentBalance >= feeInCurrency;
+  const canAfford       = !pricesLoading && currentBalance >= feeInCurrency;
   const isLocked        = rankLevel < TOURNAMENT_MIN_LEVEL;
 
   const handleConfirm = () => {
@@ -186,8 +191,9 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                   <div className="grid grid-cols-3 gap-2">
                     {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
                       const bal = balanceMap[c];
-                      const fee = TOURNAMENT_FEE * CURRENCY_RATES[c];
-                      const ok  = bal >= fee;
+                      const cFee = TOURNAMENT_FEE * rates[c];
+                      const cLoading = c !== Currency.SOL && rates[c] === 0;
+                      const ok  = !cLoading && bal >= cFee;
                       return (
                         <button
                           key={c}
@@ -199,8 +205,8 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                           }`}
                         >
                           <span>{CURRENCY_LABELS[c]}</span>
-                          <span className={`text-[8px] font-bold normal-case not-italic tracking-wide ${ok ? 'text-green-400/70' : 'text-red-400/60'}`}>
-                            {bal.toFixed(c === Currency.SOL ? 3 : 1)}
+                          <span className={`text-[8px] font-bold normal-case not-italic tracking-wide ${cLoading ? 'text-white/30 animate-pulse' : ok ? 'text-green-400/70' : 'text-red-400/60'}`}>
+                            {cLoading ? '...' : bal.toFixed(c === Currency.SOL ? 3 : 1)}
                           </span>
                         </button>
                       );
@@ -219,10 +225,10 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                   <div className="flex justify-between text-[10px] font-black uppercase">
                     <span className="text-white/50">ENTRY COST</span>
                     <span className="text-purple-400">
-                      {feeInCurrency % 1 === 0 ? feeInCurrency.toFixed(0) : feeInCurrency.toFixed(3)} {CURRENCY_LABELS[currency]}
+                      {pricesLoading ? <span className="animate-pulse text-white/40">FETCHING…</span> : <>{feeInCurrency % 1 === 0 ? feeInCurrency.toFixed(0) : feeInCurrency.toFixed(3)} {CURRENCY_LABELS[currency]}</>}
                     </span>
                   </div>
-                  {!canAfford && (
+                  {!pricesLoading && !canAfford && (
                     <p className="text-[9px] text-red-400 font-black uppercase tracking-widest text-right pt-0.5">
                       ✗ INSUFFICIENT FUNDS
                     </p>
@@ -232,14 +238,14 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                 {/* Confirm */}
                 <button
                   onClick={handleConfirm}
-                  disabled={!canAfford}
+                  disabled={pricesLoading || !canAfford}
                   className={`w-full py-5 tech-border font-black uppercase tracking-tight text-lg italic transition-all ${
-                    canAfford
+                    !pricesLoading && canAfford
                       ? 'bg-purple-600 text-white shadow-[0_0_25px_rgba(168,85,247,0.3)] active:scale-95'
                       : 'bg-white/5 text-white/40 cursor-not-allowed border border-white/5'
                   }`}
                 >
-                  {canAfford ? 'CONFIRM_ENTRY →' : 'INSUFFICIENT FUNDS'}
+                  {pricesLoading ? 'FETCHING PRICES…' : canAfford ? 'CONFIRM_ENTRY →' : 'INSUFFICIENT FUNDS'}
                 </button>
               </div>
 

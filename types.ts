@@ -51,10 +51,11 @@ export enum Currency {
   SKR = 'SKR'
 }
 
+// Currency rates are fetched live via usePrices hook — no hardcoded fallback
 export const CURRENCY_RATES: Record<Currency, number> = {
-  [Currency.SOL]: 1,
-  [Currency.USDC]: 150, // 1 SOL = 150 USDC (approx for game)
-  [Currency.SKR]: 1000 // 1 SOL = 1000 SKR
+  [Currency.SOL]:  1,
+  [Currency.USDC]: 0,
+  [Currency.SKR]:  0,
 };
 
 // ── Raid Pass (ticket system) ─────────────────────────────────────────────────
@@ -62,9 +63,7 @@ export interface RaidPass {
   id: string;
   name: string;
   tickets: number;
-  skrPrice: number;  // SKR (Seeker-native, featured)
-  solPrice: number;
-  usdcPrice: number;
+  usdPrice: number;  // base price in USD — converted to SOL/USDC/SKR via live rates; SKR pays 50% off
   description: string;
   badge: string;
 }
@@ -74,9 +73,7 @@ export const RAID_PASSES: RaidPass[] = [
     id: 'pass_basic',
     name: 'BASIC PASS',
     tickets: 10,
-    skrPrice: 70,
-    solPrice: 0.07,
-    usdcPrice: 10,
+    usdPrice: 10,
     description: '10 discounted entries. 50% off entry fee per ticket.',
     badge: '🟨',
   },
@@ -84,9 +81,7 @@ export const RAID_PASSES: RaidPass[] = [
     id: 'pass_core',
     name: 'CORE PASS',
     tickets: 25,
-    skrPrice: 133,
-    solPrice: 0.133,
-    usdcPrice: 20,
+    usdPrice: 20,
     description: '25 discounted entries + 10% win boost per ticket.',
     badge: '🟦',
   },
@@ -94,9 +89,7 @@ export const RAID_PASSES: RaidPass[] = [
     id: 'pass_pro',
     name: 'PRO PASS',
     tickets: 60,
-    skrPrice: 200,
-    solPrice: 0.20,
-    usdcPrice: 30,
+    usdPrice: 35,
     description: '60 entries. Max discount + max win boost. Degen tier.',
     badge: '🟥',
   },
