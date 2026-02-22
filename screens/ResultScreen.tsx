@@ -185,7 +185,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
         </div>
 
         <h2 className={`text-5xl sm:text-7xl font-black italic uppercase tracking-tighter mb-4 leading-none text-center ${result.success ? 'text-white glitch-text' : 'text-red-500'}`}>
-          {result.success ? 'MISSION_OK' : 'LINK_COLLAPSED'}
+          {result.success ? 'MISSION_OK' : 'RAID_COLLAPSED'}
         </h2>
         <p className="text-white/50 text-xs sm:text-sm font-black uppercase tracking-[0.4em] mb-8 sm:mb-12 text-center italic">
           {result.success ? '___Operation success. Assets secured.' : '___Critical failure. Initial stake purged.'}

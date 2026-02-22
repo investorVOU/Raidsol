@@ -164,18 +164,18 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </h1>
             <div className="flex items-center gap-2 mt-1">
               <div
-                className={`w-2 h-2 rounded-full ${isConnected ? 'bg-[#14F195] shadow-[0_0_10px_#14F195]' : 'bg-red-500 animate-pulse'}`}
+                className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-[#14F195] shadow-[0_0_8px_#14F195]' : 'bg-red-500 animate-pulse'}`}
               />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">
-                {isConnected ? 'NET_ONLINE' : 'NET_OFFLINE'} // V5.0.2
+              <span className="text-[10px] font-bold tracking-wider text-white/50">
+                {isConnected ? 'online' : 'offline'} · v5.0
               </span>
             </div>
           </div>
 
           {/* Live Combat Log */}
           <div className="w-full sm:w-56 bg-black/50 border border-white/10 p-1.5 tech-border">
-            <p className="text-[8px] font-black text-white/50 uppercase tracking-widest border-b border-white/5 mb-1 pb-1">
-              LIVE_COMBAT_LOG
+            <p className="text-[8px] font-bold text-white/40 uppercase tracking-wider border-b border-white/5 mb-1 pb-1">
+              live feed
             </p>
             <div className="space-y-0.5 h-12 overflow-hidden flex flex-col justify-end">
               {feedLines.length === 0 ? (
@@ -207,29 +207,29 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             className="w-full group relative bg-[#14F195] p-[2px] transition-all hover:scale-[1.01] active:scale-[0.99] shadow-[0_0_40px_rgba(20,241,149,0.15)]"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 z-20" />
-            <div className="bg-[#030303] h-28 sm:h-32 flex items-center justify-between px-5 sm:px-8 relative z-10 group-hover:bg-[#080808] transition-colors">
+            <div className="bg-[#030303] h-20 sm:h-24 flex items-center justify-between px-5 sm:px-7 relative z-10 group-hover:bg-[#080808] transition-colors">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[#14F195] font-black uppercase tracking-[0.2em] text-[10px]">
-                    {isConnected ? 'COMMAND_READY' : 'CONNECT_WALLET'}
+                  <p className="text-[#14F195] font-bold tracking-wide text-[10px]">
+                    {isConnected ? 'Ready to deploy' : 'Connect wallet'}
                   </p>
                   {raidTickets > 0 && (
-                    <span className="bg-yellow-500 text-black text-[9px] font-black px-1.5 py-0.5 animate-pulse">
+                    <span className="bg-yellow-500 text-black text-[9px] font-black px-1.5 py-0.5">
                       🎟️ {raidTickets}x
                     </span>
                   )}
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-black italic uppercase text-white leading-none tracking-tighter">
-                  ENTER RAID
+                <h2 className="text-3xl sm:text-4xl font-black italic uppercase text-white leading-none tracking-tight">
+                  Enter Raid
                 </h2>
-                <p className="text-white/50 font-bold uppercase text-[9px] mt-1.5">HIGH RISK // HIGH REWARD</p>
+                <p className="text-white/40 font-bold text-[9px] mt-1">High risk · high reward</p>
               </div>
               <div className="flex flex-col items-center gap-1 shrink-0">
-                <div className="w-11 h-11 border-2 border-[#14F195] flex items-center justify-center group-hover:bg-[#14F195] group-hover:text-black transition-all">
-                  <span className="text-xl font-black">GO</span>
+                <div className="w-10 h-10 border-2 border-[#14F195] flex items-center justify-center group-hover:bg-[#14F195] group-hover:text-black transition-all">
+                  <span className="text-base font-black">GO</span>
                 </div>
                 {raidTickets > 0 && (
-                  <p className="text-[8px] text-yellow-500/60 font-black uppercase">50% OFF</p>
+                  <p className="text-[8px] text-yellow-500/60 font-bold">50% off</p>
                 )}
               </div>
             </div>
@@ -239,12 +239,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => (isConnected ? onEnterRaid(Mode.PVP, Difficulty.MEDIUM, []) : onConnect())}
-              className="p-4 bg-[#9945FF]/10 border-2 border-[#9945FF]/40 tech-border hover:bg-[#9945FF]/20 hover:border-[#9945FF] transition-all text-left group relative overflow-hidden"
+              className="p-3 bg-[#9945FF]/10 border-2 border-[#9945FF]/40 tech-border hover:bg-[#9945FF]/20 hover:border-[#9945FF] transition-all text-left group relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-8 h-8 bg-[#9945FF]/20 blur-xl" />
-              <p className="text-[9px] font-black text-[#9945FF] uppercase tracking-widest mb-1">MULTIPLAYER</p>
-              <p className="text-lg sm:text-xl font-black italic text-white leading-none">PVP DUEL</p>
-              <p className="text-[8px] text-white/40 font-black mt-1 uppercase">STAKE vs PLAYERS</p>
+              <p className="text-[9px] font-bold text-[#9945FF] tracking-wide mb-1">Multiplayer</p>
+              <p className="text-base sm:text-lg font-black text-white leading-none">PvP Duel</p>
+              <p className="text-[8px] text-white/40 font-bold mt-1">stake vs players</p>
             </button>
             <button
               onClick={() => {
@@ -260,10 +260,10 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               }`}
             >
               <div className="absolute top-0 right-0 w-8 h-8 bg-white/5 blur-xl" />
-              <p className="text-[9px] font-black text-white/60 uppercase tracking-widest mb-1">TRAINING</p>
-              <p className="text-lg sm:text-xl font-black italic text-white leading-none">FREE DRILL</p>
-              <p className={`text-[8px] font-black mt-1 uppercase ${drillCapHit ? 'text-red-400/60' : 'text-white/40'}`}>
-                {isConnected ? (drillCapHit ? 'CAP_REACHED' : `${drillsRemaining}/3 LEFT`) : 'NO ENTRY FEE'}
+              <p className="text-[9px] font-bold text-white/50 tracking-wide mb-1">Training</p>
+              <p className="text-base sm:text-lg font-black text-white leading-none">Free Drill</p>
+              <p className={`text-[8px] font-bold mt-1 ${drillCapHit ? 'text-red-400/60' : 'text-white/40'}`}>
+                {isConnected ? (drillCapHit ? 'limit reached' : `${drillsRemaining}/3 left`) : 'no entry fee'}
               </p>
             </button>
           </div>
@@ -309,9 +309,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
 
         {!isConnected && (
-          <div className="mt-5 text-center">
-            <p className="text-red-500 text-xs font-black uppercase bg-red-950/30 p-2 border border-red-500/30 inline-block animate-pulse">
-              [!] UPLINK REQUIRED FOR DEPLOYMENT
+          <div className="mt-4 text-center">
+            <p className="text-red-400/80 text-[10px] font-bold bg-red-950/20 px-3 py-1.5 border border-red-500/20 inline-block">
+              Connect your wallet to deploy
             </p>
           </div>
         )}
@@ -375,11 +375,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
           </div>
 
-          <p className="text-[#14F195] font-black text-lg sm:text-2xl uppercase tracking-widest text-center animate-pulse mb-2">
-            AWAITING_SIGNATURE
+          <p className="text-[#14F195] font-black text-lg sm:text-xl uppercase tracking-wider text-center animate-pulse mb-2">
+            Awaiting signature
           </p>
-          <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.3em] text-center mb-8">
-            APPROVE TRANSACTION IN YOUR WALLET
+          <p className="text-white/50 text-[10px] font-bold text-center mb-8">
+            Approve the transaction in your wallet
           </p>
 
           {/* Bouncing dots */}
@@ -393,8 +393,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             ))}
           </div>
 
-          <p className="mt-12 text-[9px] font-black uppercase tracking-[0.5em] text-white/20">
-            DO_NOT_CLOSE_WINDOW
+          <p className="mt-12 text-[9px] font-bold text-white/20">
+            Don't close this window
           </p>
         </div>
       )}
@@ -416,15 +416,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="shrink-0 px-4 py-3 sm:p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="w-1 sm:w-1.5 h-5 sm:h-6 bg-[#14F195]" />
-                <h2 className="text-base sm:text-2xl font-black uppercase italic tracking-tighter text-white">
-                  MISSION_CONFIG
+                <h2 className="text-base sm:text-xl font-black uppercase tracking-tight text-white">
+                  Configure Raid
                 </h2>
               </div>
               <button
                 onClick={() => setShowModeModal(false)}
-                className="text-white/40 hover:text-white px-2 text-xl font-black"
+                className="text-white/40 hover:text-white w-8 h-8 flex items-center justify-center text-lg font-bold"
               >
-                [X]
+                ×
               </button>
             </div>
 
@@ -437,17 +437,17 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
                   {/* 01 Mode */}
                   <div className="space-y-2 sm:space-y-3">
-                    <Label text="01 // OPERATION_MODE" />
+                    <Label text="Mode" />
                     <div className="space-y-1.5">
-                      <ModeOption label="SOLO_RAID"   fee={ENTRY_FEES[Mode.SOLO]}       active={selectedMode === Mode.SOLO}       onClick={() => setSelectedMode(Mode.SOLO)} />
-                      <ModeOption label="SQUAD_LINK"  fee={ENTRY_FEES[Mode.TEAM]}       active={selectedMode === Mode.TEAM}       onClick={() => setSelectedMode(Mode.TEAM)}       locked={currentLevel < 5} />
-                      <ModeOption label="TOURNAMENT"  fee={ENTRY_FEES[Mode.TOURNAMENT]} active={selectedMode === Mode.TOURNAMENT} onClick={() => setSelectedMode(Mode.TOURNAMENT)} locked={currentLevel < 15} />
+                      <ModeOption label="Solo"        fee={ENTRY_FEES[Mode.SOLO]}       active={selectedMode === Mode.SOLO}       onClick={() => setSelectedMode(Mode.SOLO)} />
+                      <ModeOption label="Squad"       fee={ENTRY_FEES[Mode.TEAM]}       active={selectedMode === Mode.TEAM}       onClick={() => setSelectedMode(Mode.TEAM)}       locked={currentLevel < 5} />
+                      <ModeOption label="Tournament"  fee={ENTRY_FEES[Mode.TOURNAMENT]} active={selectedMode === Mode.TOURNAMENT} onClick={() => setSelectedMode(Mode.TOURNAMENT)} locked={currentLevel < 15} />
                     </div>
                   </div>
 
                   {/* 02 Difficulty */}
                   <div className="space-y-2 sm:space-y-3">
-                    <Label text="02 // RISK_PARAMETERS" />
+                    <Label text="Difficulty" />
                     <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                       {Object.values(Difficulty).map((diff) => {
                         const config = DIFFICULTY_CONFIG[diff];
@@ -473,7 +473,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
                   {/* 03 Boosts */}
                   <div className="space-y-2 sm:space-y-3">
-                    <Label text="03 // PROTOCOL_INJECTIONS" />
+                    <Label text="Boosts" />
                     <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                       {RAID_BOOSTS.map((boost) => {
                         const isActive = selectedBoosts.includes(boost.id);
@@ -500,7 +500,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
                   {/* Loadout header */}
                   <div className="flex justify-between items-center mb-2">
-                    <Label text="04 // ACTIVE_LOADOUT" />
+                    <Label text="Loadout" />
                     <span className="text-[10px] font-black uppercase text-white/50">{equippedGear.length}/4 SLOTS</span>
                   </div>
 
@@ -535,7 +535,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   {/* Quick-swap inventory */}
                   {ownedGear.length > 0 ? (
                     <div className="p-2.5 sm:p-3 bg-white/5 border border-white/5 mb-3">
-                      <p className="text-[10px] font-black uppercase text-white/50 mb-1.5 sm:mb-2">QUICK_SWAP</p>
+                      <p className="text-[10px] font-bold uppercase text-white/40 mb-1.5 sm:mb-2">Quick swap</p>
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {ownedGear.map((gear) => {
                           const isEquipped = equippedGearIds.includes(gear.id);
@@ -557,30 +557,30 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     </div>
                   ) : (
                     <div className="p-2.5 sm:p-3 bg-white/5 border border-white/5 mb-3 text-center">
-                      <p className="text-[10px] font-black uppercase text-white/40">NO GEAR OWNED — VISIT STORE TO EQUIP</p>
+                      <p className="text-[10px] font-bold text-white/40">No gear — visit the market to equip</p>
                     </div>
                   )}
 
                   {/* Combat stats */}
                   <div className="p-3 sm:p-4 bg-black border border-white/10 tech-border mb-3">
-                    <p className="text-[10px] font-black uppercase text-white/50 tracking-widest mb-2 sm:mb-3">COMBAT_ADVANTAGE</p>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-wide mb-2 sm:mb-3">Stats</p>
                     <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-2 sm:mb-3">
                       <div className="text-center">
-                        <p className="text-[9px] text-white/50 uppercase tracking-widest mb-1">MULTIPLIER</p>
+                        <p className="text-[9px] text-white/40 uppercase tracking-wide mb-1">Mult</p>
                         <p className="font-black mono text-[#14F195] text-base sm:text-lg leading-none">{totalMult}x</p>
                       </div>
                       <div className="text-center border-x border-white/5">
-                        <p className="text-[9px] text-white/50 uppercase tracking-widest mb-1">RISK_REDUC</p>
+                        <p className="text-[9px] text-white/40 uppercase tracking-wide mb-1">Risk</p>
                         <p className="font-black mono text-cyan-400 text-base sm:text-lg leading-none">-{totalRiskReduc}%</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-[9px] text-white/50 uppercase tracking-widest mb-1">RAID_TIME</p>
+                        <p className="text-[9px] text-white/40 uppercase tracking-wide mb-1">Time</p>
                         <p className="font-black mono text-purple-400 text-base sm:text-lg leading-none">{totalTime}s</p>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-[9px] font-black uppercase text-white/50 mb-1">
-                        <span>LOADOUT_POWER</span>
+                        <span>Power</span>
                         <span className={advantageScore >= 50 ? 'text-[#14F195]' : advantageScore >= 25 ? 'text-yellow-500' : 'text-red-500'}>
                           {advantageScore >= 50 ? 'STRONG' : advantageScore >= 25 ? 'MODERATE' : 'WEAK'} +{advantageScore}
                         </span>
@@ -602,7 +602,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="shrink-0 border-t-2 border-white/10 p-3 sm:p-5 bg-[#050505]">
               {/* Currency selector */}
               <div className="mb-2 sm:mb-3">
-                <p className="text-[9px] text-white/50 font-black uppercase tracking-widest mb-1">PAY_WITH</p>
+                <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Pay with</p>
                 <div className="grid grid-cols-3 gap-1.5">
                   {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map((c) => {
                     const bal = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
@@ -633,12 +633,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="text-base">🎟️</span>
                       <div className="text-left">
-                        <p className={`text-[10px] font-black uppercase tracking-wider ${applyTicket ? 'text-yellow-400' : 'text-white/70'}`}>USE TICKET</p>
-                        <p className="text-[9px] text-white/50 font-black">50% OFF ENTRY + 10% WIN BOOST</p>
+                        <p className={`text-[10px] font-bold ${applyTicket ? 'text-yellow-400' : 'text-white/60'}`}>Use ticket</p>
+                        <p className="text-[9px] text-white/40 font-bold">50% off entry · +10% win boost</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black text-white/60">{raidTickets}x LEFT</span>
+                      <span className="text-[10px] font-bold text-white/50">{raidTickets}x left</span>
                       <div className={`w-8 h-4 rounded-full transition-all relative ${applyTicket ? 'bg-yellow-500' : 'bg-white/10'}`}>
                         <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${applyTicket ? 'left-4.5 left-[18px]' : 'left-0.5'}`} />
                       </div>
@@ -650,12 +650,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {/* Cost + Deploy row */}
               <div className="flex items-center gap-3">
                 <div className="min-w-0 shrink-0">
-                  <p className="text-[9px] text-white/50 font-black uppercase tracking-widest mb-0.5">ENTRY_COST</p>
+                  <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-0.5">Entry cost</p>
                   <p className="text-xl font-black mono text-white leading-none">
                     {pricesLoading ? <span className="text-white/40 text-sm animate-pulse">FETCHING…</span> : <>{totalCostDisplay.toFixed(currencyDecimals)}{' '}<span className={`text-sm ${entryCurrency === Currency.SOL ? 'text-[#14F195]' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{currencySymbol}</span></>}
                   </p>
                   {applyTicket && (
-                    <p className="text-[9px] text-yellow-500 font-black uppercase mt-0.5">🎟️ TICKET DISCOUNT ACTIVE</p>
+                    <p className="text-[9px] text-yellow-500 font-bold mt-0.5">🎟️ ticket discount active</p>
                   )}
                   {!pricesLoading && currentBalance < totalCostDisplay && totalCostSol > 0 && (
                     <p className="text-[9px] text-red-500 font-black uppercase mt-0.5">INSUFFICIENT</p>
@@ -664,9 +664,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 <button
                   onClick={handleDeploy}
                   disabled={pricesLoading || (totalCostSol > 0 && currentBalance < totalCostDisplay)}
-                  className="flex-1 py-4 bg-[#14F195] text-black font-black uppercase tracking-tighter text-base sm:text-xl tech-border hover:bg-[#10c479] active:translate-y-0.5 transition-all shadow-[0_0_30px_rgba(20,241,149,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:translate-y-0"
+                  className="flex-1 py-3 bg-[#14F195] text-black font-black uppercase tracking-tight text-sm sm:text-base tech-border hover:bg-[#10c479] active:translate-y-0.5 transition-all shadow-[0_0_20px_rgba(20,241,149,0.2)] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:translate-y-0"
                 >
-                  CONFIRM_DEPLOYMENT
+                  Deploy
                 </button>
               </div>
             </div>
@@ -678,7 +678,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 };
 
 const Label = ({ text }: { text: string }) => (
-  <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] italic">{text}</p>
+  <p className="text-[11px] font-bold text-white/50 tracking-wide">{text}</p>
 );
 
 const ModeOption = ({
@@ -697,7 +697,7 @@ const ModeOption = ({
   <button
     onClick={onClick}
     disabled={locked}
-    className={`w-full flex justify-between items-center p-3 sm:p-4 border tech-border transition-all group ${
+    className={`w-full flex justify-between items-center p-2.5 sm:p-3 border tech-border transition-all group ${
       locked
         ? 'opacity-40 cursor-not-allowed border-white/5 bg-transparent'
         : active
@@ -705,18 +705,16 @@ const ModeOption = ({
         : 'bg-black border-white/10 hover:border-white/30'
     }`}
   >
-    <div className="text-left">
-      <span className={`text-sm sm:text-base font-black uppercase italic ${active ? 'text-cyan-400' : 'text-white'}`}>
+    <div className="text-left flex items-center gap-2">
+      {active && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />}
+      <span className={`text-sm font-black uppercase ${active ? 'text-cyan-400' : 'text-white'}`}>
         {label}
       </span>
       {locked && (
-        <span className="ml-2 text-[9px] text-red-500 font-bold uppercase bg-red-950/30 px-1">LOCKED</span>
+        <span className="text-[9px] text-red-500/70 font-bold bg-red-950/30 px-1">locked</span>
       )}
     </div>
-    <div className="flex flex-col items-end shrink-0 ml-2">
-      <span className="mono text-xs sm:text-sm font-black text-white/75">{fee} SOL</span>
-      {active && <span className="text-[9px] text-cyan-500 font-black uppercase tracking-wider">SELECTED</span>}
-    </div>
+    <span className="mono text-xs font-black text-white/60">{fee} SOL</span>
   </button>
 );
 
