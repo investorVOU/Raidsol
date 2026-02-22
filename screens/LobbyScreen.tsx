@@ -282,6 +282,42 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
         </div>
 
+          {/* ── RAID PASS BANNER ─────────────────────────────────────── */}
+          <button
+            onClick={() => onNavigateStore?.('PASS')}
+            className="w-full group relative overflow-hidden border border-yellow-500/30 bg-yellow-500/5 hover:bg-yellow-500/10 hover:border-yellow-500/60 transition-all tech-border flex items-center gap-3 px-4 py-3"
+          >
+            {/* Sweep shimmer */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+
+            <div className="text-2xl shrink-0">🎟️</div>
+
+            <div className="flex-1 text-left min-w-0">
+              {raidTickets > 0 ? (
+                <>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
+                    {raidTickets}x RAID PASS READY
+                  </p>
+                  <p className="text-[9px] text-white/30 font-black uppercase">50% OFF ENTRY + 10% WIN BOOST — ACTIVE AT DEPLOYMENT</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
+                    RAID PASS — 50% OFF ENTRY FEE
+                  </p>
+                  <p className="text-[9px] text-white/30 font-black uppercase">BUY A PASS · PLAY MORE · WIN BIGGER</p>
+                </>
+              )}
+            </div>
+
+            <div className="shrink-0 flex items-center gap-1 text-yellow-500 group-hover:translate-x-0.5 transition-transform">
+              <span className="text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
+                {raidTickets > 0 ? 'GET MORE' : 'GET PASS'}
+              </span>
+              <span className="font-black text-sm">→</span>
+            </div>
+          </button>
+
           {/* ── DAILY CHALLENGE ──────────────────────────────────────── */}
           <button
             onClick={() => isConnected
@@ -348,42 +384,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             {!bossState.open && (
               <span className="mono shrink-0 text-[11px] font-black text-white/20 tabular-nums">{fmtCountdown(bossState.secsUntil)}</span>
             )}
-          </button>
-
-          {/* ── RAID PASS BANNER ─────────────────────────────────────── */}
-          <button
-            onClick={() => onNavigateStore?.('PASS')}
-            className="w-full group relative overflow-hidden border border-yellow-500/30 bg-yellow-500/5 hover:bg-yellow-500/10 hover:border-yellow-500/60 transition-all tech-border flex items-center gap-3 px-4 py-3"
-          >
-            {/* Sweep shimmer */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
-
-            <div className="text-2xl shrink-0">🎟️</div>
-
-            <div className="flex-1 text-left min-w-0">
-              {raidTickets > 0 ? (
-                <>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
-                    {raidTickets}x RAID PASS READY
-                  </p>
-                  <p className="text-[9px] text-white/30 font-black uppercase">50% OFF ENTRY + 10% WIN BOOST — ACTIVE AT DEPLOYMENT</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
-                    RAID PASS — 50% OFF ENTRY FEE
-                  </p>
-                  <p className="text-[9px] text-white/30 font-black uppercase">BUY A PASS · PLAY MORE · WIN BIGGER</p>
-                </>
-              )}
-            </div>
-
-            <div className="shrink-0 flex items-center gap-1 text-yellow-500 group-hover:translate-x-0.5 transition-transform">
-              <span className="text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
-                {raidTickets > 0 ? 'GET MORE' : 'GET PASS'}
-              </span>
-              <span className="font-black text-sm">→</span>
-            </div>
           </button>
 
         {!isConnected && (
