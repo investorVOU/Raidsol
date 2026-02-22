@@ -21,6 +21,8 @@ interface LobbyScreenProps {
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
   raidTickets?: number;
   lastFreeRaidDate?: string | null;
+  drillCount?: number;
+  drillWindowStart?: number;
 }
 
 const LobbyScreen: React.FC<LobbyScreenProps> = ({
@@ -39,6 +41,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onNavigateStore,
   raidTickets = 0,
   lastFreeRaidDate = null,
+  drillCount = 0,
+  drillWindowStart = 0,
 }) => {
   const [showModeModal, setShowModeModal] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
@@ -54,6 +58,13 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   // ── Daily challenge state ──────────────────────────────────────────────────
   const todayStr = new Date().toISOString().slice(0, 10);
   const dailyAvailable = isConnected && lastFreeRaidDate !== todayStr;
+
+  // ── Drill cap: 3 per 6 hours ──────────────────────────────────────────────
+  const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+  const drillWindowExpired = (Date.now() - drillWindowStart) >= SIX_HOURS_MS;
+  const drillsUsed = drillWindowExpired ? 0 : drillCount;
+  const drillsRemaining = Math.max(0, 3 - drillsUsed);
+  const drillCapHit = isConnected && drillsRemaining === 0;
 
   // ── Boss raid countdown ────────────────────────────────────────────────────
   // Boss window opens at 00, 06, 12, 18 UTC and lasts 1h
@@ -270,13 +281,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <p className="text-[8px] text-white/25 font-black mt-1 uppercase">STAKE vs PLAYERS</p>
             </button>
             <button
-              onClick={() => (isConnected ? onEnterRaid(Mode.DRILL, Difficulty.MEDIUM, []) : onConnect())}
-              className="p-4 bg-white/5 border-2 border-white/10 tech-border hover:bg-white/8 hover:border-white/25 transition-all text-left group relative overflow-hidden"
+              onClick={() => {
+                if (!isConnected) { onConnect(); return; }
+                if (drillCapHit) return;
+                onEnterRaid(Mode.DRILL, Difficulty.MEDIUM, []);
+              }}
+              disabled={drillCapHit}
+              className={`p-4 border-2 tech-border text-left relative overflow-hidden transition-all ${
+                drillCapHit
+                  ? 'bg-white/3 border-white/5 opacity-50 cursor-not-allowed'
+                  : 'bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/25'
+              }`}
             >
               <div className="absolute top-0 right-0 w-8 h-8 bg-white/5 blur-xl" />
               <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">TRAINING</p>
               <p className="text-lg sm:text-xl font-black italic text-white leading-none">FREE DRILL</p>
-              <p className="text-[8px] text-white/25 font-black mt-1 uppercase">NO ENTRY FEE</p>
+              <p className={`text-[8px] font-black mt-1 uppercase ${drillCapHit ? 'text-red-400/60' : 'text-white/25'}`}>
+                {isConnected ? (drillCapHit ? 'CAP_REACHED' : `${drillsRemaining}/3 LEFT`) : 'NO ENTRY FEE'}
+              </p>
             </button>
           </div>
 

@@ -92,6 +92,8 @@ const AppInner: React.FC = () => {
       bustTimestamps: [],
       lastFreeRaidDate: null,
       activeStreakBonus: 0,
+      drillCount: 0,
+      drillWindowStart: 0,
     };
   });
 
@@ -1328,6 +1330,19 @@ const AppInner: React.FC = () => {
       return;
     }
 
+    // ── Drill cap: 3 free drills per 6-hour rolling window ───────────────
+    if (mode === Mode.DRILL) {
+      const SIX_HOURS = 6 * 60 * 60 * 1000;
+      const windowExpired = (now - gameState.drillWindowStart) >= SIX_HOURS;
+      const currentDrillCount = windowExpired ? 0 : gameState.drillCount;
+      if (currentDrillCount >= 3) {
+        const nextReset = gameState.drillWindowStart + SIX_HOURS;
+        const minLeft = Math.ceil((nextReset - now) / 60000);
+        alert(`DRILL_CAP_REACHED — 3 free drills used. Resets in ${minLeft} min.`);
+        return;
+      }
+    }
+
     // ── Daily free raid at EASY (first of each calendar day) ─────────────
     const todayStr = new Date().toISOString().slice(0, 10);
     const freeRaidToday = gameState.lastFreeRaidDate === todayStr;
@@ -1417,6 +1432,15 @@ const AppInner: React.FC = () => {
       lastFreeRaidDate: isFreeRaid ? todayStr : prev.lastFreeRaidDate,
       // Streak bonus stored (used by RaidScreen via activeRaidBoosts or multiplier — pass via dedicated state)
       activeStreakBonus: streakBonus,
+      // Drill cap tracking
+      ...(mode === Mode.DRILL ? (() => {
+        const SIX_HOURS = 6 * 60 * 60 * 1000;
+        const windowExpired = (now - prev.drillWindowStart) >= SIX_HOURS;
+        return {
+          drillCount: windowExpired ? 1 : prev.drillCount + 1,
+          drillWindowStart: windowExpired ? now : prev.drillWindowStart,
+        };
+      })() : {}),
     }));
 
     if (mode === Mode.TEAM) navigateTo(Screen.TEAM);
@@ -1462,6 +1486,8 @@ const AppInner: React.FC = () => {
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             raidTickets={gameState.raidTickets}
             lastFreeRaidDate={gameState.lastFreeRaidDate}
+            drillCount={gameState.drillCount}
+            drillWindowStart={gameState.drillWindowStart}
           />
         );
       case Screen.RAID:
@@ -1605,6 +1631,9 @@ const AppInner: React.FC = () => {
             ownedItemIds={gameState.ownedItemIds}
             onToggleGear={handleToggleGear}
             raidTickets={gameState.raidTickets}
+            lastFreeRaidDate={gameState.lastFreeRaidDate}
+            drillCount={gameState.drillCount}
+            drillWindowStart={gameState.drillWindowStart}
             onEquipAvatar={handleEquipAvatar}
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}

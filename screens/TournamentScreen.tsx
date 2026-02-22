@@ -15,9 +15,9 @@ interface TournamentScreenProps {
 }
 
 const PERIOD_TABS: { id: LeaderboardPeriod; label: string; srLabel: string }[] = [
+  { id: 'alltime', label: 'ALL-TIME', srLabel: 'TOTAL SR'      },
   { id: 'weekly',  label: 'WEEKLY',   srLabel: 'SR THIS WEEK'  },
   { id: 'monthly', label: 'MONTHLY',  srLabel: 'SR THIS MONTH' },
-  { id: 'alltime', label: 'ALL-TIME', srLabel: 'TOTAL SR'      },
 ];
 
 function getPeriodSubtitle(period: LeaderboardPeriod): string {
@@ -78,7 +78,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
   srPoints,
   walletAddress,
 }) => {
-  const [period,      setPeriod]      = useState<LeaderboardPeriod>('weekly');
+  const [period,      setPeriod]      = useState<LeaderboardPeriod>('alltime');
   const [showEntry,   setShowEntry]   = useState(false);
   const [currency,    setCurrency]    = useState<Currency>(Currency.SOL);
   const { entries, loading } = useLeaderboard(period);

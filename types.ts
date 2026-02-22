@@ -327,4 +327,7 @@ export interface GameState {
   activeStreakBonus: number;           // +0.15 per 3-win streak, applied as starting mult bonus
   lastRaidEvents?: RaidEvent[];        // populated after each raid for post-raid breakdown
   storeInitialTab?: 'GEAR' | 'AVATAR' | 'PASS' | 'FORGE'; // deep-link into store tab
+  // Drill cap: 3 free drills per 6-hour rolling window
+  drillCount: number;                  // drills used in current 6h window
+  drillWindowStart: number;            // epoch ms when current 6h window started
 }
