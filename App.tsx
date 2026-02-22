@@ -1443,12 +1443,9 @@ const AppInner: React.FC = () => {
       })() : {}),
     }));
 
-    if (mode === Mode.TEAM) navigateTo(Screen.TEAM);
-    else {
-      setGameState(prev => ({ ...prev, currentScreen: Screen.RAID, isRaidLoading: true }));
-      acquireWakeLock();
-      enterFullscreen();
-    }
+    setGameState(prev => ({ ...prev, currentScreen: Screen.RAID, isRaidLoading: true }));
+    acquireWakeLock();
+    enterFullscreen();
 
     // ── Provably-fair seed fetched in background (ready before raid ends) ─
     if (walletAddr) {
@@ -1506,11 +1503,7 @@ const AppInner: React.FC = () => {
       case Screen.TEAM:
         return (
           <TeamScreen
-            onStartRaid={() => {
-              if (!requireWallet()) return;
-              setGameState(prev => ({ ...prev, activeRaidFee: ENTRY_FEES[Mode.TEAM] }));
-              navigateTo(Screen.RAID);
-            }}
+            onStartRaid={() => enterRaid(Mode.TEAM, Difficulty.MEDIUM, [], Currency.SOL)}
             username={gameState.username}
             walletAddress={walletAddr}
           />
@@ -1673,7 +1666,7 @@ const AppInner: React.FC = () => {
           domainName={domainName}
         />
         <main className="flex-1 relative overflow-hidden">
-          <Suspense fallback={<div className="flex-1 flex items-center justify-center text-white/20 text-xs font-black uppercase tracking-widest animate-pulse">LOADING...</div>}>{renderScreen()}</Suspense>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center text-white/40 text-xs font-black uppercase tracking-widest animate-pulse">LOADING...</div>}>{renderScreen()}</Suspense>
         </main>
       </div>
       <HowItWorksModal
@@ -1703,20 +1696,20 @@ const AppInner: React.FC = () => {
             <h2 className="text-lg font-black uppercase tracking-widest text-white">
               VAULT ACCESS DENIED
             </h2>
-            <p className="text-xs text-white/50 font-black uppercase tracking-widest leading-relaxed">
+            <p className="text-xs text-white/70 font-black uppercase tracking-widest leading-relaxed">
               The vault is restricted to<br />
               <span className="text-[#00FBFF]">OPERATIVE</span> rank and above.
             </p>
             <div className="w-full border border-white/5 bg-white/5 p-3 flex flex-col gap-1">
-              <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em]">YOUR CURRENT RANK</p>
+              <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">YOUR CURRENT RANK</p>
               <p className="font-black uppercase tracking-widest text-sm" style={{ color: currentRank.color }}>
                 {currentRank.title}
               </p>
-              <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">
+              <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">
                 {gameState.srPoints.toLocaleString()} / 3,000 SR REQUIRED
               </p>
             </div>
-            <p className="text-[10px] text-white/30 font-black uppercase tracking-widest leading-relaxed">
+            <p className="text-[10px] text-white/50 font-black uppercase tracking-widest leading-relaxed">
               Keep raiding to reach OPERATIVE.<br />
               The vault will be waiting.
             </p>

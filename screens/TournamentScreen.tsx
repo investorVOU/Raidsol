@@ -31,7 +31,7 @@ function getPeriodSubtitle(period: LeaderboardPeriod): string {
 
 const PODIUM = [
   { numColor: 'text-yellow-400', border: 'border-yellow-500/50', bg: 'bg-yellow-500/5',  glow: 'shadow-[0_0_30px_rgba(234,179,8,0.10)]',        avatarRing: 'ring-2 ring-yellow-400/60', medal: '🥇' },
-  { numColor: 'text-white/60',   border: 'border-white/15',      bg: 'bg-white/[0.02]', glow: '',                                               avatarRing: 'ring-2 ring-white/20',      medal: '🥈' },
+  { numColor: 'text-white/75',   border: 'border-white/15',      bg: 'bg-white/[0.02]', glow: '',                                               avatarRing: 'ring-2 ring-white/20',      medal: '🥈' },
   { numColor: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/5', glow: 'shadow-[0_0_20px_rgba(249,115,22,0.08)]',        avatarRing: 'ring-2 ring-orange-400/40', medal: '🥉' },
 ];
 
@@ -50,7 +50,7 @@ function AvatarImg({ src, size }: { src: string | null; size: number }) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"
         style={{ width: size * 0.55, height: size * 0.55 }}
-        className="text-white/10"
+        className="text-white/20"
       >
         <circle cx="12" cy="8" r="4" />
         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
@@ -116,16 +116,16 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
               <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-400">
                 ACCESS_DENIED
               </h3>
-              <p className="text-white/40 text-xs font-black uppercase tracking-widest mb-6">
+              <p className="text-white/60 text-xs font-black uppercase tracking-widest mb-6">
                 Tournament unlocks at Level {TOURNAMENT_MIN_LEVEL} — COMMANDER
               </p>
               <div className="bg-white/5 p-4 mb-6 tech-border">
                 <div className="flex justify-between text-xs font-black uppercase mb-2">
-                  <span className="text-white/30">YOUR RANK</span>
-                  <span className="text-white/60">L.{rankLevel} {rankTitle}</span>
+                  <span className="text-white/50">YOUR RANK</span>
+                  <span className="text-white/75">L.{rankLevel} {rankTitle}</span>
                 </div>
                 <div className="flex justify-between text-xs font-black uppercase mb-3">
-                  <span className="text-white/30">REQUIRED</span>
+                  <span className="text-white/50">REQUIRED</span>
                   <span className="text-purple-400">L.{TOURNAMENT_MIN_LEVEL} COMMANDER</span>
                 </div>
                 {/* Progress bar toward 7000 SR (COMMANDER threshold) */}
@@ -135,13 +135,13 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                     style={{ width: `${Math.min(100, (srPoints / 7000) * 100).toFixed(1)}%` }}
                   />
                 </div>
-                <p className="text-[9px] text-white/20 font-black uppercase tracking-widest mt-1.5 text-right">
+                <p className="text-[9px] text-white/40 font-black uppercase tracking-widest mt-1.5 text-right">
                   {srPoints.toLocaleString()} / 7,000 SR
                 </p>
               </div>
               <button
                 onClick={() => setShowEntry(false)}
-                className="w-full border border-white/10 text-white/40 py-3 font-black uppercase tracking-widest text-sm italic hover:text-white/70 transition-colors"
+                className="w-full border border-white/10 text-white/60 py-3 font-black uppercase tracking-widest text-sm italic hover:text-white/70 transition-colors"
               >
                 ← BACK
               </button>
@@ -163,7 +163,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
 
                 {/* Difficulty (fixed) */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">DIFFICULTY</span>
+                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">DIFFICULTY</span>
                   <span className="text-xs font-black italic text-orange-400 border border-orange-500/30 bg-orange-500/10 px-2 py-1 uppercase tracking-wide">
                     ⚡ HARDCORE
                   </span>
@@ -171,18 +171,18 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
 
                 {/* Entry fee */}
                 <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                  <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">ENTRY FEE</span>
+                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">ENTRY FEE</span>
                   <span className="mono text-lg font-black text-white italic">
                     {feeInCurrency % 1 === 0
                       ? feeInCurrency.toFixed(0)
                       : feeInCurrency.toFixed(3)}{' '}
-                    <span className="text-white/40 text-sm">{CURRENCY_LABELS[currency]}</span>
+                    <span className="text-white/60 text-sm">{CURRENCY_LABELS[currency]}</span>
                   </span>
                 </div>
 
                 {/* Currency selector */}
                 <div>
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2">PAY WITH</p>
+                  <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-2">PAY WITH</p>
                   <div className="grid grid-cols-3 gap-2">
                     {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
                       const bal = balanceMap[c];
@@ -195,7 +195,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                           className={`py-2.5 px-2 tech-border font-black uppercase text-xs italic transition-all border-2 flex flex-col items-center gap-0.5 ${
                             currency === c
                               ? 'bg-purple-500/20 border-purple-400 text-white'
-                              : 'bg-black border-white/10 text-white/40 hover:border-white/25 hover:text-white/60'
+                              : 'bg-black border-white/10 text-white/60 hover:border-white/25 hover:text-white/75'
                           }`}
                         >
                           <span>{CURRENCY_LABELS[c]}</span>
@@ -211,13 +211,13 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                 {/* Balance vs cost */}
                 <div className="bg-white/3 p-3 tech-border space-y-1.5 border border-white/5">
                   <div className="flex justify-between text-[10px] font-black uppercase">
-                    <span className="text-white/30">YOUR BALANCE</span>
-                    <span className={currentBalance < feeInCurrency ? 'text-red-400' : 'text-white/60'}>
+                    <span className="text-white/50">YOUR BALANCE</span>
+                    <span className={currentBalance < feeInCurrency ? 'text-red-400' : 'text-white/75'}>
                       {currentBalance.toFixed(currency === Currency.SOL ? 4 : 2)} {CURRENCY_LABELS[currency]}
                     </span>
                   </div>
                   <div className="flex justify-between text-[10px] font-black uppercase">
-                    <span className="text-white/30">ENTRY COST</span>
+                    <span className="text-white/50">ENTRY COST</span>
                     <span className="text-purple-400">
                       {feeInCurrency % 1 === 0 ? feeInCurrency.toFixed(0) : feeInCurrency.toFixed(3)} {CURRENCY_LABELS[currency]}
                     </span>
@@ -236,7 +236,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                   className={`w-full py-5 tech-border font-black uppercase tracking-tight text-lg italic transition-all ${
                     canAfford
                       ? 'bg-purple-600 text-white shadow-[0_0_25px_rgba(168,85,247,0.3)] active:scale-95'
-                      : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'
+                      : 'bg-white/5 text-white/40 cursor-not-allowed border border-white/5'
                   }`}
                 >
                   {canAfford ? 'CONFIRM_ENTRY →' : 'INSUFFICIENT FUNDS'}
@@ -245,7 +245,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
 
               <button
                 onClick={() => setShowEntry(false)}
-                className="w-full mt-3 py-3 text-white/30 font-black uppercase tracking-widest text-xs italic hover:text-white/60 transition-colors"
+                className="w-full mt-3 py-3 text-white/50 font-black uppercase tracking-widest text-xs italic hover:text-white/75 transition-colors"
               >
                 ← CANCEL
               </button>
@@ -271,7 +271,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
             <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest italic">LIVE</span>
           </div>
         </div>
-        <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] italic mb-4">
+        <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] italic mb-4">
           _{getPeriodSubtitle(period)}
         </p>
         <div className="flex gap-2">
@@ -282,7 +282,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
               className={`flex-1 py-2.5 font-black uppercase tracking-wider text-xs italic transition-all tech-border border-2 ${
                 period === tab.id
                   ? 'bg-white text-black border-white'
-                  : 'bg-black border-white/15 text-white/40 hover:text-white/60 hover:border-white/30'
+                  : 'bg-black border-white/15 text-white/60 hover:text-white/75 hover:border-white/30'
               }`}
             >
               {tab.label}
@@ -310,8 +310,8 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-28 text-center">
             <p className="text-5xl mb-4">🏴</p>
-            <p className="text-white/20 font-black uppercase tracking-widest text-sm">NO OPERATORS YET</p>
-            <p className="text-white/10 font-bold uppercase tracking-widest text-xs mt-2">
+            <p className="text-white/40 font-black uppercase tracking-widest text-sm">NO OPERATORS YET</p>
+            <p className="text-white/20 font-bold uppercase tracking-widest text-xs mt-2">
               {period === 'alltime' ? 'Be the first to raid.' : 'No raids this period. Be first.'}
             </p>
           </div>
@@ -354,7 +354,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                         <p className={`mono text-xl sm:text-2xl font-black italic leading-none ${s.numColor}`}>
                           {entry.sr_points.toLocaleString()}
                         </p>
-                        <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mt-0.5">{srLabel}</p>
+                        <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mt-0.5">{srLabel}</p>
                       </div>
                     </div>
                   );
@@ -373,7 +373,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                       key={entry.wallet_address}
                       className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/3 ${isMe ? 'bg-cyan-500/5' : ''}`}
                     >
-                      <span className="w-6 mono text-xs font-black text-white/20 text-center shrink-0">#{place}</span>
+                      <span className="w-6 mono text-xs font-black text-white/40 text-center shrink-0">#{place}</span>
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-white/5 shrink-0 flex items-center justify-center ring-1 ring-white/10">
                         <AvatarImg src={entry.avatarImage} size={32} />
                       </div>
@@ -388,7 +388,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                           L.{entry.rank_level} {entry.rank_title}
                         </p>
                       </div>
-                      <p className="mono text-sm font-black text-white/60 shrink-0">{entry.sr_points.toLocaleString()}</p>
+                      <p className="mono text-sm font-black text-white/75 shrink-0">{entry.sr_points.toLocaleString()}</p>
                     </div>
                   );
                 })}
@@ -404,7 +404,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
           onClick={() => setShowEntry(true)}
           className={`w-full py-5 sm:py-6 tech-border font-black uppercase tracking-tight text-xl sm:text-2xl active:scale-95 transition-all italic flex items-center justify-center gap-3 ${
             isLocked
-              ? 'bg-white/5 border border-white/10 text-white/25 cursor-pointer'
+              ? 'bg-white/5 border border-white/10 text-white/40 cursor-pointer'
               : 'bg-purple-600 text-white shadow-[0_0_30px_rgba(168,85,247,0.2)]'
           }`}
         >
@@ -414,7 +414,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
             <>⚔ ENTER_TOURNAMENT</>
           )}
         </button>
-        <p className="text-center text-[10px] text-white/10 font-black uppercase mt-3 tracking-[0.5em] italic">
+        <p className="text-center text-[10px] text-white/20 font-black uppercase mt-3 tracking-[0.5em] italic">
           {isLocked
             ? `* REQUIRES LEVEL ${TOURNAMENT_MIN_LEVEL} — COMMANDER *`
             : `* ULTRA HIGH RISK_TERMINAL · ${TOURNAMENT_FEE} SOL ENTRY *`}

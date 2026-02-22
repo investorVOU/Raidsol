@@ -75,7 +75,7 @@ const RaidLoadingScreen: React.FC<RaidLoadingScreenProps> = ({ onComplete, mode 
           <h1 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter text-white glitch-text leading-none">
             INITIALIZING
           </h1>
-          <p className="text-xs font-black text-white/20 uppercase tracking-[0.4em] mt-2">
+          <p className="text-xs font-black text-white/40 uppercase tracking-[0.4em] mt-2">
             RAID_ENGINE_v6.0
           </p>
         </div>
@@ -88,9 +88,9 @@ const RaidLoadingScreen: React.FC<RaidLoadingScreenProps> = ({ onComplete, mode 
               style={{ width: `${progress}%`, backgroundColor: barColor, boxShadow: `0 0 10px ${barColor}` }}
             />
           </div>
-          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-white/20">
+          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-white/40">
             <span>{Math.floor(progress)}%</span>
-            <span className="text-white/40 animate-pulse">{statuses[statusIdx]}</span>
+            <span className="text-white/60 animate-pulse">{statuses[statusIdx]}</span>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ const RaidLoadingScreen: React.FC<RaidLoadingScreenProps> = ({ onComplete, mode 
         </div>
 
         {/* Bottom note */}
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/10 text-center">
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 text-center">
           PROTOCOL_INITIALIZING // STANDBY
         </p>
       </div>

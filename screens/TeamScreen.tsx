@@ -48,7 +48,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
             <h2 className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter">
               SQUAD_OPS
             </h2>
-            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.35em] italic mt-0.5">
+            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.35em] italic mt-0.5">
               _CO-OP RAID PROTOCOL · {MAX_SQUAD}-MAN UNIT
             </p>
           </div>
@@ -65,7 +65,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
 
         {/* ─── SQUAD ROSTER ─── */}
         <div>
-          <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.4em] italic mb-3">
+          <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em] italic mb-3">
             __ ROSTER
           </p>
           <div className="space-y-2">
@@ -92,7 +92,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
                   </span>
                 </div>
                 {shortAddr && (
-                  <p className="text-[10px] font-mono text-white/25 tracking-widest truncate">{shortAddr}</p>
+                  <p className="text-[10px] font-mono text-white/40 tracking-widest truncate">{shortAddr}</p>
                 )}
               </div>
               {/* Role badge */}
@@ -108,13 +108,13 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
                 className="border border-dashed border-white/10 p-4 flex items-center gap-4 transition-colors hover:border-white/20"
               >
                 <div className="shrink-0 w-12 h-12 rounded-full bg-white/3 border border-dashed border-white/10 flex items-center justify-center">
-                  <span className="text-white/15 text-xl font-black">+</span>
+                  <span className="text-white/30 text-xl font-black">+</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-black uppercase tracking-widest text-white/15 italic">
+                  <p className="text-xs font-black uppercase tracking-widest text-white/30 italic">
                     {slot.hint}
                   </p>
-                  <p className="text-[9px] mono text-white/10 uppercase tracking-widest mt-0.5">{slot.label}</p>
+                  <p className="text-[9px] mono text-white/20 uppercase tracking-widest mt-0.5">{slot.label}</p>
                 </div>
                 <div className="shrink-0">
                   <div className="w-2 h-2 rounded-full bg-white/10" />
@@ -127,7 +127,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
 
         {/* ─── ROLE SELECTION ─── */}
         <div>
-          <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.4em] italic mb-3">
+          <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em] italic mb-3">
             __ SELECT ROLE
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -138,13 +138,13 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
                 className={`p-3 tech-border border-2 text-left transition-all ${
                   selectedRole === role
                     ? ROLE_COLORS[role] + ' border-opacity-100'
-                    : 'bg-black border-white/10 text-white/30 hover:border-white/20'
+                    : 'bg-black border-white/10 text-white/50 hover:border-white/20'
                 }`}
               >
-                <p className={`text-xs font-black uppercase tracking-widest ${selectedRole === role ? '' : 'text-white/25'}`}>
+                <p className={`text-xs font-black uppercase tracking-widest ${selectedRole === role ? '' : 'text-white/40'}`}>
                   {role}
                 </p>
-                <p className="text-[8px] font-bold uppercase text-white/20 mt-0.5 tracking-wide normal-case italic">
+                <p className="text-[8px] font-bold uppercase text-white/40 mt-0.5 tracking-wide normal-case italic">
                   {role === 'BREACHER'  && 'High offense. +10% attack dmg'}
                   {role === 'SUPPORT'   && 'Shared shield. Defends 2x'}
                   {role === 'RECON'     && 'Reveals spikes 1s early'}
@@ -157,24 +157,24 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
 
         {/* ─── SQUAD INTEL ─── */}
         <div className="bg-black border border-white/5 tech-border p-4 space-y-3">
-          <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.4em] italic mb-1">
+          <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em] italic mb-1">
             __ SQUAD INTEL
           </p>
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <p className="text-[9px] text-white/20 font-black uppercase tracking-widest">ENTRY FEE</p>
-              <p className="mono font-black text-white mt-0.5">{SQUAD_FEE} SOL<span className="text-white/30 text-[9px]"> / player</span></p>
+              <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">ENTRY FEE</p>
+              <p className="mono font-black text-white mt-0.5">{SQUAD_FEE} SOL<span className="text-white/50 text-[9px]"> / player</span></p>
             </div>
             <div>
-              <p className="text-[9px] text-white/20 font-black uppercase tracking-widest">PAYOUT SPLIT</p>
+              <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">PAYOUT SPLIT</p>
               <p className="mono font-black text-white mt-0.5">EQUAL SHARE</p>
             </div>
             <div>
-              <p className="text-[9px] text-white/20 font-black uppercase tracking-widest">BUST PENALTY</p>
+              <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">BUST PENALTY</p>
               <p className="mono font-black text-red-400 mt-0.5">−25% POOL</p>
             </div>
             <div>
-              <p className="text-[9px] text-white/20 font-black uppercase tracking-widest">SQUAD BONUS</p>
+              <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">SQUAD BONUS</p>
               <p className="mono font-black text-cyan-400 mt-0.5">+1.25× POOL</p>
             </div>
           </div>
@@ -185,7 +185,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
           <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse shrink-0" />
           <div>
             <p className="text-[9px] font-black text-yellow-400 uppercase tracking-widest">MATCHMAKING COMING SOON</p>
-            <p className="text-[8px] text-white/20 font-black uppercase tracking-widest mt-0.5">
+            <p className="text-[8px] text-white/40 font-black uppercase tracking-widest mt-0.5">
               Share code · Invite direct · Auto-match queue
             </p>
           </div>
@@ -206,12 +206,12 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ onStartRaid, username, walletAd
           className={`w-full py-5 tech-border font-black uppercase tracking-tight text-xl italic transition-all flex items-center justify-center gap-3 ${
             isConnected
               ? 'bg-cyan-500 text-black active:scale-95 shadow-[0_0_25px_rgba(6,182,212,0.25)]'
-              : 'bg-white/5 border border-white/5 text-white/20 cursor-not-allowed'
+              : 'bg-white/5 border border-white/5 text-white/40 cursor-not-allowed'
           }`}
         >
           {isConnected ? '⚡ DEPLOY SQUAD →' : '🔒 WALLET_REQUIRED'}
         </button>
-        <p className="text-center text-[9px] text-white/10 font-black uppercase tracking-[0.5em] italic">
+        <p className="text-center text-[9px] text-white/20 font-black uppercase tracking-[0.5em] italic">
           * CO-OP RAID · {SQUAD_FEE} SOL ENTRY · SHARED PAYOUT *
         </p>
       </div>

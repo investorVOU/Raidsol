@@ -78,14 +78,14 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
     <div className="h-full flex flex-col p-6 animate-in slide-in-from-right duration-300 overflow-y-auto scrollbar-hide">
       {/* Header */}
       <div className="shrink-0 flex items-center gap-4 mb-8">
-        <button onClick={onBack} className="text-white/40 hover:text-white font-black text-2xl">
+        <button onClick={onBack} className="text-white/60 hover:text-white font-black text-2xl">
           {'<'}
         </button>
         <div>
           <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">
             PROTOCOL_<span className="text-[#14F195]">TREASURY</span>
           </h2>
-          <p className="text-xs font-black text-white/30 uppercase tracking-[0.4em]">Solvency_Check_v5.0</p>
+          <p className="text-xs font-black text-white/50 uppercase tracking-[0.4em]">Solvency_Check_v5.0</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
             <div className="absolute top-0 right-0 p-4 opacity-10">
               <span className="text-6xl font-black text-[#14F195]">SOL</span>
             </div>
-            <p className="text-sm font-black text-white/40 uppercase tracking-widest mb-2">TOTAL_RESERVE</p>
+            <p className="text-sm font-black text-white/60 uppercase tracking-widest mb-2">TOTAL_RESERVE</p>
             {balanceLoading && liveBalance === null ? (
               <div className="h-12 bg-white/5 animate-pulse rounded w-2/3" />
             ) : (
@@ -115,11 +115,11 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
                 LIVE_ON-CHAIN
               </span>
             </div>
-            <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mt-1">DEVNET</p>
+            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1">DEVNET</p>
           </div>
 
           <div className="bg-[#050505] border-2 border-white/10 p-8 tech-border">
-            <p className="text-sm font-black text-white/40 uppercase tracking-widest mb-2">24H_PAYOUTS</p>
+            <p className="text-sm font-black text-white/60 uppercase tracking-widest mb-2">24H_PAYOUTS</p>
             {loading ? (
               <div className="h-12 bg-white/5 animate-pulse rounded w-2/3" />
             ) : (
@@ -127,7 +127,7 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
                 {stats ? Number(stats.payouts_24h_sol).toFixed(2) : '—'}
               </p>
             )}
-            <p className="text-xs font-black text-white/20 mt-2 uppercase tracking-wider">
+            <p className="text-xs font-black text-white/40 mt-2 uppercase tracking-wider">
               VIA {stats ? stats.total_transactions.toLocaleString() : '—'} TRANSACTIONS
             </p>
           </div>
@@ -138,12 +138,12 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
           <div>
             <h3 className="text-lg font-black uppercase text-[#14F195] italic">VERIFY ON CHAIN</h3>
             <div className="flex items-center gap-2 mt-1 mb-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">TREASURY_ADDR:</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/60">TREASURY_ADDR:</span>
               <span className="mono text-xs text-white bg-black/50 px-2 py-1 border border-white/10">
                 {displayAddr}
               </span>
             </div>
-            <p className="text-xs text-white/60 font-medium max-w-md">
+            <p className="text-xs text-white/75 font-medium max-w-md">
               The treasury wallet is public. You can audit all inflows (fees) and outflows (payouts) directly on the ledger.
             </p>
           </div>
@@ -169,7 +169,7 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
 
         {/* Recent Transactions — from real raid_history */}
         <div className="border-t border-white/10 pt-6">
-          <h3 className="text-sm font-black text-white/40 uppercase tracking-widest mb-4">RECENT_PROTOCOLS</h3>
+          <h3 className="text-sm font-black text-white/60 uppercase tracking-widest mb-4">RECENT_PROTOCOLS</h3>
           {txLoading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (
@@ -177,7 +177,7 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
               ))}
             </div>
           ) : recentTx.length === 0 ? (
-            <p className="text-white/20 font-black uppercase tracking-widest text-xs py-8 text-center">
+            <p className="text-white/40 font-black uppercase tracking-widest text-xs py-8 text-center">
               NO TRANSACTIONS YET
             </p>
           ) : (
@@ -187,7 +187,7 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
                   key={tx.id}
                   className="flex justify-between items-center p-3 bg-white/2 border border-white/5 hover:bg-white/5 transition-colors"
                 >
-                  <span className="text-white/40 truncate max-w-[120px]">{tx.raid_id}</span>
+                  <span className="text-white/60 truncate max-w-[120px]">{tx.raid_id}</span>
                   <span className={tx.success ? 'text-[#14F195]' : 'text-red-500'}>
                     {tx.success ? 'OUTFLOW (WIN)' : 'INFLOW (FEE)'}
                   </span>

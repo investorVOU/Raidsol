@@ -222,7 +222,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-[#9945FF] rounded-full animate-pulse shadow-[0_0_8px_#9945FF]" />
             <span className="text-xs font-black uppercase tracking-widest text-[#9945FF]">LOBBY_ACTIVE</span>
-            <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">// {players.length}/{activeRoom.maxPlayers} ONLINE</span>
+            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">// {players.length}/{activeRoom.maxPlayers} ONLINE</span>
           </div>
           <button onClick={onLeaveRoom} className="text-[10px] font-black uppercase tracking-widest text-red-500/70 hover:text-red-400 border border-red-500/20 hover:border-red-500/50 px-3 py-1.5 transition-all">
             LEAVE_ROOM
@@ -239,29 +239,29 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                 {/* QR */}
                 <div className="shrink-0 p-2 bg-black border border-white/10">
                   <canvas ref={qrCanvasRef} width="180" height="180" className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] block" />
-                  <p className="text-[8px] text-center text-white/20 font-black uppercase mt-1 tracking-widest">SCAN_TO_JOIN</p>
+                  <p className="text-[8px] text-center text-white/40 font-black uppercase mt-1 tracking-widest">SCAN_TO_JOIN</p>
                 </div>
                 {/* Code + stats */}
                 <div className="flex-1 w-full text-center sm:text-left">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2">ACCESS_CODE</p>
+                  <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.4em] mb-2">ACCESS_CODE</p>
                   <button
                     onClick={copyCode}
                     className="group inline-flex items-center gap-3 px-5 py-3 bg-white/5 border border-white/10 hover:border-[#9945FF]/50 hover:bg-[#9945FF]/5 transition-all mb-2"
                   >
                     <span className="text-3xl sm:text-4xl font-black text-white tracking-widest mono select-all">{activeRoom.code}</span>
-                    <span className="text-white/30 group-hover:text-[#9945FF] transition-colors">
+                    <span className="text-white/50 group-hover:text-[#9945FF] transition-colors">
                       {codeCopied ? <Check size={18} /> : <Copy size={18} />}
                     </span>
                   </button>
-                  <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-4">{codeCopied ? 'COPIED!' : 'TAP_TO_COPY'}</p>
+                  <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-4">{codeCopied ? 'COPIED!' : 'TAP_TO_COPY'}</p>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-black border border-white/8 p-3 text-center">
-                      <p className="text-[9px] text-white/30 font-black uppercase tracking-widest mb-0.5">STAKE</p>
+                      <p className="text-[9px] text-white/50 font-black uppercase tracking-widest mb-0.5">STAKE</p>
                       <p className="text-lg font-black text-[#14F195] mono">{activeRoom.stakePerPlayer} <span className="text-sm">{CURRENCY_LABELS[roomCcy]}</span></p>
                     </div>
                     <div className="bg-black border border-white/8 p-3 text-center">
-                      <p className="text-[9px] text-white/30 font-black uppercase tracking-widest mb-0.5">POT</p>
+                      <p className="text-[9px] text-white/50 font-black uppercase tracking-widest mb-0.5">POT</p>
                       <p className="text-lg font-black text-yellow-500 mono">{totalPot.toFixed(roomCcy === Currency.SKR ? 0 : 2)} <span className="text-sm">{CURRENCY_LABELS[roomCcy]}</span></p>
                     </div>
                   </div>
@@ -272,7 +272,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
             {/* ── PLAYER SLOTS ── */}
             <div className="bg-[#09090b] border border-white/8 tech-border overflow-hidden">
               <div className="px-4 py-3 border-b border-white/5 flex justify-between items-center">
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">OPERATIVES</span>
+                <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.3em]">OPERATIVES</span>
                 <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: players.length >= activeRoom.maxPlayers ? '#14F195' : '#9945FF' }}>
                   {players.length}/{activeRoom.maxPlayers}
                 </span>
@@ -292,9 +292,9 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                 {[...Array(activeRoom.maxPlayers - players.length)].map((_, i) => (
                   <div key={i} className="flex items-center gap-3 px-4 py-3 opacity-30">
                     <div className="w-6 h-6 border border-white/10 flex items-center justify-center shrink-0">
-                      <span className="text-[9px] font-black text-white/20">{String(players.length + i + 1).padStart(2, '0')}</span>
+                      <span className="text-[9px] font-black text-white/40">{String(players.length + i + 1).padStart(2, '0')}</span>
                     </div>
-                    <span className="flex-1 text-sm font-black italic text-white/20">Waiting for operative...</span>
+                    <span className="flex-1 text-sm font-black italic text-white/40">Waiting for operative...</span>
                     <div className="w-2 h-2 rounded-full bg-white/10 animate-pulse" />
                   </div>
                 ))}
@@ -304,18 +304,18 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
             {/* ── CHAT ── */}
             <div className="bg-[#09090b] border border-white/8 tech-border overflow-hidden">
               <div className="px-4 py-2 border-b border-white/5">
-                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">COMMS_CHANNEL</span>
+                <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.4em]">COMMS_CHANNEL</span>
               </div>
               <div className="h-36 overflow-y-auto scrollbar-hide bg-black/60 p-3 space-y-1.5">
                 {chatMessages.length === 0 && (
-                  <p className="text-[10px] text-white/15 font-black italic tracking-widest text-center mt-10">No transmissions yet...</p>
+                  <p className="text-[10px] text-white/30 font-black italic tracking-widest text-center mt-10">No transmissions yet...</p>
                 )}
                 {chatMessages.map((msg) => {
                   const isMe = msg.wallet_address === walletAddress;
                   return (
                     <div key={msg.id} className={`flex gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[80%] px-2.5 py-1.5 ${isMe ? 'bg-[#9945FF]/20 border border-[#9945FF]/30' : 'bg-white/5 border border-white/8'}`}>
-                        {!isMe && <p className="text-[8px] font-black text-white/30 uppercase tracking-widest mb-0.5">{msg.username}</p>}
+                        {!isMe && <p className="text-[8px] font-black text-white/50 uppercase tracking-widest mb-0.5">{msg.username}</p>}
                         <p className={`text-[11px] font-medium ${isMe ? 'text-[#9945FF]' : 'text-white/70'}`}>{msg.content}</p>
                       </div>
                     </div>
@@ -355,13 +355,13 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               className={`w-full py-5 sm:py-6 tech-border font-black uppercase tracking-tight text-xl sm:text-2xl transition-all
                 ${canStart
                   ? 'bg-[#9945FF] text-white shadow-[0_0_40px_rgba(153,69,255,0.35)] hover:bg-[#8035e0] active:scale-[0.99]'
-                  : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'}`}
+                  : 'bg-white/5 text-white/40 cursor-not-allowed border border-white/5'}`}
             >
               {canStart ? 'INITIATE_PVP_PROTOCOL →' : `WAITING FOR PLAYERS (${players.length}/${activeRoom.maxPlayers})...`}
             </button>
           ) : (
             <div className="w-full py-5 sm:py-6 border border-white/8 tech-border text-center bg-black">
-              <span className="text-sm font-black uppercase text-white/30 animate-pulse tracking-widest">HOST_CONTROLS_START — STANDBY...</span>
+              <span className="text-sm font-black uppercase text-white/50 animate-pulse tracking-widest">HOST_CONTROLS_START — STANDBY...</span>
             </div>
           )}
         </div>
@@ -384,7 +384,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
             </div>
             <button
               onClick={stopScanning}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-white/20 hover:border-white/50 text-white/50 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-white/20 hover:border-white/50 text-white/70 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
             >
               <X size={14} /> CANCEL
             </button>
@@ -407,7 +407,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
 
           {/* Bottom hint — always visible */}
           <div className="shrink-0 px-4 py-5 text-center border-t border-white/5 bg-[#050505]">
-            <p className="text-[11px] font-black text-white/30 uppercase tracking-widest animate-pulse">
+            <p className="text-[11px] font-black text-white/50 uppercase tracking-widest animate-pulse">
               Point camera at room QR code
             </p>
           </div>
@@ -418,7 +418,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
       <div className="shrink-0 flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/5 bg-[#050505]">
         <button
           onClick={() => view === 'MENU' ? onBack() : (setView('MENU'), setJoinPreview(null), setPreviewError(''))}
-          className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white border border-white/10 hover:border-white/30 transition-all font-black text-lg"
+          className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white border border-white/10 hover:border-white/30 transition-all font-black text-lg"
         >
           {'<'}
         </button>
@@ -426,7 +426,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
           <h2 className="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-white leading-none">
             PVP_<span className="text-[#9945FF]">ARENA</span>
           </h2>
-          <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">
+          <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">
             {view === 'MENU' ? 'SELECT MODE' : view === 'CREATE' ? 'CONFIGURE ROOM' : 'ENTER ROOM CODE'}
           </p>
         </div>
@@ -443,9 +443,9 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               <div className="border border-[#9945FF]/30 bg-[#9945FF]/5 p-4 sm:p-5 tech-border text-center">
                 <Trophy className="mx-auto mb-2 text-[#9945FF]" size={22} />
                 <p className="text-white font-black uppercase tracking-widest text-sm sm:text-base mb-1">WINNER TAKES ALL</p>
-                <p className="text-white/40 text-[11px] font-medium leading-relaxed">
+                <p className="text-white/60 text-[11px] font-medium leading-relaxed">
                   Pool tokens with rivals. Raid the same protocol.<br />
-                  <span className="text-white/60">Highest extract wins the entire pot.</span>
+                  <span className="text-white/75">Highest extract wins the entire pot.</span>
                 </p>
               </div>
 
@@ -470,13 +470,13 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                 className="group w-full p-4 sm:p-5 bg-black border-2 border-white/20 text-white tech-border hover:border-[#9945FF]/60 hover:bg-[#9945FF]/5 transition-all active:scale-[0.99] text-left flex items-center gap-4"
               >
                 <div className="w-10 h-10 border border-white/20 flex items-center justify-center shrink-0 group-hover:border-[#9945FF]/50">
-                  <Users size={20} className="text-white/60 group-hover:text-[#9945FF]" />
+                  <Users size={20} className="text-white/75 group-hover:text-[#9945FF]" />
                 </div>
                 <div className="flex-1">
                   <p className="text-base sm:text-lg font-black uppercase tracking-tight leading-none mb-0.5">JOIN ROOM</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30">ENTER CODE OR SCAN QR</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/50">ENTER CODE OR SCAN QR</p>
                 </div>
-                <span className="text-xl font-black text-white/20 group-hover:text-[#9945FF] transition-colors">→</span>
+                <span className="text-xl font-black text-white/40 group-hover:text-[#9945FF] transition-colors">→</span>
               </button>
 
             </div>
@@ -488,7 +488,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
 
               {/* Currency selector */}
               <div>
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-2">01 // STAKE_CURRENCY</p>
+                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mb-2">01 // STAKE_CURRENCY</p>
                 <div className="grid grid-cols-3 gap-2">
                   {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
                     const active = stakeCurrency === c;
@@ -499,7 +499,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                       <button
                         key={c}
                         onClick={() => setStakeCurrency(c)}
-                        className={`py-3 sm:py-4 border-2 tech-border font-black text-sm transition-all ${active ? col : 'bg-black border-white/10 text-white/30 hover:border-white/30'}`}
+                        className={`py-3 sm:py-4 border-2 tech-border font-black text-sm transition-all ${active ? col : 'bg-black border-white/10 text-white/50 hover:border-white/30'}`}
                       >
                         <p className="text-sm font-black">{CURRENCY_LABELS[c]}</p>
                         <p className="text-[9px] font-black opacity-60 mt-0.5">{balanceFmt(c)}</p>
@@ -511,13 +511,13 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
 
               {/* Stake amount */}
               <div>
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-2">02 // ENTRY_STAKE</p>
+                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mb-2">02 // ENTRY_STAKE</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {STAKE_OPTIONS[stakeCurrency].map(val => (
                     <button
                       key={val}
                       onClick={() => setStakeAmount(val)}
-                      className={`py-4 tech-border font-black text-lg transition-all ${stakeAmount === val ? 'bg-[#14F195] text-black border-[#14F195]' : 'bg-black border-white/10 text-white/40 hover:border-white/30 hover:text-white/70'}`}
+                      className={`py-4 tech-border font-black text-lg transition-all ${stakeAmount === val ? 'bg-[#14F195] text-black border-[#14F195]' : 'bg-black border-white/10 text-white/60 hover:border-white/30 hover:text-white/70'}`}
                     >
                       {val}
                     </button>
@@ -528,7 +528,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               {/* Max players */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">03 // MAX_PLAYERS</p>
+                  <p className="text-[10px] font-black text-white/70 uppercase tracking-widest">03 // MAX_PLAYERS</p>
                   <span className="text-sm font-black text-[#9945FF] mono">{maxPlayers}</span>
                 </div>
                 <input
@@ -536,7 +536,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                   onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
                   className="w-full accent-[#9945FF]"
                 />
-                <div className="flex justify-between text-[9px] font-black text-white/20 mt-1">
+                <div className="flex justify-between text-[9px] font-black text-white/40 mt-1">
                   <span>2 MIN</span>
                   <span>10 MAX</span>
                 </div>
@@ -545,11 +545,11 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               {/* Pool preview */}
               <div className="p-4 sm:p-5 bg-[#09090b] border border-[#9945FF]/20 tech-border">
                 <div className="flex justify-between items-center mb-3 pb-3 border-b border-white/5">
-                  <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">STAKE PER PLAYER</span>
+                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">STAKE PER PLAYER</span>
                   <span className="font-black mono text-white">{stakeAmount} {CURRENCY_LABELS[stakeCurrency]}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">MAX TOTAL POT</span>
+                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">MAX TOTAL POT</span>
                   <span className="text-2xl font-black text-yellow-500 mono">
                     {(stakeAmount * maxPlayers).toFixed(stakeCurrency === Currency.SKR ? 0 : 2)}
                     <span className="text-sm ml-1 text-yellow-500/60">{CURRENCY_LABELS[stakeCurrency]}</span>
@@ -572,7 +572,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
             <div className="space-y-4 py-2">
 
               <div>
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-2">ROOM_CODE</p>
+                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mb-2">ROOM_CODE</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -583,7 +583,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                   />
                   <button
                     onClick={startScanning}
-                    className="shrink-0 bg-white/5 border-2 border-white/15 tech-border px-3 sm:px-4 hover:bg-[#9945FF]/10 hover:border-[#9945FF]/50 text-white/40 hover:text-[#9945FF] transition-all"
+                    className="shrink-0 bg-white/5 border-2 border-white/15 tech-border px-3 sm:px-4 hover:bg-[#9945FF]/10 hover:border-[#9945FF]/50 text-white/60 hover:text-[#9945FF] transition-all"
                     title="Scan QR Code"
                   >
                     <Scan size={20} />
@@ -605,17 +605,17 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                   </div>
                   <div className="p-4 grid grid-cols-2 gap-3 mb-3">
                     <div className="bg-black/60 p-3 text-center border border-white/8">
-                      <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">STAKE</p>
+                      <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">STAKE</p>
                       <p className="text-xl font-black text-[#14F195] mono">{joinPreview.stake} <span className="text-sm">{CURRENCY_LABELS[joinPreview.currency]}</span></p>
                     </div>
                     <div className="bg-black/60 p-3 text-center border border-white/8">
-                      <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">MAX PLAYERS</p>
+                      <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">MAX PLAYERS</p>
                       <p className="text-xl font-black text-white mono">{joinPreview.maxPlayers}</p>
                     </div>
                   </div>
                   <div className="px-4 pb-4">
                     <div className="flex items-center justify-between p-2.5 bg-black/40 border border-white/5">
-                      <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">YOUR BALANCE</span>
+                      <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">YOUR BALANCE</span>
                       <span className={`text-[11px] font-black mono ${
                         balanceFor(joinPreview.currency) >= joinPreview.stake ? 'text-[#14F195]' : 'text-red-400'
                       }`}>

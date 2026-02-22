@@ -884,7 +884,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           </span>
           {nearMissSOL !== null && (
             <div className="mt-2 text-center px-6 py-3 border border-white/10 bg-black/60">
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 mb-1">YOU WERE THIS CLOSE</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/50 mb-1">YOU WERE THIS CLOSE</p>
               <p className="mono text-3xl font-black text-white/70">{nearMissSOL.toFixed(4)} <span className="text-sm text-[#14F195]/60">SOL</span></p>
               <p className="text-[8px] font-black uppercase tracking-widest text-red-500/40 mt-1">COULD HAVE EXTRACTED</p>
             </div>
@@ -942,7 +942,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         {/* ── TOP HUD ── */}
         <div className="shrink-0 flex justify-between items-center gap-2 mb-2">
           <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : earlyExitWarn ? 'border-orange-500/40' : 'border-white/10'}`}>
-            <p className={`text-[9px] font-black uppercase tracking-widest leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : earlyExitWarn ? 'text-orange-500/60' : 'text-white/40'}`}>
+            <p className={`text-[9px] font-black uppercase tracking-widest leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : earlyExitWarn ? 'text-orange-500/60' : 'text-white/60'}`}>
               {goldenWindow ? 'GOLDEN_EXTRACT' : earlyExitWarn ? 'EARLY_EXIT_-50%' : 'EXTRACT_VAL'}
             </p>
             <div className="flex items-baseline gap-2">
@@ -951,10 +951,10 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             </div>
           </div>
           <div className={`relative w-28 px-2 py-2 bg-black/80 border tech-border flex flex-col items-center ${timerGlowClass}`}>
-            <span className={`text-[8px] font-black uppercase tracking-widest mb-0.5 ${isUrgent ? 'text-red-500 animate-pulse' : 'text-white/30'}`}>TIME_LEFT</span>
+            <span className={`text-[8px] font-black uppercase tracking-widest mb-0.5 ${isUrgent ? 'text-red-500 animate-pulse' : 'text-white/50'}`}>TIME_LEFT</span>
             <div className="flex items-baseline gap-1">
               <span className={`mono text-2xl font-black leading-none ${isUrgent ? 'text-red-500' : 'text-[#00FBFF]'}`}>{Math.max(0, Math.floor(timeLeft))}</span>
-              <span className="text-[10px] font-black uppercase italic text-white/20">s</span>
+              <span className="text-[10px] font-black uppercase italic text-white/40">s</span>
             </div>
           </div>
         </div>
@@ -992,10 +992,10 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             <div className="absolute inset-0 border-[3px] border-dashed rounded-full animate-[spin_30s_linear_infinite] transition-colors duration-300"
                  style={{ borderColor: risk > 80 ? 'rgba(239,68,68,0.6)' : risk > 50 ? 'rgba(249,115,22,0.6)' : 'rgba(153,69,255,0.4)' }} />
             <div className="absolute top-0 right-0 bg-black/80 backdrop-blur-sm px-2 py-1 border tech-border border-white/10 min-w-[68px]">
-              <p className="text-[8px] font-black text-white/40 uppercase tracking-widest">RISK</p>
+              <p className="text-[8px] font-black text-white/60 uppercase tracking-widest">RISK</p>
               <div className="flex items-baseline gap-0.5">
                 <span className={`mono text-xl font-black ${risk > 85 ? 'text-red-500 animate-pulse' : risk > 60 ? 'text-orange-400' : 'text-white'}`}>{Math.floor(risk)}</span>
-                <span className="text-[10px] text-white/40">%</span>
+                <span className="text-[10px] text-white/60">%</span>
               </div>
               <div className="w-full h-0.5 bg-white/10 overflow-hidden mt-1">
                 <div className="h-full transition-all duration-500"
@@ -1027,7 +1027,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                   {graceCount === 0 ? 'GO!' : graceCount}
                 </span>
                 {graceCount > 0 && (
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 animate-pulse">GET_READY</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 animate-pulse">GET_READY</span>
                 )}
               </div>
             </div>
@@ -1039,7 +1039,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           {/* Multiplier + Score row */}
           <div className="bg-black/60 backdrop-blur-sm p-2 rounded border border-white/5 flex justify-between items-center">
             <div>
-              <p className="text-[8px] text-white/30 font-black uppercase tracking-widest mb-0.5">MULT</p>
+              <p className="text-[8px] text-white/50 font-black uppercase tracking-widest mb-0.5">MULT</p>
               <div className="flex items-center gap-2">
                 <p className={`mono text-2xl font-black italic ${
                   hotStreak ? 'hot-streak-text text-orange-400' :
@@ -1059,8 +1059,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               )}
             </div>
             <div className="text-right">
-              <p className="text-[8px] text-white/30 font-black uppercase tracking-widest mb-0.5">SCORE</p>
-              <p className="mono text-xl font-black text-white/60">{points.toLocaleString()}</p>
+              <p className="text-[8px] text-white/50 font-black uppercase tracking-widest mb-0.5">SCORE</p>
+              <p className="mono text-xl font-black text-white/75">{points.toLocaleString()}</p>
             </div>
           </div>
 
@@ -1120,7 +1120,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                 ambushed
                   ? 'bg-red-950/40 text-red-500/40 border-red-900/20 cursor-not-allowed'
                   : !hasInteracted || graceActive
-                  ? 'bg-[#1a1a1a] text-white/20 border-white/5 cursor-not-allowed grayscale'
+                  ? 'bg-[#1a1a1a] text-white/40 border-white/5 cursor-not-allowed grayscale'
                   : goldenWindow
                   ? 'bg-yellow-500 text-black active:translate-y-1 golden-glow'
                   : earlyExitWarn

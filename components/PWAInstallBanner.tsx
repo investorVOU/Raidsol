@@ -82,11 +82,11 @@ const PWAInstallBanner: React.FC = () => {
             INSTALL_SOLANA_RAID
           </p>
           {showIos ? (
-            <p className="text-[9px] text-white/40 font-mono mt-0.5 leading-snug">
+            <p className="text-[9px] text-white/60 font-mono mt-0.5 leading-snug">
               Tap <span className="text-[#14F195]">Share</span> → <span className="text-[#14F195]">Add to Home Screen</span>
             </p>
           ) : (
-            <p className="text-[9px] text-white/40 font-mono mt-0.5">
+            <p className="text-[9px] text-white/60 font-mono mt-0.5">
               Play offline · Fast load · No browser UI
             </p>
           )}
@@ -104,7 +104,7 @@ const PWAInstallBanner: React.FC = () => {
           )}
           <button
             onClick={handleDismiss}
-            className="w-6 h-6 flex items-center justify-center text-white/30 hover:text-white/70 transition-colors text-lg leading-none"
+            className="w-6 h-6 flex items-center justify-center text-white/50 hover:text-white/70 transition-colors text-lg leading-none"
             aria-label="Dismiss"
           >
             ×

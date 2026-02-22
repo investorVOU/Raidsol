@@ -220,7 +220,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
               <div className={`w-5 h-5 border-2 tech-border transition-colors flex items-center justify-center shrink-0 ${ageConfirmed ? 'bg-red-500 border-red-500' : 'border-white/20 group-hover:border-red-500/50'}`}>
                 {ageConfirmed && <div className="w-2 h-2 bg-white" />}
               </div>
-              <span className={`text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-widest italic transition-colors ${ageConfirmed ? 'text-white' : 'text-white/40'}`}>
+              <span className={`text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-widest italic transition-colors ${ageConfirmed ? 'text-white' : 'text-white/60'}`}>
                 I AM 18 YEARS OF AGE OR OLDER
               </span>
             </label>
@@ -230,7 +230,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
               <div className={`w-5 h-5 border-2 tech-border transition-colors flex items-center justify-center shrink-0 ${dontShowAgain ? 'bg-white/20 border-white/40' : 'border-white/10 group-hover:border-white/30'}`}>
                 {dontShowAgain && <div className="w-2 h-2 bg-white" />}
               </div>
-              <span className={`text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-widest italic transition-colors ${dontShowAgain ? 'text-white/60' : 'text-white/20'}`}>
+              <span className={`text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-widest italic transition-colors ${dontShowAgain ? 'text-white/75' : 'text-white/40'}`}>
                 DON'T SHOW THIS AGAIN
               </span>
             </label>
@@ -245,7 +245,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
               className={`group relative px-6 sm:px-10 py-2 sm:py-3 border font-black uppercase tracking-[0.15em] transition-all duration-300 tech-border text-[10px] sm:text-xs md:text-sm ${
                 ageConfirmed
                   ? 'bg-red-600/10 border-red-600 text-red-500 hover:bg-red-600 hover:text-black cursor-pointer'
-                  : 'bg-transparent border-white/10 text-white/10 cursor-not-allowed'
+                  : 'bg-transparent border-white/10 text-white/20 cursor-not-allowed'
               }`}
             >
               <span className={`absolute inset-0 bg-red-600/20 blur-xl opacity-0 transition-opacity ${ageConfirmed ? 'group-hover:opacity-100' : ''}`} />

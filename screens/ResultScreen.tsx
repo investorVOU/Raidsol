@@ -25,7 +25,7 @@ const SEVERITY_STYLES: Record<RaidEvent['severity'], { border: string; dot: stri
   danger:  { border: 'border-red-500/30',    dot: 'bg-red-500',    text: 'text-red-400',    badge: 'bg-red-500/10 text-red-400' },
   warning: { border: 'border-orange-500/30', dot: 'bg-orange-400', text: 'text-orange-400', badge: 'bg-orange-500/10 text-orange-400' },
   bonus:   { border: 'border-green-500/30',  dot: 'bg-[#14F195]',  text: 'text-[#14F195]',  badge: 'bg-green-500/10 text-[#14F195]' },
-  info:    { border: 'border-white/10',      dot: 'bg-white/40',   text: 'text-white/50',   badge: 'bg-white/5 text-white/40' },
+  info:    { border: 'border-white/10',      dot: 'bg-white/40',   text: 'text-white/70',   badge: 'bg-white/5 text-white/60' },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -187,7 +187,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
         <h2 className={`text-5xl sm:text-7xl font-black italic uppercase tracking-tighter mb-4 leading-none text-center ${result.success ? 'text-white glitch-text' : 'text-red-500'}`}>
           {result.success ? 'MISSION_OK' : 'LINK_COLLAPSED'}
         </h2>
-        <p className="text-white/30 text-xs sm:text-sm font-black uppercase tracking-[0.4em] mb-8 sm:mb-12 text-center italic">
+        <p className="text-white/50 text-xs sm:text-sm font-black uppercase tracking-[0.4em] mb-8 sm:mb-12 text-center italic">
           {result.success ? '___Operation success. Assets secured.' : '___Critical failure. Initial stake purged.'}
         </p>
 
@@ -195,7 +195,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
           {/* SOL Results */}
           <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-green-500' : 'border-red-500/40'}`}>
             <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black italic uppercase">[SOL]</div>
-            <p className="text-xs text-white/30 font-black uppercase tracking-widest mb-3 italic">__Harvest Yield</p>
+            <p className="text-xs text-white/50 font-black uppercase tracking-widest mb-3 italic">__Harvest Yield</p>
             <p className={`mono text-5xl sm:text-6xl font-black italic tracking-tighter leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
               {result.success ? `+${result.solAmount.toFixed(4)}` : `-${entryFee.toFixed(3)}`}
               <span className="text-sm sm:text-base font-normal not-italic opacity-30 ml-2">SOL</span>
@@ -226,11 +226,11 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-black border-2 border-white/5 p-4 sm:p-6 tech-border">
-              <p className="text-[10px] sm:text-xs text-white/20 font-black uppercase mb-1 tracking-widest">Experience</p>
+              <p className="text-[10px] sm:text-xs text-white/40 font-black uppercase mb-1 tracking-widest">Experience</p>
               <p className="mono text-2xl sm:text-3xl font-black">+{result.points.toLocaleString()}</p>
             </div>
             <div className="bg-black border-2 border-white/5 p-4 sm:p-6 tech-border">
-              <p className="text-[10px] sm:text-xs text-white/20 font-black uppercase mb-1 tracking-widest">Rank Power</p>
+              <p className="text-[10px] sm:text-xs text-white/40 font-black uppercase mb-1 tracking-widest">Rank Power</p>
               <p className="mono text-2xl sm:text-3xl font-black text-cyan-400">+{Math.floor(result.points / 120)}</p>
             </div>
           </div>
@@ -246,11 +246,11 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full animate-pulse ${result.success ? 'bg-[#14F195]' : 'bg-red-500'}`} />
                   <span className="text-xs font-black uppercase tracking-[0.3em] text-white/70 italic">RAID_DEBRIEF</span>
-                  <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">
+                  <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
                     {debriefEvents.length} event{debriefEvents.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <span className="text-white/30 text-sm font-black">{debriefOpen ? '▲' : '▼'}</span>
+                <span className="text-white/50 text-sm font-black">{debriefOpen ? '▲' : '▼'}</span>
               </button>
 
               {debriefOpen && (
@@ -263,7 +263,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                         {/* Timeline dot + tick */}
                         <div className="flex flex-col items-center shrink-0 pt-0.5">
                           <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                          <span className="text-[8px] font-black text-white/20 mono mt-1">{ev.tick}s</span>
+                          <span className="text-[8px] font-black text-white/40 mono mt-1">{ev.tick}s</span>
                         </div>
                         {/* Content */}
                         <div className="flex-1 min-w-0">
@@ -271,7 +271,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                             <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${s.badge}`}>{label}</span>
                             <span className={`text-[9px] font-black uppercase tracking-wider ${s.text}`}>{ev.impact}</span>
                           </div>
-                          <p className="text-[9px] text-white/40 font-bold leading-tight">{ev.reason}</p>
+                          <p className="text-[9px] text-white/60 font-bold leading-tight">{ev.reason}</p>
                         </div>
                       </div>
                     );
@@ -289,19 +289,19 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
             </div>
             <div className="space-y-3">
               <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">RAID_ID</span>
-                <span className="mono text-xs text-white/60">{result.raidId}</span>
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">RAID_ID</span>
+                <span className="mono text-xs text-white/75">{result.raidId}</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">SERVER_HASH</span>
-                <span className="mono text-xs text-white/60 truncate w-32 text-right">{result.serverSeedHash}</span>
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">SERVER_HASH</span>
+                <span className="mono text-xs text-white/75 truncate w-32 text-right">{result.serverSeedHash}</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">USER_WALLET</span>
-                <span className="mono text-xs text-white/60">{result.userWallet}</span>
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">USER_WALLET</span>
+                <span className="mono text-xs text-white/75">{result.userWallet}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">TX_SIG</span>
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">TX_SIG</span>
                 <a
                   href={`https://solscan.io/tx/${result.txSignature}?cluster=devnet`}
                   target="_blank"
@@ -356,7 +356,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
         )}
         <button
           onClick={onPlayAgain}
-          className="w-full bg-[#050505] text-white/40 hover:text-white py-4 sm:py-5 tech-border font-black uppercase tracking-tight text-sm sm:text-base active:scale-95 transition-all italic border border-white/10"
+          className="w-full bg-[#050505] text-white/60 hover:text-white py-4 sm:py-5 tech-border font-black uppercase tracking-tight text-sm sm:text-base active:scale-95 transition-all italic border border-white/10"
         >
           {result.success ? 'RETURN_TO_LOBBY' : 'ABORT_TO_LOBBY'}
         </button>

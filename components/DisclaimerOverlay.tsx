@@ -26,19 +26,19 @@ const DisclaimerOverlay: React.FC<DisclaimerOverlayProps> = ({ onAccept }) => {
           <div className="space-y-4 sm:space-y-5 text-left w-full bg-red-950/5 p-5 sm:p-8 border-l-2 border-red-500/20 max-h-[35vh] sm:max-h-none overflow-y-auto">
             <div className="flex gap-4">
               <span className="text-red-500 mono font-black text-xs sm:text-sm shrink-0">[01]</span>
-              <p className="text-xs sm:text-sm text-white/40 leading-relaxed italic font-medium">
+              <p className="text-xs sm:text-sm text-white/60 leading-relaxed italic font-medium">
                 HIGH-STAKES DEGEN PROTOCOL. 100% RISK OF LOSS IS POSSIBLE AT ANY MOMENT DURING A RAID.
               </p>
             </div>
             <div className="flex gap-4">
               <span className="text-red-500 mono font-black text-xs sm:text-sm shrink-0">[02]</span>
-              <p className="text-xs sm:text-sm text-white/40 leading-relaxed italic font-medium">
+              <p className="text-xs sm:text-sm text-white/60 leading-relaxed italic font-medium">
                 NOT FINANCIAL ADVICE. WE ARE NOT RESPONSIBLE FOR BUSTED CONNECTIONS OR NETWORK LAG.
               </p>
             </div>
             <div className="flex gap-4">
               <span className="text-red-500 mono font-black text-xs sm:text-sm shrink-0">[03]</span>
-              <p className="text-xs sm:text-sm text-white/40 leading-relaxed italic font-medium">
+              <p className="text-xs sm:text-sm text-white/60 leading-relaxed italic font-medium">
                 CODE IS LAW. ALL SMART CONTRACT INTERACTIONS ARE FINAL AND NON-REFUNDABLE.
               </p>
             </div>
@@ -55,7 +55,7 @@ const DisclaimerOverlay: React.FC<DisclaimerOverlayProps> = ({ onAccept }) => {
               <div className={`w-6 h-6 border-2 tech-border transition-colors flex items-center justify-center shrink-0 ${ageConfirmed ? 'bg-red-500 border-red-500' : 'border-white/10 group-hover:border-red-500/50'}`}>
                 {ageConfirmed && <div className="w-2.5 h-2.5 bg-white" />}
               </div>
-              <span className={`text-xs sm:text-sm font-black uppercase tracking-widest italic transition-colors ${ageConfirmed ? 'text-white' : 'text-white/20'}`}>
+              <span className={`text-xs sm:text-sm font-black uppercase tracking-widest italic transition-colors ${ageConfirmed ? 'text-white' : 'text-white/40'}`}>
                 I AM 18 YEARS OF AGE OR OLDER
               </span>
             </label>
@@ -67,12 +67,12 @@ const DisclaimerOverlay: React.FC<DisclaimerOverlayProps> = ({ onAccept }) => {
                 className={`w-full py-5 sm:py-6 tech-border font-black uppercase tracking-tight text-xl sm:text-2xl transition-all italic shadow-lg
                   ${ageConfirmed 
                     ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:bg-red-500 active:scale-95' 
-                    : 'bg-white/5 text-white/10 border-white/5 cursor-not-allowed'}`}
+                    : 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed'}`}
               >
                 I UNDERSTAND THE RISK
               </button>
               <button 
-                className="w-full bg-black border-2 border-white/5 text-white/10 py-4 sm:py-5 tech-border font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs hover:text-white transition-colors italic"
+                className="w-full bg-black border-2 border-white/5 text-white/20 py-4 sm:py-5 tech-border font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs hover:text-white transition-colors italic"
                 onClick={() => window.location.href = 'https://solana.com'}
               >
                 ABORT_LINK
