@@ -47,8 +47,8 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
   const [debriefOpen, setDebriefOpen] = useState(true);
 
   const handleShareToX = () => {
-    const text = `MISSION SUCCESS 🏴‍☠️\n\nI just extracted ${result.solAmount.toFixed(4)} $SOL from the Protocol.\n\nRisk: CRITICAL\nStatus: LEGEND\n\nCan you survive the drain?\n\n@solana @solanamobile #Solana #DegenRaid`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://solanaraid.game')}`;
+    const text = `MISSION SUCCESS 🏴‍☠️\n\nI just extracted ${result.solAmount.toFixed(4)} $SOL from the Protocol.\n\nRisk: CRITICAL\nStatus: LEGEND\n\nCan you survive the drain?\n\n@solraid_app @solana @solanamobile #Solana #SolRaid #DegenRaid`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://solraid.app')}`;
     window.open(url, '_blank');
   };
 

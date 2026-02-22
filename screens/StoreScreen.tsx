@@ -25,39 +25,57 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
   const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS'>(initialTab ?? 'GEAR');
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(Currency.SKR);
   const [popups, setPopups] = useState<PurchasePopup[]>([]);
+  const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
 
   const filteredItems = activeTab === 'GEAR' ? GEAR_ITEMS : AVATAR_ITEMS;
 
   const handleBuy = async (itemId: string, solPrice: number, minLevel: number = 0) => {
     if (currentLevel < minLevel) return;
+    if (loadingItemId) return;
 
-    // Calculate price in selected currency
     const finalPrice = solPrice * CURRENCY_RATES[selectedCurrency];
     const roundedPrice = selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice);
 
-    const success = await onPurchase(itemId, roundedPrice, selectedCurrency);
-    if (success) {
-      const srReward = Math.max(50, Math.floor(solPrice * 1000));
-      const id = Date.now();
-      const x = Math.floor(Math.random() * 100) - 50;
-      const y = Math.floor(Math.random() * 60) - 30;
-      setPopups(prev => [...prev, { id, val: srReward, x, y }]);
-      setTimeout(() => {
-        setPopups(prev => prev.filter(p => p.id !== id));
-      }, 1000);
+    setLoadingItemId(itemId);
+    try {
+      const success = await onPurchase(itemId, roundedPrice, selectedCurrency);
+      if (success) {
+        const srReward = Math.max(50, Math.floor(solPrice * 1000));
+        const id = Date.now();
+        const x = Math.floor(Math.random() * 100) - 50;
+        const y = Math.floor(Math.random() * 60) - 30;
+        setPopups(prev => [...prev, { id, val: srReward, x, y }]);
+        setTimeout(() => setPopups(prev => prev.filter(p => p.id !== id)), 1000);
+      } else {
+        alert('PURCHASE FAILED\n\nTransaction did not complete. Check your balance and try again.');
+      }
+    } catch {
+      alert('PURCHASE FAILED\n\nAn error occurred. Please try again.');
+    } finally {
+      setLoadingItemId(null);
     }
   };
 
   const handleBuyPass = async (passId: string, passSkrPrice: number, passSolPrice: number, passUsdcPrice: number) => {
     if (!onBuyPass) return;
+    if (loadingItemId) return;
     const price = selectedCurrency === Currency.SKR ? passSkrPrice
                 : selectedCurrency === Currency.SOL ? passSolPrice
                 : passUsdcPrice;
-    const success = await onBuyPass(passId, price, selectedCurrency);
-    if (success) {
-      const id = Date.now();
-      setPopups(prev => [...prev, { id, val: 0, x: 0, y: 0 }]);
-      setTimeout(() => setPopups(prev => prev.filter(p => p.id !== id)), 1200);
+    setLoadingItemId(passId);
+    try {
+      const success = await onBuyPass(passId, price, selectedCurrency);
+      if (success) {
+        const id = Date.now();
+        setPopups(prev => [...prev, { id, val: 0, x: 0, y: 0 }]);
+        setTimeout(() => setPopups(prev => prev.filter(p => p.id !== id)), 1200);
+      } else {
+        alert('PURCHASE FAILED\n\nTransaction did not complete. Check your balance and try again.');
+      }
+    } catch {
+      alert('PURCHASE FAILED\n\nAn error occurred. Please try again.');
+    } finally {
+      setLoadingItemId(null);
     }
   };
 
@@ -134,12 +152,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             </div>
 
             <div className="grid grid-cols-3 gap-1 w-full">
-              <p className="col-span-3 text-[9px] font-black text-white/60 uppercase tracking-widest mb-0.5">BUY WITH</p>
+              <p className="col-span-3 text-[9px] font-black text-white uppercase tracking-widest mb-0.5">BUY WITH</p>
               {[Currency.SOL, Currency.USDC, Currency.SKR].map(curr => (
                 <button
                   key={curr}
                   onClick={() => setSelectedCurrency(curr)}
-                  className={`py-2 text-[10px] font-black uppercase tracking-wider border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-black border-white/5 text-white/20 hover:text-white'}`}
+                  className={`py-2 text-[10px] font-black uppercase tracking-wider border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-black border-white/20 text-white/70 hover:text-white hover:border-white/40'}`}
                 >
                   {curr}
                 </button>
@@ -239,14 +257,24 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                           </p>
                           <button
                             onClick={() => handleBuyPass(pass.id, pass.skrPrice, pass.solPrice, pass.usdcPrice)}
-                            disabled={!canAfford || !onBuyPass}
-                            className={`shrink-0 px-3 py-2 font-black uppercase tracking-tighter text-[9px] tech-border transition-all ${
-                              !canAfford || !onBuyPass
+                            disabled={!canAfford || !onBuyPass || loadingItemId !== null}
+                            className={`shrink-0 px-3 py-2 font-black uppercase tracking-tighter text-[9px] tech-border transition-all min-w-[80px] flex items-center justify-center gap-1 ${
+                              !canAfford || !onBuyPass || (loadingItemId !== null && loadingItemId !== pass.id)
                                 ? 'bg-white/5 text-white/10 border-white/5 cursor-not-allowed'
+                                : loadingItemId === pass.id
+                                ? 'bg-white/10 text-white/50 border-white/10 cursor-wait'
                                 : `${btnColors} hover:opacity-90 active:translate-y-0.5`
                             }`}
                           >
-                            GET PASS
+                            {loadingItemId === pass.id ? (
+                              <>
+                                <svg className="animate-spin w-2.5 h-2.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                </svg>
+                                BUYING…
+                              </>
+                            ) : 'GET PASS'}
                           </button>
                         </div>
                       </div>
@@ -362,15 +390,25 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                       LOCKED
                     </div>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => handleBuy(item.id, item.price, item.minLevel)}
-                      disabled={!canAfford}
-                      className={`px-8 py-3 font-black uppercase tracking-tighter text-xs tech-border transition-all 
-                        ${!canAfford 
-                          ? 'bg-white/5 text-white/10 border-white/5 cursor-not-allowed' 
+                      disabled={!canAfford || loadingItemId !== null}
+                      className={`px-8 py-3 font-black uppercase tracking-tighter text-xs tech-border transition-all min-w-[90px] flex items-center justify-center gap-1.5
+                        ${!canAfford || (loadingItemId !== null && loadingItemId !== item.id)
+                          ? 'bg-white/5 text-white/10 border-white/5 cursor-not-allowed'
+                          : loadingItemId === item.id
+                          ? 'bg-white/10 text-white/50 border-white/10 cursor-wait'
                           : `${rarityStyle.button} hover:opacity-90 active:translate-y-0.5 shadow-lg`}`}
                     >
-                      BUY ITEM
+                      {loadingItemId === item.id ? (
+                        <>
+                          <svg className="animate-spin w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                          </svg>
+                          BUYING…
+                        </>
+                      ) : 'BUY ITEM'}
                     </button>
                   )}
                 </div>

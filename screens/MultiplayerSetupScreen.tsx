@@ -80,9 +80,10 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   const [codeCopied, setCodeCopied] = useState(false);
 
   // QR scanner
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const qrCanvasRef    = useRef<HTMLCanvasElement>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const scannerRef  = useRef<Html5Qrcode | null>(null);
+  const scannerRef     = useRef<Html5Qrcode | null>(null);
+  const isScanningRef  = useRef(false); // tracks actual running state (avoids stale closure in cleanup)
 
   // Chat
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -104,11 +105,15 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
     }
   }, [activeRoom]);
 
+  // Unmount-only cleanup — uses ref so it never reads stale state
   useEffect(() => {
     return () => {
-      if (scannerRef.current && isScanning) scannerRef.current.stop().catch(console.error);
+      if (scannerRef.current && isScanningRef.current) {
+        isScanningRef.current = false;
+        scannerRef.current.stop().catch(() => {});
+      }
     };
-  }, [isScanning]);
+  }, []);
 
   useEffect(() => {
     if (!activeRoom) return;
@@ -149,20 +154,23 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
         scannerRef.current = html5QrCode;
         await html5QrCode.start(
           { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          { fps: 10, qrbox: { width: 200, height: 200 } },
           (decodedText) => { setInviteCode(decodedText); stopScanning(); },
           () => {},
         );
+        isScanningRef.current = true; // only true once camera is actually running
       }, 100);
     } catch {
       alert('Camera access failed or denied.');
+      isScanningRef.current = false;
       setIsScanning(false);
     }
   };
 
   const stopScanning = async () => {
+    isScanningRef.current = false; // mark stopped before the async call
     if (scannerRef.current) {
-      try { await scannerRef.current.stop(); await scannerRef.current.clear(); } catch { /* ignored */ }
+      try { await scannerRef.current.stop(); await scannerRef.current.clear(); } catch { /* already stopped */ }
     }
     setIsScanning(false);
   };
@@ -365,22 +373,44 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   return (
     <div className="h-full flex flex-col animate-in slide-in-from-right duration-300 bg-black">
 
-      {/* QR Scanner overlay */}
+      {/* QR Scanner overlay — full-screen, safe on all viewports */}
       {isScanning && (
-        <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-4">
-          <div className="relative w-full max-w-md bg-black border-2 border-[#9945FF] tech-border p-1">
-            <div id="reader" className="w-full h-64 sm:h-96 bg-black" />
-            <div className="absolute inset-0 pointer-events-none m-12 animate-pulse">
-              <div className="absolute top-0 left-0 w-5 h-5 border-t-4 border-l-4 border-[#9945FF]" />
-              <div className="absolute top-0 right-0 w-5 h-5 border-t-4 border-r-4 border-[#9945FF]" />
-              <div className="absolute bottom-0 left-0 w-5 h-5 border-b-4 border-l-4 border-[#9945FF]" />
-              <div className="absolute bottom-0 right-0 w-5 h-5 border-b-4 border-r-4 border-[#9945FF]" />
+        <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+          {/* Top bar */}
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#9945FF]/30 bg-[#050505]">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#9945FF] animate-pulse" />
+              <span className="text-xs font-black text-[#9945FF] uppercase tracking-widest">SCANNING QR CODE</span>
             </div>
-            <button onClick={stopScanning} className="absolute -bottom-16 left-1/2 -translate-x-1/2 rounded-full bg-white text-black p-4 shadow-xl">
-              <X size={28} />
+            <button
+              onClick={stopScanning}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-white/20 hover:border-white/50 text-white/50 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
+            >
+              <X size={14} /> CANCEL
             </button>
           </div>
-          <p className="mt-20 text-white font-black uppercase tracking-widest animate-pulse text-sm">SEARCHING_QR_PATTERN</p>
+
+          {/* Camera view — fills remaining space, never overflows */}
+          <div className="flex-1 flex items-center justify-center p-6 min-h-0">
+            <div className="relative w-full max-w-xs">
+              {/* Scanner mount — aspect-square so it fits any phone */}
+              <div id="reader" className="w-full aspect-square bg-black border-2 border-[#9945FF]/40 overflow-hidden" />
+              {/* Corner decorators */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-2 left-2 w-6 h-6 border-t-4 border-l-4 border-[#9945FF]" />
+                <div className="absolute top-2 right-2 w-6 h-6 border-t-4 border-r-4 border-[#9945FF]" />
+                <div className="absolute bottom-2 left-2 w-6 h-6 border-b-4 border-l-4 border-[#9945FF]" />
+                <div className="absolute bottom-2 right-2 w-6 h-6 border-b-4 border-r-4 border-[#9945FF]" />
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom hint — always visible */}
+          <div className="shrink-0 px-4 py-5 text-center border-t border-white/5 bg-[#050505]">
+            <p className="text-[11px] font-black text-white/30 uppercase tracking-widest animate-pulse">
+              Point camera at room QR code
+            </p>
+          </div>
         </div>
       )}
 
@@ -549,14 +579,14 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                     value={inviteCode}
                     onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setJoinPreview(null); setPreviewError(''); }}
                     placeholder="RAID-XXXX"
-                    className="flex-1 bg-black border-2 border-white/20 p-4 sm:p-5 text-2xl sm:text-3xl font-black text-center text-white placeholder-white/10 outline-none focus:border-[#9945FF] tech-border mono transition-colors"
+                    className="flex-1 bg-black border-2 border-white/20 px-3 py-3 sm:py-4 text-xl sm:text-2xl font-black text-center text-white placeholder-white/10 outline-none focus:border-[#9945FF] tech-border mono transition-colors min-w-0"
                   />
                   <button
                     onClick={startScanning}
-                    className="bg-white/5 border-2 border-white/15 tech-border px-4 hover:bg-[#9945FF]/10 hover:border-[#9945FF]/50 text-white/40 hover:text-[#9945FF] transition-all"
+                    className="shrink-0 bg-white/5 border-2 border-white/15 tech-border px-3 sm:px-4 hover:bg-[#9945FF]/10 hover:border-[#9945FF]/50 text-white/40 hover:text-[#9945FF] transition-all"
                     title="Scan QR Code"
                   >
-                    <Scan size={24} />
+                    <Scan size={20} />
                   </button>
                 </div>
               </div>

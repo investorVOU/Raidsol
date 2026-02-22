@@ -840,6 +840,7 @@ const AppInner: React.FC = () => {
         currency === Currency.SOL ? 'STORE_SOL' :
         currency === Currency.USDC ? 'STORE_USDC' : 'STORE_SKR';
 
+      console.log('[verify-payment] invoking', { paymentType, expectedUnits, itemId, sig: signature?.slice(0, 20) });
       const { data, error } = await supabase.functions.invoke('verify-payment', {
         body: {
           wallet_address: walletAddr,
@@ -861,12 +862,22 @@ const AppInner: React.FC = () => {
         }));
         return true;
       } else {
-        console.error('verify-payment failed:', error || data?.error);
-        return false;
+        // Extract actual error body from FunctionsHttpError
+        let errMsg = data?.error ?? 'verify-payment failed';
+        if (error) {
+          try {
+            const body = await (error as any).context?.json?.();
+            errMsg = body?.error ?? error.message ?? errMsg;
+          } catch {
+            errMsg = error.message ?? errMsg;
+          }
+        }
+        console.error('[verify-payment] error:', errMsg, { paymentType, expectedUnits, itemId });
+        throw new Error(errMsg);
       }
     } catch (err: any) {
-      console.error('Purchase transaction failed:', err);
-      return false;
+      console.error('[handlePurchase] failed:', err?.message ?? err);
+      throw err;
     }
   };
 
@@ -924,7 +935,7 @@ const AppInner: React.FC = () => {
       return true;
     } catch (err: any) {
       console.error('Pass purchase failed:', err);
-      return false;
+      throw err;
     }
   };
 
@@ -1385,7 +1396,6 @@ const AppInner: React.FC = () => {
     }));
 
     if (mode === Mode.TEAM) navigateTo(Screen.TEAM);
-    else if (mode === Mode.TOURNAMENT) navigateTo(Screen.TOURNAMENT);
     else {
       setGameState(prev => ({ ...prev, currentScreen: Screen.RAID, isRaidLoading: true }));
       acquireWakeLock();
@@ -1456,11 +1466,16 @@ const AppInner: React.FC = () => {
         );
       case Screen.TOURNAMENT:
         return (
-          <TournamentScreen onEnter={() => {
-            if (!requireWallet()) return;
-            setGameState(prev => ({ ...prev, activeRaidFee: ENTRY_FEES[Mode.TOURNAMENT] }));
-            navigateTo(Screen.RAID);
-          }} />
+          <TournamentScreen
+            walletAddress={walletAddr ?? undefined}
+            walletBalance={gameState.walletBalance}
+            usdcBalance={gameState.usdcBalance}
+            skrBalance={gameState.skrBalance}
+            rankLevel={currentRank.level}
+            rankTitle={currentRank.title}
+            srPoints={gameState.srPoints}
+            onEnterRaid={enterRaid}
+          />
         );
       case Screen.RESULT:
         return (

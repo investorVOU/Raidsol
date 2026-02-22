@@ -9,9 +9,10 @@ const RPC_URLS: string[] = [
 if (RPC_URLS.length === 0) RPC_URLS.push('https://api.mainnet-beta.solana.com');
 
 const USDC_MINT = Deno.env.get('USDC_MINT_ADDRESS') ?? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const SKR_MINT  = Deno.env.get('SKR_MINT_ADDRESS')  ?? 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
 
 // ── B. On-chain verification constants ────────────────────────────────────
-const MAX_TX_AGE_SEC = 300; // 5 minutes
+const MAX_TX_AGE_SEC = 600; // 10 minutes (extended for slow networks)
 
 async function solanaRpc(method: string, params: unknown[]): Promise<unknown> {
   let lastErr: unknown;
@@ -55,7 +56,7 @@ const respond = (body: object, status = 200, corsH: Record<string, string>) =>
  *   tx_signature: string,
  *   item_id: string,
  *   expected_lamports: number,   // lamports for SOL; micro-USDC (6 dec) for USDC
- *   payment_type: 'STORE_SOL' | 'STORE_USDC',
+ *   payment_type: 'STORE_SOL' | 'STORE_USDC' | 'STORE_SKR',
  * }
  */
 Deno.serve(async (req: Request) => {
@@ -125,51 +126,85 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const accountKeys: string[] = txData.transaction.message.accountKeys;
+    // Normalize accountKeys — some RPC nodes return objects { pubkey, signer, writable }
+    // instead of plain strings, especially with newer validator versions.
+    const rawKeys: (string | { pubkey: string })[] = txData.transaction.message.accountKeys ?? [];
+    const accountKeys: string[] = rawKeys.map(k => (typeof k === 'string' ? k : k.pubkey));
+
+    console.log('[verify-payment]', {
+      payment_type,
+      wallet_address,
+      item_id,
+      expected_lamports,
+      accountKeys_0: accountKeys[0],
+      accountKeys_len: accountKeys.length,
+      TREASURY_ADDRESS: Deno.env.get('TREASURY_ADDRESS'),
+    });
 
     // ── B3. Sender verification — wallet_address must be the fee-payer ─
     // In a standard Solana transaction the fee-payer is always accountKeys[0].
     if (accountKeys[0] !== wallet_address) {
-      return respond({ error: 'Transaction fee-payer does not match wallet_address' }, 400, corsH);
+      return respond({
+        error: `Transaction fee-payer mismatch: tx signer=${accountKeys[0]}, expected=${wallet_address}`,
+      }, 400, corsH);
     }
 
-    if (payment_type === 'STORE_USDC') {
-      // ── USDC verification via token balance deltas ───────────────────
+    if (payment_type === 'STORE_USDC' || payment_type === 'STORE_SKR') {
+      // ── SPL token verification via token balance deltas ──────────────
+      const mint = payment_type === 'STORE_USDC' ? USDC_MINT : SKR_MINT;
+      const tokenLabel = payment_type === 'STORE_USDC' ? 'USDC' : 'SKR';
+
       const postTokenBalances: any[] = txData.meta?.postTokenBalances ?? [];
-      const preTokenBalances: any[] = txData.meta?.preTokenBalances ?? [];
+      const preTokenBalances: any[]  = txData.meta?.preTokenBalances  ?? [];
 
       const treasuryPost = postTokenBalances.find(
-        (b: any) => b.mint === USDC_MINT && b.owner === TREASURY_ADDRESS,
+        (b: any) => b.mint === mint && b.owner === TREASURY_ADDRESS,
       );
       const treasuryPre = preTokenBalances.find(
-        (b: any) => b.mint === USDC_MINT && b.owner === TREASURY_ADDRESS,
+        (b: any) => b.mint === mint && b.owner === TREASURY_ADDRESS,
       );
 
       const postAmount = Number(treasuryPost?.uiTokenAmount?.amount ?? 0);
-      const preAmount = Number(treasuryPre?.uiTokenAmount?.amount ?? 0);
-      const received = postAmount - preAmount;
+      const preAmount  = Number(treasuryPre?.uiTokenAmount?.amount  ?? 0);
+      const received   = postAmount - preAmount;
 
       if (received < (expected_lamports ?? 0)) {
         return respond({
-          error: `Insufficient USDC payment: received ${received}, expected ${expected_lamports}`,
+          error: `Insufficient ${tokenLabel} payment: received ${received} raw units, expected ${expected_lamports}`,
         }, 400, corsH);
       }
     } else {
       // ── SOL verification via balance deltas ──────────────────────────
-      const treasuryIndex = accountKeys.indexOf(TREASURY_ADDRESS);
+      const preBalances: number[]  = txData.meta.preBalances;
+      const postBalances: number[] = txData.meta.postBalances;
+
+      // Log all account deltas to help diagnose mismatches
+      const deltas = accountKeys.map((k: string, i: number) => ({ key: k, delta: postBalances[i] - preBalances[i] }));
+      console.log('[verify-payment] SOL deltas:', JSON.stringify(deltas));
+      console.log('[verify-payment] Looking for TREASURY_ADDRESS:', TREASURY_ADDRESS);
+
       const senderIndex   = accountKeys.indexOf(wallet_address);
+      const treasuryIndex = accountKeys.indexOf(TREASURY_ADDRESS);
 
       if (senderIndex === -1) {
         return respond({ error: 'Sender wallet not found in transaction accounts' }, 400, corsH);
       }
 
       if (treasuryIndex === -1) {
-        return respond({ error: 'Treasury is not a recipient of this transaction' }, 400, corsH);
+        // Help diagnose: show which account actually received SOL
+        const recipient = deltas.find(d => d.delta > 0 && d.key !== wallet_address);
+        return respond({
+          error: `Treasury address not found in transaction. Expected treasury: ${TREASURY_ADDRESS}. Actual SOL recipient: ${recipient?.key ?? 'unknown'}. Check TREASURY_ADDRESS Supabase secret.`,
+        }, 400, corsH);
       }
 
-      const preBalances: number[]  = txData.meta.preBalances;
-      const postBalances: number[] = txData.meta.postBalances;
       const treasuryReceived = postBalances[treasuryIndex] - preBalances[treasuryIndex];
+
+      if (treasuryReceived <= 0) {
+        return respond({
+          error: `Treasury address found but received no SOL (delta=${treasuryReceived}). This usually means TREASURY_ADDRESS matches the fee-payer (self-transfer). Treasury: ${TREASURY_ADDRESS}, sender: ${wallet_address}. Are they the same wallet?`,
+        }, 400, corsH);
+      }
 
       if (treasuryReceived < (expected_lamports ?? 0)) {
         return respond({
@@ -196,8 +231,10 @@ Deno.serve(async (req: Request) => {
 
     // SR reward: 1 SOL = 1000 SR (so price_in_sol * 1000)
     const priceInSol = payment_type === 'STORE_USDC'
-      ? (expected_lamports ?? 0) / 1_000_000 / 150   // 1 SOL ≈ 150 USDC
-      : (expected_lamports ?? 0) / 1_000_000_000;     // lamports → SOL
+      ? (expected_lamports ?? 0) / 1_000_000 / 150    // USDC: 6 decimals, 1 SOL ≈ 150 USDC
+      : payment_type === 'STORE_SKR'
+      ? (expected_lamports ?? 0) / 1_000_000 / 1000   // SKR:  6 decimals, 1 SOL ≈ 1000 SKR
+      : (expected_lamports ?? 0) / 1_000_000_000;     // SOL:  lamports → SOL
     const srReward = Math.max(50, Math.floor(priceInSol * 1000));
 
     const newOwned = [...profile.owned_item_ids, item_id];
