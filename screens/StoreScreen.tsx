@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { GEAR_ITEMS, AVATAR_ITEMS, RAID_PASSES, Currency, CURRENCY_RATES } from '../types';
+import { GEAR_ITEMS, AVATAR_ITEMS, RAID_PASSES, Currency, CURRENCY_RATES, Equipment } from '../types';
 
 interface StoreScreenProps {
   walletBalance: number;
@@ -11,7 +11,8 @@ interface StoreScreenProps {
   currentLevel: number;
   raidTickets?: number;
   onBuyPass?: (passId: string, price: number, currency: Currency) => boolean | Promise<boolean>;
-  initialTab?: 'GEAR' | 'AVATAR' | 'PASS';
+  onForgeGear?: (item1Id: string, item2Id: string) => Promise<string | null>;
+  initialTab?: 'GEAR' | 'AVATAR' | 'PASS' | 'FORGE';
 }
 
 interface PurchasePopup {
@@ -21,11 +22,16 @@ interface PurchasePopup {
   y: number;
 }
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, initialTab }) => {
-  const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS'>(initialTab ?? 'GEAR');
+const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, onForgeGear, initialTab }) => {
+  const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS' | 'FORGE'>(initialTab ?? 'GEAR');
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(Currency.SKR);
   const [popups, setPopups] = useState<PurchasePopup[]>([]);
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
+
+  // FORGE state
+  const [forgeSelected, setForgeSelected] = useState<string[]>([]);
+  const [forgeResult, setForgeResult] = useState<Equipment | null>(null);
+  const [forging, setForging] = useState(false);
 
   const filteredItems = activeTab === 'GEAR' ? GEAR_ITEMS : AVATAR_ITEMS;
 
@@ -76,6 +82,35 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
       alert('PURCHASE FAILED\n\nAn error occurred. Please try again.');
     } finally {
       setLoadingItemId(null);
+    }
+  };
+
+  const ownedStandardGear = GEAR_ITEMS.filter(g => g.rarity === 'STANDARD' && ownedItemIds.includes(g.id));
+
+  const toggleForgeSelect = (id: string) => {
+    setForgeSelected(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 2 ? [...prev, id] : prev,
+    );
+    setForgeResult(null);
+  };
+
+  const handleForge = async () => {
+    if (forgeSelected.length !== 2 || !onForgeGear || forging) return;
+    setForging(true);
+    setForgeResult(null);
+    try {
+      const resultId = await onForgeGear(forgeSelected[0], forgeSelected[1]);
+      if (resultId) {
+        const item = GEAR_ITEMS.find(g => g.id === resultId) ?? null;
+        setForgeResult(item);
+        setForgeSelected([]);
+      } else {
+        alert('FORGE FAILED\n\nNo available LIMITED gear to mint. You may already own all of them.');
+      }
+    } catch {
+      alert('FORGE FAILED\n\nAn error occurred. Please try again.');
+    } finally {
+      setForging(false);
     }
   };
 
@@ -193,6 +228,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
               </span>
             )}
           </button>
+          <button
+            onClick={() => { setActiveTab('FORGE'); setForgeSelected([]); setForgeResult(null); }}
+            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'FORGE' ? 'border-orange-500 text-orange-400 bg-orange-500/10' : 'border-white/20 text-white/50'}`}
+          >
+            <span className="hidden sm:inline">[ FORGE ]</span>
+            <span className="sm:hidden">FORGE</span>
+          </button>
         </div>
 
         {/* ── PASS TAB ─────────────────────────────────────────────────── */}
@@ -286,8 +328,134 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
           </div>
         )}
 
+        {/* ── FORGE TAB ──────────────────────────────────────────────── */}
+        {activeTab === 'FORGE' && (
+          <div className="mb-10 space-y-6">
+            {/* Header */}
+            <div className="p-4 sm:p-6 bg-orange-500/5 border border-orange-500/20 tech-border">
+              <h3 className="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-orange-400">GEAR_FORGE</h3>
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mt-1">
+                Salvage 2 STANDARD gear → receive 1 random LIMITED gear. Both items are destroyed.
+              </p>
+            </div>
+
+            {/* Selection grid */}
+            {ownedStandardGear.length < 2 ? (
+              <div className="p-8 border-2 border-dashed border-white/10 tech-border text-center">
+                <p className="text-white/30 font-black uppercase tracking-widest text-sm">INSUFFICIENT_SALVAGE</p>
+                <p className="text-white/20 text-xs font-bold mt-2">You need at least 2 STANDARD gear items to forge.</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-[10px] font-black text-orange-400/60 uppercase tracking-widest">
+                  SELECT 2 ITEMS TO DESTROY ({forgeSelected.length}/2)
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {ownedStandardGear.map(gear => {
+                    const isSelected = forgeSelected.includes(gear.id);
+                    return (
+                      <button
+                        key={gear.id}
+                        onClick={() => toggleForgeSelect(gear.id)}
+                        disabled={forging}
+                        className={`relative border-2 p-3 tech-border transition-all flex flex-col items-center gap-2 text-center ${
+                          isSelected
+                            ? 'border-orange-500 bg-orange-500/10 shadow-[0_0_15px_rgba(249,115,22,0.2)]'
+                            : forgeSelected.length >= 2
+                            ? 'border-white/5 opacity-40 cursor-not-allowed'
+                            : 'border-white/10 hover:border-orange-500/40 hover:bg-orange-500/5'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                            <span className="text-black text-[8px] font-black">✓</span>
+                          </div>
+                        )}
+                        <span className="text-3xl leading-none">{gear.image}</span>
+                        <span className="text-[9px] font-black uppercase tracking-tighter text-white/60 leading-tight">{gear.name}</span>
+                        <span className="text-[8px] text-white/30 font-bold italic">{gear.effect?.replace('_', ' ')}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Forge action area */}
+                <div className="border-2 border-orange-500/20 bg-orange-500/5 tech-border p-5 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
+                  {/* Input side */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    {forgeSelected.map((id, i) => {
+                      const g = GEAR_ITEMS.find(x => x.id === id);
+                      return (
+                        <React.Fragment key={id}>
+                          <div className="w-14 h-14 border border-orange-500/40 bg-black flex items-center justify-center">
+                            <span className="text-3xl">{g?.image ?? '?'}</span>
+                          </div>
+                          {i === 0 && <span className="text-orange-500 font-black text-xl">+</span>}
+                        </React.Fragment>
+                      );
+                    })}
+                    {forgeSelected.length < 2 && (
+                      [...Array(2 - forgeSelected.length)].map((_, i) => (
+                        <React.Fragment key={i}>
+                          {forgeSelected.length + i > 0 && <span className="text-white/20 font-black text-xl">+</span>}
+                          <div className="w-14 h-14 border-2 border-dashed border-white/15 bg-black/50 flex items-center justify-center">
+                            <span className="text-white/20 text-xs font-black">?</span>
+                          </div>
+                        </React.Fragment>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="text-orange-400 font-black text-2xl hidden sm:block">→</div>
+
+                  {/* Output side */}
+                  <div className="flex flex-col items-center gap-2">
+                    {forgeResult ? (
+                      <div className="flex flex-col items-center gap-1 animate-in zoom-in-75 duration-500">
+                        <div className="w-16 h-16 border-2 border-purple-500 bg-purple-500/10 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                          <span className="text-4xl">{forgeResult.image}</span>
+                        </div>
+                        <span className="text-purple-400 font-black uppercase text-xs tracking-tighter">{forgeResult.name}</span>
+                        <span className="text-[8px] text-purple-400/60 uppercase font-bold">LIMITED FORGED</span>
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 border-2 border-dashed border-purple-500/30 bg-purple-500/5 flex items-center justify-center">
+                        <span className="text-purple-500/40 text-2xl font-black">?</span>
+                      </div>
+                    )}
+                    <span className="text-[8px] text-white/20 font-black uppercase tracking-widest">RANDOM_LIMITED</span>
+                  </div>
+
+                  {/* Forge button */}
+                  <button
+                    onClick={handleForge}
+                    disabled={forgeSelected.length !== 2 || !onForgeGear || forging}
+                    className={`ml-auto shrink-0 px-6 py-4 font-black uppercase tracking-tighter tech-border transition-all text-sm flex items-center gap-2 ${
+                      forgeSelected.length !== 2 || !onForgeGear
+                        ? 'bg-white/5 text-white/15 border-white/5 cursor-not-allowed'
+                        : forging
+                        ? 'bg-orange-500/20 text-orange-400/50 border-orange-500/20 cursor-wait'
+                        : 'bg-orange-500 text-black hover:bg-orange-400 active:scale-95 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+                    }`}
+                  >
+                    {forging ? (
+                      <>
+                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        FORGING…
+                      </>
+                    ) : 'INITIATE_FORGE'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {/* ── GEAR / AVATAR GRIDS ──────────────────────────────────────── */}
-        {activeTab !== 'PASS' && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {activeTab !== 'PASS' && activeTab !== 'FORGE' && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map(item => {
             const isOwned = ownedItemIds.includes(item.id);
             const levelLocked = currentLevel < (item.minLevel || 0);

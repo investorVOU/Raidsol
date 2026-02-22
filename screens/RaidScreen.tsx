@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { useGameSounds } from '../hooks/useGameSounds';
 
 interface RaidScreenProps {
-  onFinish: (success: boolean, solAmount: number, points: number, elapsedSec: number, events?: RaidEvent[]) => void;
+  onFinish: (success: boolean, solAmount: number, points: number, elapsedSec: number, events?: RaidEvent[], peakMult?: number) => void;
   equippedGearIds: string[];
   entryFee: number;
   difficulty: Difficulty;
@@ -284,7 +284,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     return { driftMultiplier, startMultBonus };
   }, [activeBoosts]);
 
-  const gearRiskFactor  = Math.max(0.4, 1 - gearStats.riskReduc / 100);
+  const gearRiskFactor  = Math.max(0.60, 1 - gearStats.riskReduc / 100);
   const baseRisk        = Math.max(0, diffConfig.riskMod - gearStats.riskReduc);
   const initialMultiplier = 1.0 + gearStats.mult + boostStats.startMultBonus + streakBonus;
   const initialTime     = 30 + gearStats.timeBoost;
@@ -446,7 +446,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     sounds.hapticBust();
     spawnSparks('#EF4444', '#ff6600', 22);
     addDmgPopup('BUSTED!', '#EF4444', true);
-    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current]), 2500);
+    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current), 2500);
   }, [onFinish, initialTime, entryFee, ticketBoost, sounds, spawnSparks, addDmgPopup]);
 
   const handleBustRef = useRef(handleBust);
@@ -539,12 +539,12 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       // ── AMBUSH: 10% chance after 8s, throttled by ambushTimeoutRef ─────
       if (elapsedSeconds > 8 && Math.random() < 0.10 && !ambushTimeoutRef.current && !state.isEnding) {
-        logEvent('AMBUSH', 'Enemy flanked your position — random event', '+10 RISK + 2.2s controls locked', 'danger');
+        logEvent('AMBUSH', 'Enemy flanked your position — random event', '+14 RISK + 2.2s controls locked', 'danger');
         setAmbushed(true);
         addLog('AMBUSH_DETECTED');
         addDmgPopup('AMBUSH!', '#EF4444', true);
         spawnSparks('#EF4444', '#f97316', 18);
-        setRisk(prev => Math.min(98, prev + 10));
+        setRisk(prev => Math.min(98, prev + 14));
         sounds.hapticCritical();
         ambushTimeoutRef.current = setTimeout(() => {
           setAmbushed(false);
@@ -552,15 +552,15 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         }, 2200);
       }
 
-      const timePenalty = (elapsedSeconds - 3) * 0.07;
-      const greedFactor  = state.multiplier > 2.5 ? 2.4 : state.multiplier > 1.8 ? 1.8 : 1.0;
-      const houseEdge    = 1.30;
-      const baseDrift    = (2.2 + (Math.random() * 2.8)) + timePenalty;
+      const timePenalty = (elapsedSeconds - 3) * 0.09;  // faster late-game escalation
+      const greedFactor  = state.multiplier > 2.0 ? 2.5 : state.multiplier > 1.5 ? 1.9 : 1.0;
+      const houseEdge    = 1.55;  // ~25-30% base win rate, ~45% max with full gear
+      const baseDrift    = (2.0 + (Math.random() * 3.5)) + timePenalty;  // higher variance for near-miss feel
       const totalDrift   = baseDrift * diffConfig.driftMod * boostStats.driftMultiplier * greedFactor * houseEdge * gearRiskFactor;
       const spikeRoll    = Math.random();
-      const randomSpike  = spikeRoll > 0.93 ? (spikeRoll > 0.97 ? 18 : 14) : 0;
+      const randomSpike  = spikeRoll > 0.91 ? (spikeRoll > 0.96 ? 20 : 16) : 0;  // 9% spike chance
       if (randomSpike > 0 && !state.isEnding) {
-        logEvent('NETWORK_SURGE', 'Random protocol traffic spike — occurs ~7% of ticks', `+${randomSpike} RISK applied`, 'danger');
+        logEvent('NETWORK_SURGE', 'Random protocol traffic spike — occurs ~9% of ticks', `+${randomSpike} RISK applied`, 'danger');
         addLog('NETWORK_SURGE (+RISK)');
         addDmgPopup(`+${randomSpike} RISK!`, '#f97316');
         spawnSparks('#f97316', '#EF4444', 6);
@@ -568,14 +568,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       const nextRisk = state.risk + totalDrift + randomSpike;
 
-      // ── LAST-SECOND SAVE: 12% chance right at 100 — heart-stopping ─────
-      if (nextRisk >= 100 && Math.random() < 0.12 && !state.isEnding) {
-        logEvent('FIREWALL', 'Emergency firewall activated just before bust — 12% chance', 'Risk reset to 72, raid continues', 'bonus');
+      // ── LAST-SECOND SAVE: 7% chance right at 100 — heart-stopping ──────
+      if (nextRisk >= 100 && Math.random() < 0.07 && !state.isEnding) {
+        logEvent('FIREWALL', 'Emergency firewall activated just before bust — 7% chance', 'Risk reset to 75, raid continues', 'bonus');
         addLog('FIREWALL_ACTIVATED');
         spawnSparks('#14F195', '#00FBFF', 32);
         setFirewallSave(true);
         setTimeout(() => setFirewallSave(false), 1400);
-        setRisk(72);
+        setRisk(75);
         sounds.hapticCritical();
         addDmgPopup('FIREWALL SAVED!', '#14F195', true);
       } else if (nextRisk >= 100) {
@@ -635,7 +635,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       spawnSparks('#14F195', '#00FBFF', 22);
       addDmgPopup('EXTRACTED!', '#14F195', true);
     }
-    setTimeout(() => onFinish(true, solReward, points, elapsedSec, [...raidEventsRef.current]), 2500);
+    setTimeout(() => onFinish(true, solReward, points, elapsedSec, [...raidEventsRef.current], peakMultRef.current), 2500);
   };
 
   const handleAttack = () => {
@@ -1079,24 +1079,40 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             </button>
 
             {/* DEFEND button */}
-            <button onClick={handleDefend} disabled={!!isEnding || graceActive || defendLocked || ambushed}
-              className={`col-span-1 bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
-                ambushed ? 'border-cyan-900/30 opacity-30' :
-                defendLocked ? 'border-orange-500/60 bg-orange-950/20' : 'border-[#00FBFF]/50'
-              }`}>
-              <div className="flex flex-col items-center group-active:scale-95 transition-transform">
-                <span className={`text-base font-black uppercase italic tracking-tighter ${
-                  defendLocked ? 'text-orange-400 animate-pulse' : 'text-[#00FBFF]'
+            <div className="col-span-1 relative">
+              {/* Cooldown SVG ring — depletes as timer counts down */}
+              {defendLocked && (() => {
+                const r = 46;
+                const circ = 2 * Math.PI * r;
+                const offset = circ * (1 - defendLockTimer / 3);
+                return (
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r={r} fill="none" stroke="#f97316" strokeWidth="3.5"
+                      strokeDasharray={circ} strokeDashoffset={offset}
+                      strokeLinecap="round" transform="rotate(-90 50 50)"
+                      style={{ transition: 'stroke-dashoffset 1s linear' }} />
+                  </svg>
+                );
+              })()}
+              <button onClick={handleDefend} disabled={!!isEnding || graceActive || defendLocked || ambushed}
+                className={`w-full bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
+                  ambushed ? 'border-cyan-900/30 opacity-30' :
+                  defendLocked ? 'border-orange-500/60 bg-orange-950/20' : 'border-[#00FBFF]/50'
                 }`}>
-                  {defendLocked ? `COOLDOWN_${defendLockTimer}` : 'DEFEND'}
-                </span>
-                <span className={`text-[8px] font-bold uppercase tracking-widest ${
-                  defendLocked ? 'text-orange-500/60' : 'text-[#00FBFF]/40'
-                }`}>
-                  {defendLocked ? 'SHIELD OVERLOAD' : consecutiveDefends >= 1 ? 'CHAIN RISK' : 'RISK --'}
-                </span>
-              </div>
-            </button>
+                <div className="flex flex-col items-center group-active:scale-95 transition-transform">
+                  <span className={`text-base font-black uppercase italic tracking-tighter ${
+                    defendLocked ? 'text-orange-400 animate-pulse' : 'text-[#00FBFF]'
+                  }`}>
+                    {defendLocked ? `COOLDOWN_${defendLockTimer}` : 'DEFEND'}
+                  </span>
+                  <span className={`text-[8px] font-bold uppercase tracking-widest ${
+                    defendLocked ? 'text-orange-500/60' : 'text-[#00FBFF]/40'
+                  }`}>
+                    {defendLocked ? 'SHIELD OVERLOAD' : consecutiveDefends >= 1 ? 'CHAIN RISK' : 'RISK --'}
+                  </span>
+                </div>
+              </button>
+            </div>
 
             {/* CASHOUT button */}
             <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed}

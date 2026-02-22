@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
-import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent } from './types';
+import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, GEAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent } from './types';
 const LobbyScreen = lazy(() => import('./screens/LobbyScreen'));
 const RaidScreen = lazy(() => import('./screens/RaidScreen'));
 const TeamScreen = lazy(() => import('./screens/TeamScreen'));
@@ -604,7 +604,7 @@ const AppInner: React.FC = () => {
     updateProfile({ username: name });
   };
 
-  const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10, events?: import('./types').RaidEvent[]) => {
+  const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10, events?: import('./types').RaidEvent[], peakMult?: number) => {
     const baseSR = success ? 100 : 25;
     const performanceSR = Math.floor(points / 200);
     const localSREarned = baseSR + performanceSR;
@@ -640,6 +640,7 @@ const AppInner: React.FC = () => {
         serverSeedHash: prev.activeServerSeedHash ?? '',
         userWallet,
         txSignature: '',
+        peakMult,
       },
       activeRaidBoosts: [],
       activeRoom: undefined,
@@ -943,6 +944,23 @@ const AppInner: React.FC = () => {
       console.error('Pass purchase failed:', err);
       throw err;
     }
+  };
+
+  const handleForgeGear = async (item1Id: string, item2Id: string): Promise<string | null> => {
+    if (!requireWallet()) return null;
+    const ownedIds = gameState.ownedItemIds;
+
+    // Pick a random LIMITED gear the user doesn't own yet
+    const available = GEAR_ITEMS.filter(g => g.rarity === 'LIMITED' && !ownedIds.includes(g.id));
+    if (available.length === 0) return null;
+
+    const forged = available[Math.floor(Math.random() * available.length)];
+    const newOwned = ownedIds.filter(id => id !== item1Id && id !== item2Id).concat(forged.id);
+
+    setGameState(prev => ({ ...prev, ownedItemIds: newOwned }));
+    await updateProfile({ owned_item_ids: newOwned });
+
+    return forged.id;
   };
 
   const handleEquipAvatar = (avatarId: string) => {
@@ -1443,6 +1461,7 @@ const AppInner: React.FC = () => {
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             raidTickets={gameState.raidTickets}
+            lastFreeRaidDate={gameState.lastFreeRaidDate}
           />
         );
       case Screen.RAID:
@@ -1539,6 +1558,7 @@ const AppInner: React.FC = () => {
             currentLevel={currentRank.level}
             raidTickets={gameState.raidTickets}
             onBuyPass={handleBuyPass}
+            onForgeGear={handleForgeGear}
             initialTab={gameState.storeInitialTab}
           />
         );

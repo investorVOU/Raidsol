@@ -20,6 +20,7 @@ interface LobbyScreenProps {
   onNavigateTreasury: () => void;
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
   raidTickets?: number;
+  lastFreeRaidDate?: string | null;
 }
 
 const LobbyScreen: React.FC<LobbyScreenProps> = ({
@@ -37,6 +38,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onNavigateTreasury,
   onNavigateStore,
   raidTickets = 0,
+  lastFreeRaidDate = null,
 }) => {
   const [showModeModal, setShowModeModal] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
@@ -48,6 +50,45 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
+
+  // ── Daily challenge state ──────────────────────────────────────────────────
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const dailyAvailable = isConnected && lastFreeRaidDate !== todayStr;
+
+  // ── Boss raid countdown ────────────────────────────────────────────────────
+  // Boss window opens at 00, 06, 12, 18 UTC and lasts 1h
+  const getBossState = () => {
+    const now = new Date();
+    const utcHour = now.getUTCHours();
+    const utcMin  = now.getUTCMinutes();
+    const utcSec  = now.getUTCSeconds();
+    const minuteOfDay = utcHour * 60 + utcMin;
+    const bossHours = [0, 6, 12, 18];
+    // Find current boss window
+    const inWindow = bossHours.some(h => utcHour === h && utcMin < 60);
+    if (inWindow) {
+      const secLeft = 3600 - (utcMin * 60 + utcSec);
+      return { open: true, secsUntil: secLeft };
+    }
+    // Find next window
+    const nextH = bossHours.find(h => h * 60 > minuteOfDay) ?? (bossHours[0] + 24);
+    const secsUntil = (nextH * 60 - minuteOfDay) * 60 - utcSec;
+    return { open: false, secsUntil };
+  };
+  const [bossState, setBossState] = useState(getBossState);
+  useEffect(() => {
+    const t = setInterval(() => setBossState(getBossState()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const fmtCountdown = (secs: number) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return h > 0
+      ? `${h}h ${String(m).padStart(2, '0')}m`
+      : `${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+  };
 
   const { feed } = useActivityFeed();
   const { stats } = useTreasuryStats();
@@ -240,6 +281,74 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </div>
 
         </div>
+
+          {/* ── DAILY CHALLENGE ──────────────────────────────────────── */}
+          <button
+            onClick={() => isConnected
+              ? onEnterRaid(Mode.SOLO, Difficulty.EASY, [])
+              : onConnect()}
+            className={`w-full relative overflow-hidden border tech-border flex items-center gap-3 px-4 py-3 transition-all group ${
+              dailyAvailable
+                ? 'bg-cyan-500/8 border-cyan-500/40 hover:bg-cyan-500/15 hover:border-cyan-500/70'
+                : 'bg-white/3 border-white/8 opacity-60 cursor-default'
+            }`}
+            disabled={!isConnected && false /* always clickable to connect */}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+            <span className="text-2xl shrink-0">🎯</span>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">
+                DAILY CHALLENGE
+              </p>
+              {dailyAvailable ? (
+                <p className="text-[9px] text-white/40 font-black uppercase">FREE EASY RAID — RESETS MIDNIGHT UTC · PLAY NOW</p>
+              ) : (
+                <p className="text-[9px] text-white/25 font-black uppercase">COMPLETED TODAY — RESETS AT MIDNIGHT UTC</p>
+              )}
+            </div>
+            {dailyAvailable && (
+              <span className="shrink-0 text-[10px] font-black text-cyan-400 uppercase tracking-wider">FREE →</span>
+            )}
+          </button>
+
+          {/* ── BOSS RAID COUNTDOWN ───────────────────────────────────── */}
+          <button
+            onClick={() => bossState.open && isConnected
+              ? onEnterRaid(Mode.SOLO, Difficulty.HARD, [])
+              : !isConnected ? onConnect() : undefined}
+            disabled={!bossState.open && isConnected}
+            className={`w-full relative overflow-hidden border tech-border flex items-center gap-3 px-4 py-3 transition-all group ${
+              bossState.open
+                ? 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.1)]'
+                : 'bg-white/3 border-white/8 cursor-default opacity-70'
+            }`}
+          >
+            {bossState.open && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+            )}
+            <div className="relative shrink-0">
+              <span className="text-2xl">{bossState.open ? '💀' : '🔒'}</span>
+              {bossState.open && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+              )}
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className={`text-[10px] font-black uppercase tracking-widest ${bossState.open ? 'text-red-400' : 'text-white/30'}`}>
+                BOSS RAID {bossState.open ? '— WINDOW OPEN' : '— NEXT WINDOW'}
+              </p>
+              <p className="text-[9px] font-black uppercase text-white/30">
+                {bossState.open
+                  ? `CLOSES IN ${fmtCountdown(bossState.secsUntil)} · HIGH RISK HARD MODE`
+                  : `OPENS IN ${fmtCountdown(bossState.secsUntil)} · 6H SCHEDULE`}
+              </p>
+            </div>
+            {bossState.open && (
+              <span className="shrink-0 text-[10px] font-black text-red-400 uppercase tracking-wider animate-pulse">ENTER →</span>
+            )}
+            {!bossState.open && (
+              <span className="mono shrink-0 text-[11px] font-black text-white/20 tabular-nums">{fmtCountdown(bossState.secsUntil)}</span>
+            )}
+          </button>
 
           {/* ── RAID PASS BANNER ─────────────────────────────────────── */}
           <button

@@ -298,6 +298,7 @@ export interface GameState {
     serverSeedHash: string;
     userWallet: string;
     txSignature: string;
+    peakMult?: number;
   };
   isRaidLoading?: boolean;          // true while 2.5s pre-raid loading screen shows
   pvpWinnerResult?: {               // set when all PvP players have finished
@@ -325,5 +326,5 @@ export interface GameState {
   lastFreeRaidDate: string | null;     // ISO date — daily free raid at EASY
   activeStreakBonus: number;           // +0.15 per 3-win streak, applied as starting mult bonus
   lastRaidEvents?: RaidEvent[];        // populated after each raid for post-raid breakdown
-  storeInitialTab?: 'GEAR' | 'AVATAR' | 'PASS'; // deep-link into store tab
+  storeInitialTab?: 'GEAR' | 'AVATAR' | 'PASS' | 'FORGE'; // deep-link into store tab
 }
