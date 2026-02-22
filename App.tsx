@@ -80,7 +80,7 @@ const AppInner: React.FC = () => {
       isConnected: false,
       username: '',
       ownedItemIds: [],
-      equippedAvatarId: AVATAR_ITEMS[0].id,
+      equippedAvatarId: '',
       equippedGearIds: [],
       activeRaidFee: ENTRY_FEES[Mode.SOLO],
       activeRaidDifficulty: Difficulty.MEDIUM,
@@ -214,7 +214,7 @@ const AppInner: React.FC = () => {
       unclaimedBalance:   profile.unclaimed_sol,
       username:           profile.username,
       ownedItemIds:       profile.owned_item_ids,
-      equippedAvatarId:   profile.equipped_avatar_id ?? AVATAR_ITEMS[0].id,
+      equippedAvatarId:   profile.equipped_avatar_id ?? '',
       equippedGearIds:    profile.equipped_gear_ids,
       raidTickets:        profile.raid_tickets ?? 0,
       lastFreeTicketDate: profile.last_free_ticket_date ?? null,
@@ -604,7 +604,7 @@ const AppInner: React.FC = () => {
     updateProfile({ username: name });
   };
 
-  const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10) => {
+  const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10, events?: import('./types').RaidEvent[]) => {
     const baseSR = success ? 100 : 25;
     const performanceSR = Math.floor(points / 200);
     const localSREarned = baseSR + performanceSR;
@@ -630,6 +630,7 @@ const AppInner: React.FC = () => {
       bustTimestamps: success
         ? prev.bustTimestamps
         : [...prev.bustTimestamps.filter(t => t > Date.now() - 10 * 60 * 1000), Date.now()],
+      lastRaidEvents: events ?? [],
       lastResult: {
         success,
         solAmount,
@@ -1465,6 +1466,7 @@ const AppInner: React.FC = () => {
           <ResultScreen
             result={gameState.lastResult!}
             entryFee={gameState.activeRaidFee}
+            raidEvents={gameState.lastRaidEvents}
             onPlayAgain={() => navigateTo(Screen.LOBBY)}
             onRedeploy={gameState.lastRaidConfig
               ? () => enterRaid(
@@ -1501,6 +1503,7 @@ const AppInner: React.FC = () => {
             domainName={domainName}
             referralCode={profile?.referral_code ?? null}
             referralSREarned={profile?.referral_sr_earned ?? 0}
+            onNavigateStore={() => navigateTo(Screen.STORE)}
           />
         );
       case Screen.STORE:

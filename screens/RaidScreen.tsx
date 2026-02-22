@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from 'react';
-import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS } from '../types';
+import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent } from '../types';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations, OrbitControls, Environment, ContactShadows, SpotLight, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameSounds } from '../hooks/useGameSounds';
 
 interface RaidScreenProps {
-  onFinish: (success: boolean, solAmount: number, points: number, elapsedSec: number) => void;
+  onFinish: (success: boolean, solAmount: number, points: number, elapsedSec: number, events?: RaidEvent[]) => void;
   equippedGearIds: string[];
   entryFee: number;
   difficulty: Difficulty;
@@ -343,6 +343,16 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setTimeout(() => setComboPopups(prev => prev.filter(p => p.id !== id)), 950);
   }, []);
 
+  // ── Post-Raid Event Ledger ────────────────────────────────────────────────
+  const raidEventsRef  = useRef<RaidEvent[]>([]);
+  const raidStartMsRef = useRef(Date.now());
+  const logEvent = useCallback((
+    type: string, reason: string, impact: string, severity: RaidEvent['severity'],
+  ) => {
+    const tick = Math.floor((Date.now() - raidStartMsRef.current) / 1000);
+    raidEventsRef.current.push({ tick, type, reason, impact, severity });
+  }, []);
+
   // Fighter actions
   const [userAction,  setUserAction]  = useState('Idle');
   const [enemyAction, setEnemyAction] = useState('Idle');
@@ -420,6 +430,15 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       ? Math.max(3, (initialTime - stateRef.current.timeLeft))
       : initialTime;
     addLog(reason);
+    // Log the final bust event
+    const bustReasons: Record<string, { reason: string; impact: string }> = {
+      RISK_OVERLOAD:    { reason: 'Cumulative risk drift exceeded 100%', impact: 'Entry fee lost' },
+      RISK_CRITICAL:    { reason: 'High-risk attack triggered critical overload', impact: 'Instant bust' },
+      TIMEOUT_EXPIRED:  { reason: 'Timer ran out before extraction', impact: 'Entry fee lost' },
+      PROTOCOL_FAILURE: { reason: 'Protocol collapsed from accumulated damage', impact: 'Entry fee lost' },
+    };
+    const bustInfo = bustReasons[reason] ?? { reason: reason, impact: 'Entry fee lost' };
+    logEvent('BUST', bustInfo.reason, bustInfo.impact, 'danger');
     setIsEnding('LOSS');
     setUserAction('Death');
     setEnemyAction('Dance');
@@ -427,7 +446,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     sounds.hapticBust();
     spawnSparks('#EF4444', '#ff6600', 22);
     addDmgPopup('BUSTED!', '#EF4444', true);
-    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current), 2500);
+    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current]), 2500);
   }, [onFinish, initialTime, entryFee, ticketBoost, sounds, spawnSparks, addDmgPopup]);
 
   const handleBustRef = useRef(handleBust);
@@ -482,6 +501,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         let secs = 6;
         setGoldenWindow(true);
         setGoldenCountdown(secs);
+        logEvent('GOLDEN_WINDOW', `Multiplier reached ${state.multiplier.toFixed(2)}x — extraction window opened`, '6s window: +5% bonus if you cash out now', 'bonus');
         addLog('GOLDEN_WINDOW_OPEN');
         addDmgPopup('GOLDEN WINDOW! +5%', '#FFD700', true);
         spawnSparks('#FFD700', '#14F195', 22);
@@ -494,6 +514,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             goldenWindowRef.current = null;
             setGoldenWindow(false);
             setGoldenCountdown(0);
+            logEvent('GOLDEN_EXPIRED', 'Golden extraction window expired unused', 'Bonus opportunity missed — no penalty', 'warning');
             addLog('GOLDEN_WINDOW_EXPIRED');
             addDmgPopup('WINDOW CLOSED!', '#EF4444');
           }
@@ -502,6 +523,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       // ── JACKPOT: 3% chance after 6s — variable reward rush ────────────
       if (elapsedSeconds > 6 && Math.random() < 0.03 && !state.isEnding) {
+        logEvent('JACKPOT', 'Protocol glitch in your favour — rare random event', '+0.5x multiplier bonus', 'bonus');
         addLog('PROTOCOL_GLITCH_DETECTED');
         addDmgPopup('JACKPOT! +0.5x', '#FFD700', true);
         spawnSparks('#FFD700', '#9945FF', 28);
@@ -517,6 +539,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       // ── AMBUSH: 10% chance after 8s, throttled by ambushTimeoutRef ─────
       if (elapsedSeconds > 8 && Math.random() < 0.10 && !ambushTimeoutRef.current && !state.isEnding) {
+        logEvent('AMBUSH', 'Enemy flanked your position — random event', '+10 RISK + 2.2s controls locked', 'danger');
         setAmbushed(true);
         addLog('AMBUSH_DETECTED');
         addDmgPopup('AMBUSH!', '#EF4444', true);
@@ -537,6 +560,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       const spikeRoll    = Math.random();
       const randomSpike  = spikeRoll > 0.93 ? (spikeRoll > 0.97 ? 18 : 14) : 0;
       if (randomSpike > 0 && !state.isEnding) {
+        logEvent('NETWORK_SURGE', 'Random protocol traffic spike — occurs ~7% of ticks', `+${randomSpike} RISK applied`, 'danger');
         addLog('NETWORK_SURGE (+RISK)');
         addDmgPopup(`+${randomSpike} RISK!`, '#f97316');
         spawnSparks('#f97316', '#EF4444', 6);
@@ -546,6 +570,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       // ── LAST-SECOND SAVE: 12% chance right at 100 — heart-stopping ─────
       if (nextRisk >= 100 && Math.random() < 0.12 && !state.isEnding) {
+        logEvent('FIREWALL', 'Emergency firewall activated just before bust — 12% chance', 'Risk reset to 72, raid continues', 'bonus');
         addLog('FIREWALL_ACTIVATED');
         spawnSparks('#14F195', '#00FBFF', 32);
         setFirewallSave(true);
@@ -598,16 +623,19 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     sounds.playCashOut();
     sounds.hapticExtract();
     if (goldenWindow) {
+      logEvent('CASHOUT', 'Extracted during Golden Window', `+5% bonus → ${solReward.toFixed(4)} SOL`, 'bonus');
       spawnSparks('#FFD700', '#14F195', 32);
       addDmgPopup('GOLDEN EXIT! +5%', '#FFD700', true);
     } else if (elapsedSec < 8) {
+      logEvent('CASHOUT', 'Early exit before 8s full-value window', `-50% penalty → ${solReward.toFixed(4)} SOL`, 'warning');
       spawnSparks('#f97316', '#EF4444', 14);
       addDmgPopup('EARLY EXIT! -50%', '#f97316', true);
     } else {
+      logEvent('CASHOUT', 'Clean extraction at full value', `${solReward.toFixed(4)} SOL secured`, 'bonus');
       spawnSparks('#14F195', '#00FBFF', 22);
       addDmgPopup('EXTRACTED!', '#14F195', true);
     }
-    setTimeout(() => onFinish(true, solReward, points, elapsedSec), 2500);
+    setTimeout(() => onFinish(true, solReward, points, elapsedSec, [...raidEventsRef.current]), 2500);
   };
 
   const handleAttack = () => {
@@ -629,6 +657,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
     // ── Combo bonus ────────────────────────────────────────────────────────
     if (isCombo) {
+      logEvent('COMBO', 'Defend → Attack within 2.2s — perfect sequence', '+500 pts, -4 RISK, reduced attack cost', 'bonus');
       addComboPopup('COMBO! +500', '#FFD700');
       spawnSparks('#FFD700', '#14F195', 18);
       addLog('COMBO_STRIKE');
@@ -638,6 +667,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
     // ── Aggression surge: every 5 attacks without defending ────────────────
     if (newAttackCount >= 5 && newAttackCount % 5 === 0) {
+      logEvent('AGGRESSION', `${newAttackCount} attacks fired without defending — aggression penalty triggered`, '+15 RISK surge', 'danger');
       addLog('AGGRESSION_DETECTED');
       addDmgPopup('AGGRESSION! +15', '#f97316', true);
       spawnSparks('#f97316', '#EF4444', 12);
@@ -664,6 +694,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setRisk(prev => {
       const next = Math.min(99.9, prev + riskAdded);
       if (next > 85 && Math.random() > 0.75) {
+        logEvent('CRITICAL', `Attack at ${Math.floor(next)}% risk triggered critical overload (25% chance above 85%)`, 'Instant bust — do not attack above 85% risk', 'danger');
         sounds.playCritical();
         sounds.hapticCritical();
         addDmgPopup('CRITICAL!', '#EF4444', true);
@@ -705,6 +736,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     sounds.hapticDefend();
 
     if (isCounter) {
+      logEvent('COUNTER', 'Attack → Defend within 2.2s — counter sequence', '+350 pts, -10 RISK bonus', 'bonus');
       addComboPopup('COUNTER! -10', '#9945FF');
       spawnSparks('#9945FF', '#00FBFF', 16);
       addLog('COUNTER_EXECUTED');
@@ -734,6 +766,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
     // Lock defend after 2 consecutive uses — must attack first
     if (newCount >= 2) {
+      logEvent('SHIELD_OVERLOAD', '2 consecutive defends exhausted your shield generator', '3s lockout — must attack or wait', 'warning');
       setDefendLocked(true);
       addDmgPopup('SHIELD OVERLOAD!', '#f97316', true);
       sounds.hapticWarning();

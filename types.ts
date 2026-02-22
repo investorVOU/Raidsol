@@ -1,4 +1,13 @@
 
+// ── Post-Raid Breakdown Event ──────────────────────────────────────────────
+export interface RaidEvent {
+  tick: number;        // elapsed seconds when it happened
+  type: string;        // machine identifier
+  reason: string;      // why it happened (shown to player)
+  impact: string;      // what it did (+15 RISK, -50% SOL, etc.)
+  severity: 'danger' | 'warning' | 'bonus' | 'info';
+}
+
 export enum Screen {
   LOBBY = 'LOBBY',
   RAID = 'RAID',
@@ -315,4 +324,5 @@ export interface GameState {
   bustTimestamps: number[];            // epoch ms of recent busts (rage-quit protection)
   lastFreeRaidDate: string | null;     // ISO date — daily free raid at EASY
   activeStreakBonus: number;           // +0.15 per 3-win streak, applied as starting mult bonus
+  lastRaidEvents?: RaidEvent[];        // populated after each raid for post-raid breakdown
 }

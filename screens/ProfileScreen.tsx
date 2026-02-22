@@ -24,6 +24,7 @@ interface ProfileScreenProps {
   domainName?: string | null;
   referralCode?: string | null;
   referralSREarned?: number;
+  onNavigateStore?: () => void;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -44,6 +45,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   domainName,
   referralCode,
   referralSREarned = 0,
+  onNavigateStore,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -244,10 +246,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         {/* Header Profile Section */}
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-10">
           {/* Avatar Container */}
-          <div className="shrink-0">
-            <div 
-              className="w-36 h-36 sm:w-44 sm:h-44 lg:w-52 lg:h-52 bg-black border-4 tech-border flex items-center justify-center relative overflow-hidden transition-all duration-500" 
-              style={{ borderColor: currentRank.color, boxShadow: `0 0 30px ${currentRank.color}20` }}
+          <div className="shrink-0 flex flex-col items-center gap-2">
+            <div
+              className="w-36 h-36 sm:w-44 sm:h-44 lg:w-52 lg:h-52 bg-black border-4 tech-border flex items-center justify-center relative overflow-hidden transition-all duration-500"
+              style={{ borderColor: equippedAvatar ? currentRank.color : '#333', boxShadow: equippedAvatar ? `0 0 30px ${currentRank.color}20` : 'none' }}
             >
               {equippedAvatar?.image ? (
                 <img
@@ -256,10 +258,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   className="w-full h-full object-cover transition-all duration-700"
                 />
               ) : (
-                <div className="text-4xl font-black text-white/10 italic">NULL</div>
+                <div className="flex flex-col items-center gap-2 px-3">
+                  <div className="text-3xl font-black text-white/10 italic">?</div>
+                  <span className="text-[9px] font-black text-white/20 uppercase tracking-widest text-center leading-tight">NO AVATAR</span>
+                </div>
               )}
-              <div className="absolute bottom-0 left-0 w-full h-1 bg-cyan-500 shadow-[0_0_15px_#06b6d4]"></div>
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-cyan-500 shadow-[0_0_15px_#06b6d4]" />
             </div>
+            {/* Purchase prompt when no avatar equipped */}
+            {!equippedAvatar && onNavigateStore && (
+              <button
+                onClick={onNavigateStore}
+                className="px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 text-[9px] font-black uppercase tracking-widest hover:bg-cyan-500/20 active:scale-95 transition-all"
+              >
+                BUY AVATAR →_STORE
+              </button>
+            )}
+            {equippedAvatar && (
+              <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">{equippedAvatar.name}</span>
+            )}
           </div>
 
           {/* User Info & Progress */}
