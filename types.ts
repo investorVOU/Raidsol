@@ -75,7 +75,7 @@ export const RAID_PASSES: RaidPass[] = [
     tickets: 10,
     usdPrice: 10,
     description: '10 discounted entries. 50% off entry fee per ticket.',
-    badge: '🟨',
+    badge: 'I',
   },
   {
     id: 'pass_core',
@@ -83,7 +83,7 @@ export const RAID_PASSES: RaidPass[] = [
     tickets: 25,
     usdPrice: 20,
     description: '25 discounted entries + 10% win boost per ticket.',
-    badge: '🟦',
+    badge: 'II',
   },
   {
     id: 'pass_pro',
@@ -91,7 +91,7 @@ export const RAID_PASSES: RaidPass[] = [
     tickets: 60,
     usdPrice: 35,
     description: '60 entries. Max discount + max win boost. Degen tier.',
-    badge: '🟥',
+    badge: 'III',
   },
   {
     id: 'pass_elite',
@@ -99,7 +99,7 @@ export const RAID_PASSES: RaidPass[] = [
     tickets: 120,
     usdPrice: 60,
     description: '120 entries. Elite-tier access with priority queue and double SR bonus.',
-    badge: '🟪',
+    badge: 'IV',
   },
   {
     id: 'pass_legend',
@@ -107,7 +107,7 @@ export const RAID_PASSES: RaidPass[] = [
     tickets: 250,
     usdPrice: 100,
     description: '250 entries. Full legend status, max perks, exclusive badge, priority everything.',
-    badge: '⬛',
+    badge: 'V',
   },
 ];
 

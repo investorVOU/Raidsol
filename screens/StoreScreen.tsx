@@ -301,24 +301,36 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                 const priceValue = passesLoading ? Infinity : (selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice));
                 const canAfford = !passesLoading && currentBalance >= priceValue;
                 const isLoading = passesLoading;
-                const badgeColors = pass.id === 'pass_basic'  ? 'border-yellow-500/30 bg-yellow-500/5'
-                                  : pass.id === 'pass_core'   ? 'border-blue-500/30 bg-blue-500/5'
-                                  : pass.id === 'pass_pro'    ? 'border-red-500/30 bg-red-500/5'
-                                  : pass.id === 'pass_elite'  ? 'border-purple-500/30 bg-purple-500/5'
-                                  : 'border-white/20 bg-white/3';
-                const btnColors = pass.id === 'pass_basic'  ? 'bg-yellow-500 text-black'
-                                : pass.id === 'pass_core'   ? 'bg-blue-500 text-white'
-                                : pass.id === 'pass_pro'    ? 'bg-red-500 text-white'
-                                : pass.id === 'pass_elite'  ? 'bg-purple-600 text-white'
-                                : 'bg-white text-black';
+                // tier accent: game palette — green / cyan / orange / purple / gold
+                const tierColor = pass.id === 'pass_basic'  ? '#14F195'
+                                : pass.id === 'pass_core'   ? '#22d3ee'
+                                : pass.id === 'pass_pro'    ? '#fb923c'
+                                : pass.id === 'pass_elite'  ? '#9945FF'
+                                : '#eab308';
+                const badgeColors = 'border-white/10 bg-white/[0.02]';
+                const btnColors = pass.id === 'pass_basic'  ? 'bg-[#14F195] text-black'
+                                : pass.id === 'pass_core'   ? 'bg-cyan-400 text-black'
+                                : pass.id === 'pass_pro'    ? 'bg-orange-500 text-black'
+                                : pass.id === 'pass_elite'  ? 'bg-[#9945FF] text-white'
+                                : 'bg-yellow-400 text-black';
 
                 return (
-                  <div key={pass.id} className={`border-2 tech-border p-3 sm:p-5 ${badgeColors}`}>
+                  <div
+                    key={pass.id}
+                    className={`border tech-border p-3 sm:p-5 relative overflow-hidden ${badgeColors}`}
+                    style={{ borderLeftColor: tierColor, borderLeftWidth: 3 }}
+                  >
                     {/* Mobile: single row layout — Desktop: stacked */}
                     <div className="flex sm:flex-col gap-3 sm:gap-0">
                       {/* Left / top: identity */}
                       <div className="flex items-center gap-3 sm:justify-between sm:mb-3 shrink-0">
-                        <span className="text-2xl">{pass.badge}</span>
+                        {/* Tier badge */}
+                        <div
+                          className="w-10 h-10 shrink-0 border-2 flex items-center justify-center"
+                          style={{ borderColor: tierColor, boxShadow: `0 0 12px ${tierColor}30` }}
+                        >
+                          <span className="text-sm font-black mono" style={{ color: tierColor }}>{pass.badge}</span>
+                        </div>
                         <div>
                           <p className="text-sm font-black uppercase text-white leading-none">{pass.name}</p>
                           <p className="text-xs font-bold text-white/50 mt-0.5"><span className="text-white font-black">{pass.tickets}</span> tickets · <span className="text-white/40">${pass.usdPrice}</span></p>
