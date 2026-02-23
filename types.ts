@@ -324,6 +324,7 @@ export interface GameState {
     difficulty: Difficulty;
     boosts: string[];
     currency: Currency;
+    isRoundEntry?: boolean;
   };
   // RaidCore Pass ticket system
   raidTickets: number;

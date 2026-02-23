@@ -5,9 +5,10 @@ import { Screen } from '../types';
 interface NavigationProps {
   currentScreen: Screen;
   onNavigate: (screen: Screen) => void;
+  roundWinCount?: number;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate }) => {
+const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roundWinCount = 0 }) => {
   const leftTabs = [
     { label: 'Home',   icon: 'fa-solid fa-house',  screen: Screen.LOBBY      },
     { label: 'Market', icon: 'fa-solid fa-store',   screen: Screen.STORE      },
@@ -61,6 +62,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate }) =>
             icon={tab.icon}
             active={currentScreen === tab.screen}
             onClick={() => onNavigate(tab.screen)}
+            badge={tab.screen === Screen.PROFILE && roundWinCount > 0 ? roundWinCount : 0}
           />
         ))}
       </div>
@@ -85,21 +87,31 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate }) =>
   );
 };
 
-const NavItem: React.FC<{ label: string; icon: string; active: boolean; onClick: () => void }> = ({
-  label, icon, active, onClick,
+const NavItem: React.FC<{ label: string; icon: string; active: boolean; onClick: () => void; badge?: number }> = ({
+  label, icon, active, onClick, badge = 0,
 }) => (
   <button
     onClick={onClick}
     className={`flex flex-col items-center flex-1 md:flex-none md:w-full py-1.5 gap-1 transition-all active:scale-95`}
   >
-    <i
-      className={icon}
-      style={{
-        fontSize: '17px',
-        color: active ? '#ffffff' : 'rgba(255,255,255,0.35)',
-        transition: 'color 0.15s',
-      }}
-    />
+    <div className="relative">
+      <i
+        className={icon}
+        style={{
+          fontSize: '17px',
+          color: active ? '#ffffff' : 'rgba(255,255,255,0.35)',
+          transition: 'color 0.15s',
+        }}
+      />
+      {badge > 0 && (
+        <span
+          className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-black font-black animate-pulse"
+          style={{ background: '#14F195', fontSize: '7px', lineHeight: 1 }}
+        >
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
+    </div>
     <span
       style={{
         fontSize: '9px',

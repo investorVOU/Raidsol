@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { RaidEvent } from '../types';
+import type { CurrentRoundInfo } from '../hooks/useRoundData';
+import { formatCountdown } from '../hooks/useRoundData';
 
 interface ResultScreenProps {
   result: {
@@ -19,6 +21,8 @@ interface ResultScreenProps {
   onPlayAgain: () => void;
   onRedeploy?: () => void;
   onClaim: () => void;
+  isRoundEntry?: boolean;
+  roundInfo?: CurrentRoundInfo | null;
 }
 
 const SEVERITY_STYLES: Record<RaidEvent['severity'], { border: string; dot: string; text: string; badge: string }> = {
@@ -44,7 +48,10 @@ const TYPE_LABELS: Record<string, string> = {
   CASHOUT:        'EXTRACT',
 };
 
-const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvents, onPlayAgain, onRedeploy, onClaim }) => {
+const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06];
+const ROUND_PCT_LABELS  = ['40%', '25%', '18%', '11%', '6%'];
+
+const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvents, onPlayAgain, onRedeploy, onClaim, isRoundEntry, roundInfo }) => {
   const [debriefOpen, setDebriefOpen] = useState(true);
 
   const handleShareToX = () => {
@@ -226,6 +233,104 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
               ))}
             </div>
           </div>
+
+          {/* ── ROUND STANDING ── */}
+          {isRoundEntry && roundInfo && (() => {
+            const myEntry = roundInfo.topExtractors.find(e => e.walletAddress === result.userWallet);
+            const roundClosed = roundInfo.timeRemainingMs <= 0;
+            return (
+              <div className="bg-black border-2 p-6 tech-border relative overflow-hidden" style={{ borderColor: 'rgba(153,69,255,0.40)' }}>
+                <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black" style={{ color: '#9945FF' }}>ROUND</div>
+
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#9945FF' }} />
+                    <h3 className="text-xs font-bold uppercase tracking-wide" style={{ color: '#b77aff' }}>Round Standing</h3>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: 'rgba(153,69,255,0.15)', color: '#b77aff', border: '1px solid rgba(153,69,255,0.28)' }}>
+                    R{roundInfo.roundNum} / 4
+                  </span>
+                </div>
+
+                {/* Player's extraction this raid */}
+                <div className="mb-4">
+                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Your extraction</p>
+                  <p className="mono text-4xl font-black text-white leading-none">
+                    {result.success ? `+${result.solAmount.toFixed(4)}` : '0.0000'}
+                    <span className="text-base font-normal text-white/30 ml-2">SOL</span>
+                  </p>
+                </div>
+
+                {/* Rank badge */}
+                {result.success && myEntry ? (
+                  <div className="rounded-lg p-4 mb-4" style={{ background: 'rgba(153,69,255,0.10)', border: '1px solid rgba(153,69,255,0.28)' }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-black uppercase tracking-wide" style={{ color: '#c89eff' }}>
+                        #{myEntry.rank} — {ROUND_PCT_LABELS[myEntry.rank - 1]} of pool
+                      </p>
+                      <span className="text-[10px] font-bold text-white/40">{myEntry.rank === 1 ? '🥇' : myEntry.rank === 2 ? '🥈' : myEntry.rank === 3 ? '🥉' : `#${myEntry.rank}`}</span>
+                    </div>
+                    <p className="text-[11px] text-white/50">
+                      Est. allocation:{' '}
+                      <span className="font-bold text-white/75">
+                        {(roundInfo.poolSol * ROUND_ALLOCATION[myEntry.rank - 1]).toFixed(4)} SOL
+                      </span>
+                    </p>
+                  </div>
+                ) : result.success ? (
+                  <div className="rounded-lg p-3 mb-4 bg-white/3 border border-white/8">
+                    <p className="text-xs font-bold text-white/40">Not in top 5 yet — extract more SOL to qualify</p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg p-3 mb-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}>
+                    <p className="text-xs font-bold text-red-400/60">Raid failed — no extraction recorded for this round</p>
+                  </div>
+                )}
+
+                {/* Top 3 leaderboard preview */}
+                {roundInfo.topExtractors.length > 0 && (
+                  <div className="space-y-1 mb-4">
+                    <p className="text-[9px] text-white/25 uppercase tracking-wider font-bold mb-2">Current leaders</p>
+                    {roundInfo.topExtractors.slice(0, 3).map(e => (
+                      <div key={e.rank} className="flex items-center justify-between py-1.5 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] w-5 text-white/30 font-bold">#{e.rank}</span>
+                          <span className="text-[10px] text-white/55 font-medium truncate max-w-[120px]">{e.username}</span>
+                          {e.walletAddress === result.userWallet && (
+                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(153,69,255,0.18)', color: '#b77aff' }}>YOU</span>
+                          )}
+                        </div>
+                        <span className="mono text-[10px] font-bold text-white/65">{e.solExtracted.toFixed(4)} SOL</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Pool + countdown */}
+                <div className="flex items-center justify-between py-2 border-t border-white/5">
+                  <span className="text-[10px] text-white/35 uppercase tracking-wide font-bold">Prize pool</span>
+                  <span className="mono text-sm font-black text-white">{roundInfo.poolSol.toFixed(4)} SOL</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-t border-white/5">
+                  <span className="text-[10px] text-white/35 uppercase tracking-wide font-bold">
+                    {roundClosed ? 'Round status' : 'Closes in'}
+                  </span>
+                  {roundClosed ? (
+                    <span className="text-[10px] font-bold" style={{ color: '#b77aff' }}>Closed — claim in Profile</span>
+                  ) : (
+                    <span className="mono text-xs font-bold" style={{ color: '#b77aff' }}>{formatCountdown(roundInfo.timeRemainingMs)}</span>
+                  )}
+                </div>
+
+                {roundClosed && (
+                  <div className="mt-3 text-center py-2 rounded-lg" style={{ background: 'rgba(153,69,255,0.08)', border: '1px solid rgba(153,69,255,0.20)' }}>
+                    <p className="text-[10px] font-bold" style={{ color: '#b77aff' }}>Go to Profile → Round Wins to claim your allocation</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-black border-2 border-white/5 p-4 sm:p-6 tech-border">

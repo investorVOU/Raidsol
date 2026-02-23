@@ -30,6 +30,7 @@ import { useProfile } from './hooks/useProfile';
 import { useDomainName } from './hooks/useDomainName';
 import { usePrices } from './hooks/usePrices';
 import { useRoundData } from './hooks/useRoundData';
+import { usePlayerRoundWins } from './hooks/usePlayerRoundWins';
 import { supabase } from './lib/supabase';
 
 // USDC mint — mainnet by default (VITE_USDC_MINT), falls back to devnet Circle mint
@@ -63,6 +64,9 @@ const AppInner: React.FC = () => {
   const domainName = useDomainName(walletAddr);
   const { currencyRates: liveCurrencyRates, pricesReady } = usePrices();
   const { info: currentRound, refetch: refetchRound } = useRoundData();
+  const { wins: roundWins } = usePlayerRoundWins(walletAddr);
+  const unclaimedRoundWins = roundWins.filter(w => !w.claimed);
+  const [roundWinPopupDismissed, setRoundWinPopupDismissed] = React.useState<string | null>(null);
 
   // Screens that are safe to restore on reload (mid-game states are excluded)
   const RESTORABLE_SCREENS = new Set<Screen>([
@@ -1498,6 +1502,14 @@ const AppInner: React.FC = () => {
     }
   };
 
+  const enterRoundRaid = async (difficulty: Difficulty, boosts: string[], currency: Currency) => {
+    await enterRaid(Mode.SOLO, difficulty, boosts, currency, false);
+    setGameState(prev => prev.lastRaidConfig
+      ? { ...prev, lastRaidConfig: { ...prev.lastRaidConfig, isRoundEntry: true } }
+      : prev
+    );
+  };
+
   const renderScreen = () => {
     switch (gameState.currentScreen) {
       case Screen.LOBBY:
@@ -1523,6 +1535,7 @@ const AppInner: React.FC = () => {
             drillWindowStart={gameState.drillWindowStart}
             currencyRates={liveCurrencyRates}
             currentRound={currentRound}
+            onEnterRound={enterRoundRaid}
           />
         );
       case Screen.RAID:
@@ -1580,6 +1593,8 @@ const AppInner: React.FC = () => {
                 )
               : undefined}
             onClaim={() => navigateTo(Screen.PROFILE)}
+            isRoundEntry={!!gameState.lastRaidConfig?.isRoundEntry}
+            roundInfo={gameState.lastRaidConfig?.isRoundEntry ? currentRound : null}
           />
         );
       case Screen.PRIVACY:
@@ -1677,6 +1692,7 @@ const AppInner: React.FC = () => {
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             currencyRates={liveCurrencyRates}
             currentRound={currentRound}
+            onEnterRound={enterRoundRaid}
           />
         );
     }
@@ -1698,7 +1714,7 @@ const AppInner: React.FC = () => {
       )}
       <div className="absolute inset-0 pixel-grid z-0" />
       {showNavigation && (
-        <Navigation currentScreen={gameState.currentScreen} onNavigate={navigateTo} />
+        <Navigation currentScreen={gameState.currentScreen} onNavigate={navigateTo} roundWinCount={unclaimedRoundWins.length} />
       )}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
         <Header
@@ -1736,6 +1752,64 @@ const AppInner: React.FC = () => {
           WAITING_FOR_OTHER_PLAYERS...
         </div>
       )}
+      {/* ── ROUND WIN POPUP ── */}
+      {unclaimedRoundWins.length > 0 && roundWinPopupDismissed !== unclaimedRoundWins[0].id && gameState.isConnected && gameState.currentScreen === Screen.LOBBY && (
+        (() => {
+          const win = unclaimedRoundWins[0];
+          const medalMap: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉', 4: '4th', 5: '5th' };
+          const pctMap: Record<number, string> = { 1: '40%', 2: '25%', 3: '18%', 4: '11%', 5: '6%' };
+          return (
+            <div className="fixed top-20 left-0 right-0 z-[150] px-4 pointer-events-none">
+              <div
+                className="w-full max-w-sm mx-auto pointer-events-auto animate-in slide-in-from-top duration-300"
+                style={{ background: '#0d0a16', border: '1px solid rgba(153,69,255,0.45)', borderRadius: '16px', boxShadow: '0 0 40px rgba(153,69,255,0.15), 0 8px 32px rgba(0,0,0,0.6)' }}
+              >
+                <div className="px-4 pt-4 pb-3">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(153,69,255,0.18)', border: '1px solid rgba(153,69,255,0.30)' }}>
+                        <i className="fa-solid fa-trophy text-sm" style={{ color: '#b77aff' }} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold" style={{ color: '#b77aff' }}>ROUND WIN</p>
+                        <p className="text-[9px] text-white/35">R{win.roundNum}/4 · {win.roundDate}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setRoundWinPopupDismissed(win.id)}
+                      className="w-6 h-6 rounded-full bg-white/6 flex items-center justify-center text-white/35 hover:text-white transition-colors shrink-0 mt-0.5"
+                    >
+                      <i className="fa-solid fa-xmark text-[10px]" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-[9px] text-white/35 mb-0.5">Rank · Allocation</p>
+                      <p className="text-lg font-black text-white leading-none">
+                        {medalMap[win.rank]} <span style={{ color: '#b77aff' }}>{win.solAllocation.toFixed(4)} SOL</span>
+                      </p>
+                      <p className="text-[9px] text-white/40 mt-0.5">{pctMap[win.rank]} of {win.poolSol.toFixed(3)} SOL pool</p>
+                    </div>
+                    <button
+                      onClick={() => { setRoundWinPopupDismissed(win.id); navigateTo(Screen.PROFILE); }}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-white active:scale-95 transition-all shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #9945FF 0%, #7c2dd6 100%)', boxShadow: '0 0 16px rgba(153,69,255,0.25)' }}
+                    >
+                      Claim →
+                    </button>
+                  </div>
+
+                  {unclaimedRoundWins.length > 1 && (
+                    <p className="text-[9px] text-white/28 text-center">+{unclaimedRoundWins.length - 1} more unclaimed win{unclaimedRoundWins.length - 1 > 1 ? 's' : ''}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()
+      )}
+
       {showVaultLocked && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="w-full max-w-sm border-2 border-white/10 bg-black tech-border p-6 flex flex-col items-center gap-4 text-center">

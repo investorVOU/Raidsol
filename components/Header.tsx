@@ -14,6 +14,9 @@ interface HeaderProps {
   domainName?: string | null;
 }
 
+const INTER: React.CSSProperties  = { fontFamily: "'Inter', system-ui, sans-serif" };
+const SG_NUM: React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontVariantNumeric: 'tabular-nums' };
+
 const Header: React.FC<HeaderProps> = ({
   balance,
   srPoints,
@@ -32,101 +35,104 @@ const Header: React.FC<HeaderProps> = ({
   const displayName = domain ?? shortAddress;
 
   return (
-    <header className="px-3 sm:px-6 pt-4 sm:pt-6 pb-2 flex justify-between items-center z-50 shrink-0 min-w-0">
-      {/* ── LEFT SIDE ─────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 sm:gap-4 min-w-0 overflow-hidden">
-        {/* S.R badge + level */}
-        <div className="relative shrink-0 flex items-center gap-1">
-          <div
-            className={`px-2 py-1 border-2 font-black tech-border transition-colors ${
-              isConnected
-                ? 'border-cyan-500 text-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
-                : 'border-white/10 text-white/40'
-            }`}
-          >
-            <span className="text-sm">S.R</span>
-          </div>
-          {isConnected && (
-            <span className="text-xs font-bold" style={{ color: currentRank.color }}>
-              Lv.{currentRank.level}
-            </span>
-          )}
+    <header className="px-4 pt-3 pb-2 shrink-0 z-50">
+
+      {/* ── ROW 1: wallet pill + action buttons ── */}
+      <div className="flex items-center justify-between mb-2.5">
+        {/* Wallet / status */}
+        <div className="flex items-center gap-2 min-w-0">
+          {isConnected && displayName ? (
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
+              style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.10)' }}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-[#14F195] animate-pulse shrink-0" />
+              <span className="text-[10px] text-white/55 truncate max-w-[120px]" style={INTER}>
+                {displayName}
+              </span>
+            </div>
+          ) : !isConnected ? (
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
+              style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.07)' }}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+              <span className="text-[10px] text-white/35" style={INTER}>Not connected</span>
+            </div>
+          ) : null}
         </div>
 
-        {isConnected ? (
-          <div className="flex gap-2 sm:gap-4 items-center min-w-0 overflow-hidden">
-            {/* SOL balance — visible on ALL sizes */}
-            <div className="shrink-0 min-w-0">
-              <p className="hidden sm:block text-[10px] text-white/50 leading-tight">
-                Sol balance
-              </p>
-              <p className="mono font-black uppercase leading-tight text-cyan-400" style={{ fontSize: 'clamp(9px, 2.2vw, 14px)' }}>
-                {balance.toFixed(3)} SOL
-              </p>
-            </div>
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onOpenHowItWorks}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-white/35 hover:text-white transition-colors"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}
+          >
+            <span className="text-[11px] font-bold" style={INTER}>?</span>
+          </button>
 
-            {/* Rank — always visible, label hidden on mobile */}
-            <div className="sm:border-l sm:border-white/10 sm:pl-4 shrink-0">
-              <p className="hidden sm:block text-[10px] text-white/50 leading-tight">
-                Rank
-              </p>
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <p
-                  className="mono font-black uppercase leading-tight"
-                  style={{ color: currentRank.color, fontSize: 'clamp(9px, 2.2vw, 14px)' }}
-                >
-                  {currentRank.title}
-                </p>
-                <span className="text-xs font-black text-white/40">
-                  ({srPoints.toLocaleString()})
-                </span>
-              </div>
-            </div>
-
-            {/* Wallet address / .skr domain — desktop only */}
-            <div className="hidden sm:block sm:ml-2 px-2 py-1 bg-cyan-900/30 rounded text-xs font-mono font-bold border shrink-0 transition-colors"
-              style={{ color: domain ? '#14F195' : '#67e8f9', borderColor: domain ? 'rgba(20,241,149,0.4)' : 'rgb(21 94 117)' }}>
-              {displayName}
-            </div>
-          </div>
-        ) : (
-          <div className="hidden sm:block">
-            <p className="text-[10px] text-white/40 leading-tight">
-              Offline
-            </p>
-            <p className="text-xs font-bold text-red-400">
-              No wallet
-            </p>
-          </div>
-        )}
+          {!isConnected ? (
+            <button
+              onClick={onConnect}
+              className="px-3 py-1.5 rounded-full text-black text-[11px] font-bold active:scale-95 transition-all"
+              style={{ background: '#14F195', ...INTER }}
+            >
+              Connect
+            </button>
+          ) : (
+            <button
+              onClick={onDisconnect}
+              className="px-3 py-1.5 rounded-full text-[11px] font-medium text-white/35 hover:text-red-400 transition-colors"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', ...INTER }}
+            >
+              Disconnect
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* ── RIGHT SIDE ────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-2">
-        <button
-          onClick={onOpenHowItWorks}
-          className="px-2 sm:px-3 py-1.5 border tech-border border-white/10 text-xs font-bold uppercase tracking-wide text-white/60 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
-        >
-          <span className="hidden sm:inline">HELP</span>
-          <span className="sm:hidden">?</span>
-        </button>
+      {/* ── ROW 2: stat chips (connected only) ── */}
+      {isConnected && (
+        <div className="grid grid-cols-3 gap-2">
 
-        {!isConnected ? (
-          <button
-            onClick={onConnect}
-            className="px-3 sm:px-5 py-2 bg-cyan-500 text-black text-xs font-black uppercase tracking-tighter tech-border shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all active:scale-95"
+          {/* SOL Balance */}
+          <div
+            className="rounded-xl px-3 py-2"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)' }}
           >
-            CONNECT<span className="hidden sm:inline"> WALLET</span>
-          </button>
-        ) : (
-          <button
-            onClick={onDisconnect}
-            className="px-3 sm:px-4 py-1.5 border tech-border border-red-500/20 text-xs font-black uppercase text-red-500/40 hover:text-red-500 transition-colors"
+            <p className="text-[9px] text-white/35 mb-0.5 uppercase tracking-wide" style={INTER}>Balance</p>
+            <p className="text-[13px] leading-tight text-[#14F195]" style={SG_NUM}>
+              {balance.toFixed(3)}
+              <span className="text-[10px] text-white/35 ml-1" style={INTER}>SOL</span>
+            </p>
+          </div>
+
+          {/* Level + Rank */}
+          <div
+            className="rounded-xl px-3 py-2"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)' }}
           >
-            EXIT
-          </button>
-        )}
-      </div>
+            <p className="text-[9px] text-white/35 mb-0.5 uppercase tracking-wide" style={INTER}>Rank</p>
+            <p className="text-[13px] leading-tight truncate" style={{ ...SG_NUM, color: currentRank.color }}>
+              Lv.{currentRank.level}
+              <span className="text-[11px] ml-1 text-white/50" style={INTER}>{currentRank.title}</span>
+            </p>
+          </div>
+
+          {/* SR Points */}
+          <div
+            className="rounded-xl px-3 py-2"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)' }}
+          >
+            <p className="text-[9px] text-white/35 mb-0.5 uppercase tracking-wide" style={INTER}>SR Points</p>
+            <p className="text-[13px] leading-tight text-amber-400" style={SG_NUM}>
+              {srPoints.toLocaleString()}
+            </p>
+          </div>
+
+        </div>
+      )}
     </header>
   );
 };

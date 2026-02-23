@@ -10,6 +10,7 @@ const SG_H1:  React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif",
 const SG_CTA: React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, letterSpacing: '0.3px' };
 const SG_NUM: React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontVariantNumeric: 'tabular-nums' };
 const SG:     React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif" };
+const BC:     React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontStyle: 'italic', letterSpacing: '-0.3px' };
 
 interface LobbyScreenProps {
   onEnterRaid: (mode: Mode, difficulty?: Difficulty, boosts?: string[], currency?: Currency, useTicket?: boolean) => Promise<void> | void;
@@ -26,6 +27,7 @@ interface LobbyScreenProps {
   onEquipAvatar: (avatarId: string) => void;
   onNavigateTreasury: () => void;
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
+  onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency) => Promise<void>;
   raidTickets?: number;
   lastFreeRaidDate?: string | null;
   drillCount?: number;
@@ -45,7 +47,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onEnterRaid, isConnected, onConnect, currentLevel,
   walletBalance, usdcBalance, skrBalance,
   equippedGearIds, equippedAvatarId, ownedItemIds,
-  onToggleGear, onNavigateTreasury, onNavigateStore,
+  onToggleGear, onNavigateTreasury, onNavigateStore, onEnterRound,
   raidTickets = 0, lastFreeRaidDate = null,
   drillCount = 0, drillWindowStart = 0,
   currencyRates, currentRound,
@@ -101,7 +103,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     setShowRoundModal(false);
     setIsDeploying(true);
     try {
-      await onEnterRaid(Mode.SOLO, roundDifficulty, roundBoosts, roundCurrency, false);
+      if (onEnterRound) {
+        await onEnterRound(roundDifficulty, roundBoosts, roundCurrency);
+      } else {
+        await onEnterRaid(Mode.SOLO, roundDifficulty, roundBoosts, roundCurrency, false);
+      }
     } finally {
       if (mountedRef.current) setIsDeploying(false);
     }
@@ -159,9 +165,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       <div className="relative z-10 shrink-0 px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <h1 className="text-[26px] italic text-[#14F195] leading-none" style={SG_H1}>SOL RAID</h1>
-            </div>
             <p className="text-[13px] text-white/70 leading-snug" style={{ ...INTER, fontWeight: 400 }}>
               Raid the chain. Extract SOL. Don't get busted.
             </p>
@@ -191,11 +194,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/12 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
           <div className="relative z-10 flex items-center justify-between px-5 py-2.5 sm:py-3">
             <div>
-              <p className="text-black/45 text-[10px] font-medium mb-0.5" style={INTER}>
-                {isConnected ? 'Ready to deploy' : 'Connect wallet to start'}
+              <p className="text-black/60 mb-0.5" style={{ ...BC, fontSize: '12px', letterSpacing: '0.5px' }}>
+                {isConnected ? 'AGENT READY' : 'CONNECT WALLET'}
               </p>
-              <p className="text-black text-[28px] font-black leading-none" style={SG_H1}>ENTER RAID</p>
-              <p className="text-black/40 text-[11px] mt-1" style={{ ...INTER, fontWeight: 500 }}>High risk · high reward</p>
+              <p className="text-black leading-none" style={{ ...BC, fontSize: '36px', letterSpacing: '-0.5px' }}>ENTER RAID</p>
+              <p className="text-black/55 mt-0.5" style={{ ...BC, fontSize: '13px' }}>EXTRACT OR GET BUSTED</p>
             </div>
             <div className="flex flex-col items-center gap-1.5 shrink-0">
               <div className="w-11 h-11 rounded-xl bg-black/10 flex items-center justify-center group-hover:bg-black/18 transition-colors">
@@ -264,13 +267,13 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => isConnected ? onEnterRaid(Mode.PVP, Difficulty.MEDIUM, []) : onConnect()}
-            className="relative overflow-hidden rounded-xl bg-white/[0.025] border border-white/[0.12] p-4 text-left active:scale-[0.97] transition-all group hover:bg-white/[0.04]"
+            className="relative overflow-hidden rounded-xl bg-white/[0.025] border border-white/[0.12] p-2.5 text-left active:scale-[0.97] transition-all group hover:bg-white/[0.04]"
           >
             <div className="absolute top-2 right-2 opacity-15 group-hover:opacity-25 transition-opacity">
               <i className="fa-solid fa-swords text-white text-lg" />
             </div>
             <p className="text-[10px] text-white/70 mb-1" style={{ ...INTER, fontWeight: 500 }}>Multiplayer</p>
-            <p className="text-sm leading-tight" style={{ ...SG_CTA, color: '#ff5f5f' }}>PVP DUEL</p>
+            <p className="leading-tight" style={{ ...BC, fontSize: '20px', color: '#ff5f5f' }}>PVP DUEL</p>
             <p className="text-[10px] text-white/70 mt-1" style={{ ...INTER, fontWeight: 400 }}>Stake vs players</p>
           </button>
 
@@ -281,7 +284,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               onEnterRaid(Mode.DRILL, Difficulty.MEDIUM, []);
             }}
             disabled={drillCapHit}
-            className={`relative overflow-hidden rounded-xl border p-4 text-left transition-all group ${
+            className={`relative overflow-hidden rounded-xl border p-2.5 text-left transition-all group ${
               drillCapHit
                 ? 'bg-white/2 border-white/6 opacity-35 cursor-not-allowed'
                 : 'bg-white/[0.025] border-white/[0.12] active:scale-[0.97] hover:bg-white/[0.04]'
@@ -291,7 +294,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <i className="fa-solid fa-dumbbell text-white text-base" />
             </div>
             <p className="text-[10px] text-white/70 mb-1" style={{ ...INTER, fontWeight: 500 }}>Training</p>
-            <p className="text-sm leading-tight" style={{ ...SG_CTA, color: '#4da6ff' }}>FREE DRILL</p>
+            <p className="leading-tight" style={{ ...BC, fontSize: '20px', color: '#4da6ff' }}>FREE DRILL</p>
             <p className={`text-[10px] mt-1 ${drillCapHit ? 'text-white/25' : 'text-white/28'}`} style={{ ...INTER, fontWeight: 400 }}>
               {isConnected ? (drillCapHit ? 'Limit reached' : `${drillsRemaining}/3 left`) : 'No entry fee'}
             </p>
@@ -308,12 +311,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="flex-1 min-w-0">
               {raidTickets > 0 ? (
                 <>
-                  <p className="text-sm font-semibold text-white">{raidTickets}x Raid Pass active</p>
+                  <p className="text-white" style={{ ...BC, fontSize: '18px' }}>{raidTickets}x RAID PASS ACTIVE</p>
                   <p className="text-[10px] text-white/40" style={{ ...INTER, fontWeight: 400 }}>50% off entry · 10% win boost</p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm font-semibold text-white/70">Raid Pass — 50% off entry</p>
+                  <p className="text-white/75" style={{ ...BC, fontSize: '18px' }}>RAID PASS — 50% OFF ENTRY</p>
                   <p className="text-[10px] text-white/70" style={{ ...INTER, fontWeight: 400 }}>SKR holders get extra 50% off</p>
                 </>
               )}
