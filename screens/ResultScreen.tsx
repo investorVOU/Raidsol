@@ -183,40 +183,40 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
   return (
     <div className="h-full flex flex-col p-6 animate-in zoom-in-95 duration-500 overflow-y-auto scrollbar-hide">
       <div className="flex-1 flex flex-col items-center justify-center py-6 sm:py-10">
-        <div className={`mb-6 sm:mb-10 px-10 py-5 border-4 italic ${result.success ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-red-500/10 border-red-500 text-red-500'} tech-border font-black text-4xl sm:text-5xl`}>
-          {result.success ? 'EXTRACTED' : 'BUSTED'}
+        <div className={`mb-6 sm:mb-8 px-8 py-4 border-2 ${result.success ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-red-500/10 border-red-500 text-red-500'} tech-border font-black text-3xl sm:text-4xl uppercase tracking-wide`}>
+          {result.success ? 'Extracted' : 'Busted'}
         </div>
 
-        <h2 className={`text-5xl sm:text-7xl font-black italic uppercase tracking-tighter mb-4 leading-none text-center ${result.success ? 'text-white glitch-text' : 'text-red-500'}`}>
-          {result.success ? 'MISSION_OK' : 'RAID_COLLAPSED'}
+        <h2 className={`text-4xl sm:text-6xl font-black uppercase tracking-tight mb-3 leading-none text-center ${result.success ? 'text-white glitch-text' : 'text-red-500'}`}>
+          {result.success ? 'Mission Complete' : 'Raid Failed'}
         </h2>
-        <p className="text-white/50 text-xs sm:text-sm font-black uppercase tracking-[0.4em] mb-8 sm:mb-12 text-center italic">
-          {result.success ? '___Operation success. Assets secured.' : '___Critical failure. Initial stake purged.'}
+        <p className="text-white/40 text-xs sm:text-sm font-bold mb-8 sm:mb-12 text-center">
+          {result.success ? 'Operation complete · assets secured.' : 'Critical failure · entry fee lost.'}
         </p>
 
         <div className="w-full max-w-sm space-y-4">
           {/* SOL Results */}
           <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-green-500' : 'border-red-500/40'}`}>
-            <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black italic uppercase">[SOL]</div>
-            <p className="text-xs text-white/50 font-black uppercase tracking-widest mb-3 italic">__Harvest Yield</p>
-            <p className={`mono text-5xl sm:text-6xl font-black italic tracking-tighter leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
+            <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black uppercase">SOL</div>
+            <p className="text-xs text-white/40 font-bold uppercase tracking-wide mb-3">Harvest yield</p>
+            <p className={`mono text-5xl sm:text-6xl font-black tracking-tight leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
               {result.success ? `+${result.solAmount.toFixed(4)}` : `-${entryFee.toFixed(3)}`}
-              <span className="text-sm sm:text-base font-normal not-italic opacity-30 ml-2">SOL</span>
+              <span className="text-sm sm:text-base font-normal opacity-30 ml-2">SOL</span>
             </p>
             {result.success && result.peakMult != null && (
-              <p className="text-xs text-[#14F195]/60 font-black uppercase tracking-widest mt-2 italic">
-                PEAK MULT: {result.peakMult.toFixed(2)}x
+              <p className="text-xs text-[#14F195]/60 font-bold mt-2">
+                Peak mult: {result.peakMult.toFixed(2)}x
               </p>
             )}
           </div>
 
           {/* SR Points */}
           <div className="bg-black border-2 border-yellow-500/20 p-6 sm:p-8 tech-border relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 mono text-2xl font-black italic uppercase text-yellow-500">[$SR]</div>
-            <p className="text-xs text-yellow-500/40 font-black uppercase tracking-widest mb-3 italic">__Reputation Gain</p>
+            <div className="absolute top-0 right-0 p-4 opacity-10 mono text-2xl font-black text-yellow-500">$SR</div>
+            <p className="text-xs text-yellow-500/40 font-bold uppercase tracking-wide mb-3">Reputation gain</p>
             <div className="flex items-baseline gap-2">
-              <p className="mono text-5xl sm:text-6xl font-black italic tracking-tighter leading-none text-yellow-500">+{result.srEarned}</p>
-              <span className="text-sm sm:text-base font-black text-yellow-500/40 italic">PTS</span>
+              <p className="mono text-5xl sm:text-6xl font-black tracking-tight leading-none text-yellow-500">+{result.srEarned}</p>
+              <span className="text-sm sm:text-base font-black text-yellow-500/50">pts</span>
             </div>
             <div className="mt-4 flex gap-1">
               {[...Array(6)].map((_, i) => (
@@ -229,11 +229,11 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-black border-2 border-white/5 p-4 sm:p-6 tech-border">
-              <p className="text-[10px] sm:text-xs text-white/40 font-black uppercase mb-1 tracking-widest">Experience</p>
+              <p className="text-[10px] sm:text-xs text-white/40 font-bold uppercase tracking-wide mb-1">Experience</p>
               <p className="mono text-2xl sm:text-3xl font-black">+{result.points.toLocaleString()}</p>
             </div>
             <div className="bg-black border-2 border-white/5 p-4 sm:p-6 tech-border">
-              <p className="text-[10px] sm:text-xs text-white/40 font-black uppercase mb-1 tracking-widest">Rank Power</p>
+              <p className="text-[10px] sm:text-xs text-white/40 font-bold uppercase tracking-wide mb-1">Rank power</p>
               <p className="mono text-2xl sm:text-3xl font-black text-cyan-400">+{Math.floor(result.points / 120)}</p>
             </div>
           </div>
@@ -241,19 +241,18 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
           {/* ── RAID DEBRIEF ─────────────────────────────────────────── */}
           {debriefEvents.length > 0 && (
             <div className="bg-black border-2 border-white/8 tech-border overflow-hidden">
-              {/* Header / toggle */}
               <button
                 onClick={() => setDebriefOpen(p => !p)}
                 className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${result.success ? 'bg-[#14F195]' : 'bg-red-500'}`} />
-                  <span className="text-xs font-black uppercase tracking-[0.3em] text-white/70 italic">RAID_DEBRIEF</span>
-                  <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
+                  <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${result.success ? 'bg-[#14F195]' : 'bg-red-500'}`} />
+                  <span className="text-xs font-bold text-white/60">Raid debrief</span>
+                  <span className="text-[9px] font-bold text-white/30">
                     {debriefEvents.length} event{debriefEvents.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <span className="text-white/50 text-sm font-black">{debriefOpen ? '▲' : '▼'}</span>
+                <span className="text-white/40 text-sm">{debriefOpen ? '▲' : '▼'}</span>
               </button>
 
               {debriefOpen && (
@@ -263,16 +262,14 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                     const label = TYPE_LABELS[ev.type] ?? ev.type;
                     return (
                       <div key={i} className={`flex gap-3 px-4 py-3 border-l-2 ${s.border}`}>
-                        {/* Timeline dot + tick */}
                         <div className="flex flex-col items-center shrink-0 pt-0.5">
                           <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                          <span className="text-[8px] font-black text-white/40 mono mt-1">{ev.tick}s</span>
+                          <span className="text-[8px] font-bold text-white/40 mono mt-1">{ev.tick}s</span>
                         </div>
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${s.badge}`}>{label}</span>
-                            <span className={`text-[9px] font-black uppercase tracking-wider ${s.text}`}>{ev.impact}</span>
+                            <span className={`text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-sm ${s.badge}`}>{label}</span>
+                            <span className={`text-[9px] font-bold ${s.text}`}>{ev.impact}</span>
                           </div>
                           <p className="text-[9px] text-white/60 font-bold leading-tight">{ev.reason}</p>
                         </div>
@@ -287,24 +284,24 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
           {/* Verifiable Proof */}
           <div className="mt-8 p-6 bg-black border-2 border-white/5 tech-border">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse" />
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-cyan-400 italic">VERIFIABLE_PROOF</h3>
+              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+              <h3 className="text-xs font-bold uppercase tracking-wide text-cyan-400">Verifiable proof</h3>
             </div>
             <div className="space-y-3">
               <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">RAID_ID</span>
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">Raid ID</span>
                 <span className="mono text-xs text-white/75">{result.raidId}</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">SERVER_HASH</span>
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">Server hash</span>
                 <span className="mono text-xs text-white/75 truncate w-32 text-right">{result.serverSeedHash}</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">USER_WALLET</span>
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">Wallet</span>
                 <span className="mono text-xs text-white/75">{result.userWallet}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">TX_SIG</span>
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide">TX sig</span>
                 <a
                   href={`https://solscan.io/tx/${result.txSignature}?cluster=devnet`}
                   target="_blank"
@@ -319,49 +316,49 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
         </div>
       </div>
 
-      <div className="py-6 sm:py-8 space-y-4 shrink-0">
+      <div className="py-6 sm:py-8 space-y-3 shrink-0">
         {result.success ? (
           <>
             <button
               onClick={onClaim}
-              className="w-full bg-green-500 text-black py-5 sm:py-6 tech-border font-black uppercase tracking-tight text-xl sm:text-2xl shadow-[0_0_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all italic"
+              className="w-full bg-green-500 text-black py-4 sm:py-5 tech-border font-black uppercase tracking-tight text-lg sm:text-xl shadow-[0_0_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all"
             >
-              COLLECT_HARVEST →_PROFILE
+              Collect harvest
             </button>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleShareToX}
-                className="bg-black border-2 border-white/20 text-white py-4 tech-border font-black uppercase tracking-tight text-sm active:scale-95 transition-all italic hover:bg-white hover:text-black hover:border-white flex items-center justify-center gap-2"
+                className="bg-black border-2 border-white/20 text-white py-3 tech-border font-bold uppercase tracking-wide text-sm active:scale-95 transition-all hover:bg-white hover:text-black hover:border-white flex items-center justify-center gap-2"
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
-                BROADCAST
+                Post on X
               </button>
               <button
                 onClick={handleDownloadCard}
-                className="bg-black border-2 border-[#14F195]/30 text-[#14F195] py-4 tech-border font-black uppercase tracking-tight text-sm active:scale-95 transition-all italic hover:bg-[#14F195] hover:text-black flex items-center justify-center gap-2"
+                className="bg-black border-2 border-[#14F195]/30 text-[#14F195] py-3 tech-border font-bold uppercase tracking-wide text-sm active:scale-95 transition-all hover:bg-[#14F195] hover:text-black flex items-center justify-center gap-2"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 shrink-0">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
-                SHARE_CARD
+                Save card
               </button>
             </div>
           </>
         ) : (
           <button
             onClick={onRedeploy ?? onPlayAgain}
-            className="w-full bg-red-600 text-white py-5 sm:py-6 tech-border font-black uppercase tracking-tight text-xl sm:text-2xl active:scale-95 transition-all italic shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+            className="w-full bg-red-600 text-white py-4 sm:py-5 tech-border font-black uppercase tracking-tight text-lg sm:text-xl active:scale-95 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
           >
-            {onRedeploy ? 'RETRY_SAME_CONFIG' : 'RETRY_REDEPLOY'}
+            {onRedeploy ? 'Retry same config' : 'Back to lobby'}
           </button>
         )}
         <button
           onClick={onPlayAgain}
-          className="w-full bg-[#050505] text-white/60 hover:text-white py-4 sm:py-5 tech-border font-black uppercase tracking-tight text-sm sm:text-base active:scale-95 transition-all italic border border-white/10"
+          className="w-full bg-[#050505] text-white/50 hover:text-white py-3 sm:py-4 tech-border font-bold uppercase tracking-wide text-sm active:scale-95 transition-all border border-white/10"
         >
-          {result.success ? 'RETURN_TO_LOBBY' : 'ABORT_TO_LOBBY'}
+          {result.success ? 'Back to lobby' : 'Back to lobby'}
         </button>
       </div>
     </div>
