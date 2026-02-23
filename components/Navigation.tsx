@@ -15,7 +15,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate }) =>
     >
       
       <div className="hidden md:flex mb-12 flex-col items-center">
-        <span className="text-2xl font-black italic text-cyan-500 tracking-tighter">RAID</span>
+        <span className="text-2xl font-black text-cyan-500 tracking-tight">RAID</span>
         <div className="w-10 h-[2px] bg-white/20 mt-1" />
       </div>
 
@@ -60,7 +60,7 @@ const NavItem: React.FC<{ label: string; active: boolean; onClick: () => void }>
     onClick={onClick}
     className={`flex flex-col items-center transition-all flex-1 md:flex-none md:w-full py-2 ${active ? 'text-cyan-400' : 'text-white/70 hover:text-white/80'}`}
   >
-    <span className={`text-[10px] md:text-sm font-black tracking-[0.2em] uppercase transition-colors ${active ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-white/70'}`}>
+    <span className={`text-[10px] md:text-sm font-semibold tracking-wide uppercase transition-colors ${active ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-white/70'}`}>
       {label}
     </span>
   </button>
