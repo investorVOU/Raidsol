@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Room, Currency } from '../types';
 import { Html5Qrcode } from 'html5-qrcode';
 import QRious from 'qrious';
-import { Scan, X, Copy, Check, Swords, Users, Trophy } from 'lucide-react';
+import { Scan, X, Copy, Check, Swords, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface ChatMessage {
@@ -441,7 +441,6 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
 
               {/* Banner */}
               <div className="border border-[#9945FF]/30 bg-[#9945FF]/5 p-4 sm:p-5 tech-border text-center">
-                <Trophy className="mx-auto mb-2 text-[#9945FF]" size={22} />
                 <p className="text-white font-bold text-sm sm:text-base mb-1">Winner takes all</p>
                 <p className="text-white/60 text-[11px] font-medium leading-relaxed">
                   Pool tokens with rivals. Raid the same protocol.<br />
