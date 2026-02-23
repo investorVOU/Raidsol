@@ -72,20 +72,20 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
     : 'https://solscan.io';
   const displayAddr = addr
     ? `${addr.slice(0, 6)}...${addr.slice(-6)}`
-    : 'NOT_CONFIGURED';
+    : 'Not configured';
 
   return (
     <div className="h-full flex flex-col p-6 animate-in slide-in-from-right duration-300 overflow-y-auto scrollbar-hide">
       {/* Header */}
       <div className="shrink-0 flex items-center gap-4 mb-8">
-        <button onClick={onBack} className="text-white/60 hover:text-white font-black text-2xl">
-          {'<'}
+        <button onClick={onBack} className="text-white/60 hover:text-white font-bold text-lg leading-none">
+          {'←'}
         </button>
         <div>
-          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">
-            PROTOCOL_<span className="text-[#14F195]">TREASURY</span>
+          <h2 className="text-3xl font-black uppercase tracking-tight text-white">
+            Protocol <span className="text-[#14F195]">Treasury</span>
           </h2>
-          <p className="text-xs font-black text-white/50 uppercase tracking-[0.4em]">Solvency_Check_v5.0</p>
+          <p className="text-xs text-white/40 mt-0.5">Solvency check v5.0</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
             <div className="absolute top-0 right-0 p-4 opacity-10">
               <span className="text-6xl font-black text-[#14F195]">SOL</span>
             </div>
-            <p className="text-sm font-black text-white/60 uppercase tracking-widest mb-2">TOTAL_RESERVE</p>
+            <p className="text-sm font-bold text-white/60 uppercase tracking-wide mb-2">Total reserve</p>
             {balanceLoading && liveBalance === null ? (
               <div className="h-12 bg-white/5 animate-pulse rounded w-2/3" />
             ) : (
@@ -109,17 +109,17 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
               </p>
             )}
             <div className="flex items-center gap-3 mt-2">
-              <p className="text-xs font-black text-[#14F195] uppercase tracking-wider">STATUS: OVER-COLLATERALIZED</p>
-              <span className="flex items-center gap-1 text-[10px] font-black text-[#14F195]/60 uppercase tracking-widest">
+              <p className="text-xs font-bold text-[#14F195] uppercase tracking-wide">Over-collateralized</p>
+              <span className="flex items-center gap-1 text-[10px] text-[#14F195]/60">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#14F195] animate-pulse inline-block" />
-                LIVE_ON-CHAIN
+                live · on-chain
               </span>
             </div>
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1">DEVNET</p>
+            <p className="text-[10px] text-white/30 mt-1">devnet</p>
           </div>
 
           <div className="bg-[#050505] border-2 border-white/10 p-8 tech-border">
-            <p className="text-sm font-black text-white/60 uppercase tracking-widest mb-2">24H_PAYOUTS</p>
+            <p className="text-sm font-bold text-white/60 uppercase tracking-wide mb-2">24h payouts</p>
             {loading ? (
               <div className="h-12 bg-white/5 animate-pulse rounded w-2/3" />
             ) : (
@@ -127,8 +127,8 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
                 {stats ? Number(stats.payouts_24h_sol).toFixed(2) : '—'}
               </p>
             )}
-            <p className="text-xs font-black text-white/40 mt-2 uppercase tracking-wider">
-              VIA {stats ? stats.total_transactions.toLocaleString() : '—'} TRANSACTIONS
+            <p className="text-xs text-white/40 mt-2">
+              via {stats ? stats.total_transactions.toLocaleString() : '—'} transactions
             </p>
           </div>
         </div>
@@ -136,9 +136,9 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
         {/* Verification Link */}
         <div className="p-6 bg-[#14F195]/5 border border-[#14F195]/20 tech-border flex flex-col md:flex-row justify-between items-center gap-6">
           <div>
-            <h3 className="text-lg font-black uppercase text-[#14F195] italic">VERIFY ON CHAIN</h3>
+            <h3 className="text-base font-bold uppercase text-[#14F195]">Verify on-chain</h3>
             <div className="flex items-center gap-2 mt-1 mb-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/60">TREASURY_ADDR:</span>
+              <span className="text-[10px] text-white/50 uppercase tracking-wide">Treasury:</span>
               <span className="mono text-xs text-white bg-black/50 px-2 py-1 border border-white/10">
                 {displayAddr}
               </span>
@@ -169,7 +169,7 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
 
         {/* Recent Transactions — from real raid_history */}
         <div className="border-t border-white/10 pt-6">
-          <h3 className="text-sm font-black text-white/60 uppercase tracking-widest mb-4">RECENT_PROTOCOLS</h3>
+          <h3 className="text-sm font-bold text-white/60 uppercase tracking-wide mb-4">Recent transactions</h3>
           {txLoading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (
@@ -177,8 +177,8 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
               ))}
             </div>
           ) : recentTx.length === 0 ? (
-            <p className="text-white/40 font-black uppercase tracking-widest text-xs py-8 text-center">
-              NO TRANSACTIONS YET
+            <p className="text-white/40 text-xs py-8 text-center">
+              No transactions yet
             </p>
           ) : (
             <div className="space-y-2 font-mono text-xs">
@@ -188,8 +188,8 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
                   className="flex justify-between items-center p-3 bg-white/2 border border-white/5 hover:bg-white/5 transition-colors"
                 >
                   <span className="text-white/60 truncate max-w-[120px]">{tx.raid_id}</span>
-                  <span className={tx.success ? 'text-[#14F195]' : 'text-red-500'}>
-                    {tx.success ? 'OUTFLOW (WIN)' : 'INFLOW (FEE)'}
+                  <span className={tx.success ? 'text-[#14F195]' : 'text-red-400'}>
+                    {tx.success ? 'outflow · win' : 'inflow · fee'}
                   </span>
                   <span className="text-white font-bold">
                     {tx.success ? `+${Number(tx.sol_amount).toFixed(3)}` : `-${Number(tx.entry_fee).toFixed(3)}`} SOL
