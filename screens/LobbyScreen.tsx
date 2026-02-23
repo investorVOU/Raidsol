@@ -199,7 +199,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
             <div className="flex flex-col items-center gap-1.5 shrink-0">
               <div className="w-11 h-11 rounded-xl bg-black/10 flex items-center justify-center group-hover:bg-black/18 transition-colors">
-                <i className="fa-solid fa-person-running" style={{ fontSize: '20px', color: 'rgba(0,0,0,0.7)' }} />
+                <i className="fa-solid fa-person-running" style={{ fontSize: '24px', color: 'rgba(0,0,0,0.7)' }} />
               </div>
               {raidTickets > 0 && (
                 <span className="text-[9px] font-medium bg-black/12 text-black/60 rounded-full px-2 py-0.5" style={INTER}>
@@ -244,9 +244,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {/* Bottom row: countdown + CTA */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white/30 animate-pulse shrink-0" />
-                  <span className="text-[10px] text-white/30" style={INTER}>Closes in</span>
-                  <span className="text-[10px] text-white/55" style={SG_NUM}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#14F195] animate-pulse shrink-0" />
+                  <span className="text-[10px] text-white/70" style={INTER}>Closes in</span>
+                  <span className="text-[10px] text-[#14F195]" style={SG_NUM}>
                     {formatCountdown(currentRound.timeRemainingMs)}
                   </span>
                 </div>
