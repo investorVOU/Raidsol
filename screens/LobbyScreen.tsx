@@ -224,20 +224,20 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-white/8 text-white/50">
                       Round {currentRound.roundNum} / 4
                     </span>
-                    <span className="text-[9px] text-white/25" style={INTER}>{dayLabel}</span>
+                    <span className="text-[9px] text-white/70" style={INTER}>{dayLabel}</span>
                   </div>
-                  <p className="text-base text-white leading-tight" style={SG_H1}>Raid Round</p>
-                  <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
+                  <p className="text-base text-white leading-tight" style={SG_H1}>RAID ROUND</p>
+                  <p className="text-[10px] text-white/70 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
                     Top 5 extractors share the prize pool
                   </p>
                 </div>
                 {/* Pool */}
                 <div className="text-right shrink-0 ml-4">
-                  <p className="text-[9px] text-white/28 mb-0.5" style={INTER}>Prize pool</p>
-                  <p className="text-xl font-bold text-white leading-none" style={SG_NUM}>
+                  <p className="text-[9px] text-white/70 mb-0.5" style={INTER}>Prize pool</p>
+                  <p className="text-xl font-bold text-[#14F195] leading-none" style={SG_NUM}>
                     {currentRound.poolSol < 0.001 ? '0.000' : currentRound.poolSol.toFixed(3)}
                   </p>
-                  <p className="text-[9px] text-white/28" style={INTER}>SOL</p>
+                  <p className="text-[9px] text-white/70" style={INTER}>SOL</p>
                 </div>
               </div>
 
@@ -269,9 +269,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="absolute top-2 right-2 opacity-15 group-hover:opacity-25 transition-opacity">
               <i className="fa-solid fa-swords text-white text-lg" />
             </div>
-            <p className="text-[10px] text-white/30 mb-1" style={{ ...INTER, fontWeight: 500 }}>Multiplayer</p>
+            <p className="text-[10px] text-white/70 mb-1" style={{ ...INTER, fontWeight: 500 }}>Multiplayer</p>
             <p className="text-sm leading-tight" style={{ ...SG_CTA, color: '#ff5f5f' }}>PVP DUEL</p>
-            <p className="text-[10px] text-white/28 mt-1" style={{ ...INTER, fontWeight: 400 }}>Stake vs players</p>
+            <p className="text-[10px] text-white/70 mt-1" style={{ ...INTER, fontWeight: 400 }}>Stake vs players</p>
           </button>
 
           <button
@@ -290,7 +290,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="absolute top-2 right-2 opacity-15 group-hover:opacity-25 transition-opacity">
               <i className="fa-solid fa-dumbbell text-white text-base" />
             </div>
-            <p className="text-[10px] text-white/30 mb-1" style={{ ...INTER, fontWeight: 500 }}>Training</p>
+            <p className="text-[10px] text-white/70 mb-1" style={{ ...INTER, fontWeight: 500 }}>Training</p>
             <p className="text-sm leading-tight" style={{ ...SG_CTA, color: '#4da6ff' }}>FREE DRILL</p>
             <p className={`text-[10px] mt-1 ${drillCapHit ? 'text-white/25' : 'text-white/28'}`} style={{ ...INTER, fontWeight: 400 }}>
               {isConnected ? (drillCapHit ? 'Limit reached' : `${drillsRemaining}/3 left`) : 'No entry fee'}
@@ -314,7 +314,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               ) : (
                 <>
                   <p className="text-sm font-semibold text-white/70">Raid Pass — 50% off entry</p>
-                  <p className="text-[10px] text-white/35" style={{ ...INTER, fontWeight: 400 }}>SKR holders get extra 50% off</p>
+                  <p className="text-[10px] text-white/70" style={{ ...INTER, fontWeight: 400 }}>SKR holders get extra 50% off</p>
                 </>
               )}
             </div>
@@ -583,7 +583,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         className={`p-2.5 rounded-xl border transition-all text-center active:scale-[0.97] ${active ? `${cfg.ring} ${cfg.bg}` : 'border-white/[0.12] bg-white/3 hover:border-white/18'}`}>
                         <span className="text-lg block mb-1">{cfg.emoji}</span>
                         <p className={`text-[9px] font-semibold ${active ? cfg.color : 'text-white/45'}`}>{cfg.label}</p>
-                        <p className="text-[8px] text-white/22 mt-0.5">{cfg.mult}</p>
+                        <p className="text-[8px] text-white/70 mt-0.5">{cfg.mult}</p>
                       </button>
                     );
                   })}
@@ -718,7 +718,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                               {active && <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />}
                             </div>
                             <p className={`text-xs font-semibold ${active ? cfg.color : 'text-white/55'}`}>{cfg.label}</p>
-                            <p className="text-[9px] text-white/25 mt-0.5 font-medium">{cfg.mult}</p>
+                            <p className="text-[9px] text-white/70 mt-0.5 font-medium">{cfg.mult}</p>
                           </button>
                         );
                       })}
