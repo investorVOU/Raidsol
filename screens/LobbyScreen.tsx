@@ -162,7 +162,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="flex items-center gap-2 mb-0.5">
               <h1 className="text-[26px] italic text-[#14F195] leading-none" style={SG_H1}>SOL RAID</h1>
             </div>
-            <p className="text-[11px] text-white/35 leading-snug" style={{ ...INTER, fontWeight: 400 }}>
+            <p className="text-[13px] text-white/70 leading-snug" style={{ ...INTER, fontWeight: 400 }}>
               Raid the chain. Extract SOL. Don't get busted.
             </p>
           </div>
@@ -194,7 +194,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <p className="text-black/45 text-[10px] font-medium mb-0.5" style={INTER}>
                 {isConnected ? 'Ready to deploy' : 'Connect wallet to start'}
               </p>
-              <p className="text-black text-2xl font-black leading-none" style={SG_H1}>ENTER RAID</p>
+              <p className="text-black text-[28px] font-black leading-none" style={SG_H1}>ENTER RAID</p>
               <p className="text-black/40 text-[11px] mt-1" style={{ ...INTER, fontWeight: 500 }}>High risk · high reward</p>
             </div>
             <div className="flex flex-col items-center gap-1.5 shrink-0">
