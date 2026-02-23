@@ -48,7 +48,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
   const [debriefOpen, setDebriefOpen] = useState(true);
 
   const handleShareToX = () => {
-    const text = `MISSION SUCCESS 🏴‍☠️\n\nI just extracted ${result.solAmount.toFixed(4)} $SOL from the Protocol.\n\nRisk: CRITICAL\nStatus: LEGEND\n\nCan you survive the drain?\n\n@solraid_app @solana @solanamobile #Solana #SolRaid #DegenRaid`;
+    const text = `just extracted ${result.solAmount.toFixed(4)} SOL on @solraid_app\n\npeak mult: ${result.peakMult != null ? result.peakMult.toFixed(2) + 'x' : '--'} · score: ${result.points.toLocaleString()}\n\n#Solana #SolRaid`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://solraid.app')}`;
     window.open(url, '_blank');
   };
@@ -183,7 +183,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
   return (
     <div className="h-full flex flex-col p-6 animate-in zoom-in-95 duration-500 overflow-y-auto scrollbar-hide">
       <div className="flex-1 flex flex-col items-center justify-center py-6 sm:py-10">
-        <div className={`mb-6 sm:mb-8 px-8 py-4 border-2 ${result.success ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-red-500/10 border-red-500 text-red-500'} tech-border font-black text-3xl sm:text-4xl uppercase tracking-wide`}>
+        <div className={`mb-6 sm:mb-8 px-8 py-4 border-2 ${result.success ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-red-500/10 border-red-500 text-red-500'} tech-border font-bold text-3xl sm:text-4xl uppercase tracking-wide`}>
           {result.success ? 'Extracted' : 'Busted'}
         </div>
 
@@ -321,7 +321,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
           <>
             <button
               onClick={onClaim}
-              className="w-full bg-green-500 text-black py-4 sm:py-5 tech-border font-black uppercase tracking-tight text-lg sm:text-xl shadow-[0_0_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all"
+              className="w-full bg-green-500 text-black py-4 sm:py-5 tech-border font-bold uppercase tracking-tight text-lg sm:text-xl shadow-[0_0_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all"
             >
               Collect harvest
             </button>
@@ -349,7 +349,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
         ) : (
           <button
             onClick={onRedeploy ?? onPlayAgain}
-            className="w-full bg-red-600 text-white py-4 sm:py-5 tech-border font-black uppercase tracking-tight text-lg sm:text-xl active:scale-95 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+            className="w-full bg-red-600 text-white py-4 sm:py-5 tech-border font-bold uppercase tracking-tight text-lg sm:text-xl active:scale-95 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
           >
             {onRedeploy ? 'Retry same config' : 'Back to lobby'}
           </button>
