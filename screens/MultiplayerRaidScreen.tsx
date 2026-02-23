@@ -23,7 +23,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
   const [opponents, setOpponents] = useState<Opponent[]>(
     room.players.filter(p => p.id !== walletAddress),
   );
-  const [logs, setLogs] = useState<string[]>(['LINK_ESTABLISHED', 'PVP_PROTOCOL_ACTIVE']);
+  const [logs, setLogs] = useState<string[]>(['Link established', 'PvP active']);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef(0);
@@ -116,11 +116,11 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
       {/* ── BUST / EXTRACT OVERLAY ── */}
       {isEnding && (
         <div className={`absolute inset-0 z-50 flex flex-col items-center justify-center animate-in fade-in duration-500 ${isEnding === 'LOSS' ? 'bg-red-950/80' : 'bg-[#9945FF]/20'}`}>
-          <div className={`text-5xl sm:text-7xl font-black italic uppercase mb-3 ${isEnding === 'LOSS' ? 'text-red-500' : 'text-[#14F195]'}`}>
+          <div className={`text-5xl sm:text-7xl font-black uppercase mb-3 ${isEnding === 'LOSS' ? 'text-red-500' : 'text-[#14F195]'}`}>
             {isEnding === 'LOSS' ? 'BUSTED' : 'EXTRACTED'}
           </div>
-          <p className="text-white/60 text-sm font-black uppercase tracking-widest animate-pulse">
-            {isEnding === 'LOSS' ? 'CALCULATING STANDINGS...' : 'AWAITING NETWORK CONSENSUS...'}
+          <p className="text-white/60 text-sm font-bold animate-pulse">
+            {isEnding === 'LOSS' ? 'Calculating standings...' : 'Awaiting results...'}
           </p>
         </div>
       )}
@@ -128,23 +128,23 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
       {/* ── TOP HUD ── */}
       <div className="shrink-0 grid grid-cols-4 border-b border-white/8 bg-[#050505] divide-x divide-white/8">
         <div className="px-3 py-2 sm:px-5 sm:py-3 text-center">
-          <p className="text-[8px] sm:text-[9px] font-black text-white/50 uppercase tracking-widest">RISK</p>
+          <p className="text-[8px] sm:text-[9px] font-bold text-white/50">Risk</p>
           <p className="text-xl sm:text-2xl font-black mono leading-none" style={{ color: riskColor }}>
             {Math.floor(risk)}<span className="text-sm">%</span>
           </p>
         </div>
         <div className="px-3 py-2 sm:px-5 sm:py-3 text-center">
-          <p className="text-[8px] sm:text-[9px] font-black text-white/50 uppercase tracking-widest">SCORE</p>
+          <p className="text-[8px] sm:text-[9px] font-bold text-white/50">Score</p>
           <p className="text-xl sm:text-2xl font-black mono text-white leading-none">{points.toLocaleString()}</p>
         </div>
         <div className="px-3 py-2 sm:px-5 sm:py-3 text-center">
-          <p className="text-[8px] sm:text-[9px] font-black text-white/50 uppercase tracking-widest">POT</p>
+          <p className="text-[8px] sm:text-[9px] font-bold text-white/50">Pot</p>
           <p className="text-xl sm:text-2xl font-black mono text-yellow-500 leading-none">
             {totalPot.toFixed(ccy === 'SKR' ? 0 : 2)}<span className="text-xs ml-0.5 text-yellow-500/60">{CURRENCY_LABELS[ccy] ?? ccy}</span>
           </p>
         </div>
         <div className="px-3 py-2 sm:px-5 sm:py-3 text-center">
-          <p className="text-[8px] sm:text-[9px] font-black text-white/50 uppercase tracking-widest">RANK</p>
+          <p className="text-[8px] sm:text-[9px] font-bold text-white/50">Rank</p>
           <p className="text-xl sm:text-2xl font-black mono text-[#9945FF] leading-none">
             #{myRank}<span className="text-xs text-white/40">/{allPlayers.length}</span>
           </p>
@@ -178,7 +178,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-1">RISK</span>
+              <span className="text-[10px] font-bold text-white/50 mb-1">Risk</span>
               <p className="text-4xl sm:text-5xl font-black mono leading-none" style={{ color: riskColor }}>
                 {Math.floor(risk)}
               </p>
@@ -196,8 +196,8 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
               />
             </div>
             {risk > 75 && (
-              <p className="text-[9px] font-black text-red-400 uppercase tracking-widest text-center mt-1.5 animate-pulse">
-                ⚠ CRITICAL RISK — EXTRACT NOW
+              <p className="text-[9px] font-bold text-red-400 text-center mt-1.5 animate-pulse">
+                ⚠ Critical risk — extract now
               </p>
             )}
           </div>
@@ -205,8 +205,8 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
           {/* Action buttons */}
           {isEnding ? (
             <div className="text-center">
-              <p className="text-lg sm:text-2xl font-black italic uppercase text-white animate-pulse">
-                {isEnding === 'LOSS' ? 'PROTOCOL_SEVERED' : 'CONSENSUS_PENDING...'}
+              <p className="text-lg sm:text-2xl font-bold text-white animate-pulse">
+                {isEnding === 'LOSS' ? 'Protocol severed' : 'Results pending...'}
               </p>
             </div>
           ) : (
@@ -232,7 +232,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
 
           {/* Multiplier */}
           <div className="mt-4 flex items-center gap-2">
-            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">MULT</span>
+            <span className="text-[9px] font-bold text-white/40">Mult</span>
             <span className="text-lg font-black text-[#9945FF] mono">{multiplier.toFixed(1)}x</span>
           </div>
         </div>
@@ -242,8 +242,8 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
 
           {/* Leaderboard header */}
           <div className="shrink-0 px-4 py-2.5 border-b border-white/8 flex items-center justify-between">
-            <span className="text-[9px] font-black uppercase tracking-widest text-white/60">LIVE STANDINGS</span>
-            <span className="text-[9px] font-black text-[#9945FF] uppercase tracking-widest">{room.players.length} OPERATIVES</span>
+            <span className="text-[9px] font-bold text-white/60">Live standings</span>
+            <span className="text-[9px] font-bold text-[#9945FF]">{room.players.length} players</span>
           </div>
 
           {/* Player rows */}
@@ -264,10 +264,10 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
                     <span className={`text-[9px] font-black w-5 text-center shrink-0 ${i === 0 ? 'text-yellow-500' : 'text-white/40'}`}>
                       #{i + 1}
                     </span>
-                    <span className={`flex-1 text-xs font-black italic truncate ${isMe ? 'text-[#9945FF]' : 'text-white'}`}>
-                      {p.name}{isMe && <span className="text-[#9945FF]/40 not-italic text-[9px]"> (YOU)</span>}
+                    <span className={`flex-1 text-xs font-bold truncate ${isMe ? 'text-[#9945FF]' : 'text-white'}`}>
+                      {p.name}{isMe && <span className="text-[#9945FF]/40 text-[9px]"> (you)</span>}
                     </span>
-                    <span className={`text-[8px] font-black px-1.5 py-0.5 border uppercase tracking-widest shrink-0 ${statusColor}`}>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 border tracking-wide shrink-0 ${statusColor}`}>
                       {p.status === 'RAIDING' ? 'LIVE' : p.status}
                     </span>
                   </div>
@@ -296,7 +296,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
 
           {/* Event log */}
           <div className="shrink-0 border-t border-white/8 bg-black/60 p-3 h-28 overflow-hidden">
-            <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] mb-2">COMBAT_LOG</p>
+            <p className="text-[8px] font-bold text-white/40 mb-2">Event log</p>
             <div className="space-y-1 overflow-hidden">
               {logs.map((log, i) => (
                 <div key={i} className="flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
