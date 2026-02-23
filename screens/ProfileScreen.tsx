@@ -328,8 +328,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   </div>
               )}
               
-              <div className="px-4 py-1.5 bg-white/5 border border-white/10 tech-border mb-1 shrink-0">
-                <span className="text-xs sm:text-sm font-black italic uppercase" style={{ color: currentRank.color }}>L.{currentRank.level}</span>
+              <div className="px-3 py-1 bg-white/5 border border-white/10 tech-border mb-1 shrink-0">
+                <span className="text-xs font-bold uppercase" style={{ color: currentRank.color }}>Lv.{currentRank.level}</span>
               </div>
             </div>
             
@@ -373,7 +373,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               {currentRank.perks.map((perk, i) => (
                 <div key={i} className="px-3 py-1.5 bg-white/2 border border-white/5 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-[#14F195] shrink-0" />
-                  <span className="text-[8px] sm:text-[9px] font-black text-white/70 uppercase italic tracking-tighter">{perk}</span>
+                  <span className="text-[8px] sm:text-[9px] font-bold text-white/60">{perk}</span>
                 </div>
               ))}
             </div>
