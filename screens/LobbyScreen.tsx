@@ -162,11 +162,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
 
       {/* ── HEADER ── */}
-      <div className="relative z-10 shrink-0 px-4 pt-4 pb-2">
+      <div className="relative z-10 shrink-0 px-4 pt-2 pb-1">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[13px] text-white/70 leading-snug" style={{ ...INTER, fontWeight: 400 }}>
-              Raid the chain. Extract SOL. Don't get busted.
+            <p className="text-[13px] text-white/45 leading-snug" style={{ ...INTER, fontWeight: 400 }}>
+              Win SOL. Don't get caught.
             </p>
           </div>
           {/* FAQ button */}
@@ -180,7 +180,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       </div>
 
       {/* ── SCROLLABLE CONTENT ── */}
-      <div className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-44 space-y-3">
+      <div className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-44 space-y-2">
 
         {/* ── ENTER RAID ── */}
         <button
@@ -188,17 +188,16 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           className="w-full relative overflow-hidden rounded-2xl group active:scale-[0.98] transition-all duration-150"
           style={{
             background: 'linear-gradient(135deg, #14F195 0%, #0fd47e 50%, #09a55f 100%)',
-            boxShadow: '0 0 28px rgba(20,241,149,0.18), 0 4px 20px rgba(0,0,0,0.4)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/12 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
-          <div className="relative z-10 flex items-center justify-between px-5 py-2.5 sm:py-3">
+          <div className="relative z-10 flex items-center justify-between px-5 py-2 sm:py-2.5">
             <div>
-              <p className="text-black/60 mb-0.5" style={{ ...BC, fontSize: '12px', letterSpacing: '0.5px' }}>
-                {isConnected ? 'AGENT READY' : 'CONNECT WALLET'}
+              <p className="text-black/55 mb-0.5 text-[11px]" style={INTER}>
+                {isConnected ? 'Ready to deploy' : 'Connect wallet to start'}
               </p>
-              <p className="text-black leading-none" style={{ ...BC, fontSize: '36px', letterSpacing: '-0.5px' }}>ENTER RAID</p>
-              <p className="text-black/55 mt-0.5" style={{ ...BC, fontSize: '13px' }}>EXTRACT OR GET BUSTED</p>
+              <p className="text-black leading-none" style={{ ...BC, fontSize: '32px', letterSpacing: '-0.5px' }}>ENTER RAID</p>
+              <p className="text-black/50 mt-0.5 text-[11px]" style={INTER}>Win SOL · don't get caught</p>
             </div>
             <div className="flex flex-col items-center gap-1.5 shrink-0">
               <div className="w-11 h-11 rounded-xl bg-black/10 flex items-center justify-center group-hover:bg-black/18 transition-colors">
@@ -219,9 +218,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             onClick={() => isConnected ? setShowRoundModal(true) : onConnect()}
             className="w-full relative overflow-hidden rounded-2xl text-left active:scale-[0.98] transition-all duration-150 group bg-white/[0.025] border border-white/[0.12] hover:bg-white/[0.04]"
           >
-            <div className="px-5 py-4">
+            <div className="px-4 py-3">
               {/* Top row: badge + pool */}
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start justify-between mb-2">
                 <div>
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-white/8 text-white/50">
@@ -229,9 +228,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     </span>
                     <span className="text-[9px] text-white/70" style={INTER}>{dayLabel}</span>
                   </div>
-                  <p className="text-base text-white leading-tight" style={SG_H1}>RAID ROUND</p>
+                  <p className="text-base text-white leading-tight font-semibold" style={INTER}>Raid Round</p>
                   <p className="text-[10px] text-white/70 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
-                    Top 5 extractors share the prize pool
+                    Top 5 players share the prize pool
                   </p>
                 </div>
                 {/* Pool */}
@@ -255,7 +254,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 </div>
                 <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all group-hover:opacity-90"
                   style={{ background: 'rgba(20,241,149,0.12)', border: '1px solid rgba(20,241,149,0.25)', color: '#14F195' }}>
-                  <i className="fa-solid fa-trophy text-[10px]" />
+                  <i className="fa-solid fa-trophy text-white text-[10px]" />
                   Compete
                 </div>
               </div>
@@ -264,16 +263,16 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         )}
 
         {/* ── SECONDARY MODES ── */}
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => isConnected ? onEnterRaid(Mode.PVP, Difficulty.MEDIUM, []) : onConnect()}
             className="relative overflow-hidden rounded-xl bg-white/[0.025] border border-white/[0.12] p-2.5 text-left active:scale-[0.97] transition-all group hover:bg-white/[0.04]"
           >
-            <div className="absolute top-2 right-2 opacity-15 group-hover:opacity-25 transition-opacity">
+            <div className="absolute top-2 right-2">
               <i className="fa-solid fa-swords text-white text-lg" />
             </div>
             <p className="text-[10px] text-white/70 mb-1" style={{ ...INTER, fontWeight: 500 }}>Multiplayer</p>
-            <p className="leading-tight" style={{ ...BC, fontSize: '20px', color: '#ff5f5f' }}>PVP DUEL</p>
+            <p className="leading-tight text-[15px] font-semibold" style={{ ...INTER, color: '#ff5f5f' }}>PVP DUEL</p>
             <p className="text-[10px] text-white/70 mt-1" style={{ ...INTER, fontWeight: 400 }}>Stake vs players</p>
           </button>
 
@@ -290,11 +289,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 : 'bg-white/[0.025] border-white/[0.12] active:scale-[0.97] hover:bg-white/[0.04]'
             }`}
           >
-            <div className="absolute top-2 right-2 opacity-15 group-hover:opacity-25 transition-opacity">
+            <div className="absolute top-2 right-2">
               <i className="fa-solid fa-dumbbell text-white text-base" />
             </div>
             <p className="text-[10px] text-white/70 mb-1" style={{ ...INTER, fontWeight: 500 }}>Training</p>
-            <p className="leading-tight" style={{ ...BC, fontSize: '20px', color: '#4da6ff' }}>FREE DRILL</p>
+            <p className="leading-tight text-[15px] font-semibold" style={{ ...INTER, color: '#4da6ff' }}>FREE DRILL</p>
             <p className={`text-[10px] mt-1 ${drillCapHit ? 'text-white/25' : 'text-white/28'}`} style={{ ...INTER, fontWeight: 400 }}>
               {isConnected ? (drillCapHit ? 'Limit reached' : `${drillsRemaining}/3 left`) : 'No entry fee'}
             </p>
@@ -304,24 +303,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         {/* ── RAID PASS ── */}
         <button
           onClick={() => onNavigateStore?.('PASS')}
-          className="w-full rounded-xl bg-white/[0.025] border border-white/[0.14] p-3.5 text-left active:scale-[0.98] transition-all group hover:bg-white/[0.04]"
+          className="w-full rounded-xl bg-white/[0.025] border border-white/[0.14] p-3 text-left active:scale-[0.98] transition-all group hover:bg-white/[0.04]"
         >
           <div className="flex items-center gap-3">
             <div className="text-xl shrink-0">🎟️</div>
             <div className="flex-1 min-w-0">
               {raidTickets > 0 ? (
                 <>
-                  <p className="text-white" style={{ ...BC, fontSize: '18px' }}>{raidTickets}x RAID PASS ACTIVE</p>
+                  <p className="text-white text-[15px] font-semibold" style={INTER}>{raidTickets}x Raid Pass active</p>
                   <p className="text-[10px] text-white/40" style={{ ...INTER, fontWeight: 400 }}>50% off entry · 10% win boost</p>
                 </>
               ) : (
                 <>
-                  <p className="text-white/75" style={{ ...BC, fontSize: '18px' }}>RAID PASS — 50% OFF ENTRY</p>
+                  <p className="text-white/75 text-[15px] font-semibold" style={INTER}>Raid Pass — 50% off entry</p>
                   <p className="text-[10px] text-white/70" style={{ ...INTER, fontWeight: 400 }}>SKR holders get extra 50% off</p>
                 </>
               )}
             </div>
-            <i className="fa-solid fa-chevron-right text-white/20 text-xs shrink-0 group-hover:text-white/40 transition-colors" />
+            <i className="fa-solid fa-chevron-right text-white text-xs shrink-0" />
           </div>
         </button>
 
@@ -335,21 +334,10 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
       {/* ── LOADING OVERLAY ── */}
       {isDeploying && (
-        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center p-8" style={SG}>
-          <div className="relative w-24 h-24 mb-8">
-            <div className="absolute inset-0 rounded-full border-2 border-[#14F195] animate-ping opacity-20" />
-            <div className="absolute inset-4 rounded-full border-2 border-[#14F195]/60 animate-pulse" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <i className="fa-solid fa-bolt text-3xl text-[#14F195]" />
-            </div>
-          </div>
-          <p className="text-[#14F195] font-bold text-xl text-center animate-pulse mb-2">Awaiting signature</p>
-          <p className="text-white/35 text-sm text-center font-medium">Approve in your wallet</p>
-          <div className="flex gap-2 mt-8">
-            {[0,1,2,3].map(i => (
-              <div key={i} className="w-2 h-2 rounded-full bg-[#14F195] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-            ))}
-          </div>
+        <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center p-8" style={INTER}>
+          <i className="fa-solid fa-person-running text-[#14F195] text-3xl mb-5" />
+          <p className="text-white text-base font-medium mb-1">Waiting for signature</p>
+          <p className="text-white/35 text-sm">Approve in your wallet</p>
         </div>
       )}
 
@@ -368,7 +356,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 <div className="w-8 h-8 rounded-xl bg-white/8 flex items-center justify-center">
                   <i className="fa-solid fa-question text-white/60 text-sm" />
                 </div>
-                <h2 className="text-base font-black text-white">FAQ</h2>
+                <h2 className="text-base font-semibold text-white">FAQ</h2>
               </div>
               <button onClick={() => setShowFaq(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
                 <i className="fa-solid fa-xmark text-sm" />
@@ -512,8 +500,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">How it works</p>
                 {[
                   'Enter this round with any difficulty',
-                  'Extract as much SOL as possible in your raid',
-                  'Your best extraction is tracked on the leaderboard',
+                  'Win as much SOL as possible in your raid',
+                  'Your best result is tracked on the leaderboard',
                   'Top 5 wallets at round close share the prize pool',
                 ].map((t, i) => (
                   <div key={i} className="flex items-start gap-2">
