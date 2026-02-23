@@ -168,7 +168,10 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
     const a = document.createElement('a');
     a.download = `solraid-${result.success ? 'victory' : 'bust'}-${Date.now()}.png`;
     a.href = canvas.toDataURL('image/png');
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   };
 
   // Keep max 10 most informative events (skip routine idle decays etc.)

@@ -171,12 +171,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             className="absolute animate-sr-popup pointer-events-none flex flex-col items-center"
             style={{ transform: `translate(${p.x}px, ${p.y}px)` }}
           >
-            <span className="text-4xl sm:text-6xl font-black text-yellow-500 italic drop-shadow-[0_0_15px_rgba(234,179,8,1)] uppercase tracking-tighter">
-              ITEM_SECURED
+            <span className="text-4xl sm:text-6xl font-black text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,1)] uppercase tracking-tight">
+              Item secured
             </span>
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-2xl sm:text-4xl font-black text-yellow-500 italic">+{p.val}</span>
-              <span className="text-xs font-black text-yellow-500/60 uppercase tracking-[0.2em]">SR_REPUTATION</span>
+              <span className="text-2xl sm:text-4xl font-black text-yellow-500">+{p.val}</span>
+              <span className="text-xs font-black text-yellow-500/60 uppercase tracking-wide">$SR</span>
             </div>
           </div>
         ))}
@@ -185,28 +185,28 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
       <div className="w-full max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-10 gap-3 sm:gap-6">
           <div>
-            <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black italic uppercase tracking-tighter text-white leading-none">
-              BLACK_<span className="text-gradient-solana">MARKET</span>
+            <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black uppercase tracking-tight text-white leading-none">
+              Black <span className="text-gradient-solana">Market</span>
             </h2>
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mt-1 sm:mt-3">UNOFFICIAL_EQUIPMENT_DEPOT</p>
+            <p className="text-[10px] font-bold text-white/40 mt-1 sm:mt-3">Equipment depot</p>
           </div>
 
           <div className="flex flex-col gap-2 w-full sm:w-72">
             <div className="bg-black/60 px-3 py-2 sm:p-6 border border-white/10 tech-border w-full">
-              <p className="text-[9px] text-white/40 font-black uppercase mb-0.5 italic">CREDITS</p>
+              <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-0.5">Balance</p>
               <div className="flex items-baseline justify-between gap-2">
                 <p className="mono text-lg sm:text-3xl font-black text-white">{selectedCurrency === Currency.SOL ? currentBalance.toFixed(3) : Math.floor(currentBalance).toLocaleString()}</p>
-                <span className={`text-xs font-black italic ${currencyColor}`}>{selectedCurrency}</span>
+                <span className={`text-xs font-black ${currencyColor}`}>{selectedCurrency}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-1 w-full">
-              <p className="col-span-3 text-[9px] font-black text-white uppercase tracking-widest mb-0.5">BUY WITH</p>
+              <p className="col-span-3 text-[9px] font-bold text-white/50 uppercase tracking-wide mb-0.5">Buy with</p>
               {[Currency.SOL, Currency.USDC, Currency.SKR].map(curr => (
                 <button
                   key={curr}
                   onClick={() => setSelectedCurrency(curr)}
-                  className={`py-2 text-[10px] font-black uppercase tracking-wider border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-black border-white/20 text-white/70 hover:text-white hover:border-white/40'}`}
+                  className={`py-2 text-[10px] font-bold uppercase tracking-wide border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-black border-white/20 text-white/50 hover:text-white hover:border-white/40'}`}
                 >
                   {curr}
                 </button>
@@ -218,24 +218,21 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         <div className="flex gap-1.5 mb-6 sm:mb-10">
           <button
             onClick={() => setActiveTab('GEAR')}
-            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'GEAR' ? 'border-[#14F195] text-[#14F195] bg-[#14F195]/10' : 'border-white/20 text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'GEAR' ? 'border-[#14F195] text-[#14F195] bg-[#14F195]/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
-            <span className="hidden sm:inline">[ BATTLE_TOOLS ]</span>
-            <span className="sm:hidden">GEAR</span>
+            Gear
           </button>
           <button
             onClick={() => setActiveTab('AVATAR')}
-            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'AVATAR' ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10' : 'border-white/20 text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'AVATAR' ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
-            <span className="hidden sm:inline">[ IDENTITY_CORES ]</span>
-            <span className="sm:hidden">AVATAR</span>
+            Avatars
           </button>
           <button
             onClick={() => setActiveTab('PASS')}
-            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all relative ${activeTab === 'PASS' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-white/20 text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all relative ${activeTab === 'PASS' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
-            <span className="hidden sm:inline">[ RAID_PASS ]</span>
-            <span className="sm:hidden">PASS</span>
+            Pass
             {raidTickets > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-yellow-500 text-black text-[9px] font-black px-1.5 rounded-full min-w-[18px] text-center">
                 {raidTickets}
@@ -244,10 +241,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
           </button>
           <button
             onClick={() => { setActiveTab('FORGE'); setForgeSelected([]); setForgeResult(null); }}
-            className={`flex-1 py-3 sm:py-5 lg:py-6 border-2 tech-border font-black uppercase text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] transition-all ${activeTab === 'FORGE' ? 'border-orange-500 text-orange-400 bg-orange-500/10' : 'border-white/20 text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'FORGE' ? 'border-orange-500 text-orange-400 bg-orange-500/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
-            <span className="hidden sm:inline">[ FORGE ]</span>
-            <span className="sm:hidden">FORGE</span>
+            Forge
           </button>
         </div>
 
@@ -257,23 +253,23 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             {/* Ticket balance banner */}
             <div className="mb-6 p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/30 tech-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div>
-                <p className="text-[9px] font-black text-yellow-500/60 uppercase tracking-widest">RAID_TICKETS_BALANCE</p>
-                <p className="text-2xl sm:text-3xl font-black text-yellow-400 mono leading-none mt-0.5">{raidTickets}<span className="text-xs sm:text-sm text-yellow-500/50 ml-1">x TICKETS</span></p>
+                <p className="text-[9px] font-bold text-yellow-500/60 uppercase tracking-wide">Raid tickets</p>
+                <p className="text-2xl sm:text-3xl font-black text-yellow-400 mono leading-none mt-0.5">{raidTickets}<span className="text-xs sm:text-sm text-yellow-500/50 ml-1">tickets</span></p>
               </div>
               <div className="flex gap-4 sm:block sm:text-right">
                 <div>
-                  <p className="text-[9px] font-black text-white/50 uppercase tracking-widest hidden sm:block">PERKS_PER_TICKET</p>
-                  <p className="text-[9px] text-yellow-500/70 font-black">🎟️ 50% OFF ENTRY FEE</p>
-                  <p className="text-[9px] text-yellow-500/70 font-black">🎟️ +10% WIN BOOST</p>
+                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-wide hidden sm:block">Per ticket</p>
+                  <p className="text-[9px] text-yellow-500/70 font-bold">🎟️ 50% off entry fee</p>
+                  <p className="text-[9px] text-yellow-500/70 font-bold">🎟️ +10% win boost</p>
                 </div>
                 <div className="mt-0 sm:mt-2 flex items-center gap-1">
                   <span className="text-orange-400 text-[10px]">🟠</span>
-                  <p className="text-[9px] text-orange-400 font-black uppercase tracking-wide">PAY WITH SKR = 50% OFF PASS PRICE</p>
+                  <p className="text-[9px] text-orange-400 font-bold">Pay with SKR = 50% off pass price</p>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:grid sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {RAID_PASSES.map(pass => {
                 // Passes are USD-denominated — convert via live rates
                 // rates[USDC] = solUsd, rates[SKR] = solUsd/skrUsd
@@ -305,50 +301,54 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                 const priceValue = passesLoading ? Infinity : (selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice));
                 const canAfford = !passesLoading && currentBalance >= priceValue;
                 const isLoading = passesLoading;
-                const badgeColors = pass.id === 'pass_basic' ? 'border-yellow-500/30 bg-yellow-500/5'
-                                  : pass.id === 'pass_core' ? 'border-blue-500/30 bg-blue-500/5'
-                                  : 'border-red-500/30 bg-red-500/5';
-                const btnColors = pass.id === 'pass_basic' ? 'bg-yellow-500 text-black'
-                                : pass.id === 'pass_core' ? 'bg-blue-500 text-white'
-                                : 'bg-red-500 text-white';
+                const badgeColors = pass.id === 'pass_basic'  ? 'border-yellow-500/30 bg-yellow-500/5'
+                                  : pass.id === 'pass_core'   ? 'border-blue-500/30 bg-blue-500/5'
+                                  : pass.id === 'pass_pro'    ? 'border-red-500/30 bg-red-500/5'
+                                  : pass.id === 'pass_elite'  ? 'border-purple-500/30 bg-purple-500/5'
+                                  : 'border-white/20 bg-white/3';
+                const btnColors = pass.id === 'pass_basic'  ? 'bg-yellow-500 text-black'
+                                : pass.id === 'pass_core'   ? 'bg-blue-500 text-white'
+                                : pass.id === 'pass_pro'    ? 'bg-red-500 text-white'
+                                : pass.id === 'pass_elite'  ? 'bg-purple-600 text-white'
+                                : 'bg-white text-black';
 
                 return (
                   <div key={pass.id} className={`border-2 tech-border p-3 sm:p-5 ${badgeColors}`}>
                     {/* Mobile: single row layout — Desktop: stacked */}
                     <div className="flex sm:flex-col gap-3 sm:gap-0">
                       {/* Left / top: identity */}
-                      <div className="flex items-center gap-2 sm:justify-between sm:mb-2 shrink-0">
-                        <span className="text-lg">{pass.badge}</span>
+                      <div className="flex items-center gap-3 sm:justify-between sm:mb-3 shrink-0">
+                        <span className="text-2xl">{pass.badge}</span>
                         <div>
-                          <p className="text-xs font-black uppercase text-white leading-none">{pass.name}</p>
-                          <p className="text-[9px] font-black text-white/50 uppercase"><span className="text-white font-black">{pass.tickets}</span> TICKETS · <span className="text-white/40">${pass.usdPrice}</span></p>
+                          <p className="text-sm font-black uppercase text-white leading-none">{pass.name}</p>
+                          <p className="text-xs font-bold text-white/50 mt-0.5"><span className="text-white font-black">{pass.tickets}</span> tickets · <span className="text-white/40">${pass.usdPrice}</span></p>
                         </div>
                       </div>
 
                       {/* Right / bottom: perks + price + button */}
                       <div className="flex-1 flex flex-col sm:mt-2 gap-2 min-w-0">
                         <div className="flex gap-1.5 flex-wrap">
-                          <span className="text-[8px] font-black text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">50% OFF ENTRY</span>
-                          <span className="text-[8px] font-black text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">+10% WIN</span>
+                          <span className="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">50% off entry</span>
+                          <span className="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">+10% win</span>
                           {skrDiscount && (
-                            <span className="text-[8px] font-black text-orange-400 bg-orange-500/10 px-1.5 py-0.5 border border-orange-400/30 whitespace-nowrap animate-pulse">SKR −50% PRICE</span>
+                            <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-1.5 py-0.5 border border-orange-400/30 whitespace-nowrap animate-pulse">SKR −50%</span>
                           )}
                         </div>
                         <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
                           <div className="shrink-0">
                             {displayFull && (
-                              <p className="text-[9px] font-black text-white/30 mono line-through leading-none">
-                                {displayFull} <span className="text-[7px]">{selectedCurrency}</span>
+                              <p className="text-xs font-black text-white/30 mono line-through leading-none">
+                                {displayFull} <span className="text-[9px]">{selectedCurrency}</span>
                               </p>
                             )}
-                            <p className={`text-sm font-black mono leading-none ${isLoading ? 'text-white/30 animate-pulse' : skrDiscount ? 'text-orange-400' : 'text-white'}`}>
-                              {displayPrice} <span className={`text-[9px] ${skrDiscount ? 'text-orange-400' : currencyColor}`}>{selectedCurrency}</span>
+                            <p className={`text-base font-black mono leading-none ${isLoading ? 'text-white/30 animate-pulse' : skrDiscount ? 'text-orange-400' : 'text-white'}`}>
+                              {displayPrice} <span className={`text-xs ${skrDiscount ? 'text-orange-400' : currencyColor}`}>{selectedCurrency}</span>
                             </p>
                           </div>
                           <button
                             onClick={() => handleBuyPass(pass.id, pass.usdPrice)}
                             disabled={!canAfford || !onBuyPass || loadingItemId !== null}
-                            className={`shrink-0 px-3 py-2 font-black uppercase tracking-tighter text-[9px] tech-border transition-all min-w-[80px] flex items-center justify-center gap-1 ${
+                            className={`shrink-0 px-3 py-2 font-bold uppercase tracking-wide text-[9px] tech-border transition-all min-w-[80px] flex items-center justify-center gap-1 ${
                               !canAfford || !onBuyPass || (loadingItemId !== null && loadingItemId !== pass.id)
                                 ? 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed'
                                 : loadingItemId === pass.id
@@ -362,9 +362,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                                 </svg>
-                                BUYING…
+                                Buying…
                               </>
-                            ) : 'GET PASS'}
+                            ) : 'Get pass'}
                           </button>
                         </div>
                       </div>
@@ -381,22 +381,22 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
           <div className="mb-10 space-y-6">
             {/* Header */}
             <div className="p-4 sm:p-6 bg-orange-500/5 border border-orange-500/20 tech-border">
-              <h3 className="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-orange-400">GEAR_FORGE</h3>
-              <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mt-1">
-                Salvage 2 STANDARD gear → receive 1 random LIMITED gear. Both items are destroyed.
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-orange-400">Gear Forge</h3>
+              <p className="text-[10px] font-bold text-white/50 mt-1">
+                Salvage 2 standard gear → receive 1 random limited gear. Both items are destroyed.
               </p>
             </div>
 
             {/* Selection grid */}
             {ownedStandardGear.length < 2 ? (
               <div className="p-8 border-2 border-dashed border-white/10 tech-border text-center">
-                <p className="text-white/50 font-black uppercase tracking-widest text-sm">INSUFFICIENT_SALVAGE</p>
-                <p className="text-white/40 text-xs font-bold mt-2">You need at least 2 STANDARD gear items to forge.</p>
+                <p className="text-white/50 font-bold text-sm">Not enough gear</p>
+                <p className="text-white/40 text-xs font-bold mt-2">You need at least 2 standard gear items to forge.</p>
               </div>
             ) : (
               <>
-                <p className="text-[10px] font-black text-orange-400/60 uppercase tracking-widest">
-                  SELECT 2 ITEMS TO DESTROY ({forgeSelected.length}/2)
+                <p className="text-[10px] font-bold text-orange-400/60 uppercase tracking-wide">
+                  Select 2 items to destroy ({forgeSelected.length}/2)
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                   {ownedStandardGear.map(gear => {
@@ -420,8 +420,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                           </div>
                         )}
                         <span className="text-3xl leading-none">{gear.image}</span>
-                        <span className="text-[9px] font-black uppercase tracking-tighter text-white/75 leading-tight">{gear.name}</span>
-                        <span className="text-[8px] text-white/50 font-bold italic">{gear.effect?.replace('_', ' ')}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wide text-white/75 leading-tight">{gear.name}</span>
+                        <span className="text-[8px] text-white/50 font-bold">{gear.effect?.replace('_', ' ')}</span>
                       </button>
                     );
                   })}
@@ -463,22 +463,22 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         <div className="w-16 h-16 border-2 border-purple-500 bg-purple-500/10 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)]">
                           <span className="text-4xl">{forgeResult.image}</span>
                         </div>
-                        <span className="text-purple-400 font-black uppercase text-xs tracking-tighter">{forgeResult.name}</span>
-                        <span className="text-[8px] text-purple-400/60 uppercase font-bold">LIMITED FORGED</span>
+                        <span className="text-purple-400 font-black uppercase text-xs tracking-wide">{forgeResult.name}</span>
+                        <span className="text-[8px] text-purple-400/60 font-bold">Limited · forged</span>
                       </div>
                     ) : (
                       <div className="w-16 h-16 border-2 border-dashed border-purple-500/30 bg-purple-500/5 flex items-center justify-center">
                         <span className="text-purple-500/40 text-2xl font-black">?</span>
                       </div>
                     )}
-                    <span className="text-[8px] text-white/40 font-black uppercase tracking-widest">RANDOM_LIMITED</span>
+                    <span className="text-[8px] text-white/40 font-bold">Random limited</span>
                   </div>
 
                   {/* Forge button */}
                   <button
                     onClick={handleForge}
                     disabled={forgeSelected.length !== 2 || !onForgeGear || forging}
-                    className={`ml-auto shrink-0 px-6 py-4 font-black uppercase tracking-tighter tech-border transition-all text-sm flex items-center gap-2 ${
+                    className={`ml-auto shrink-0 px-6 py-4 font-black uppercase tracking-tight tech-border transition-all text-sm flex items-center gap-2 ${
                       forgeSelected.length !== 2 || !onForgeGear
                         ? 'bg-white/5 text-white/30 border-white/5 cursor-not-allowed'
                         : forging
@@ -492,9 +492,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                         </svg>
-                        FORGING…
+                        Forging…
                       </>
-                    ) : 'INITIATE_FORGE'}
+                    ) : 'Forge'}
                   </button>
                 </div>
               </>
@@ -547,7 +547,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         />
                         ) : (
                         <div className="w-full h-full flex items-center justify-center bg-white/5">
-                            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest text-center">NO_IMG</span>
+                            <span className="text-[10px] font-bold text-white/30 text-center">?</span>
                         </div>
                         )}
                         
@@ -570,48 +570,48 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   
                   <div className="flex-1 flex flex-col">
                     <div className="flex justify-between items-start">
-                      <h4 className={`font-black uppercase tracking-tight italic text-base leading-tight ${isOwned ? 'text-green-500' : 'text-white'}`}>
+                      <h4 className={`font-black uppercase tracking-tight text-base leading-tight ${isOwned ? 'text-green-500' : 'text-white'}`}>
                         {item.name}
                       </h4>
                     </div>
                     <div className="mt-2 space-y-1.5">
                       {levelLocked ? (
-                        <span className="block text-[10px] font-black text-red-500 uppercase tracking-tighter animate-pulse">LOCKED: LVL_{item.minLevel}</span>
+                        <span className="block text-[10px] font-bold text-red-500 animate-pulse">Locked · Lv.{item.minLevel}</span>
                       ) : (
                         <>
                           {item.effect && (
-                            <span className="block text-[10px] font-black text-[#14F195] uppercase tracking-tighter">_ MOD: {item.effect.replace('_', ' ')}</span>
+                            <span className="block text-[10px] font-bold text-[#14F195]">{item.effect.replace('_', ' ')}</span>
                           )}
-                          <span className="block text-[10px] font-black text-yellow-500 uppercase tracking-tighter">_ GAINS: +{srReward} $SR</span>
+                          <span className="block text-[10px] font-bold text-yellow-500">+{srReward} $SR</span>
                         </>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <p className="text-xs text-white/50 font-medium leading-tight mb-8 flex-1 italic">{item.description}</p>
+                <p className="text-xs text-white/50 font-medium leading-tight mb-8 flex-1">{item.description}</p>
                 
                 <div className="flex justify-between items-end mt-auto pt-5 border-t border-white/5">
                   <div className="mono flex flex-col">
-                     <span className="text-[9px] font-black text-white/20 uppercase mb-1">COST</span>
+                     <span className="text-[9px] font-bold text-white/30 uppercase tracking-wide mb-1">Cost</span>
                      <span className={`text-base font-black ${isOwned ? 'text-white/40 line-through' : 'text-white'}`}>
                         {displayPrice} <span className={`text-xs ${isOwned ? 'text-white/40' : currencyColor}`}>{selectedCurrency}</span>
                      </span>
                   </div>
                   
                   {isOwned ? (
-                    <div className="px-8 py-3 font-black uppercase tracking-tighter text-xs tech-border bg-green-500/10 text-green-500 border-green-500/30 text-center cursor-default">
-                      PURCHASED
+                    <div className="px-8 py-3 font-bold uppercase tracking-wide text-xs tech-border bg-green-500/10 text-green-500 border-green-500/30 text-center cursor-default">
+                      Owned
                     </div>
                   ) : levelLocked ? (
-                    <div className="px-8 py-3 font-black uppercase tracking-tighter text-xs tech-border bg-red-950/20 text-red-500/40 border-red-500/10 text-center cursor-default">
-                      LOCKED
+                    <div className="px-8 py-3 font-bold uppercase tracking-wide text-xs tech-border bg-red-950/20 text-red-500/40 border-red-500/10 text-center cursor-default">
+                      Locked
                     </div>
                   ) : (
                     <button
                       onClick={() => handleBuy(item.id, item.price, item.minLevel)}
                       disabled={!canAfford || loadingItemId !== null}
-                      className={`px-8 py-3 font-black uppercase tracking-tighter text-xs tech-border transition-all min-w-[90px] flex items-center justify-center gap-1.5
+                      className={`px-8 py-3 font-bold uppercase tracking-wide text-xs tech-border transition-all min-w-[90px] flex items-center justify-center gap-1.5
                         ${!canAfford || (loadingItemId !== null && loadingItemId !== item.id)
                           ? 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed'
                           : loadingItemId === item.id
@@ -624,9 +624,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                           </svg>
-                          BUYING…
+                          Buying…
                         </>
-                      ) : 'BUY ITEM'}
+                      ) : 'Buy'}
                     </button>
                   )}
                 </div>
@@ -636,7 +636,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         </div>}
 
         <div className="mt-16 p-8 bg-white/2 border-2 border-dashed border-white/5 tech-border text-center">
-          <p className="text-xs font-black text-white/40 uppercase tracking-[0.5em] italic">__END_OF_CATALOGUE__</p>
+          <p className="text-xs font-bold text-white/30">End of catalogue</p>
         </div>
       </div>
     </div>

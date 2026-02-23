@@ -93,6 +93,22 @@ export const RAID_PASSES: RaidPass[] = [
     description: '60 entries. Max discount + max win boost. Degen tier.',
     badge: '🟥',
   },
+  {
+    id: 'pass_elite',
+    name: 'ELITE PASS',
+    tickets: 120,
+    usdPrice: 60,
+    description: '120 entries. Elite-tier access with priority queue and double SR bonus.',
+    badge: '🟪',
+  },
+  {
+    id: 'pass_legend',
+    name: 'LEGEND PASS',
+    tickets: 250,
+    usdPrice: 100,
+    description: '250 entries. Full legend status, max perks, exclusive badge, priority everything.',
+    badge: '⬛',
+  },
 ];
 
 export const ENTRY_FEES: Record<Mode, number> = {

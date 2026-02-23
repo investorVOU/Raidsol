@@ -433,7 +433,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Reputation</p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-2xl sm:text-3xl font-black mono text-yellow-500">{srPoints.toLocaleString()}</p>
-                  <span className="text-xs font-bold text-yellow-500/40">$SR</span>
+                  <span className="text-xs font-black text-yellow-500/70">$SR</span>
                 </div>
               </div>
               <div className="bg-black border-2 border-white/5 p-6 tech-border hover:border-purple-500/20 transition-all">
