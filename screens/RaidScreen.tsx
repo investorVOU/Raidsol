@@ -294,7 +294,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const [timeLeft,   setTimeLeft]   = useState(initialTime);
   const [multiplier, setMultiplier] = useState(initialMultiplier);
   const [flash,      setFlash]      = useState<string | null>(null);
-  const [logs,       setLogs]       = useState<string[]>(['LINK_STABLE', 'TIMER_SYNCED']);
+  const [logs,       setLogs]       = useState<string[]>(['Link stable', 'Timer synced']);
   const [isEnding,   setIsEnding]   = useState<'WIN' | 'LOSS' | null>(null);
   const [sparks,     setSparks]     = useState<Spark[]>([]);
   const [dmgPopups,  setDmgPopups]  = useState<DamagePopup[]>([]);
@@ -502,7 +502,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         setGoldenWindow(true);
         setGoldenCountdown(secs);
         logEvent('GOLDEN_WINDOW', `Multiplier reached ${state.multiplier.toFixed(2)}x — extraction window opened`, '6s window: +5% bonus if you cash out now', 'bonus');
-        addLog('GOLDEN_WINDOW_OPEN');
+        addLog('Golden window');
         addDmgPopup('GOLDEN WINDOW! +5%', '#FFD700', true);
         spawnSparks('#FFD700', '#14F195', 22);
         if (goldenWindowRef.current) clearInterval(goldenWindowRef.current);
@@ -515,7 +515,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             setGoldenWindow(false);
             setGoldenCountdown(0);
             logEvent('GOLDEN_EXPIRED', 'Golden extraction window expired unused', 'Bonus opportunity missed — no penalty', 'warning');
-            addLog('GOLDEN_WINDOW_EXPIRED');
+            addLog('Window expired');
             addDmgPopup('WINDOW CLOSED!', '#EF4444');
           }
         }, 1000);
@@ -524,7 +524,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       // ── JACKPOT: 3% chance after 6s — variable reward rush ────────────
       if (elapsedSeconds > 6 && Math.random() < 0.03 && !state.isEnding) {
         logEvent('JACKPOT', 'Protocol glitch in your favour — rare random event', '+0.5x multiplier bonus', 'bonus');
-        addLog('PROTOCOL_GLITCH_DETECTED');
+        addLog('Protocol glitch');
         addDmgPopup('JACKPOT! +0.5x', '#FFD700', true);
         spawnSparks('#FFD700', '#9945FF', 28);
         setJackpotFlash(true);
@@ -541,7 +541,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       if (elapsedSeconds > 8 && Math.random() < 0.10 && !ambushTimeoutRef.current && !state.isEnding) {
         logEvent('AMBUSH', 'Enemy flanked your position — random event', '+14 RISK + 2.2s controls locked', 'danger');
         setAmbushed(true);
-        addLog('AMBUSH_DETECTED');
+        addLog('Ambush detected');
         addDmgPopup('AMBUSH!', '#EF4444', true);
         spawnSparks('#EF4444', '#f97316', 18);
         setRisk(prev => Math.min(98, prev + 14));
@@ -561,7 +561,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       const randomSpike  = spikeRoll > 0.91 ? (spikeRoll > 0.96 ? 20 : 16) : 0;  // 9% spike chance
       if (randomSpike > 0 && !state.isEnding) {
         logEvent('NETWORK_SURGE', 'Random protocol traffic spike — occurs ~9% of ticks', `+${randomSpike} RISK applied`, 'danger');
-        addLog('NETWORK_SURGE (+RISK)');
+        addLog('Network surge');
         addDmgPopup(`+${randomSpike} RISK!`, '#f97316');
         spawnSparks('#f97316', '#EF4444', 6);
       }
@@ -571,7 +571,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       // ── LAST-SECOND SAVE: 7% chance right at 100 — heart-stopping ──────
       if (nextRisk >= 100 && Math.random() < 0.07 && !state.isEnding) {
         logEvent('FIREWALL', 'Emergency firewall activated just before bust — 7% chance', 'Risk reset to 75, raid continues', 'bonus');
-        addLog('FIREWALL_ACTIVATED');
+        addLog('Firewall activated');
         spawnSparks('#14F195', '#00FBFF', 32);
         setFirewallSave(true);
         setTimeout(() => setFirewallSave(false), 1400);
@@ -660,7 +660,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       logEvent('COMBO', 'Defend → Attack within 2.2s — perfect sequence', '+500 pts, -4 RISK, reduced attack cost', 'bonus');
       addComboPopup('COMBO! +500', '#FFD700');
       spawnSparks('#FFD700', '#14F195', 18);
-      addLog('COMBO_STRIKE');
+      addLog('Combo strike');
       setPoints(prev => prev + 500);
       setRisk(prev => Math.max(0, prev - 4));
     }
@@ -668,7 +668,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     // ── Aggression surge: every 5 attacks without defending ────────────────
     if (newAttackCount >= 5 && newAttackCount % 5 === 0) {
       logEvent('AGGRESSION', `${newAttackCount} attacks fired without defending — aggression penalty triggered`, '+15 RISK surge', 'danger');
-      addLog('AGGRESSION_DETECTED');
+      addLog('Aggression detected');
       addDmgPopup('AGGRESSION! +15', '#f97316', true);
       spawnSparks('#f97316', '#EF4444', 12);
       setTimeout(() => { if (!stateRef.current.isEnding) setRisk(prev => Math.min(99, prev + 15)); }, 200);
@@ -699,14 +699,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         sounds.hapticCritical();
         addDmgPopup('CRITICAL!', '#EF4444', true);
         spawnSparks('#EF4444', '#ffffff', 20);
-        addLog('CRITICAL_OVERLOAD');
+        addLog('Critical overload');
         setTimeout(() => handleBust('RISK_CRITICAL'), 350);
         return 100;
       }
       return next;
     });
     setPoints(prev => prev + 200);
-    if (!isCombo) addLog('ATTACK_INITIATED');
+    if (!isCombo) addLog('Attack initiated');
 
     setUserAction('Punch');
     setTimeout(() => { if (!stateRef.current.isEnding) setUserAction('Idle'); }, 600);
@@ -739,16 +739,16 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       logEvent('COUNTER', 'Attack → Defend within 2.2s — counter sequence', '+350 pts, -10 RISK bonus', 'bonus');
       addComboPopup('COUNTER! -10', '#9945FF');
       spawnSparks('#9945FF', '#00FBFF', 16);
-      addLog('COUNTER_EXECUTED');
+      addLog('Counter executed');
       setPoints(prev => prev + 350);
       setRisk(prev => Math.max(0, prev - 10));
     }
 
     const tiers = [
-      { min: 10, max: 14, multCost: 0.10, log: 'SHIELD_STABLE'   },
-      { min:  7, max: 11, multCost: 0.15, log: 'SHIELD_ACTIVE'   },
-      { min:  5, max:  9, multCost: 0.22, log: 'SHIELD_OVERHEAT' },
-      { min:  3, max:  6, multCost: 0.30, log: 'SHIELD_STRAINED' },
+      { min: 10, max: 14, multCost: 0.10, log: 'Shield stable'   },
+      { min:  7, max: 11, multCost: 0.15, log: 'Shield active'   },
+      { min:  5, max:  9, multCost: 0.22, log: 'Shield overheat' },
+      { min:  3, max:  6, multCost: 0.30, log: 'Shield strained' },
     ];
     const tier      = tiers[Math.min(newCount - 1, tiers.length - 1)];
     const reduction = tier.min + Math.random() * (tier.max - tier.min);
@@ -870,23 +870,23 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       {/* WIN OVERLAY */}
       {isEnding === 'WIN' && (
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#14F195]/20 backdrop-blur-sm animate-in fade-in duration-300">
-          <span className="text-5xl font-black text-[#14F195] glitch-text italic tracking-tighter uppercase">EXTRACTION_OK</span>
-          <span className="text-xs text-white font-black uppercase tracking-[0.6em] mt-4 animate-pulse">UPLOADING_CREDITS</span>
+          <span className="text-5xl font-black text-[#14F195] glitch-text uppercase">Extracted!</span>
+          <span className="text-xs text-white font-bold mt-4 animate-pulse">Uploading credits...</span>
         </div>
       )}
 
       {/* LOSS OVERLAY */}
       {isEnding === 'LOSS' && (
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-red-950/40 backdrop-blur-sm animate-in fade-in duration-300 gap-3">
-          <span className="text-5xl font-black text-red-500 glitch-text italic tracking-tighter uppercase">LINK_SEVERED</span>
-          <span className="text-xs text-red-500/60 font-black uppercase tracking-[0.6em] animate-pulse">
-            {timeLeft <= 0 ? 'TIMEOUT_EXPIRED' : 'PROTOCOL_FAILURE'}
+          <span className="text-5xl font-black text-red-500 glitch-text uppercase">Link Severed</span>
+          <span className="text-xs text-red-500/60 font-bold animate-pulse">
+            {timeLeft <= 0 ? 'Timeout' : 'Protocol failure'}
           </span>
           {nearMissSOL !== null && (
             <div className="mt-2 text-center px-6 py-3 border border-white/10 bg-black/60">
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/50 mb-1">YOU WERE THIS CLOSE</p>
+              <p className="text-[9px] font-bold text-white/50 mb-1">You were this close</p>
               <p className="mono text-3xl font-black text-white/70">{nearMissSOL.toFixed(4)} <span className="text-sm text-[#14F195]/60">SOL</span></p>
-              <p className="text-[8px] font-black uppercase tracking-widest text-red-500/40 mt-1">COULD HAVE EXTRACTED</p>
+              <p className="text-[8px] font-bold text-red-500/40 mt-1">Could have extracted</p>
             </div>
           )}
         </div>
@@ -901,8 +901,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       {firewallSave && (
         <div className="absolute inset-0 z-[95] flex items-center justify-center pointer-events-none">
           <div className="firewall-pop flex flex-col items-center gap-1">
-            <span className="text-5xl font-black text-[#14F195] italic uppercase tracking-tighter" style={{ textShadow: '0 0 40px #14F195' }}>FIREWALL</span>
-            <span className="text-sm font-black text-[#00FBFF] uppercase tracking-[0.4em]">PROTOCOL SAVED</span>
+            <span className="text-5xl font-black text-[#14F195] uppercase" style={{ textShadow: '0 0 40px #14F195' }}>Firewall</span>
+            <span className="text-sm font-bold text-[#00FBFF]">Protocol saved</span>
           </div>
         </div>
       )}
@@ -911,9 +911,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       {goldenWindow && !isEnding && (
         <div className="absolute top-0 left-0 right-0 z-[60] flex justify-center pt-1 pointer-events-none">
           <div className="golden-glow flex items-center gap-3 px-4 py-2 bg-yellow-950/80 border border-yellow-500/80">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500">GOLDEN_WINDOW</span>
+            <span className="text-[10px] font-bold text-yellow-500">Golden window</span>
             <span className="mono text-2xl font-black text-yellow-400">{goldenCountdown}s</span>
-            <span className="text-[9px] font-black text-yellow-600 uppercase">+5%_BONUS</span>
+            <span className="text-[9px] font-bold text-yellow-600">+5% bonus</span>
           </div>
         </div>
       )}
@@ -942,19 +942,19 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         {/* ── TOP HUD ── */}
         <div className="shrink-0 flex justify-between items-center gap-2 mb-2">
           <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : earlyExitWarn ? 'border-orange-500/40' : 'border-white/10'}`}>
-            <p className={`text-[9px] font-black uppercase tracking-widest leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : earlyExitWarn ? 'text-orange-500/60' : 'text-white/60'}`}>
-              {goldenWindow ? 'GOLDEN_EXTRACT' : earlyExitWarn ? 'EARLY_EXIT_-50%' : 'EXTRACT_VAL'}
+            <p className={`text-[9px] font-bold leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : earlyExitWarn ? 'text-orange-500/60' : 'text-white/60'}`}>
+              {goldenWindow ? 'Golden extract' : earlyExitWarn ? 'Early exit -50%' : 'Yield'}
             </p>
             <div className="flex items-baseline gap-2">
-              <span className={`mono text-xl font-black italic ${goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-red-500' : 'text-white'}`}>{currentYield}</span>
-              <span className={`text-[10px] font-black italic ${goldenWindow ? 'text-yellow-500' : 'text-[#14F195]'}`}>SOL</span>
+              <span className={`mono text-xl font-black ${goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-red-500' : 'text-white'}`}>{currentYield}</span>
+              <span className={`text-[10px] font-bold ${goldenWindow ? 'text-yellow-500' : 'text-[#14F195]'}`}>SOL</span>
             </div>
           </div>
           <div className={`relative w-28 px-2 py-2 bg-black/80 border tech-border flex flex-col items-center ${timerGlowClass}`}>
-            <span className={`text-[8px] font-black uppercase tracking-widest mb-0.5 ${isUrgent ? 'text-red-500 animate-pulse' : 'text-white/50'}`}>TIME_LEFT</span>
+            <span className={`text-[8px] font-bold mb-0.5 ${isUrgent ? 'text-red-500 animate-pulse' : 'text-white/50'}`}>Time left</span>
             <div className="flex items-baseline gap-1">
               <span className={`mono text-2xl font-black leading-none ${isUrgent ? 'text-red-500' : 'text-[#00FBFF]'}`}>{Math.max(0, Math.floor(timeLeft))}</span>
-              <span className="text-[10px] font-black uppercase italic text-white/40">s</span>
+              <span className="text-[10px] font-bold text-white/40">s</span>
             </div>
           </div>
         </div>
@@ -964,7 +964,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           {/* Logs bg */}
           <div className="absolute top-2 left-2 z-0 opacity-40 pointer-events-none">
             {logs.map((log, i) => (
-              <div key={i} className={`text-[9px] mono font-bold uppercase tracking-widest mb-1 ${log.includes('PENALTY') || log.includes('OVERHEAT') || log.includes('SURGE') ? 'text-red-500' : 'text-[#14F195]'}`}>
+              <div key={i} className={`text-[9px] mono font-bold mb-1 ${log.includes('overheat') || log.includes('surge') || log.includes('overload') || log.includes('Ambush') || log.includes('Critical') ? 'text-red-500' : 'text-[#14F195]'}`}>
                 {'>'} {log}
               </div>
             ))}
@@ -992,7 +992,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             <div className="absolute inset-0 border-[3px] border-dashed rounded-full animate-[spin_30s_linear_infinite] transition-colors duration-300"
                  style={{ borderColor: risk > 80 ? 'rgba(239,68,68,0.6)' : risk > 50 ? 'rgba(249,115,22,0.6)' : 'rgba(153,69,255,0.4)' }} />
             <div className="absolute top-0 right-0 bg-black/80 backdrop-blur-sm px-2 py-1 border tech-border border-white/10 min-w-[68px]">
-              <p className="text-[8px] font-black text-white/60 uppercase tracking-widest">RISK</p>
+              <p className="text-[8px] font-bold text-white/60 uppercase">Risk</p>
               <div className="flex items-baseline gap-0.5">
                 <span className={`mono text-xl font-black ${risk > 85 ? 'text-red-500 animate-pulse' : risk > 60 ? 'text-orange-400' : 'text-white'}`}>{Math.floor(risk)}</span>
                 <span className="text-[10px] text-white/60">%</span>
@@ -1003,7 +1003,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               </div>
             </div>
             <div className="absolute bottom-0 left-0 bg-black/80 backdrop-blur-sm px-2 py-1 border tech-border border-white/10">
-              <span className={`text-[10px] font-black uppercase italic ${diffConfig.color}`}>{difficulty}</span>
+              <span className={`text-[10px] font-bold uppercase ${diffConfig.color}`}>{difficulty}</span>
             </div>
           </div>
 
@@ -1012,8 +1012,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             <div className="absolute inset-0 z-[55] flex items-center justify-center" style={{ animation: 'ambush-in 0.2s ease-out' }}>
               <div className="absolute inset-0 bg-red-950/70 backdrop-blur-[2px]" />
               <div className="relative flex flex-col items-center gap-1">
-                <span className="text-4xl font-black text-red-500 italic uppercase tracking-tight animate-pulse" style={{ textShadow: '0 0 30px #ef4444' }}>AMBUSH!</span>
-                <span className="text-xs font-black text-red-400/70 uppercase tracking-[0.4em]">CONTROLS_LOCKED</span>
+                <span className="text-4xl font-black text-red-500 uppercase animate-pulse" style={{ textShadow: '0 0 30px #ef4444' }}>AMBUSH!</span>
+                <span className="text-xs font-bold text-red-400/70">Controls locked</span>
               </div>
             </div>
           )}
@@ -1023,11 +1023,11 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             <div className="absolute inset-0 z-[50] flex items-center justify-center pointer-events-none">
               <div className="flex flex-col items-center gap-2">
                 <span key={graceCount}
-                  className={`text-9xl font-black italic leading-none drop-shadow-[0_0_40px_rgba(255,255,255,0.6)] animate-in zoom-in-75 duration-200 ${graceCount === 0 ? 'text-[#14F195]' : 'text-white'}`}>
+                  className={`text-9xl font-black leading-none drop-shadow-[0_0_40px_rgba(255,255,255,0.6)] animate-in zoom-in-75 duration-200 ${graceCount === 0 ? 'text-[#14F195]' : 'text-white'}`}>
                   {graceCount === 0 ? 'GO!' : graceCount}
                 </span>
                 {graceCount > 0 && (
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 animate-pulse">GET_READY</span>
+                  <span className="text-[10px] font-bold text-white/50 animate-pulse">Get ready</span>
                 )}
               </div>
             </div>
@@ -1039,27 +1039,27 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           {/* Multiplier + Score row */}
           <div className="bg-black/60 backdrop-blur-sm p-2 rounded border border-white/5 flex justify-between items-center">
             <div>
-              <p className="text-[8px] text-white/50 font-black uppercase tracking-widest mb-0.5">MULT</p>
+              <p className="text-[8px] text-white/50 font-bold mb-0.5">Mult</p>
               <div className="flex items-center gap-2">
-                <p className={`mono text-2xl font-black italic ${
+                <p className={`mono text-2xl font-black ${
                   hotStreak ? 'hot-streak-text text-orange-400' :
                   multiplier > 3 ? 'text-[#9945FF] chromatic-aberration' : 'text-white'
                 }`}>{multiplier.toFixed(2)}x</p>
-                {hotStreak && <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest animate-pulse">HOT</span>}
+                {hotStreak && <span className="text-[8px] font-bold text-orange-500 animate-pulse">HOT</span>}
                 {activeBoosts.includes('score_mult') && (
-                  <span className="px-1 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-[8px] font-black text-yellow-500 uppercase">BOOST</span>
+                  <span className="px-1 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-[8px] font-bold text-yellow-500 uppercase">BOOST</span>
                 )}
               </div>
             </div>
             <div className="text-center">
               {attackCount >= 4 && (
                 <div className="px-2 py-0.5 bg-red-950/80 border border-red-500/40 mb-1">
-                  <span className="text-[8px] font-black text-red-400 uppercase tracking-widest">AGGRESSION {attackCount}/5</span>
+                  <span className="text-[8px] font-bold text-red-400">Aggression {attackCount}/5</span>
                 </div>
               )}
             </div>
             <div className="text-right">
-              <p className="text-[8px] text-white/50 font-black uppercase tracking-widest mb-0.5">SCORE</p>
+              <p className="text-[8px] text-white/50 font-bold mb-0.5">Score</p>
               <p className="mono text-xl font-black text-white/75">{points.toLocaleString()}</p>
             </div>
           </div>
@@ -1071,9 +1071,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                 ambushed ? 'border-red-900/30 opacity-30' : 'border-red-600/50'
               }`}>
               <div className="flex flex-col items-center group-active:scale-95 transition-transform">
-                <span className="text-base font-black uppercase italic tracking-tighter text-red-500">ATTACK</span>
-                <span className="text-[8px] font-bold text-red-500/40 uppercase tracking-widest">
-                  {attackCount >= 4 ? `RAGE_${attackCount}/5` : 'RISK ++'}
+                <span className="text-base font-bold uppercase text-red-500">ATTACK</span>
+                <span className="text-[8px] font-bold text-red-500/40 uppercase">
+                  {attackCount >= 4 ? `Rage ${attackCount}/5` : 'RISK ++'}
                 </span>
               </div>
             </button>
@@ -1100,15 +1100,15 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                   defendLocked ? 'border-orange-500/60 bg-orange-950/20' : 'border-[#00FBFF]/50'
                 }`}>
                 <div className="flex flex-col items-center group-active:scale-95 transition-transform">
-                  <span className={`text-base font-black uppercase italic tracking-tighter ${
+                  <span className={`text-base font-bold uppercase ${
                     defendLocked ? 'text-orange-400 animate-pulse' : 'text-[#00FBFF]'
                   }`}>
-                    {defendLocked ? `COOLDOWN_${defendLockTimer}` : 'DEFEND'}
+                    {defendLocked ? `Cooldown ${defendLockTimer}s` : 'DEFEND'}
                   </span>
-                  <span className={`text-[8px] font-bold uppercase tracking-widest ${
+                  <span className={`text-[8px] font-bold uppercase ${
                     defendLocked ? 'text-orange-500/60' : 'text-[#00FBFF]/40'
                   }`}>
-                    {defendLocked ? 'SHIELD OVERLOAD' : consecutiveDefends >= 1 ? 'CHAIN RISK' : 'RISK --'}
+                    {defendLocked ? 'Shield overload' : consecutiveDefends >= 1 ? 'CHAIN RISK' : 'RISK --'}
                   </span>
                 </div>
               </button>
@@ -1128,11 +1128,11 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                   : `bg-[#14F195] text-black active:translate-y-1 ${multiplier > 3 ? 'shadow-[0_0_35px_rgba(20,241,149,0.6)]' : multiplier > 2 ? 'shadow-[0_0_22px_rgba(20,241,149,0.4)]' : 'shadow-[0_0_12px_rgba(20,241,149,0.2)]'}`
               }`}>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-black uppercase italic tracking-tighter leading-none">
+                <span className="text-2xl font-bold uppercase leading-none">
                   {ambushed
-                    ? 'AMBUSH! LOCKED'
-                    : graceActive ? 'GET_READY...'
-                    : !hasInteracted ? 'ENGAGE_TO_UNLOCK'
+                    ? 'Ambush! Locked'
+                    : graceActive ? 'Get ready...'
+                    : !hasInteracted ? 'Act to unlock'
                     : goldenWindow ? `GOLDEN EXIT +5%`
                     : earlyExitWarn ? 'EARLY EXIT -50%'
                     : 'EXIT & CASH OUT'}
@@ -1142,13 +1142,13 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                     {currentYield} SOL
                   </span>
                 )}
-                <span className={`text-[9px] font-black uppercase mt-0.5 tracking-[0.2em] italic ${goldenWindow || earlyExitWarn ? 'opacity-80' : 'opacity-60'}`}>
-                  {ambushed ? 'WAIT_FOR_CLEAR'
-                    : graceActive ? 'PROTOCOL_ARMING'
-                    : !hasInteracted ? 'PROTOCOL_IDLE'
-                    : goldenWindow ? `${goldenCountdown}s REMAINING`
-                    : earlyExitWarn ? `${8 - elapsedSec}s TO_FULL_VALUE`
-                    : 'SECURE_PROFITS'}
+                <span className={`text-[9px] font-bold mt-0.5 ${goldenWindow || earlyExitWarn ? 'opacity-80' : 'opacity-60'}`}>
+                  {ambushed ? 'Wait for clear'
+                    : graceActive ? 'Arming...'
+                    : !hasInteracted ? 'Idle'
+                    : goldenWindow ? `${goldenCountdown}s remaining`
+                    : earlyExitWarn ? `${8 - elapsedSec}s to full value`
+                    : 'Secure profits'}
                 </span>
               </div>
             </button>
