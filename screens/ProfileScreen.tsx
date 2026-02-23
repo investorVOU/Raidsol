@@ -4,6 +4,8 @@ import { AVATAR_ITEMS, GEAR_ITEMS, RANKS, Equipment } from '../types';
 import { Edit, Check, X, Lock, Wallet, ExternalLink } from 'lucide-react';
 import { useRaidHistory } from '../hooks/useRaidHistory';
 import { useWithdrawalHistory } from '../hooks/useWithdrawalHistory';
+import { usePlayerRoundWins } from '../hooks/usePlayerRoundWins';
+import { getRoundBoundsFor, formatRoundWindow } from '../hooks/useRoundData';
 import { supabase } from '../lib/supabase';
 
 interface ProfileScreenProps {
@@ -25,6 +27,7 @@ interface ProfileScreenProps {
   referralCode?: string | null;
   referralSREarned?: number;
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
+  onClaimRoundWin?: (roundNum: number, roundDate: string) => Promise<boolean>;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -46,18 +49,35 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   referralCode,
   referralSREarned = 0,
   onNavigateStore,
+  onClaimRoundWin,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(username);
   const [showNotification, setShowNotification] = useState(false);
-  const [rightTab, setRightTab] = useState<'RAIDS' | 'WITHDRAWALS'>('RAIDS');
+  const [rightTab, setRightTab] = useState<'RAIDS' | 'WITHDRAWALS' | 'ROUNDS'>('RAIDS');
   const [lastWithdrawTx, setLastWithdrawTx] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [showLockTip, setShowLockTip] = useState(false);
 
   // Real raid history from Supabase
   const { history: raidHistory, loading: historyLoading } = useRaidHistory(walletAddress ?? null);
+
+  // Round win history
+  const { wins: roundWins, loading: roundWinsLoading, refetch: refetchRoundWins } = usePlayerRoundWins(walletAddress ?? null);
+  const [claimingRound, setClaimingRound] = useState<string | null>(null); // "roundNum:roundDate" key
+
+  const handleClaimRoundWinLocal = async (roundNum: number, roundDate: string) => {
+    if (!onClaimRoundWin) return;
+    const key = `${roundNum}:${roundDate}`;
+    setClaimingRound(key);
+    try {
+      const ok = await onClaimRoundWin(roundNum, roundDate);
+      if (ok) refetchRoundWins();
+    } finally {
+      setClaimingRound(null);
+    }
+  };
 
   // Withdrawal history from Supabase
   const { history: withdrawals, loading: withdrawLoading, refetch: refetchWithdrawals } = useWithdrawalHistory(walletAddress ?? null);
@@ -560,19 +580,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <div className="lg:col-span-5 space-y-5">
 
             {/* Tab bar */}
-            <div className="flex gap-1">
-              {(['RAIDS', 'WITHDRAWALS'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setRightTab(tab)}
-                  className={`px-4 py-2 text-[9px] font-bold uppercase tracking-wide transition-all tech-border ${rightTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-white/40 border-white/5 hover:text-white/60'}`}
-                >
-                  {tab === 'RAIDS' ? 'Raids' : 'Withdrawals'}
-                  {tab === 'WITHDRAWALS' && withdrawals.length > 0 && (
-                    <span className="ml-1.5 px-1 bg-green-500 text-black text-[8px] rounded-sm">{withdrawals.length}</span>
-                  )}
-                </button>
-              ))}
+            <div className="flex gap-1 flex-wrap">
+              {(['RAIDS', 'ROUNDS', 'WITHDRAWALS'] as const).map(tab => {
+                const unclaimedCount = tab === 'ROUNDS' ? roundWins.filter(w => !w.claimed).length : 0;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setRightTab(tab)}
+                    className={`px-4 py-2 text-[9px] font-bold uppercase tracking-wide transition-all tech-border flex items-center gap-1.5 ${rightTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-white/40 border-white/5 hover:text-white/60'}`}
+                  >
+                    {tab === 'RAIDS' ? 'Raids' : tab === 'ROUNDS' ? 'Round Wins' : 'Withdrawals'}
+                    {tab === 'WITHDRAWALS' && withdrawals.length > 0 && (
+                      <span className="px-1 bg-green-500 text-black text-[8px] rounded-sm">{withdrawals.length}</span>
+                    )}
+                    {tab === 'ROUNDS' && unclaimedCount > 0 && (
+                      <span className="px-1 bg-[#9945FF] text-white text-[8px] rounded-sm animate-pulse">{unclaimedCount}</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* ── RAID HISTORY ──────────────────────────────────── */}
@@ -621,6 +647,106 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                           <span className="text-[9px] text-cyan-500/30 font-bold">
                             seed: {txShort}
                           </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* ── ROUND WINS ───────────────────────────────────── */}
+            {rightTab === 'ROUNDS' && (
+              <div className="space-y-3">
+                {roundWinsLoading ? (
+                  [...Array(3)].map((_, i) => (
+                    <div key={i} className="bg-black border-2 border-white/5 p-5 tech-border animate-pulse">
+                      <div className="h-4 bg-white/5 rounded w-3/4" />
+                    </div>
+                  ))
+                ) : roundWins.length === 0 ? (
+                  <div className="py-12 text-center space-y-2">
+                    <div className="text-4xl mb-3">🏆</div>
+                    <p className="text-white/40 font-bold text-xs">No round wins yet</p>
+                    <p className="text-white/20 text-[10px] leading-relaxed">
+                      Top 5 extractors in each 6-hour round share the pool.<br />
+                      Raid hard to claim your place.
+                    </p>
+                  </div>
+                ) : (
+                  roundWins.map((w) => {
+                    const { start, end } = getRoundBoundsFor(w.roundNum, w.roundDate);
+                    const dateLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).toUpperCase();
+                    const claimKey = `${w.roundNum}:${w.roundDate}`;
+                    const isClaiming = claimingRound === claimKey;
+                    const medals = ['🥇', '🥈', '🥉', '4th', '5th'];
+                    const rankColors = ['text-yellow-400', 'text-white/75', 'text-orange-400', 'text-white/50', 'text-white/40'];
+                    const borderColors = ['border-yellow-500/40', 'border-white/15', 'border-orange-500/30', 'border-white/10', 'border-white/8'];
+                    const glowColors = ['shadow-[0_0_20px_rgba(234,179,8,0.08)]', '', 'shadow-[0_0_15px_rgba(249,115,22,0.06)]', '', ''];
+
+                    return (
+                      <div
+                        key={w.id}
+                        className={`relative bg-black border-2 ${borderColors[w.rank - 1]} ${glowColors[w.rank - 1]} tech-border overflow-hidden`}
+                      >
+                        {/* Top accent bar */}
+                        <div className={`h-0.5 w-full ${w.rank === 1 ? 'bg-yellow-400' : w.rank === 2 ? 'bg-white/30' : w.rank === 3 ? 'bg-orange-400' : 'bg-white/15'}`} />
+
+                        <div className="p-4">
+                          {/* Round header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-lg leading-none">{w.rank <= 3 ? medals[w.rank - 1] : ''}</span>
+                                <span className={`text-xs font-black uppercase tracking-tight ${rankColors[w.rank - 1]}`}>
+                                  #{w.rank} · Round {w.roundNum}
+                                </span>
+                              </div>
+                              <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider">
+                                {dateLabel} · {formatRoundWindow(w.roundNum)}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0 ml-3">
+                              {w.claimed ? (
+                                <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-500">
+                                  Claimed
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleClaimRoundWinLocal(w.roundNum, w.roundDate)}
+                                  disabled={isClaiming}
+                                  className="text-[9px] font-black uppercase px-3 py-1.5 bg-[#9945FF] text-white hover:bg-[#7c35d4] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isClaiming ? 'Claiming…' : 'Claim'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Stats row */}
+                          <div className="grid grid-cols-3 gap-2 bg-white/3 border border-white/5 p-2.5">
+                            <div>
+                              <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Extracted</p>
+                              <p className="text-sm font-black mono text-white">{w.solExtracted.toFixed(4)}</p>
+                              <p className="text-[8px] text-[#14F195] font-bold">SOL</p>
+                            </div>
+                            <div className="border-x border-white/5 px-2">
+                              <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Pool</p>
+                              <p className="text-sm font-black mono text-white">{w.poolSol.toFixed(3)}</p>
+                              <p className="text-[8px] text-[#9945FF] font-bold">SOL</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Allocated</p>
+                              <p className="text-sm font-black mono text-yellow-400">{w.solAllocation.toFixed(4)}</p>
+                              <p className="text-[8px] text-yellow-400/60 font-bold">SOL</p>
+                            </div>
+                          </div>
+
+                          {w.claimed && w.claimedAt && (
+                            <p className="text-[8px] text-white/25 font-bold mt-1.5 text-right">
+                              Claimed {new Date(w.claimedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          )}
                         </div>
                       </div>
                     );

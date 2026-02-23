@@ -14,7 +14,9 @@
       "Bash(npm run build:*)",
       "Bash(sort:*)",
       "Bash(ls:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(dir:*)",
+      "WebFetch(domain:soltrivia.app)"
     ]
   }
 }

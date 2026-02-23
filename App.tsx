@@ -29,6 +29,7 @@ import { getAssociatedTokenAddressSync, createTransferInstruction } from '@solan
 import { useProfile } from './hooks/useProfile';
 import { useDomainName } from './hooks/useDomainName';
 import { usePrices } from './hooks/usePrices';
+import { useRoundData } from './hooks/useRoundData';
 import { supabase } from './lib/supabase';
 
 // USDC mint — mainnet by default (VITE_USDC_MINT), falls back to devnet Circle mint
@@ -61,6 +62,7 @@ const AppInner: React.FC = () => {
   // Resolved once here — passed as prop to Header + ProfileScreen to avoid duplicate API calls
   const domainName = useDomainName(walletAddr);
   const { currencyRates: liveCurrencyRates, pricesReady } = usePrices();
+  const { info: currentRound, refetch: refetchRound } = useRoundData();
 
   // Screens that are safe to restore on reload (mid-game states are excluded)
   const RESTORABLE_SCREENS = new Set<Screen>([
@@ -790,6 +792,32 @@ const AppInner: React.FC = () => {
     return null;
   };
 
+  const handleClaimRoundWin = async (roundNum: number, roundDate: string): Promise<boolean> => {
+    if (!walletAddr) return false;
+    try {
+      const { data, error } = await supabase.functions.invoke('claim-round-win', {
+        body: { round_number: roundNum, round_date: roundDate, wallet_address: walletAddr },
+      });
+      if (error || !data?.success) {
+        let msg = data?.error ?? '';
+        if (!msg && error) msg = (error as any).message ?? String(error);
+        alert('Claim failed: ' + (msg || 'Unknown error'));
+        return false;
+      }
+      // Credit unclaimed_sol locally (the edge function updates the DB)
+      setGameState(prev => ({
+        ...prev,
+        unclaimedBalance: prev.unclaimedBalance + Number(data.sol_allocation),
+      }));
+      // Refresh round standings so the CLAIMED badge appears
+      refetchRound();
+      return true;
+    } catch (err) {
+      alert('Claim failed: ' + String(err));
+      return false;
+    }
+  };
+
   const handlePurchase = async (itemId: string, price: number, currency: Currency): Promise<boolean> => {
     if (!requireWallet()) return false;
 
@@ -1494,6 +1522,7 @@ const AppInner: React.FC = () => {
             drillCount={gameState.drillCount}
             drillWindowStart={gameState.drillWindowStart}
             currencyRates={liveCurrencyRates}
+            currentRound={currentRound}
           />
         );
       case Screen.RAID:
@@ -1578,6 +1607,7 @@ const AppInner: React.FC = () => {
             referralCode={profile?.referral_code ?? null}
             referralSREarned={profile?.referral_sr_earned ?? 0}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
+            onClaimRoundWin={handleClaimRoundWin}
           />
         );
       case Screen.STORE:
@@ -1646,6 +1676,7 @@ const AppInner: React.FC = () => {
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             currencyRates={liveCurrencyRates}
+            currentRound={currentRound}
           />
         );
     }
