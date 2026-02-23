@@ -99,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({
           {/* SOL Balance */}
           <div
             className="rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)' }}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
           >
             <p className="text-[9px] text-white/35 mb-0.5 uppercase tracking-wide" style={INTER}>Balance</p>
             <p className="text-[13px] leading-tight text-[#14F195]" style={SG_NUM}>
@@ -111,7 +111,7 @@ const Header: React.FC<HeaderProps> = ({
           {/* Level + Rank */}
           <div
             className="rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)' }}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
           >
             <p className="text-[9px] text-white/35 mb-0.5 uppercase tracking-wide" style={INTER}>Rank</p>
             <p className="text-[13px] leading-tight truncate" style={{ ...SG_NUM, color: currentRank.color }}>
@@ -123,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({
           {/* SR Points */}
           <div
             className="rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)' }}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
           >
             <p className="text-[9px] text-white/35 mb-0.5 uppercase tracking-wide" style={INTER}>SR Points</p>
             <p className="text-[13px] leading-tight text-amber-400" style={SG_NUM}>
