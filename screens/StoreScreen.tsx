@@ -346,8 +346,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                             <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-1.5 py-0.5 border border-orange-400/30 whitespace-nowrap animate-pulse">SKR −50%</span>
                           )}
                         </div>
-                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
-                          <div className="shrink-0">
+                        <div className="flex flex-col gap-1.5 pt-2 border-t border-white/5">
+                          <div>
                             {displayFull && (
                               <p className="text-xs font-black text-white/30 mono line-through leading-none">
                                 {displayFull} <span className="text-[9px]">{selectedCurrency}</span>
@@ -360,7 +360,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                           <button
                             onClick={() => handleBuyPass(pass.id, pass.usdPrice)}
                             disabled={!canAfford || !onBuyPass || loadingItemId !== null}
-                            className={`shrink-0 px-3 py-2 font-bold uppercase tracking-wide text-[9px] tech-border transition-all min-w-[80px] flex items-center justify-center gap-1 ${
+                            className={`w-full py-2 font-bold uppercase tracking-wide text-[10px] tech-border transition-all flex items-center justify-center gap-1 ${
                               !canAfford || !onBuyPass || (loadingItemId !== null && loadingItemId !== pass.id)
                                 ? 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed'
                                 : loadingItemId === pass.id
