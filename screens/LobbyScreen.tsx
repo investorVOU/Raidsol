@@ -159,8 +159,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       <div className="shrink-0 p-4 sm:p-6 z-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
           <div>
-            <h1 className="text-4xl sm:text-6xl font-black italic tracking-tighter text-white leading-none glitch-text">
-              SOL_RAID
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white leading-none glitch-text">
+              SOL RAID
             </h1>
             <div className="flex items-center gap-2 mt-1">
               <div
@@ -179,7 +179,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </p>
             <div className="space-y-0.5 h-12 overflow-hidden flex flex-col justify-end">
               {feedLines.length === 0 ? (
-                <p className="text-[9px] font-bold mono text-white/40">{'>'} AWAITING ACTIVITY...</p>
+                <p className="text-[9px] font-bold mono text-white/40">{'>'} Awaiting activity...</p>
               ) : (
                 feedLines.slice(0, 3).map((entry, i) => (
                   <p
@@ -283,25 +283,25 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="flex-1 text-left min-w-0">
               {raidTickets > 0 ? (
                 <>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
-                    {raidTickets}x RAID PASS READY
+                  <p className="text-[10px] font-bold text-yellow-400">
+                    {raidTickets}x Raid Pass ready
                   </p>
-                  <p className="text-[9px] text-white/50 font-black uppercase">50% OFF ENTRY + 10% WIN BOOST — ACTIVE AT DEPLOYMENT</p>
+                  <p className="text-[9px] text-white/50">50% off entry · 10% win boost · active on deploy</p>
                 </>
               ) : (
                 <>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-yellow-400">
-                    RAID PASS — 50% OFF ENTRY FEE
+                  <p className="text-[10px] font-bold text-yellow-400">
+                    Raid Pass — 50% off entry fee
                   </p>
-                  <p className="text-[9px] text-white/50 font-black uppercase">BUY A PASS · PLAY MORE · WIN BIGGER</p>
-                  <p className="text-[9px] text-orange-400 font-black uppercase mt-0.5">🟠 SEEKER (SKR) HOLDERS GET 50% OFF PASS PRICE</p>
+                  <p className="text-[9px] text-white/50">Buy a pass · play more · win bigger</p>
+                  <p className="text-[9px] text-orange-400 mt-0.5">SKR holders get 50% off pass price</p>
                 </>
               )}
             </div>
 
             <div className="shrink-0 flex items-center gap-1 text-yellow-500 group-hover:translate-x-0.5 transition-transform">
-              <span className="text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
-                {raidTickets > 0 ? 'GET MORE' : 'GET PASS'}
+              <span className="text-[10px] font-bold whitespace-nowrap">
+                {raidTickets > 0 ? 'Get more' : 'Get pass'}
               </span>
               <span className="font-black text-sm">→</span>
             </div>
@@ -329,25 +329,25 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <React.Fragment key={i}>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-[#14F195] rounded-full animate-pulse" />
-                <span className="text-[10px] font-black uppercase text-white/70 tracking-widest">TREASURY_LIVE:</span>
-                <span className="text-sm font-black mono text-[#14F195]">
+                <span className="text-[10px] font-bold text-white/50">Treasury:</span>
+                <span className="text-sm font-bold mono text-[#14F195]">
                   {treasuryReserve !== null ? `${Number(treasuryReserve).toLocaleString()} SOL` : '—'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase text-white/70 tracking-widest">24H_PAYOUTS:</span>
-                <span className="text-sm font-black mono text-white">
+                <span className="text-[10px] font-bold text-white/50">24h payouts:</span>
+                <span className="text-sm font-bold mono text-white">
                   {treasury24h !== null ? `${Number(treasury24h).toFixed(2)} SOL` : '—'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase text-white/70 tracking-widest">STATUS:</span>
-                <span className="text-sm font-black mono text-[#14F195]">SOLVENT</span>
+                <span className="text-[10px] font-bold text-white/50">Status:</span>
+                <span className="text-sm font-bold mono text-[#14F195]">Solvent</span>
               </div>
               {latestWin && (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase text-white/70 tracking-widest">LATEST_WIN:</span>
-                  <span className="text-sm font-black mono text-yellow-500">
+                  <span className="text-[10px] font-bold text-white/50">Latest win:</span>
+                  <span className="text-sm font-bold mono text-yellow-500">
                     {latestWin.username} extracted {Number(latestWin.amount_sol).toFixed(3)} SOL
                   </span>
                 </div>
@@ -371,7 +371,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             />
             <div className="absolute inset-6 border border-[#14F195]/60 animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[#14F195] font-black text-xl italic">GO</span>
+              <span className="text-[#14F195] font-black text-xl">GO</span>
             </div>
           </div>
 
@@ -459,11 +459,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                             className={`p-2.5 sm:p-4 border tech-border text-left transition-all ${active ? `bg-white/10 border-white ${config.color}` : 'bg-black border-white/10 text-white/40 hover:border-white/30'}`}
                           >
                             <div className="flex justify-between items-start">
-                              <span className="text-xs sm:text-sm font-black uppercase italic tracking-tight">{config.label}</span>
+                              <span className="text-xs sm:text-sm font-bold uppercase tracking-tight">{config.label}</span>
                               {active && <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
                             </div>
-                            <span className="block text-[10px] sm:text-xs font-black uppercase tracking-widest opacity-60 mt-0.5 sm:mt-1">
-                              MULT: {diff === Difficulty.EASY ? '0.8X' : diff === Difficulty.MEDIUM ? '1.0X' : diff === Difficulty.HARD ? '1.4X' : '2.5X'}
+                            <span className="block text-[10px] sm:text-xs font-bold opacity-60 mt-0.5 sm:mt-1">
+                              mult: {diff === Difficulty.EASY ? '0.8×' : diff === Difficulty.MEDIUM ? '1.0×' : diff === Difficulty.HARD ? '1.4×' : '2.5×'}
                             </span>
                           </button>
                         );
@@ -487,7 +487,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                               <span className="text-lg">{boost.icon}</span>
                               <span className={`text-xs sm:text-sm mono font-black ${isActive ? 'text-yellow-500' : 'text-white/60'}`}>{boost.cost} S</span>
                             </div>
-                            <p className={`text-[10px] sm:text-xs font-black uppercase italic leading-tight ${isActive ? 'text-white' : 'text-white/60'}`}>{boost.name}</p>
+                            <p className={`text-[10px] sm:text-xs font-bold uppercase leading-tight ${isActive ? 'text-white' : 'text-white/60'}`}>{boost.name}</p>
                           </button>
                         );
                       })}
@@ -501,7 +501,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   {/* Loadout header */}
                   <div className="flex justify-between items-center mb-2">
                     <Label text="Loadout" />
-                    <span className="text-[10px] font-black uppercase text-white/50">{equippedGear.length}/4 SLOTS</span>
+                    <span className="text-[10px] font-bold text-white/50">{equippedGear.length}/4 slots</span>
                   </div>
 
                   {/* Gear slots */}
@@ -579,7 +579,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                       </div>
                     </div>
                     <div>
-                      <div className="flex justify-between text-[9px] font-black uppercase text-white/50 mb-1">
+                      <div className="flex justify-between text-[9px] font-bold uppercase text-white/50 mb-1">
                         <span>Power</span>
                         <span className={advantageScore >= 50 ? 'text-[#14F195]' : advantageScore >= 25 ? 'text-yellow-500' : 'text-red-500'}>
                           {advantageScore >= 50 ? 'STRONG' : advantageScore >= 25 ? 'MODERATE' : 'WEAK'} +{advantageScore}
@@ -615,7 +615,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         onClick={() => setEntryCurrency(c)}
                         className={`py-2 px-1 border tech-border text-center transition-all ${active ? `${col} bg-white/5` : 'border-white/10 text-white/40 hover:border-white/30'}`}
                       >
-                        <p className="text-[10px] font-black uppercase">{sym}</p>
+                        <p className="text-[10px] font-bold uppercase">{sym}</p>
                         <p className="text-[9px] mono text-white/60">{bal.toFixed(c === Currency.SKR ? 0 : 2)}</p>
                       </button>
                     );
@@ -652,13 +652,13 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 <div className="min-w-0 shrink-0">
                   <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-0.5">Entry cost</p>
                   <p className="text-xl font-black mono text-white leading-none">
-                    {pricesLoading ? <span className="text-white/40 text-sm animate-pulse">FETCHING…</span> : <>{totalCostDisplay.toFixed(currencyDecimals)}{' '}<span className={`text-sm ${entryCurrency === Currency.SOL ? 'text-[#14F195]' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{currencySymbol}</span></>}
+                    {pricesLoading ? <span className="text-white/40 text-sm animate-pulse">Fetching…</span> : <>{totalCostDisplay.toFixed(currencyDecimals)}{' '}<span className={`text-sm ${entryCurrency === Currency.SOL ? 'text-[#14F195]' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{currencySymbol}</span></>}
                   </p>
                   {applyTicket && (
                     <p className="text-[9px] text-yellow-500 font-bold mt-0.5">🎟️ ticket discount active</p>
                   )}
                   {!pricesLoading && currentBalance < totalCostDisplay && totalCostSol > 0 && (
-                    <p className="text-[9px] text-red-500 font-black uppercase mt-0.5">INSUFFICIENT</p>
+                    <p className="text-[9px] text-red-500 font-bold mt-0.5">Insufficient funds</p>
                   )}
                 </div>
                 <button
