@@ -900,38 +900,57 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 </div>
               </div>
 
-              {/* Custom entry amount — in selected currency; hidden while rate is loading */}
-              {selectedMode === Mode.SOLO && rateReady && (
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/3">
-                  <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider shrink-0">{t('lobby.entryAmount')}</span>
-                  <input
-                    type="number"
-                    min={minEntryDisplay}
-                    step={curDecimals === 0 ? 1 : curDecimals === 2 ? 0.01 : 0.001}
-                    value={customFee !== null ? customFee : ''}
-                    placeholder={minEntryDisplay.toFixed(curDecimals)}
-                    onChange={e => {
-                      const v = parseFloat(e.target.value);
-                      setCustomFee(isNaN(v) ? null : v);
-                    }}
-                    className="flex-1 bg-transparent text-white text-sm font-semibold outline-none placeholder-white/20 tabular-nums min-w-0"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                  />
-                  <span className="text-[9px] font-semibold text-white/35 shrink-0">{curSymbol}</span>
-                  {customFee !== null && customFee >= minEntryDisplay && (
-                    <span className="text-[8px] text-white/30 shrink-0 hidden sm:inline">
-                      max ~{(effectiveBase * 5.7 * displayRate).toFixed(curDecimals)} {curSymbol}
-                    </span>
+              {/* ── Stake Amount card — prominent, clearly editable ── */}
+              {selectedMode === Mode.SOLO && (
+                <div className="rounded-lg border border-white/[0.12] bg-white/[0.03] overflow-hidden">
+                  {/* Header row */}
+                  <div className="flex items-center justify-between px-3 pt-2 pb-1">
+                    <div className="flex items-center gap-1.5">
+                      <i className="fa-solid fa-fire-flame-curved text-[#FF2929]/70 text-[10px]" />
+                      <span className="text-[9px] font-bold text-white/50 uppercase tracking-wider">Stake Amount</span>
+                    </div>
+                    <span className="text-[8px] text-white/25 font-medium">higher stake = bigger win</span>
+                  </div>
+                  {/* Input row */}
+                  {rateReady ? (
+                    <div className="flex items-center gap-2 px-3 pb-2">
+                      <input
+                        type="number"
+                        min={minEntryDisplay}
+                        step={curDecimals === 0 ? 1 : curDecimals === 2 ? 0.01 : 0.001}
+                        value={customFee !== null ? customFee : ''}
+                        placeholder={minEntryDisplay.toFixed(curDecimals)}
+                        onChange={e => {
+                          const v = parseFloat(e.target.value);
+                          setCustomFee(isNaN(v) ? null : v);
+                        }}
+                        className="flex-1 bg-transparent text-white text-xl font-bold outline-none placeholder-white/20 tabular-nums min-w-0"
+                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                      />
+                      <span className={`text-sm font-bold shrink-0 ${entryCurrency === Currency.SOL ? 'text-white/50' : entryCurrency === Currency.USDC ? 'text-blue-400/70' : 'text-orange-400/70'}`}>
+                        {curSymbol}
+                      </span>
+                      <i className="fa-solid fa-pen text-white/20 text-[9px] shrink-0" />
+                    </div>
+                  ) : (
+                    <div className="px-3 pb-2">
+                      <span className="text-[10px] text-white/20 animate-pulse">fetching {curSymbol} rate…</span>
+                    </div>
                   )}
-                  {customFee !== null && customFee < minEntryDisplay && (
-                    <span className="text-[8px] text-red-400 shrink-0">min {minEntryDisplay.toFixed(curDecimals)}</span>
+                  {/* Hints */}
+                  {rateReady && (
+                    <div className="flex items-center justify-between px-3 pb-2">
+                      {customFee !== null && customFee < minEntryDisplay
+                        ? <span className="text-[8px] text-red-400 font-semibold">min {minEntryDisplay.toFixed(curDecimals)} {curSymbol}</span>
+                        : <span className="text-[8px] text-white/20">min {minEntryDisplay.toFixed(curDecimals)} {curSymbol}</span>
+                      }
+                      {customFee !== null && customFee >= minEntryDisplay && (
+                        <span className="text-[8px] text-[#FFB800]/50 font-semibold">
+                          max win ~{(effectiveBase * 5.7 * displayRate).toFixed(curDecimals)} {curSymbol}
+                        </span>
+                      )}
+                    </div>
                   )}
-                </div>
-              )}
-              {selectedMode === Mode.SOLO && !rateReady && !pricesFailed && (
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02]">
-                  <span className="text-[9px] font-semibold text-white/20 uppercase tracking-wider">{t('lobby.entryAmount')}</span>
-                  <span className="text-[9px] text-white/20 animate-pulse ml-1">fetching {curSymbol} rate…</span>
                 </div>
               )}
 
