@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface RaidLoadingScreenProps {
   onComplete: () => void;
@@ -34,6 +34,11 @@ const RaidLoadingScreen: React.FC<RaidLoadingScreenProps> = ({ onComplete, mode 
     Math.floor((progress / 100) * statuses.length),
   );
 
+  // Keep a ref so the interval always calls the latest onComplete
+  // without re-starting the timer when the parent re-renders
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
   useEffect(() => {
     let elapsed = 0;
     const timer = setInterval(() => {
@@ -42,11 +47,11 @@ const RaidLoadingScreen: React.FC<RaidLoadingScreenProps> = ({ onComplete, mode 
       setProgress(p);
       if (elapsed >= DURATION_MS) {
         clearInterval(timer);
-        onComplete();
+        onCompleteRef.current();
       }
     }, TICK_MS);
     return () => clearInterval(timer);
-  }, [onComplete]);
+  }, []); // run once on mount — timer must not reset on re-renders
 
   // Risk-bar gradient colour mirrors the actual risk meter
   const barColor =

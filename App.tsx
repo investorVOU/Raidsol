@@ -306,11 +306,15 @@ const AppInner: React.FC = () => {
     wakeLockRef.current = null;
   };
 
-  // ── Fullscreen during raids — removes browser chrome for full immersion ──
+  // ── Fullscreen during raids — must be called synchronously from a click handler ──
   const enterFullscreen = () => {
-    const el = document.documentElement;
-    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-    else if ((el as any).webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
+    try {
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+      else if ((el as any).webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
+    } catch {
+      // Ignore — browser may block if not a direct user gesture
+    }
   };
   const exitFullscreen = () => {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -1485,7 +1489,9 @@ const AppInner: React.FC = () => {
 
     setGameState(prev => ({ ...prev, currentScreen: Screen.RAID, isRaidLoading: true }));
     acquireWakeLock();
-    enterFullscreen();
+    // enterFullscreen() intentionally omitted here — requestFullscreen can only be
+    // called synchronously from a user gesture; after await-ing wallet signing it is
+    // too late and the browser blocks it. Call it from the click handler instead.
 
     // ── Provably-fair seed fetched in background (ready before raid ends) ─
     if (walletAddr) {
@@ -1536,6 +1542,7 @@ const AppInner: React.FC = () => {
             currencyRates={liveCurrencyRates}
             currentRound={currentRound}
             onEnterRound={enterRoundRaid}
+            onRequestFullscreen={enterFullscreen}
           />
         );
       case Screen.RAID:
@@ -1693,6 +1700,7 @@ const AppInner: React.FC = () => {
             currencyRates={liveCurrencyRates}
             currentRound={currentRound}
             onEnterRound={enterRoundRaid}
+            onRequestFullscreen={enterFullscreen}
           />
         );
     }

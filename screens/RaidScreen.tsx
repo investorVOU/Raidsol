@@ -1,8 +1,21 @@
 
-import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback, Component } from 'react';
+
+class CanvasErrorBoundary extends Component<{ children: React.ReactNode }, { error: boolean }> {
+  state = { error: false };
+  static getDerivedStateFromError() { return { error: true }; }
+  render() {
+    if (this.state.error) return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <p className="text-white/20 text-xs">3D unavailable</p>
+      </div>
+    );
+    return this.props.children;
+  }
+}
 import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent } from '../types';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, useAnimations, OrbitControls, Environment, ContactShadows, SpotLight, Sparkles } from '@react-three/drei';
+import { OrbitControls, Environment, ContactShadows, SpotLight, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameSounds } from '../hooks/useGameSounds';
 
@@ -116,8 +129,6 @@ const GameStyles = `
 `;
 
 // ─── 3D Fighter ───────────────────────────────────────────────────────────────
-const MODEL_URL = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/RobotExpressive/RobotExpressive.glb';
-
 const getAvatarColor = (id?: string) => {
   if (!id) return '#00FBFF';
   if (id.includes('gold') || id.includes('god'))    return '#FFD700';
@@ -149,108 +160,106 @@ interface FighterProps {
   color?: string;
   gearIds?: string[];
   isEnemy?: boolean;
+  riskLevel?: number;
 }
 
+// Procedural humanoid — no external model file required
 const FighterModel: React.FC<FighterProps> = ({
-  action, position, rotation, scale = 0.65, color = '#ffffff', gearIds = [], isEnemy = false,
+  action, position, rotation, scale = 1.0, color = '#00fbff', gearIds = [], isEnemy = false, riskLevel = 0,
 }) => {
-  const group = useRef<THREE.Group>(null);
-  const { scene, animations } = useGLTF(MODEL_URL);
-
-  const clonedScene = useMemo(() => {
-    const s = scene.clone();
-    s.traverse(child => {
-      if ((child as THREE.Mesh).isMesh) {
-        const m = child as THREE.Mesh;
-        m.material = (m.material as THREE.Material).clone();
-        (m.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(color);
-        (m.material as THREE.MeshStandardMaterial).emissiveIntensity = isEnemy ? 0.5 : 0.35;
-        (m.material as THREE.MeshStandardMaterial).color = new THREE.Color(color);
-      }
-    });
-    return s;
-  }, [scene, color, isEnemy]);
-
-  const { actions } = useAnimations(animations, group);
+  const groupRef   = useRef<THREE.Group>(null);
+  const leftArmRef  = useRef<THREE.Mesh>(null);
+  const rightArmRef = useRef<THREE.Mesh>(null);
+  const leftLegRef  = useRef<THREE.Mesh>(null);
+  const rightLegRef = useRef<THREE.Mesh>(null);
+  const t = useRef(0);
   const weaponType = useMemo(() => isEnemy ? 'BLADE' : getWeaponType(gearIds), [gearIds, isEnemy]);
+  const ei = isEnemy ? 0.45 : 0.3; // emissive intensity
 
-  const rightHandBone = useMemo(() => {
-    let bone: THREE.Object3D | undefined;
-    clonedScene.traverse(c => { if (c.name === 'HandR' || c.name === 'Hand_R') bone = c; });
-    return bone;
-  }, [clonedScene]);
-
-  // Slight float animation on idle
   useFrame((_, delta) => {
-    if (group.current && (action === 'Idle' || action === 'Walking')) {
-      group.current.position.y = position[1] + Math.sin(Date.now() * 0.002) * 0.04;
+    t.current += delta;
+    const time = t.current;
+    if (!groupRef.current) return;
+
+    // Animation speed scales with risk: 1× at 0 risk, 2.5× at 100 risk
+    const speed = 1 + (riskLevel / 100) * 1.5;
+
+    if (action === 'Idle') {
+      groupRef.current.position.y = position[1] + Math.sin(time * 1.4 * speed) * 0.05;
+      // Enemy leans toward player at high risk
+      if (isEnemy && riskLevel > 50) {
+        groupRef.current.rotation.y = rotation[1] + Math.sin(time * 0.8) * 0.12 * (riskLevel / 100);
+      }
+    } else if (action === 'Walking' || action === 'Punch') {
+      const freq = 5 * speed;
+      groupRef.current.position.y = position[1] + Math.abs(Math.sin(time * freq)) * 0.06;
+      if (leftArmRef.current)  leftArmRef.current.rotation.x  =  Math.sin(time * freq) * 0.65;
+      if (rightArmRef.current) rightArmRef.current.rotation.x = -Math.sin(time * freq) * 0.65;
+      if (leftLegRef.current)  leftLegRef.current.rotation.x  = -Math.sin(time * freq) * 0.5;
+      if (rightLegRef.current) rightLegRef.current.rotation.x =  Math.sin(time * freq) * 0.5;
+    } else if (action === 'Jump') {
+      groupRef.current.position.y = position[1] + Math.abs(Math.sin(time * 3)) * 0.45;
+    } else if (action === 'Dance') {
+      groupRef.current.position.y = position[1] + Math.abs(Math.sin(time * 5)) * 0.18;
+      groupRef.current.rotation.y = rotation[1] + Math.sin(time * 3) * 0.45;
+    } else if (action === 'Death') {
+      if (groupRef.current.rotation.z < Math.PI / 2.2)
+        groupRef.current.rotation.z += delta * 1.8;
     }
   });
 
-  useEffect(() => {
-    let animName = 'Idle';
-    if (action === 'Punch')   animName = 'Punch';
-    if (action === 'Jump')    animName = 'Jump';
-    if (action === 'Death')   animName = 'Death';
-    if (action === 'Dance')   animName = 'Dance';
-    if (action === 'Walking') animName = 'Walking';
-    const cur = actions[animName];
-    if (cur) {
-      const blend = animName === 'Punch' ? 0.04 : 0.18;
-      cur.reset().fadeIn(blend).play();
-      if (animName === 'Death') { cur.setLoop(THREE.LoopOnce, 1); cur.clampWhenFinished = true; }
-      else if (animName === 'Punch' || animName === 'Jump') {
-        cur.setLoop(THREE.LoopOnce, 1);
-        if (animName === 'Punch') cur.timeScale = 2.2;
-      } else { cur.setLoop(THREE.LoopRepeat, Infinity); }
-      return () => { cur.fadeOut(blend); };
-    }
-  }, [action, actions]);
-
   return (
-    <group ref={group} dispose={null} position={position} rotation={rotation} scale={scale}>
-      <primitive object={clonedScene} />
-      {rightHandBone && (
-        <primitive object={rightHandBone}>
-          <group position={[0, 0.4, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            {weaponType === 'BLADE' && (
-              <mesh position={[0, 0.9, 0]}>
-                <boxGeometry args={[0.18, 2.6, 0.08]} />
-                <meshStandardMaterial color={isEnemy ? '#ef4444' : '#00fbff'} emissive={isEnemy ? '#ef4444' : '#00fbff'} emissiveIntensity={2.5} />
-                <Sparkles count={12} scale={2.2} size={3} speed={0.5} opacity={0.6} color={isEnemy ? 'red' : 'cyan'} />
-              </mesh>
-            )}
-            {weaponType === 'HAMMER' && (
-              <group position={[0, 1.6, 0]}>
-                <mesh><boxGeometry args={[1.1, 0.65, 0.65]} /><meshStandardMaterial color="#888" metalness={0.9} roughness={0.15} /></mesh>
-                <mesh position={[0, -1.1, 0]}><cylinderGeometry args={[0.1, 0.1, 2.2]} /><meshStandardMaterial color="#333" /></mesh>
-              </group>
-            )}
-            {weaponType === 'SHIELD' && (
-              <mesh position={[0, 0, 0.6]} rotation={[0, 0, 0]}>
-                <cylinderGeometry args={[1.1, 1.1, 0.1, 6]} />
-                <meshStandardMaterial color={color} transparent opacity={0.65} side={THREE.DoubleSide} emissive={color} emissiveIntensity={0.5} />
-              </mesh>
-            )}
-            {weaponType === 'RANGED' && (
-              <mesh position={[0, 0.5, 0.2]} rotation={[-Math.PI / 4, 0, 0]}>
-                <boxGeometry args={[0.3, 1.6, 0.3]} />
-                <meshStandardMaterial color="#333" />
-                <mesh position={[0, 0.9, 0]}>
-                  <sphereGeometry args={[0.22]} />
-                  <meshStandardMaterial color={color} emissive={color} emissiveIntensity={5} />
-                </mesh>
-              </mesh>
-            )}
-          </group>
-        </primitive>
+    <group ref={groupRef} position={position} rotation={rotation} scale={scale}>
+      {/* Head */}
+      <mesh position={[0, 1.72, 0]}>
+        <sphereGeometry args={[0.26, 16, 16]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={ei} />
+      </mesh>
+      {/* Visor */}
+      <mesh position={[0, 1.72, 0.23]}>
+        <boxGeometry args={[0.3, 0.09, 0.04]} />
+        <meshStandardMaterial color={isEnemy ? '#ff2222' : '#00ffff'} emissive={isEnemy ? '#ff2222' : '#00ffff'} emissiveIntensity={4} />
+      </mesh>
+      {/* Body */}
+      <mesh position={[0, 1.08, 0]}>
+        <boxGeometry args={[0.52, 0.72, 0.28]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={ei} />
+      </mesh>
+      {/* Left arm */}
+      <mesh ref={leftArmRef} position={[-0.4, 1.08, 0]}>
+        <cylinderGeometry args={[0.09, 0.08, 0.62, 8]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={ei} />
+      </mesh>
+      {/* Right arm */}
+      <mesh ref={rightArmRef} position={[0.4, 1.08, 0]}>
+        <cylinderGeometry args={[0.09, 0.08, 0.62, 8]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={ei} />
+      </mesh>
+      {/* Left leg */}
+      <mesh ref={leftLegRef} position={[-0.16, 0.44, 0]}>
+        <cylinderGeometry args={[0.11, 0.09, 0.62, 8]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={ei} />
+      </mesh>
+      {/* Right leg */}
+      <mesh ref={rightLegRef} position={[0.16, 0.44, 0]}>
+        <cylinderGeometry args={[0.11, 0.09, 0.62, 8]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={ei} />
+      </mesh>
+      {/* Weapon */}
+      {weaponType !== 'NONE' && (
+        <group position={[0, 1.1, isEnemy ? -0.7 : 0.7]} rotation={[isEnemy ? -Math.PI / 10 : Math.PI / 10, 0, 0]}>
+          <mesh position={[0, 0.4, 0]}>
+            <boxGeometry args={[0.07, 1.2, 0.04]} />
+            <meshStandardMaterial color={isEnemy ? '#ef4444' : '#00fbff'} emissive={isEnemy ? '#ef4444' : '#00fbff'} emissiveIntensity={3} />
+          </mesh>
+          <Sparkles count={8} scale={1.4} size={2.5} speed={0.4} opacity={0.5} color={isEnemy ? 'red' : 'cyan'} />
+        </group>
       )}
-      <pointLight position={[0, 4, 0]} distance={4} intensity={isEnemy ? 8 : 6} color={color} />
+      {/* Ground glow */}
+      <pointLight position={[0, 0.6, 0]} distance={3.5} intensity={isEnemy ? 6 : 5} color={color} />
     </group>
   );
 };
-
-useGLTF.preload(MODEL_URL);
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const RaidScreen: React.FC<RaidScreenProps> = ({
@@ -595,9 +604,37 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         return next;
       });
 
-      if (Math.random() > 0.7 && state.enemyAction === 'Idle') {
-        setEnemyAction('Walking');
-        setTimeout(() => { if (!stateRef.current.isEnding) setEnemyAction('Idle'); }, 1000);
+      // Fighter animations driven by risk level
+      const r = state.risk;
+      if (state.enemyAction === 'Idle') {
+        if (r > 85) {
+          // Critical risk — enemy punches aggressively every tick
+          setEnemyAction('Punch');
+          setTimeout(() => { if (!stateRef.current.isEnding) setEnemyAction('Idle'); }, 500);
+          setUserAction(prev => prev === 'Idle' ? 'Walking' : prev);
+          setTimeout(() => { if (!stateRef.current.isEnding) setUserAction('Idle'); }, 500);
+        } else if (r > 65) {
+          // High risk — enemy punches occasionally, player retreats
+          if (Math.random() > 0.4) {
+            setEnemyAction('Punch');
+            setTimeout(() => { if (!stateRef.current.isEnding) setEnemyAction('Idle'); }, 600);
+          } else {
+            setEnemyAction('Walking');
+            setTimeout(() => { if (!stateRef.current.isEnding) setEnemyAction('Idle'); }, 800);
+          }
+        } else if (r > 40) {
+          // Medium risk — enemy walks forward menacingly
+          if (Math.random() > 0.5) {
+            setEnemyAction('Walking');
+            setTimeout(() => { if (!stateRef.current.isEnding) setEnemyAction('Idle'); }, 1000);
+          }
+        } else {
+          // Low risk — occasional idle movement
+          if (Math.random() > 0.75) {
+            setEnemyAction('Walking');
+            setTimeout(() => { if (!stateRef.current.isEnding) setEnemyAction('Idle'); }, 800);
+          }
+        }
       }
     }, 1000);
 
@@ -970,25 +1007,27 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             ))}
           </div>
 
-          {/* Three.js Canvas */}
-          <div className="absolute inset-0 z-0">
-            <Canvas shadows camera={{ position: [0, 0.5, 5.5], fov: 52 }}>
-              <ambientLight intensity={0.45} />
-              <SpotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={110} castShadow />
-              <pointLight position={[-10, 5, -5]} intensity={0.9} color="cyan" />
-              <pointLight position={[10, 5, -5]} intensity={0.9} color="red" />
+          {/* Three.js Canvas — sized to match the risk circle */}
+          <div className="absolute w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden z-[5]">
+            <CanvasErrorBoundary>
+            <Canvas shadows camera={{ position: [0, 0, 3.8], fov: 62 }}>
+              <ambientLight intensity={0.5} />
+              <SpotLight position={[8, 8, 8]} angle={0.35} penumbra={1} intensity={80} castShadow />
+              <pointLight position={[-6, 4, -4]} intensity={1.2} color="cyan" />
+              <pointLight position={[6, 4, -4]} intensity={1.2} color="red" />
+              <FighterModel action={userAction} position={[-0.85, -1.75, 0]} rotation={[0, -Math.PI / 2, 0]} scale={1.8} color={userColor} gearIds={equippedGearIds} riskLevel={risk} />
+              <FighterModel action={enemyAction} position={[0.85, -1.75, 0]}  rotation={[0,  Math.PI / 2, 0]} scale={1.8} color="#EF4444" isEnemy riskLevel={risk} />
               <Suspense fallback={null}>
-                <FighterModel action={userAction} position={[-1.4, -2.2, 0]} rotation={[0, Math.PI / 2, 0]}  scale={0.65} color={userColor} gearIds={equippedGearIds} />
-                <FighterModel action={enemyAction} position={[1.4, -2.2, 0]}  rotation={[0, -Math.PI / 2, 0]} scale={0.65} color="#EF4444" isEnemy />
                 <Environment preset="city" />
-                <ContactShadows position={[0, -2.2, 0]} opacity={0.6} scale={12} blur={1.5} far={1} />
+                <ContactShadows position={[0, -1.75, 0]} opacity={0.5} scale={10} blur={1.5} far={1} />
               </Suspense>
               <OrbitControls enableZoom={false} enablePan={false} minPolarAngle={Math.PI / 2.5} maxPolarAngle={Math.PI / 1.8} />
             </Canvas>
+            </CanvasErrorBoundary>
           </div>
 
           {/* Risk tag */}
-          <div className="relative z-10 w-56 h-56 md:w-64 md:h-64 flex items-center justify-center pointer-events-none">
+          <div className="relative z-20 w-56 h-56 md:w-64 md:h-64 flex items-center justify-center pointer-events-none">
             <div className="absolute inset-0 border-[3px] border-dashed rounded-full animate-[spin_30s_linear_infinite] transition-colors duration-300"
                  style={{ borderColor: risk > 80 ? 'rgba(239,68,68,0.6)' : risk > 50 ? 'rgba(249,115,22,0.6)' : 'rgba(153,69,255,0.4)' }} />
             <div className="absolute top-0 right-0 bg-black/80 backdrop-blur-sm px-2 py-1 border tech-border border-white/10 min-w-[68px]">

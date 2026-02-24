@@ -16,6 +16,7 @@ interface HeaderProps {
 
 const INTER: React.CSSProperties  = { fontFamily: "'Inter', system-ui, sans-serif" };
 const SG_NUM: React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontVariantNumeric: 'tabular-nums' };
+const BN:    React.CSSProperties  = { fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' };
 
 const Header: React.FC<HeaderProps> = ({
   balance,
@@ -75,10 +76,10 @@ const Header: React.FC<HeaderProps> = ({
           {!isConnected ? (
             <button
               onClick={onConnect}
-              className="px-3 py-1.5 rounded-full text-black text-[11px] font-bold active:scale-95 transition-all"
-              style={{ background: '#14F195', ...INTER }}
+              className="px-3 py-1.5 rounded-full text-white text-[13px] active:scale-95 transition-all"
+              style={{ background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', boxShadow: '0 0 14px rgba(255,41,41,0.30)', ...BN }}
             >
-              Connect
+              CONNECT
             </button>
           ) : (
             <button
@@ -98,34 +99,34 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* SOL Balance */}
           <div
-            className="rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
+            className="rounded-xl px-3 py-2 border-l-2"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: '2px solid #FF2929' }}
           >
-            <p className="text-[9px] text-white/70 mb-0.5 uppercase tracking-wide" style={INTER}>Balance</p>
+            <p className="text-[9px] text-white/40 mb-0.5 uppercase tracking-wider" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>Balance</p>
             <p className="text-[13px] leading-tight text-[#14F195]" style={SG_NUM}>
               {balance.toFixed(3)}
-              <span className="text-[10px] text-white/35 ml-1" style={INTER}>SOL</span>
+              <span className="text-[10px] text-white/30 ml-1" style={INTER}>SOL</span>
             </p>
           </div>
 
           {/* Level + Rank */}
           <div
             className="rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: `2px solid ${currentRank.color}` }}
           >
-            <p className="text-[9px] text-white/70 mb-0.5 uppercase tracking-wide" style={INTER}>Rank</p>
+            <p className="text-[9px] text-white/40 mb-0.5 uppercase" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>Rank</p>
             <p className="text-[13px] leading-tight truncate" style={{ ...SG_NUM, color: currentRank.color }}>
               Lv.{currentRank.level}
-              <span className="text-[11px] ml-1 text-white/50" style={INTER}>{currentRank.title}</span>
+              <span className="text-[11px] ml-1 text-white/45" style={INTER}>{currentRank.title}</span>
             </p>
           </div>
 
           {/* SR Points */}
           <div
             className="rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: '2px solid #f59e0b' }}
           >
-            <p className="text-[9px] text-white/70 mb-0.5 uppercase tracking-wide" style={INTER}>SR Points</p>
+            <p className="text-[9px] text-white/40 mb-0.5 uppercase" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>SR Points</p>
             <p className="text-[13px] leading-tight text-amber-400" style={SG_NUM}>
               {srPoints.toLocaleString()}
             </p>

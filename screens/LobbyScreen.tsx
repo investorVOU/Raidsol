@@ -11,6 +11,7 @@ const SG_CTA: React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif",
 const SG_NUM: React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontVariantNumeric: 'tabular-nums' };
 const SG:     React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif" };
 const BC:     React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontStyle: 'italic', letterSpacing: '-0.3px' };
+const BN:     React.CSSProperties = { fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' };
 
 interface LobbyScreenProps {
   onEnterRaid: (mode: Mode, difficulty?: Difficulty, boosts?: string[], currency?: Currency, useTicket?: boolean) => Promise<void> | void;
@@ -28,6 +29,7 @@ interface LobbyScreenProps {
   onNavigateTreasury: () => void;
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
   onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency) => Promise<void>;
+  onRequestFullscreen?: () => void;
   raidTickets?: number;
   lastFreeRaidDate?: string | null;
   drillCount?: number;
@@ -47,7 +49,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onEnterRaid, isConnected, onConnect, currentLevel,
   walletBalance, usdcBalance, skrBalance,
   equippedGearIds, equippedAvatarId, ownedItemIds,
-  onToggleGear, onNavigateTreasury, onNavigateStore, onEnterRound,
+  onToggleGear, onNavigateTreasury, onNavigateStore, onEnterRound, onRequestFullscreen,
   raidTickets = 0, lastFreeRaidDate = null,
   drillCount = 0, drillWindowStart = 0,
   currencyRates, currentRound,
@@ -90,6 +92,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const handleOpenModal = () => { setBoosts([]); setUseTicket(false); setShowModal(true); };
 
   const handleDeploy = async () => {
+    onRequestFullscreen?.(); // must be called synchronously before any await
     setShowModal(false);
     setIsDeploying(true);
     try {
@@ -100,6 +103,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   };
 
   const handleEnterRound = async () => {
+    onRequestFullscreen?.(); // must be called synchronously before any await
     setShowRoundModal(false);
     setIsDeploying(true);
     try {
@@ -165,7 +169,10 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       <div className="relative z-10 shrink-0 px-4 pt-2 pb-1">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[13px] text-white/45 leading-snug" style={{ ...INTER, fontWeight: 400 }}>
+            <p style={{ ...BN, fontSize: '28px', color: '#FF2929', letterSpacing: '2.5px', lineHeight: 1 }}>
+              SOL RAID
+            </p>
+            <p className="text-[11px] text-white/38 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
               Win SOL. Don't get caught.
             </p>
           </div>
@@ -180,31 +187,31 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       </div>
 
       {/* ── SCROLLABLE CONTENT ── */}
-      <div className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-44 space-y-2">
+      <div className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-44 md:pb-6 space-y-2">
 
         {/* ── ENTER RAID ── */}
         <button
           onClick={() => isConnected ? handleOpenModal() : onConnect()}
           className="w-full relative overflow-hidden rounded-2xl group active:scale-[0.98] transition-all duration-150"
           style={{
-            background: 'linear-gradient(135deg, #14F195 0%, #0fd47e 50%, #09a55f 100%)',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+            background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)',
+            boxShadow: '0 2px 18px rgba(255,41,41,0.30)',
           }}
         >
           <div className="relative z-10 flex items-center justify-between px-5 py-2 sm:py-2.5">
             <div>
-              <p className="text-black/55 mb-0.5 text-[11px]" style={INTER}>
+              <p className="text-white/55 mb-0.5 text-[11px]" style={INTER}>
                 {isConnected ? 'Ready to deploy' : 'Connect wallet to start'}
               </p>
-              <p className="text-black leading-none" style={{ ...BC, fontSize: '32px', letterSpacing: '-0.5px' }}>ENTER RAID</p>
-              <p className="text-black/50 mt-0.5 text-[11px]" style={INTER}>Win SOL · don't get caught</p>
+              <p className="text-white leading-none" style={{ ...BC, fontSize: '32px', letterSpacing: '-0.5px' }}>ENTER RAID</p>
+              <p className="text-white/50 mt-0.5 text-[11px]" style={INTER}>Win SOL · don't get caught</p>
             </div>
             <div className="flex flex-col items-center gap-1.5 shrink-0">
-              <div className="w-11 h-11 rounded-xl bg-black/10 flex items-center justify-center group-hover:bg-black/18 transition-colors">
-                <i className="fa-solid fa-person-running" style={{ fontSize: '24px', color: 'rgba(0,0,0,0.7)' }} />
+              <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/18 transition-colors">
+                <i className="fa-solid fa-person-running" style={{ fontSize: '24px', color: 'rgba(255,255,255,0.85)' }} />
               </div>
               {raidTickets > 0 && (
-                <span className="text-[9px] font-medium bg-black/12 text-black/60 rounded-full px-2 py-0.5" style={INTER}>
+                <span className="text-[9px] font-medium bg-white/15 text-white/75 rounded-full px-2 py-0.5" style={INTER}>
                   🎟️ {raidTickets}x
                 </span>
               )}
@@ -216,46 +223,51 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         {currentRound && (
           <button
             onClick={() => isConnected ? setShowRoundModal(true) : onConnect()}
-            className="w-full relative overflow-hidden rounded-2xl text-left active:scale-[0.98] transition-all duration-150 group bg-white/[0.025] border border-white/[0.12] hover:bg-white/[0.04]"
+            className="w-full relative overflow-hidden rounded-2xl text-left active:scale-[0.98] transition-all duration-150 group"
+            style={{ background: 'rgba(255,41,41,0.04)', border: '1px solid rgba(255,41,41,0.20)' }}
           >
+            {/* Faint red glow strip at top */}
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,41,41,0.5), transparent)' }} />
+
             <div className="px-4 py-3">
-              {/* Top row: badge + pool */}
+              {/* Top row: title + pool */}
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-white/8 text-white/50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] px-2 py-0.5 rounded-full text-[#FF2929]/80 uppercase tracking-wider"
+                      style={{ background: 'rgba(255,41,41,0.12)', border: '1px solid rgba(255,41,41,0.20)', ...INTER, fontWeight: 500 }}>
                       Round {currentRound.roundNum} / 4
                     </span>
-                    <span className="text-[9px] text-white/70" style={INTER}>{dayLabel}</span>
+                    <span className="text-[9px] text-white/35" style={INTER}>{dayLabel}</span>
                   </div>
-                  <p className="text-base text-white leading-tight font-semibold" style={INTER}>Raid Round</p>
-                  <p className="text-[10px] text-white/70 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
+                  <p className="leading-none" style={{ ...BN, fontSize: '22px', color: '#fff', letterSpacing: '1.5px' }}>RAID ROUND</p>
+                  <p className="text-[10px] text-white/40 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
                     Top 5 players share the prize pool
                   </p>
                 </div>
                 {/* Pool */}
                 <div className="text-right shrink-0 ml-4">
-                  <p className="text-[9px] text-white/70 mb-0.5" style={INTER}>Prize pool</p>
-                  <p className="text-xl font-bold text-[#14F195] leading-none" style={SG_NUM}>
+                  <p className="text-[9px] text-white/40 mb-0.5 uppercase tracking-wider" style={INTER}>Prize pool</p>
+                  <p className="text-2xl leading-none text-[#14F195]" style={{ ...BN, letterSpacing: '1px' }}>
                     {currentRound.poolSol < 0.001 ? '0.000' : currentRound.poolSol.toFixed(3)}
                   </p>
-                  <p className="text-[9px] text-white/70" style={INTER}>SOL</p>
+                  <p className="text-[9px] text-white/40 mt-0.5" style={INTER}>SOL</p>
                 </div>
               </div>
 
               {/* Bottom row: countdown + CTA */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#14F195] animate-pulse shrink-0" />
-                  <span className="text-[10px] text-white/70" style={INTER}>Closes in</span>
-                  <span className="text-[10px] text-[#14F195]" style={SG_NUM}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929] animate-pulse shrink-0" />
+                  <span className="text-[10px] text-white/45" style={INTER}>Closes in</span>
+                  <span className="text-[10px] font-semibold text-white/70" style={SG_NUM}>
                     {formatCountdown(currentRound.timeRemainingMs)}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all group-hover:opacity-90"
-                  style={{ background: 'rgba(20,241,149,0.12)', border: '1px solid rgba(20,241,149,0.25)', color: '#14F195' }}>
-                  <i className="fa-solid fa-trophy text-white text-[10px]" />
-                  Compete
+                <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all group-hover:opacity-90"
+                  style={{ background: 'rgba(255,41,41,0.12)', border: '1px solid rgba(255,41,41,0.30)', ...BN, fontSize: '13px', color: '#FF4444', letterSpacing: '1.5px' }}>
+                  <i className="fa-solid fa-trophy text-[10px]" />
+                  COMPETE
                 </div>
               </div>
             </div>
@@ -266,14 +278,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => isConnected ? onEnterRaid(Mode.PVP, Difficulty.MEDIUM, []) : onConnect()}
-            className="relative overflow-hidden rounded-xl bg-white/[0.025] border border-white/[0.12] p-2.5 text-left active:scale-[0.97] transition-all group hover:bg-white/[0.04]"
+            className="relative overflow-hidden rounded-xl p-3 text-left active:scale-[0.97] transition-all group"
+            style={{ background: 'rgba(255,41,41,0.05)', border: '1px solid rgba(255,41,41,0.22)' }}
           >
-            <div className="absolute top-2 right-2">
-              <i className="fa-solid fa-swords text-white text-lg" />
+            <div className="absolute top-2.5 right-2.5">
+              <i className="fa-solid fa-swords text-[#FF2929]/60 text-lg" />
             </div>
-            <p className="text-[10px] text-white/70 mb-1" style={{ ...INTER, fontWeight: 500 }}>Multiplayer</p>
-            <p className="leading-tight text-[15px] font-semibold" style={{ ...INTER, color: '#ff5f5f' }}>PVP DUEL</p>
-            <p className="text-[10px] text-white/70 mt-1" style={{ ...INTER, fontWeight: 400 }}>Stake vs players</p>
+            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>Multiplayer</p>
+            <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#FF2929', letterSpacing: '1.5px' }}>PVP DUEL</p>
+            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Stake vs players</p>
           </button>
 
           <button
@@ -283,18 +296,20 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               onEnterRaid(Mode.DRILL, Difficulty.MEDIUM, []);
             }}
             disabled={drillCapHit}
-            className={`relative overflow-hidden rounded-xl border p-2.5 text-left transition-all group ${
-              drillCapHit
-                ? 'bg-white/2 border-white/6 opacity-35 cursor-not-allowed'
-                : 'bg-white/[0.025] border-white/[0.12] active:scale-[0.97] hover:bg-white/[0.04]'
+            className={`relative overflow-hidden rounded-xl p-3 text-left transition-all group ${
+              drillCapHit ? 'opacity-35 cursor-not-allowed' : 'active:scale-[0.97]'
             }`}
+            style={{
+              background: drillCapHit ? 'rgba(255,255,255,0.02)' : 'rgba(77,166,255,0.05)',
+              border: `1px solid ${drillCapHit ? 'rgba(255,255,255,0.06)' : 'rgba(77,166,255,0.22)'}`,
+            }}
           >
-            <div className="absolute top-2 right-2">
-              <i className="fa-solid fa-dumbbell text-white text-base" />
+            <div className="absolute top-2.5 right-2.5">
+              <i className="fa-solid fa-dumbbell text-[#4da6ff]/60 text-base" />
             </div>
-            <p className="text-[10px] text-white/70 mb-1" style={{ ...INTER, fontWeight: 500 }}>Training</p>
-            <p className="leading-tight text-[15px] font-semibold" style={{ ...INTER, color: '#4da6ff' }}>FREE DRILL</p>
-            <p className={`text-[10px] mt-1 ${drillCapHit ? 'text-white/25' : 'text-white/28'}`} style={{ ...INTER, fontWeight: 400 }}>
+            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>Training</p>
+            <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#4da6ff', letterSpacing: '1.5px' }}>FREE DRILL</p>
+            <p className={`text-[10px] ${drillCapHit ? 'text-white/25' : 'text-white/45'}`} style={{ ...INTER, fontWeight: 400 }}>
               {isConnected ? (drillCapHit ? 'Limit reached' : `${drillsRemaining}/3 left`) : 'No entry fee'}
             </p>
           </button>
@@ -335,7 +350,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       {/* ── LOADING OVERLAY ── */}
       {isDeploying && (
         <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center p-8" style={INTER}>
-          <i className="fa-solid fa-person-running text-[#14F195] text-3xl mb-5" />
+          <i className="fa-solid fa-person-running text-[#FF2929] text-3xl mb-5" />
           <p className="text-white text-base font-medium mb-1">Waiting for signature</p>
           <p className="text-white/35 text-sm">Approve in your wallet</p>
         </div>
@@ -621,9 +636,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   onClick={handleEnterRound}
                   disabled={roundPricesLoading || roundBalance < roundTotalDisplay}
                   className="flex-1 py-3.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed"
-                  style={{ background: 'linear-gradient(135deg, #9945FF 0%, #7c2dd6 100%)', color: '#fff', boxShadow: '0 0 20px rgba(153,69,255,0.20)' }}
+                  style={{ background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', boxShadow: '0 0 20px rgba(255,41,41,0.25)', ...BN, fontSize: '15px' }}
                 >
-                  Enter Round →
+                  ENTER ROUND
                 </button>
               </div>
             </div>
@@ -889,12 +904,14 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   disabled={pricesLoading || (totalCostSol > 0 && currentBalance < totalDisplay)}
                   className="flex-1 py-3.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100"
                   style={{
-                    background: 'linear-gradient(135deg, #14F195 0%, #09a55f 100%)',
-                    color: '#000',
-                    boxShadow: '0 0 20px rgba(20,241,149,0.15)',
+                    background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)',
+                    color: '#fff',
+                    boxShadow: '0 0 20px rgba(255,41,41,0.30)',
+                    ...BN,
+                    fontSize: '15px',
                   }}
                 >
-                  Deploy →
+                  DEPLOY
                 </button>
               </div>
             </div>
