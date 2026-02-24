@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Currency } from '../types';
 
 const SKR_MINT = import.meta.env.VITE_SKR_MINT ?? 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
+const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
 // SOL: 1 (base). USDC/SKR: 0 means "still loading" — not a valid rate
 const LOADING_RATES: Record<Currency, number> = {
@@ -19,12 +20,25 @@ export interface LivePrices {
 }
 
 async function fetchLivePrices(): Promise<{ solUsd: number; skrUsd: number } | null> {
+  // ── Primary: Jupiter Price API ───────────────────────────────────────────
+  // Solana-native — works reliably in Phantom, Solflare, and all dapp browsers.
+  // Single request returns both SOL and SKR prices in USD.
+  try {
+    const res = await fetch(
+      `https://api.jup.ag/price/v2?ids=${SOL_MINT},${SKR_MINT}`,
+    );
+    if (res.ok) {
+      const json = await res.json();
+      const solUsd = parseFloat(json.data?.[SOL_MINT]?.price ?? '0');
+      const skrUsd = parseFloat(json.data?.[SKR_MINT]?.price ?? '0');
+      if (solUsd > 0) return { solUsd, skrUsd };
+    }
+  } catch { /* fall through to backup */ }
+
+  // ── Fallback: Binance (SOL) + DexScreener (SKR) ──────────────────────────
   const [solResult, skrResult] = await Promise.allSettled([
-    // Binance public ticker — no CORS restriction, no API key, no rate limits for browsers
-    fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT')
-      .then(r => r.json()),
-    fetch(`https://api.dexscreener.com/latest/dex/tokens/${SKR_MINT}`)
-      .then(r => r.json()),
+    fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT').then(r => r.json()),
+    fetch(`https://api.dexscreener.com/latest/dex/tokens/${SKR_MINT}`).then(r => r.json()),
   ]);
 
   const solUsd =
@@ -34,7 +48,6 @@ async function fetchLivePrices(): Promise<{ solUsd: number; skrUsd: number } | n
   if (skrResult.status === 'fulfilled') {
     const pairs = skrResult.value?.pairs;
     if (Array.isArray(pairs) && pairs.length > 0) {
-      // Sort by liquidity descending, pick most liquid pair
       const sorted = [...pairs].sort(
         (a, b) => parseFloat(b.liquidity?.usd ?? '0') - parseFloat(a.liquidity?.usd ?? '0'),
       );
