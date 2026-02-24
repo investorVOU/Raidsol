@@ -383,35 +383,39 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {[
                 {
                   q: 'What is Sol Raid?',
-                  a: 'Sol Raid is an on-chain extraction game built on Solana. You enter with an SOL stake, choose your difficulty, and try to extract as much SOL as possible before getting busted. The longer you hold, the higher the reward — but the risk rises with every second.',
+                  a: 'Sol Raid is an on-chain extraction game on Solana. You enter with a stake, choose your difficulty, and try to score as many points as possible before getting busted. Cash out at the right moment to convert your score into SOL. The longer you hold, the higher the reward — but risk rises every second.',
+                },
+                {
+                  q: 'What is the difference between a normal raid and a round-based raid?',
+                  a: 'Normal raids pay out SOL immediately when you succeed — your reward is based on your score and entry fee. Round-based raids score points instead of paying instant SOL. Your best score in a 6-hour window competes on the round leaderboard, and prizes are claimed after the round ends.',
                 },
                 {
                   q: 'How do Raid Rounds work?',
-                  a: 'There are 4 rounds per day, each lasting 6 hours. During a round, any successful solo raid counts toward the leaderboard. The top 5 wallets by best single extraction share 70% of all entry fees collected that round. Rankings: 1st 40% · 2nd 25% · 3rd 18% · 4th 11% · 5th 6%.',
+                  a: 'There are 4 rounds per day (UTC), each lasting 6 hours. Your highest score in a round goes on the leaderboard. After the round closes, 8% of all entry fees from that window are split among the top 5 wallets by score: 1st 40% · 2nd 25% · 3rd 18% · 4th 11% · 5th 6%.',
                 },
                 {
                   q: 'How do I claim my round winnings?',
-                  a: 'After a round closes, go to your Profile → Round Wins tab. Your eligible rounds will show a Claim button. Claiming credits SOL to your unclaimed balance. From there, use the Withdraw button to send it on-chain to your wallet.',
+                  a: 'After a round closes, go to Profile → Round Wins tab. Eligible rounds show a Claim button. Claiming credits SOL to your unclaimed balance — then use the Withdraw button to send it on-chain to your wallet.',
                 },
                 {
                   q: 'Is the game provably fair?',
-                  a: 'Yes. Before each raid, a server seed hash is committed on-chain. After the raid, the seed is revealed so you can verify the outcome was not manipulated. Seed history is available in your profile.',
+                  a: 'Yes. Before each raid a SHA-256 server seed hash is committed. After the raid the full seed is revealed so you can verify the RNG was never manipulated. Seed history is visible in your profile.',
                 },
                 {
                   q: 'What is the house edge?',
-                  a: 'The base win rate is approximately 25–30% with no gear. Equipped gear and boosts can raise this to around 45%. The house takes a small margin via the drift mechanics — the longer you wait, the riskier it gets.',
+                  a: 'Base win rate is roughly 25–30% with no gear. Gear and boosts can push this toward 45%. The house margin comes from risk drift mechanics — the longer you stay, the harder it gets.',
                 },
                 {
                   q: 'What are Raid Passes?',
-                  a: 'Raid Passes give you 50% off the entry fee and a 10% boost to your SOL winnings. Passes are purchased with SKR tokens. SKR holders also get an extra discount on pass price.',
+                  a: 'Raid Passes give 50% off the entry fee plus a 10% boost to your SOL winnings. You earn 1 free ticket per day (max 3 stockpiled). Additional passes are purchased with SKR in the Store. Toggle the ticket at deployment if you own one.',
                 },
                 {
                   q: 'What is the SKR token?',
-                  a: 'SKR (Seeker) is the in-game utility token on Solana. It is used to buy Raid Passes, gear, and avatars in the store. SKR is also accepted as payment for raid entry fees.',
+                  a: 'SKR (Seeker) is the in-game utility token on Solana. It is used to buy Raid Passes, gear, and avatars in the Store. SKR is also accepted as payment for raid entry fees alongside SOL and USDC.',
                 },
                 {
-                  q: 'What is PvP Duel?',
-                  a: 'PvP Duel lets you stake SOL against other players in a shared room. All players raid simultaneously; the one who extracts the most SOL wins the combined pot. Room stakes can be paid in SOL, USDC, or SKR.',
+                  q: 'What is PvP Arena?',
+                  a: 'PvP lets you stake against other players in a shared room. All players raid the same RNG seed simultaneously — pure skill decides the outcome. The player with the highest score when they extract wins the full pot. Stake any amount in SOL, USDC, or SKR.',
                 },
               ].map(({ q, a }, i) => (
                 <div key={i} className="rounded-xl bg-white/[0.025] border border-white/[0.12] p-4">
