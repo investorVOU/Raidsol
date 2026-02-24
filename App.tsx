@@ -228,6 +228,9 @@ const AppInner: React.FC = () => {
       equippedGearIds:    profile.equipped_gear_ids,
       raidTickets:        profile.raid_tickets ?? 0,
       lastFreeTicketDate: profile.last_free_ticket_date ?? null,
+      lastFreeRaidDate:   profile.last_free_raid_date ?? null,
+      drillCount:         profile.drill_count ?? 0,
+      drillWindowStart:   profile.drill_window_start ?? 0,
     }));
     // Silently sync lastLevel to the profile's actual rank so we don't fire
     // a level-up modal just because srPoints jumped from 0 → real value on hydration.
@@ -1486,6 +1489,19 @@ const AppInner: React.FC = () => {
         };
       })() : {}),
     }));
+
+    // Persist drill cap and free raid state to Supabase so reloads don't reset limits
+    if (mode === Mode.DRILL) {
+      const SIX_HOURS = 6 * 60 * 60 * 1000;
+      const windowExpired = (now - gameState.drillWindowStart) >= SIX_HOURS;
+      updateProfile({
+        drill_count:        windowExpired ? 1 : gameState.drillCount + 1,
+        drill_window_start: windowExpired ? now : gameState.drillWindowStart,
+      });
+    }
+    if (isFreeRaid) {
+      updateProfile({ last_free_raid_date: todayStr });
+    }
 
     setGameState(prev => ({ ...prev, currentScreen: Screen.RAID, isRaidLoading: true }));
     acquireWakeLock();

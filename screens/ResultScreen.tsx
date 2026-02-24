@@ -28,7 +28,7 @@ interface ResultScreenProps {
 const SEVERITY_STYLES: Record<RaidEvent['severity'], { border: string; dot: string; text: string; badge: string }> = {
   danger:  { border: 'border-red-500/30',    dot: 'bg-red-500',    text: 'text-red-400',    badge: 'bg-red-500/10 text-red-400' },
   warning: { border: 'border-orange-500/30', dot: 'bg-orange-400', text: 'text-orange-400', badge: 'bg-orange-500/10 text-orange-400' },
-  bonus:   { border: 'border-green-500/30',  dot: 'bg-[#14F195]',  text: 'text-[#14F195]',  badge: 'bg-green-500/10 text-[#14F195]' },
+  bonus:   { border: 'border-amber-500/30',  dot: 'bg-[#FFB800]',  text: 'text-[#FFB800]',  badge: 'bg-amber-500/10 text-[#FFB800]' },
   info:    { border: 'border-white/10',      dot: 'bg-white/40',   text: 'text-white/70',   badge: 'bg-white/5 text-white/60' },
 };
 
@@ -55,7 +55,9 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
   const [debriefOpen, setDebriefOpen] = useState(true);
 
   const handleShareToX = () => {
-    const text = `just extracted ${result.solAmount.toFixed(4)} SOL on @solraid_app\n\npeak mult: ${result.peakMult != null ? result.peakMult.toFixed(2) + 'x' : '--'} · score: ${result.points.toLocaleString()}\n\n#Solana #SolRaid`;
+    const text = isRoundEntry
+      ? `scored ${result.points.toLocaleString()} pts in round ${roundInfo?.roundNum ?? '?'} on @solraid_app\n\npeak mult: ${result.peakMult != null ? result.peakMult.toFixed(2) + 'x' : '--'}\n\n#Solana #SolRaid`
+      : `just extracted ${result.solAmount.toFixed(4)} SOL on @solraid_app\n\npeak mult: ${result.peakMult != null ? result.peakMult.toFixed(2) + 'x' : '--'} · score: ${result.points.toLocaleString()}\n\n#Solana #SolRaid`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://solraid.app')}`;
     window.open(url, '_blank');
   };
@@ -66,8 +68,8 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d')!;
 
-    const accent  = result.success ? '#14F195' : '#EF4444';
-    const accentD = result.success ? '#0d9e60' : '#b91c1c'; // darker shade
+    const accent  = result.success ? '#FFB800' : '#EF4444';
+    const accentD = result.success ? '#b88000' : '#b91c1c'; // darker shade
 
     // ── Background ──────────────────────────────────────────────────────────
     ctx.fillStyle = '#030303';
@@ -190,32 +192,55 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
   return (
     <div className="h-full flex flex-col p-6 animate-in zoom-in-95 duration-500 overflow-y-auto scrollbar-hide">
       <div className="flex-1 flex flex-col items-center justify-center py-6 sm:py-10">
-        <div className={`mb-6 sm:mb-8 px-8 py-4 border-2 ${result.success ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-red-500/10 border-red-500 text-red-500'} tech-border font-bold text-3xl sm:text-4xl uppercase tracking-wide`}>
-          {result.success ? 'Extracted' : 'Busted'}
+        <div className={`mb-6 sm:mb-8 px-8 py-4 border-2 ${result.success ? 'bg-[#FFB800]/10 border-[#FFB800] text-[#FFB800]' : 'bg-red-500/10 border-red-500 text-red-500'} tech-border font-bold text-3xl sm:text-4xl uppercase tracking-wide`}>
+          {result.success ? (isRoundEntry ? 'Scored' : 'Extracted') : 'Busted'}
         </div>
 
         <h2 className={`text-4xl sm:text-6xl font-black uppercase tracking-tight mb-3 leading-none text-center ${result.success ? 'text-white glitch-text' : 'text-red-500'}`}>
-          {result.success ? 'Mission Complete' : 'Raid Failed'}
+          {result.success ? (isRoundEntry ? 'Round Scored' : 'Mission Complete') : 'Raid Failed'}
         </h2>
         <p className="text-white/40 text-xs sm:text-sm font-bold mb-8 sm:mb-12 text-center">
-          {result.success ? 'Operation complete · assets secured.' : 'Critical failure · entry fee lost.'}
+          {result.success
+            ? (isRoundEntry ? 'Score locked in · leaders updated after round ends.' : 'Operation complete · assets secured.')
+            : 'Critical failure · entry fee lost.'}
         </p>
 
         <div className="w-full max-w-sm space-y-4">
-          {/* SOL Results */}
-          <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-green-500' : 'border-red-500/40'}`}>
-            <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black uppercase">SOL</div>
-            <p className="text-xs text-white/40 font-bold uppercase tracking-wide mb-3">Harvest yield</p>
-            <p className={`mono text-5xl sm:text-6xl font-black tracking-tight leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
-              {result.success ? `+${result.solAmount.toFixed(4)}` : `-${entryFee.toFixed(3)}`}
-              <span className="text-sm sm:text-base font-normal opacity-30 ml-2">SOL</span>
-            </p>
-            {result.success && result.peakMult != null && (
-              <p className="text-xs text-[#14F195]/60 font-bold mt-2">
-                Peak mult: {result.peakMult.toFixed(2)}x
+          {/* Primary metric — SOL for normal raids, POINTS for round raids */}
+          {isRoundEntry ? (
+            <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-[#FF2929]/50' : 'border-red-500/40'}`}>
+              <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black uppercase text-[#FF2929]">PTS</div>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wide mb-3">Round score</p>
+              <p className={`mono text-5xl sm:text-6xl font-black tracking-tight leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
+                {result.success ? `+${result.points.toLocaleString()}` : '0'}
+                <span className="text-sm sm:text-base font-normal opacity-30 ml-2">pts</span>
               </p>
-            )}
-          </div>
+              {result.success && result.peakMult != null && (
+                <p className="text-xs text-[#FFB800]/60 font-bold mt-2">
+                  Peak mult: {result.peakMult.toFixed(2)}x
+                </p>
+              )}
+              {result.success && (
+                <p className="text-[10px] text-white/30 font-bold mt-1">
+                  SOL rewarded after round ends · claim from Profile
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-[#FFB800]/60' : 'border-red-500/40'}`}>
+              <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black uppercase">SOL</div>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wide mb-3">Harvest yield</p>
+              <p className={`mono text-5xl sm:text-6xl font-black tracking-tight leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
+                {result.success ? `+${result.solAmount.toFixed(4)}` : `-${entryFee.toFixed(3)}`}
+                <span className="text-sm sm:text-base font-normal opacity-30 ml-2">SOL</span>
+              </p>
+              {result.success && result.peakMult != null && (
+                <p className="text-xs text-[#FFB800]/60 font-bold mt-2">
+                  Peak mult: {result.peakMult.toFixed(2)}x
+                </p>
+              )}
+            </div>
+          )}
 
           {/* SR Points */}
           <div className="bg-black border-2 border-yellow-500/20 p-6 sm:p-8 tech-border relative overflow-hidden group">
@@ -236,37 +261,37 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
 
           {/* ── ROUND STANDING ── */}
           {isRoundEntry && roundInfo && (() => {
-            const myEntry = roundInfo.topExtractors.find(e => e.walletAddress === result.userWallet);
+            const myEntry = roundInfo.currentLeaders.find(e => e.walletAddress === result.userWallet);
             const roundClosed = roundInfo.timeRemainingMs <= 0;
             return (
-              <div className="bg-black border-2 p-6 tech-border relative overflow-hidden" style={{ borderColor: 'rgba(153,69,255,0.40)' }}>
-                <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black" style={{ color: '#9945FF' }}>ROUND</div>
+              <div className="bg-black border-2 p-6 tech-border relative overflow-hidden" style={{ borderColor: 'rgba(255,41,41,0.40)' }}>
+                <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black text-[#FF2929]">ROUND</div>
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#9945FF' }} />
-                    <h3 className="text-xs font-bold uppercase tracking-wide" style={{ color: '#b77aff' }}>Round Standing</h3>
+                    <div className="w-2 h-2 rounded-full animate-pulse bg-[#FF2929]" style={{ boxShadow: '0 0 6px rgba(255,41,41,0.7)' }} />
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-[#FF2929]">Round Standing</h3>
                   </div>
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: 'rgba(153,69,255,0.15)', color: '#b77aff', border: '1px solid rgba(153,69,255,0.28)' }}>
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,41,41,0.12)', color: '#FF2929', border: '1px solid rgba(255,41,41,0.30)' }}>
                     R{roundInfo.roundNum} / 4
                   </span>
                 </div>
 
-                {/* Player's extraction this raid */}
+                {/* Player's score this raid */}
                 <div className="mb-4">
-                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Your extraction</p>
+                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Your score</p>
                   <p className="mono text-4xl font-black text-white leading-none">
-                    {result.success ? `+${result.solAmount.toFixed(4)}` : '0.0000'}
-                    <span className="text-base font-normal text-white/30 ml-2">SOL</span>
+                    {result.success ? `+${result.points.toLocaleString()}` : '0'}
+                    <span className="text-base font-normal text-white/30 ml-2">pts</span>
                   </p>
                 </div>
 
                 {/* Rank badge */}
                 {result.success && myEntry ? (
-                  <div className="rounded-lg p-4 mb-4" style={{ background: 'rgba(153,69,255,0.10)', border: '1px solid rgba(153,69,255,0.28)' }}>
+                  <div className="rounded-lg p-4 mb-4" style={{ background: 'rgba(255,184,0,0.08)', border: '1px solid rgba(255,184,0,0.25)' }}>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-black uppercase tracking-wide" style={{ color: '#c89eff' }}>
+                      <p className="text-sm font-black uppercase tracking-wide text-[#FFB800]">
                         #{myEntry.rank} — {ROUND_PCT_LABELS[myEntry.rank - 1]} of pool
                       </p>
                       <span className="text-[10px] font-bold text-white/40">{myEntry.rank === 1 ? '🥇' : myEntry.rank === 2 ? '🥈' : myEntry.rank === 3 ? '🥉' : `#${myEntry.rank}`}</span>
@@ -280,28 +305,28 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                   </div>
                 ) : result.success ? (
                   <div className="rounded-lg p-3 mb-4 bg-white/3 border border-white/8">
-                    <p className="text-xs font-bold text-white/40">Not in top 5 yet — extract more SOL to qualify</p>
+                    <p className="text-xs font-bold text-white/40">Not in top 5 yet — score more points to qualify</p>
                   </div>
                 ) : (
                   <div className="rounded-lg p-3 mb-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}>
-                    <p className="text-xs font-bold text-red-400/60">Raid failed — no extraction recorded for this round</p>
+                    <p className="text-xs font-bold text-red-400/60">Raid failed — no score recorded for this round</p>
                   </div>
                 )}
 
                 {/* Top 3 leaderboard preview */}
-                {roundInfo.topExtractors.length > 0 && (
+                {roundInfo.currentLeaders.length > 0 && (
                   <div className="space-y-1 mb-4">
                     <p className="text-[9px] text-white/25 uppercase tracking-wider font-bold mb-2">Current leaders</p>
-                    {roundInfo.topExtractors.slice(0, 3).map(e => (
+                    {roundInfo.currentLeaders.slice(0, 3).map(e => (
                       <div key={e.rank} className="flex items-center justify-between py-1.5 border-b border-white/5">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] w-5 text-white/30 font-bold">#{e.rank}</span>
                           <span className="text-[10px] text-white/55 font-medium truncate max-w-[120px]">{e.username}</span>
                           {e.walletAddress === result.userWallet && (
-                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(153,69,255,0.18)', color: '#b77aff' }}>YOU</span>
+                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#FF2929]/15 text-[#FF2929]">YOU</span>
                           )}
                         </div>
-                        <span className="mono text-[10px] font-bold text-white/65">{e.solExtracted.toFixed(4)} SOL</span>
+                        <span className="mono text-[10px] font-bold text-[#FFB800]">{e.pointsScored.toLocaleString()} pts</span>
                       </div>
                     ))}
                   </div>
@@ -310,22 +335,22 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                 {/* Pool + countdown */}
                 <div className="flex items-center justify-between py-2 border-t border-white/5">
                   <span className="text-[10px] text-white/35 uppercase tracking-wide font-bold">Prize pool</span>
-                  <span className="mono text-sm font-black text-white">{roundInfo.poolSol.toFixed(4)} SOL</span>
+                  <span className="mono text-sm font-black text-[#FFB800]">{roundInfo.poolSol.toFixed(4)} SOL</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-t border-white/5">
                   <span className="text-[10px] text-white/35 uppercase tracking-wide font-bold">
                     {roundClosed ? 'Round status' : 'Closes in'}
                   </span>
                   {roundClosed ? (
-                    <span className="text-[10px] font-bold" style={{ color: '#b77aff' }}>Closed — claim in Profile</span>
+                    <span className="text-[10px] font-bold text-[#FF2929]">Closed — claim in Profile</span>
                   ) : (
-                    <span className="mono text-xs font-bold" style={{ color: '#b77aff' }}>{formatCountdown(roundInfo.timeRemainingMs)}</span>
+                    <span className="mono text-xs font-bold text-white/70">{formatCountdown(roundInfo.timeRemainingMs)}</span>
                   )}
                 </div>
 
                 {roundClosed && (
-                  <div className="mt-3 text-center py-2 rounded-lg" style={{ background: 'rgba(153,69,255,0.08)', border: '1px solid rgba(153,69,255,0.20)' }}>
-                    <p className="text-[10px] font-bold" style={{ color: '#b77aff' }}>Go to Profile → Round Wins to claim your allocation</p>
+                  <div className="mt-3 text-center py-2 rounded-lg" style={{ background: 'rgba(255,41,41,0.06)', border: '1px solid rgba(255,41,41,0.18)' }}>
+                    <p className="text-[10px] font-bold text-[#FF2929]/80">Go to Profile → Round Wins to claim your allocation</p>
                   </div>
                 )}
               </div>
@@ -351,7 +376,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                 className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${result.success ? 'bg-[#14F195]' : 'bg-red-500'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${result.success ? 'bg-[#FFB800]' : 'bg-red-500'}`} />
                   <span className="text-xs font-bold text-white/60">Raid debrief</span>
                   <span className="text-[9px] font-bold text-white/30">
                     {debriefEvents.length} event{debriefEvents.length !== 1 ? 's' : ''}
@@ -422,36 +447,30 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
       </div>
 
       <div className="py-6 sm:py-8 space-y-3 shrink-0">
-        {result.success ? (
+        {/* Round raid success: no instant harvest — scores tallied after round ends */}
+        {isRoundEntry && result.success && (
+          <div className="p-4 border border-[#FF2929]/20 bg-[#FF2929]/5 tech-border text-center">
+            <p className="text-[11px] font-bold text-white/60">
+              Winnings paid out after round ends · go to{' '}
+              <span className="text-[#FF2929]">Profile → Round Wins</span> to claim
+            </p>
+          </div>
+        )}
+
+        {/* Normal raid success: instant collect harvest */}
+        {!isRoundEntry && result.success && (
           <>
             <button
               onClick={onClaim}
-              className="w-full bg-green-500 text-black py-4 sm:py-5 tech-border font-bold uppercase tracking-tight text-lg sm:text-xl shadow-[0_0_30px_rgba(34,197,94,0.3)] active:scale-95 transition-all"
+              className="w-full bg-[#FF2929] text-white py-4 sm:py-5 tech-border font-bold uppercase tracking-tight text-lg sm:text-xl shadow-[0_0_30px_rgba(255,41,41,0.35)] active:scale-95 transition-all hover:bg-[#CC0000]"
             >
               Collect harvest
             </button>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={handleShareToX}
-                className="bg-black border-2 border-white/20 text-white py-3 tech-border font-bold uppercase tracking-wide text-sm active:scale-95 transition-all hover:bg-white hover:text-black hover:border-white flex items-center justify-center gap-2"
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-                Post on X
-              </button>
-              <button
-                onClick={handleDownloadCard}
-                className="bg-black border-2 border-[#14F195]/30 text-[#14F195] py-3 tech-border font-bold uppercase tracking-wide text-sm active:scale-95 transition-all hover:bg-[#14F195] hover:text-black flex items-center justify-center gap-2"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 shrink-0">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Save card
-              </button>
-            </div>
           </>
-        ) : (
+        )}
+
+        {/* Bust: retry */}
+        {!result.success && (
           <button
             onClick={onRedeploy ?? onPlayAgain}
             className="w-full bg-red-600 text-white py-4 sm:py-5 tech-border font-bold uppercase tracking-tight text-lg sm:text-xl active:scale-95 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
@@ -459,11 +478,36 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
             {onRedeploy ? 'Retry same config' : 'Back to lobby'}
           </button>
         )}
+
+        {/* Share / save — shown on success */}
+        {result.success && (
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={handleShareToX}
+              className="bg-black border-2 border-white/20 text-white py-3 tech-border font-bold uppercase tracking-wide text-sm active:scale-95 transition-all hover:bg-white hover:text-black hover:border-white flex items-center justify-center gap-2"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Post on X
+            </button>
+            <button
+              onClick={handleDownloadCard}
+              className="bg-black border-2 border-[#FFB800]/30 text-[#FFB800] py-3 tech-border font-bold uppercase tracking-wide text-sm active:scale-95 transition-all hover:bg-[#FFB800] hover:text-black flex items-center justify-center gap-2"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Save card
+            </button>
+          </div>
+        )}
+
         <button
           onClick={onPlayAgain}
           className="w-full bg-[#050505] text-white/50 hover:text-white py-3 sm:py-4 tech-border font-bold uppercase tracking-wide text-sm active:scale-95 transition-all border border-white/10"
         >
-          {result.success ? 'Back to lobby' : 'Back to lobby'}
+          Back to lobby
         </button>
       </div>
     </div>

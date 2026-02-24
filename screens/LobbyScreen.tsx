@@ -242,7 +242,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   </div>
                   <p className="leading-none" style={{ ...BN, fontSize: '22px', color: '#fff', letterSpacing: '1.5px' }}>RAID ROUND</p>
                   <p className="text-[10px] text-white/40 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
-                    Top 5 players share the prize pool
+                    Top 5 after round ends share the pool
                   </p>
                 </div>
                 {/* Pool */}
@@ -491,7 +491,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     { rank: 5, pct:  6, medal: '5th' },
                   ].map(({ rank, pct, medal }) => {
                     const allocation = currentRound.poolSol * (pct / 100);
-                    const topEntry   = currentRound.topExtractors.find(e => e.rank === rank);
+                    const topEntry   = currentRound.currentLeaders.find(e => e.rank === rank);
                     return (
                       <div key={rank} className="flex items-center gap-2">
                         <span className="text-xs w-7 shrink-0 text-center">{medal}</span>
@@ -503,7 +503,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                           {allocation < 0.001 ? '—' : `${allocation.toFixed(3)} SOL`}
                         </span>
                         {topEntry && (
-                          <span className="text-[9px] text-white/30 truncate max-w-[60px]">{topEntry.username}</span>
+                          <span className="text-[9px] text-white/30 truncate max-w-[80px]">
+                            {topEntry.username} · {topEntry.pointsScored.toLocaleString()}pts
+                          </span>
                         )}
                       </div>
                     );
@@ -851,7 +853,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     const bal = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
                     const sym = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
                     const colActive = c === Currency.SOL
-                      ? 'border-[#14F195]/45 bg-[#14F195]/8 text-[#14F195]'
+                      ? 'border-[#FFB800]/45 bg-[#FFB800]/8 text-[#FFB800]'
                       : c === Currency.USDC
                       ? 'border-blue-400/45 bg-blue-400/8 text-blue-400'
                       : 'border-orange-400/45 bg-orange-400/8 text-orange-400';

@@ -63,13 +63,13 @@ const PvpWinnerModal: React.FC<PvpWinnerModalProps> = ({ result, onClose }) => {
         className={`relative z-10 w-full max-w-sm pvp-modal-enter ${result.isWinner ? 'pvp-winner-glow' : 'pvp-loser-glow'}`}
         style={{
           background: result.isWinner
-            ? 'linear-gradient(135deg, #020202 0%, #051a10 100%)'
+            ? 'linear-gradient(135deg, #020202 0%, #1a0a0a 100%)'
             : 'linear-gradient(135deg, #020202 0%, #1a0505 100%)',
-          border: `2px solid ${result.isWinner ? '#14F195' : '#EF4444'}`,
+          border: `2px solid ${result.isWinner ? '#FFB800' : '#EF4444'}`,
         }}
       >
         {/* Top accent line */}
-        <div className="h-1 w-full" style={{ background: result.isWinner ? '#14F195' : '#EF4444' }} />
+        <div className="h-1 w-full" style={{ background: result.isWinner ? '#FFB800' : '#EF4444' }} />
 
         <div className="p-8 flex flex-col items-center gap-6 text-center">
 
@@ -94,7 +94,7 @@ const PvpWinnerModal: React.FC<PvpWinnerModalProps> = ({ result, onClose }) => {
             )}
             <div
               className={`w-24 h-24 flex items-center justify-center border-4 ${
-                result.isWinner ? 'border-[#14F195] text-[#14F195]' : 'border-red-500 text-red-500'
+                result.isWinner ? 'border-[#FFB800] text-[#FFB800]' : 'border-red-500 text-red-500'
               }`}
               style={{ fontSize: '48px' }}
             >
@@ -106,7 +106,7 @@ const PvpWinnerModal: React.FC<PvpWinnerModalProps> = ({ result, onClose }) => {
           <div>
             <h2
               className={`text-4xl font-black italic tracking-tighter leading-none glitch-text ${
-                result.isWinner ? 'text-[#14F195]' : 'text-red-500'
+                result.isWinner ? 'text-[#FFB800]' : 'text-red-500'
               }`}
             >
               {result.isWinner ? 'WINNER!' : 'DEFEATED'}
@@ -128,12 +128,12 @@ const PvpWinnerModal: React.FC<PvpWinnerModalProps> = ({ result, onClose }) => {
 
           {/* Pot size */}
           <div className={`w-full p-5 border ${
-            result.isWinner ? 'bg-[#14F195]/10 border-[#14F195]/40' : 'bg-white/5 border-white/10'
+            result.isWinner ? 'bg-[#FFB800]/10 border-[#FFB800]/40' : 'bg-white/5 border-white/10'
           }`}>
             <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.4em] mb-1">
               {result.isWinner ? 'POT_CREDITED_TO_BALANCE' : 'POT_LOST'}
             </p>
-            <p className={`text-3xl font-black mono ${result.isWinner ? 'text-[#14F195]' : 'text-white/60 line-through'}`}>
+            <p className={`text-3xl font-black mono ${result.isWinner ? 'text-[#FFB800]' : 'text-white/60 line-through'}`}>
               {result.potSol.toFixed(4)} {result.currency}
             </p>
             {result.isWinner && (
@@ -148,7 +148,7 @@ const PvpWinnerModal: React.FC<PvpWinnerModalProps> = ({ result, onClose }) => {
             onClick={onClose}
             className={`w-full py-5 font-black uppercase tracking-tight text-xl tech-border transition-all active:scale-95 ${
               result.isWinner
-                ? 'bg-[#14F195] text-black shadow-[0_0_30px_rgba(20,241,149,0.4)] hover:bg-[#0fd880]'
+                ? 'bg-[#FFB800] text-black shadow-[0_0_30px_rgba(255,184,0,0.4)] hover:bg-[#e0a200]'
                 : 'bg-black border-2 border-white/20 text-white/75 hover:border-white hover:text-white'
             }`}
           >

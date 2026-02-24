@@ -6,7 +6,7 @@ export interface PlayerRoundWin {
   roundNum: number;
   roundDate: string;   // YYYY-MM-DD
   rank: number;        // 1–5
-  solExtracted: number;
+  pointsScored: number;
   poolSol: number;
   solAllocation: number;
   claimed: boolean;
@@ -34,7 +34,7 @@ export function usePlayerRoundWins(walletAddress: string | null) {
         roundNum: r.round_number,
         roundDate: r.round_date,
         rank: r.rank,
-        solExtracted: Number(r.sol_extracted),
+        pointsScored: Number(r.points_scored ?? 0),
         poolSol: Number(r.pool_sol),
         solAllocation: Number(r.sol_allocation),
         claimed: r.claimed,

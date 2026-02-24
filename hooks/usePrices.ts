@@ -20,14 +20,15 @@ export interface LivePrices {
 
 async function fetchLivePrices(): Promise<{ solUsd: number; skrUsd: number } | null> {
   const [solResult, skrResult] = await Promise.allSettled([
-    fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
+    // Binance public ticker — no CORS restriction, no API key, no rate limits for browsers
+    fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT')
       .then(r => r.json()),
     fetch(`https://api.dexscreener.com/latest/dex/tokens/${SKR_MINT}`)
       .then(r => r.json()),
   ]);
 
   const solUsd =
-    solResult.status === 'fulfilled' ? (solResult.value?.solana?.usd ?? 0) : 0;
+    solResult.status === 'fulfilled' ? parseFloat(solResult.value?.price ?? '0') : 0;
 
   let skrUsd = 0;
   if (skrResult.status === 'fulfilled') {

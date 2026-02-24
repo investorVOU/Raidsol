@@ -530,7 +530,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   if (!item) return null;
                   const isAvatar = item.type === 'AVATAR';
                   const isEquipped = isAvatar ? equippedAvatarId === id : equippedGearIds.includes(id);
-                  const equipColor = isAvatar ? 'border-[#FF2929]' : 'border-[#9945FF]';
+                  const equipColor = isAvatar ? 'border-[#FF2929]' : 'border-[#FFB800]';
 
                   return (
                     <button 
@@ -596,7 +596,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                       <span className="px-1 bg-[#FFB800] text-black text-[8px] rounded-sm">{withdrawals.length}</span>
                     )}
                     {tab === 'ROUNDS' && unclaimedCount > 0 && (
-                      <span className="px-1 bg-[#9945FF] text-white text-[8px] rounded-sm animate-pulse">{unclaimedCount}</span>
+                      <span className="px-1 bg-[#FF2929] text-white text-[8px] rounded-sm animate-pulse">{unclaimedCount}</span>
                     )}
                   </button>
                 );
@@ -728,14 +728,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                           {/* Stats row */}
                           <div className="grid grid-cols-3 gap-2 bg-white/3 border border-white/5 p-2.5">
                             <div>
-                              <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Extracted</p>
-                              <p className="text-sm font-black mono text-white">{w.solExtracted.toFixed(4)}</p>
-                              <p className="text-[8px] text-[#FFB800] font-bold">SOL</p>
+                              <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Score</p>
+                              <p className="text-sm font-black mono text-white">{w.pointsScored.toLocaleString()}</p>
+                              <p className="text-[8px] text-white/35 font-bold">pts</p>
                             </div>
                             <div className="border-x border-white/5 px-2">
                               <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Pool</p>
                               <p className="text-sm font-black mono text-white">{w.poolSol.toFixed(3)}</p>
-                              <p className="text-[8px] text-[#9945FF] font-bold">SOL</p>
+                              <p className="text-[8px] text-[#FFB800] font-bold">SOL</p>
                             </div>
                             <div>
                               <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Allocated</p>

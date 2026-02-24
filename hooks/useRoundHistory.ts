@@ -6,7 +6,7 @@ export interface HistoricalRoundEntry {
   rank: number;
   walletAddress: string;
   username: string;
-  solExtracted: number;
+  pointsScored: number;
   allocationSol: number;
 }
 
@@ -62,11 +62,11 @@ export function useRoundHistory(count = 8) {
     const [successRes, allRes] = await Promise.all([
       supabase
         .from('raid_history')
-        .select('wallet_address, sol_amount, created_at')
+        .select('wallet_address, points, created_at')
         .eq('success', true)
         .gte('created_at', minStart.toISOString())
         .lt('created_at', maxEnd.toISOString())
-        .order('sol_amount', { ascending: false })
+        .order('points', { ascending: false })
         .limit(2000),
       supabase
         .from('raid_history')
@@ -104,25 +104,25 @@ export function useRoundHistory(count = 8) {
         })
         .reduce((sum, r) => sum + Number(r.entry_fee), 0) * POOL_PCT;
 
-      // Best sol per wallet in this window
+      // Best points per wallet in this window
       const bestByWallet = new Map<string, number>();
       for (const r of successRaids) {
         const t = new Date(r.created_at).getTime();
         if (t < start.getTime() || t >= end.getTime()) continue;
-        const sol = Number(r.sol_amount);
+        const pts = Number(r.points);
         const best = bestByWallet.get(r.wallet_address) ?? 0;
-        if (sol > best) bestByWallet.set(r.wallet_address, sol);
+        if (pts > best) bestByWallet.set(r.wallet_address, pts);
       }
 
       const sorted = [...bestByWallet.entries()]
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
 
-      const entries: HistoricalRoundEntry[] = sorted.map(([wallet, sol], i) => ({
+      const entries: HistoricalRoundEntry[] = sorted.map(([wallet, pts], i) => ({
         rank: i + 1,
         walletAddress: wallet,
         username: usernameMap[wallet] ?? `${wallet.slice(0, 4)}…${wallet.slice(-4)}`,
-        solExtracted: sol,
+        pointsScored: pts,
         allocationSol: poolSol * ROUND_ALLOCATION[i],
       }));
 

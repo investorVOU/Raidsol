@@ -298,11 +298,11 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
               });
               const roundGradients = [
                 'from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/35',
-                'from-[#9945FF]/10 via-[#9945FF]/5 to-transparent border-[#9945FF]/30',
+                'from-white/8 via-white/4 to-transparent border-white/18',
                 'from-[#FF2929]/8 via-[#FF2929]/4 to-transparent border-[#FF2929]/25',
                 'from-orange-500/8 via-orange-500/4 to-transparent border-orange-500/25',
               ];
-              const roundBadgeColors = ['bg-yellow-500 text-black', 'bg-[#9945FF] text-white', 'bg-[#FF2929] text-white', 'bg-orange-500 text-white'];
+              const roundBadgeColors = ['bg-yellow-500 text-black', 'bg-white/20 text-white', 'bg-[#FF2929] text-white', 'bg-orange-500 text-white'];
 
               return (
                 <div key={`${round.roundNum}-${round.roundDate}`}
@@ -351,8 +351,8 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-xs font-bold text-white">
-                              {entry.solExtracted.toFixed(4)}
-                              <span className="text-[#FFB800] text-[9px] ml-0.5">SOL</span>
+                              {entry.pointsScored.toLocaleString()}
+                              <span className="text-white/40 text-[9px] ml-0.5">pts</span>
                             </p>
                             <p className={`text-xs font-black ${RANK_COLORS[r0]}`}>
                               +{entry.allocationSol.toFixed(4)}

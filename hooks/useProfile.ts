@@ -14,6 +14,9 @@ export interface Profile {
   referral_sr_earned: number;
   raid_tickets: number;
   last_free_ticket_date: string | null;  // "YYYY-MM-DD"
+  last_free_raid_date: string | null;    // "YYYY-MM-DD" — daily free EASY raid
+  drill_count: number;                   // drills used in current 6h window
+  drill_window_start: number;            // epoch ms when current 6h window started
 }
 
 type ProfileUpdate = Partial<Omit<Profile, 'wallet_address'>>;

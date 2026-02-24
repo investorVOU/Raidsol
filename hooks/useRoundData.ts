@@ -3,14 +3,14 @@ import { supabase } from '../lib/supabase';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const POOL_PCT = 0.70; // 70% of all entry fees → round pool
-export const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06]; // top 1-5 share
+export const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06]; // top 1-5 share of pool
 
 export interface RoundTopEntry {
   rank: number;
   walletAddress: string;
   username: string;
-  solExtracted: number;
-  allocationSol: number; // their share of the pool
+  pointsScored: number;  // best single-raid points in the round window
+  allocationSol: number; // their SOL share of the pool
 }
 
 export interface CurrentRoundInfo {
@@ -19,8 +19,11 @@ export interface CurrentRoundInfo {
   startTime: Date;
   endTime: Date;
   timeRemainingMs: number;
-  poolSol: number;        // 8% of all entry fees this window
-  topExtractors: RoundTopEntry[];
+  isActive: boolean;           // true while round is still running
+  isFinalized: boolean;        // true once finalize-round has locked in winners
+  poolSol: number;             // 70% of all entry fees this window
+  currentLeaders: RoundTopEntry[];   // live top-5 during active round (from raid_history)
+  finalWinners: RoundTopEntry[];     // locked top-5 after finalization (from round_winners)
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -77,16 +80,18 @@ export function useRoundData() {
   const fetchRound = useCallback(async () => {
     const now = new Date();
     const { roundNum, start, end, dateStr } = getRoundBounds(now);
+    const roundEnded = end <= now;
+    const isActive   = !roundEnded;
 
-    // Fetch successful raids in this round window (ordered by sol desc for dedup)
+    // ── Always fetch live leaders from raid_history ──────────────────────────
     const [successRes, allRes] = await Promise.all([
       supabase
         .from('raid_history')
-        .select('wallet_address, sol_amount')
+        .select('wallet_address, points')
         .eq('success', true)
         .gte('created_at', start.toISOString())
         .lt('created_at', end.toISOString())
-        .order('sol_amount', { ascending: false })
+        .order('points', { ascending: false })
         .limit(200),
       supabase
         .from('raid_history')
@@ -97,20 +102,20 @@ export function useRoundData() {
 
     const poolSol = ((allRes.data ?? []).reduce((sum, r) => sum + Number(r.entry_fee), 0)) * POOL_PCT;
 
-    // Deduplicate: keep best sol per wallet
+    // Deduplicate: keep best points per wallet
     const bestByWallet = new Map<string, number>();
     for (const r of successRes.data ?? []) {
-      const sol = Number(r.sol_amount);
-      const best = bestByWallet.get(r.wallet_address) ?? 0;
-      if (sol > best) bestByWallet.set(r.wallet_address, sol);
+      const pts = Number(r.points);
+      if (pts > (bestByWallet.get(r.wallet_address) ?? 0)) {
+        bestByWallet.set(r.wallet_address, pts);
+      }
     }
 
-    // Sort descending, take top 5
     const sorted = [...bestByWallet.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
 
-    // Fetch usernames for top wallets
+    // Fetch usernames for live leaders
     let usernameMap: Record<string, string> = {};
     if (sorted.length > 0) {
       const wallets = sorted.map(([w]) => w);
@@ -123,13 +128,58 @@ export function useRoundData() {
       }
     }
 
-    const topExtractors: RoundTopEntry[] = sorted.map(([wallet, sol], i) => ({
+    const currentLeaders: RoundTopEntry[] = sorted.map(([wallet, pts], i) => ({
       rank: i + 1,
       walletAddress: wallet,
       username: usernameMap[wallet] ?? `${wallet.slice(0, 4)}…${wallet.slice(-4)}`,
-      solExtracted: sol,
+      pointsScored: pts,
       allocationSol: poolSol * ROUND_ALLOCATION[i],
     }));
+
+    // ── If round has ended, check for finalization ───────────────────────────
+    let isFinalized = false;
+    let finalWinners: RoundTopEntry[] = [];
+
+    if (roundEnded) {
+      const { data: finalizationRow } = await supabase
+        .from('round_finalizations')
+        .select('pool_sol')
+        .eq('round_number', roundNum)
+        .eq('round_date', dateStr)
+        .maybeSingle();
+
+      if (finalizationRow) {
+        isFinalized = true;
+
+        const { data: winnersData } = await supabase
+          .from('round_winners')
+          .select('rank, wallet_address, points_scored, sol_allocation')
+          .eq('round_number', roundNum)
+          .eq('round_date', dateStr)
+          .order('rank');
+
+        // Fetch usernames for final winners
+        const winnerWallets = (winnersData ?? []).map(w => w.wallet_address);
+        let winnerUsernameMap: Record<string, string> = {};
+        if (winnerWallets.length > 0) {
+          const { data: wProfiles } = await supabase
+            .from('profiles')
+            .select('wallet_address, username')
+            .in('wallet_address', winnerWallets);
+          for (const p of wProfiles ?? []) {
+            winnerUsernameMap[p.wallet_address] = p.username;
+          }
+        }
+
+        finalWinners = (winnersData ?? []).map(w => ({
+          rank: w.rank,
+          walletAddress: w.wallet_address,
+          username: winnerUsernameMap[w.wallet_address] ?? `${w.wallet_address.slice(0, 4)}…${w.wallet_address.slice(-4)}`,
+          pointsScored: Number(w.points_scored),
+          allocationSol: Number(w.sol_allocation),
+        }));
+      }
+    }
 
     setInfo({
       roundNum,
@@ -137,8 +187,11 @@ export function useRoundData() {
       startTime: start,
       endTime: end,
       timeRemainingMs: Math.max(0, end.getTime() - now.getTime()),
+      isActive,
+      isFinalized,
       poolSol,
-      topExtractors,
+      currentLeaders,
+      finalWinners,
     });
     setLoading(false);
   }, []);
@@ -157,9 +210,9 @@ export function useRoundData() {
         if (!prev) return prev;
         const remaining = prev.endTime.getTime() - Date.now();
         if (remaining <= 0) {
-          // Round just ended — trigger a refetch on next tick
+          // Round just ended — trigger a refetch to check finalization
           setTimeout(fetchRound, 500);
-          return { ...prev, timeRemainingMs: 0 };
+          return { ...prev, timeRemainingMs: 0, isActive: false };
         }
         return { ...prev, timeRemainingMs: remaining };
       });

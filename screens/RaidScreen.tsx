@@ -15,7 +15,7 @@ class CanvasErrorBoundary extends Component<{ children: React.ReactNode }, { err
 }
 import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent } from '../types';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows, SpotLight, Sparkles } from '@react-three/drei';
+import { OrbitControls, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameSounds } from '../hooks/useGameSounds';
 
@@ -1010,17 +1010,13 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           {/* Three.js Canvas — sized to match the risk circle */}
           <div className="absolute w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden z-[5]">
             <CanvasErrorBoundary>
-            <Canvas shadows camera={{ position: [0, 0, 3.8], fov: 62 }}>
-              <ambientLight intensity={0.5} />
-              <SpotLight position={[8, 8, 8]} angle={0.35} penumbra={1} intensity={80} castShadow />
-              <pointLight position={[-6, 4, -4]} intensity={1.2} color="cyan" />
-              <pointLight position={[6, 4, -4]} intensity={1.2} color="red" />
+            <Canvas camera={{ position: [0, 0, 3.8], fov: 62 }}>
+              <ambientLight intensity={0.8} />
+              <directionalLight position={[5, 8, 5]} intensity={1.5} />
+              <pointLight position={[-6, 4, -4]} intensity={1.5} color="cyan" />
+              <pointLight position={[6, 4, -4]} intensity={1.5} color="red" />
               <FighterModel action={userAction} position={[-0.85, -1.75, 0]} rotation={[0, -Math.PI / 2, 0]} scale={1.8} color={userColor} gearIds={equippedGearIds} riskLevel={risk} />
               <FighterModel action={enemyAction} position={[0.85, -1.75, 0]}  rotation={[0,  Math.PI / 2, 0]} scale={1.8} color="#EF4444" isEnemy riskLevel={risk} />
-              <Suspense fallback={null}>
-                <Environment preset="city" />
-                <ContactShadows position={[0, -1.75, 0]} opacity={0.5} scale={10} blur={1.5} far={1} />
-              </Suspense>
               <OrbitControls enableZoom={false} enablePan={false} minPolarAngle={Math.PI / 2.5} maxPolarAngle={Math.PI / 1.8} />
             </Canvas>
             </CanvasErrorBoundary>

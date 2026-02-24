@@ -140,11 +140,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         };
       case 'LIMITED':
         return {
-          text: 'text-purple-500',
-          border: 'border-purple-500/30',
-          bg: 'bg-purple-500/10',
-          button: 'bg-purple-600 text-white',
-          shadow: 'hover:shadow-[0_0_20px_rgba(153,69,255,0.2)]'
+          text: 'text-orange-400',
+          border: 'border-orange-400/30',
+          bg: 'bg-orange-400/10',
+          button: 'bg-orange-500 text-white',
+          shadow: 'hover:shadow-[0_0_20px_rgba(249,115,22,0.2)]'
         };
       default:
         return {
@@ -186,7 +186,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-10 gap-3 sm:gap-6">
           <div>
             <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black uppercase tracking-tight text-white leading-none">
-              Black <span className="text-gradient-solana">Market</span>
+              Black <span className="text-[#FF2929]">Market</span>
             </h2>
             <p className="text-[10px] font-bold text-white/40 mt-1 sm:mt-3">Equipment depot</p>
           </div>
@@ -224,7 +224,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
           </button>
           <button
             onClick={() => setActiveTab('AVATAR')}
-            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'AVATAR' ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'AVATAR' ? 'border-white text-white bg-white/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
             Avatars
           </button>
@@ -301,17 +301,17 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                 const priceValue = passesLoading ? Infinity : (selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice));
                 const canAfford = !passesLoading && currentBalance >= priceValue;
                 const isLoading = passesLoading;
-                // tier accent: game palette — green / cyan / orange / purple / gold
+                // tier accent: game palette — red / cyan / orange / gold
                 const tierColor = pass.id === 'pass_basic'  ? '#FF2929'
                                 : pass.id === 'pass_core'   ? '#22d3ee'
                                 : pass.id === 'pass_pro'    ? '#fb923c'
-                                : pass.id === 'pass_elite'  ? '#9945FF'
+                                : pass.id === 'pass_elite'  ? '#FFB800'
                                 : '#eab308';
                 const badgeColors = 'border-white/10 bg-white/[0.02]';
                 const btnColors = pass.id === 'pass_basic'  ? 'bg-[#FF2929] text-white'
                                 : pass.id === 'pass_core'   ? 'bg-cyan-400 text-black'
                                 : pass.id === 'pass_pro'    ? 'bg-orange-500 text-black'
-                                : pass.id === 'pass_elite'  ? 'bg-[#9945FF] text-white'
+                                : pass.id === 'pass_elite'  ? 'bg-[#FFB800] text-black'
                                 : 'bg-yellow-400 text-black';
 
                 return (
@@ -472,15 +472,15 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   <div className="flex flex-col items-center gap-2">
                     {forgeResult ? (
                       <div className="flex flex-col items-center gap-1 animate-in zoom-in-75 duration-500">
-                        <div className="w-16 h-16 border-2 border-purple-500 bg-purple-500/10 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                        <div className="w-16 h-16 border-2 border-orange-400 bg-orange-400/10 flex items-center justify-center shadow-[0_0_20px_rgba(249,115,22,0.4)]">
                           <span className="text-4xl">{forgeResult.image}</span>
                         </div>
-                        <span className="text-purple-400 font-black uppercase text-xs tracking-wide">{forgeResult.name}</span>
-                        <span className="text-[8px] text-purple-400/60 font-bold">Limited · forged</span>
+                        <span className="text-orange-400 font-black uppercase text-xs tracking-wide">{forgeResult.name}</span>
+                        <span className="text-[8px] text-orange-400/60 font-bold">Limited · forged</span>
                       </div>
                     ) : (
-                      <div className="w-16 h-16 border-2 border-dashed border-purple-500/30 bg-purple-500/5 flex items-center justify-center">
-                        <span className="text-purple-500/40 text-2xl font-black">?</span>
+                      <div className="w-16 h-16 border-2 border-dashed border-orange-400/30 bg-orange-400/5 flex items-center justify-center">
+                        <span className="text-orange-400/40 text-2xl font-black">?</span>
                       </div>
                     )}
                     <span className="text-[8px] text-white/40 font-bold">Random limited</span>
