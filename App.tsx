@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
-import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, GEAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent } from './types';
+import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, GEAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent, PLATFORM_FEE_RAID } from './types';
 const LobbyScreen = lazy(() => import('./screens/LobbyScreen'));
 const RaidScreen = lazy(() => import('./screens/RaidScreen'));
 const TeamScreen = lazy(() => import('./screens/TeamScreen'));
@@ -633,6 +633,9 @@ const AppInner: React.FC = () => {
     const activeRoomId = gameState.activeRoom?.id;
     const roomCurrency = gameState.activeRoom?.stakeCurrency ?? 'SOL';
 
+    // solAmount arrives already net of the 5% platform fee (applied in RaidScreen)
+    const netSolAmount = success ? solAmount : 0;
+
     // Optimistic UI update — show result immediately
     releaseWakeLock();
     setGameState(prev => ({
@@ -640,7 +643,7 @@ const AppInner: React.FC = () => {
       ticketBoostActive: false,
       currentScreen: Screen.RESULT,
       walletBalance: success ? prev.walletBalance : prev.walletBalance - prev.activeRaidFee,
-      unclaimedBalance: success ? prev.unclaimedBalance + solAmount : prev.unclaimedBalance,
+      unclaimedBalance: success ? prev.unclaimedBalance + netSolAmount : prev.unclaimedBalance,
       srPoints: prev.srPoints + localSREarned,
       // Streak & tilt tracking
       raidStreak: success ? prev.raidStreak + 1 : 0,
@@ -650,7 +653,7 @@ const AppInner: React.FC = () => {
       lastRaidEvents: events ?? [],
       lastResult: {
         success,
-        solAmount,
+        solAmount: netSolAmount,
         points,
         srEarned: localSREarned,
         raidId: localRaidId,

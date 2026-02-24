@@ -42,7 +42,8 @@ async function fetchLivePrices(): Promise<{ solUsd: number; skrUsd: number } | n
     }
   }
 
-  return solUsd > 0 && skrUsd > 0 ? { solUsd, skrUsd } : null;
+  // Return as long as SOL price is available — SKR is optional
+  return solUsd > 0 ? { solUsd, skrUsd } : null;
 }
 
 export function usePrices(): LivePrices {
@@ -64,15 +65,16 @@ export function usePrices(): LivePrices {
         setState({
           solUsd,
           skrUsd,
+          // Ready once SOL price is known — USDC rate is derived from SOL alone
           pricesReady: true,
           currencyRates: {
             [Currency.SOL]:  1,
-            [Currency.USDC]: solUsd,
-            [Currency.SKR]:  solUsd / skrUsd,
+            [Currency.USDC]: solUsd,                               // always available with SOL price
+            [Currency.SKR]:  skrUsd > 0 ? solUsd / skrUsd : 0,   // 0 means SKR price still unavailable
           },
         });
       }
-      // If fetch failed, keep loading state (don't overwrite with wrong rates)
+      // If SOL price fetch failed entirely, keep loading state
     };
 
     update();

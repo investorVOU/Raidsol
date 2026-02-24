@@ -13,7 +13,7 @@ class CanvasErrorBoundary extends Component<{ children: React.ReactNode }, { err
     return this.props.children;
   }
 }
-import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent } from '../types';
+import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent, PLATFORM_FEE_RAID } from '../types';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
@@ -656,7 +656,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     const elapsedSec  = Math.max(3, initialTime - timeLeft);
     const earlyMult   = elapsedSec < 8 ? 0.5 : 1.0;    // Rule: early exit penalty
     const goldenMult  = goldenWindow ? 1.05 : 1.0;      // Rule: golden window bonus
-    const solReward   = (points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0) * earlyMult * goldenMult;
+    const solReward   = (points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0) * earlyMult * goldenMult * (1 - PLATFORM_FEE_RAID);
     sounds.playCashOut();
     sounds.hapticExtract();
     if (goldenWindow) {
@@ -831,6 +831,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     * (ticketBoost ? 1.1 : 1.0)
     * (earlyExitWarn ? 0.5 : 1.0)
     * (goldenWindow  ? 1.05 : 1.0)
+    * (1 - PLATFORM_FEE_RAID)
   ).toFixed(4);
   const isUrgent       = timeLeft < 10;
   const isCritical     = timeLeft < 5;

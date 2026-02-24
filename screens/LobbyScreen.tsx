@@ -86,6 +86,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     return () => window.removeEventListener('solraid:openRaidModal', handler);
   }, []);
 
+  // Reset custom fee whenever currency changes (values are currency-specific)
+  useEffect(() => { setCustomFee(null); }, [entryCurrency]);
+
   // Drill cap
   const drillWindowExpired = (Date.now() - drillWindowStart) >= 6 * 60 * 60 * 1000;
   const drillsRemaining    = Math.max(0, 3 - (drillWindowExpired ? 0 : drillCount));
@@ -122,17 +125,21 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
   // Cost calc
   const minEntryFee    = ENTRY_FEES[selectedMode];
-  const effectiveBase  = customFee !== null && customFee >= minEntryFee ? customFee : minEntryFee;
+  const currencyRate   = rates[entryCurrency];
+  const pricesLoading  = entryCurrency !== Currency.SOL && currencyRate === 0;
+  const curSymbol      = entryCurrency === Currency.SOL ? 'SOL' : entryCurrency === Currency.USDC ? 'USDC' : 'SKR';
+  const curDecimals    = entryCurrency === Currency.SOL ? 3 : entryCurrency === Currency.USDC ? 2 : 0;
+  const currentBalance = entryCurrency === Currency.SOL ? walletBalance : entryCurrency === Currency.USDC ? usdcBalance : skrBalance;
+  const displayRate    = currencyRate || 1; // safe divisor; pricesLoading=true when currencyRate=0
+  // customFee is typed in the selected currency (SOL/USDC/SKR); convert to SOL for all math
+  const customFeeSol   = customFee !== null ? customFee / displayRate : null;
+  const minEntryDisplay = minEntryFee * displayRate;
+  const effectiveBase  = customFeeSol !== null && customFeeSol >= minEntryFee ? customFeeSol : minEntryFee;
   const applyTicket    = useTicket && raidTickets > 0;
   const entryFee       = applyTicket ? effectiveBase * 0.5 : effectiveBase;
   const boostCost      = selectedBoosts.reduce((s, id) => s + (RAID_BOOSTS.find(b => b.id === id)?.cost ?? 0), 0);
   const totalCostSol   = entryFee + boostCost;
-  const currencyRate   = rates[entryCurrency];
-  const pricesLoading  = entryCurrency !== Currency.SOL && currencyRate === 0;
-  const totalDisplay   = totalCostSol * currencyRate;
-  const curSymbol      = entryCurrency === Currency.SOL ? 'SOL' : entryCurrency === Currency.USDC ? 'USDC' : 'SKR';
-  const curDecimals    = entryCurrency === Currency.SOL ? 3 : entryCurrency === Currency.USDC ? 2 : 0;
-  const currentBalance = entryCurrency === Currency.SOL ? walletBalance : entryCurrency === Currency.USDC ? usdcBalance : skrBalance;
+  const totalDisplay   = totalCostSol * displayRate;
 
   // Round cost calc (always SOLO, no boosts)
   const roundFeeBase       = ENTRY_FEES[Mode.SOLO];
@@ -851,80 +858,74 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
 
             {/* ── Modal footer ── */}
-            <div className="shrink-0 border-t border-white/5 p-4 sm:p-5 bg-[#060612] rounded-b-3xl sm:rounded-b-2xl space-y-3">
+            <div className="shrink-0 border-t border-white/5 p-3 sm:p-4 bg-[#060612] rounded-b-3xl sm:rounded-b-2xl space-y-2">
 
-              {/* Currency selector */}
-              <div>
-                <p className="text-[10px] font-semibold text-white/28 uppercase tracking-wider mb-2">{t('lobby.payWith')}</p>
-                <div className="grid grid-cols-3 gap-2">
+              {/* Currency selector — compact pill row */}
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-semibold text-white/28 uppercase tracking-wider shrink-0">{t('lobby.payWith')}</span>
+                <div className="flex gap-1.5 flex-1">
                   {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
                     const bal = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
                     const sym = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
                     const colActive = c === Currency.SOL
-                      ? 'border-[#FFB800]/45 bg-[#FFB800]/8 text-[#FFB800]'
+                      ? 'border-[#FFB800]/50 bg-[#FFB800]/10 text-[#FFB800]'
                       : c === Currency.USDC
-                      ? 'border-blue-400/45 bg-blue-400/8 text-blue-400'
-                      : 'border-orange-400/45 bg-orange-400/8 text-orange-400';
+                      ? 'border-blue-400/50 bg-blue-400/10 text-blue-400'
+                      : 'border-orange-400/50 bg-orange-400/10 text-orange-400';
                     const active = entryCurrency === c;
                     return (
                       <button key={c} onClick={() => setCurrency(c)}
-                        className={`py-2.5 rounded-xl border-2 transition-all text-center ${active ? colActive : 'border-white/7 text-white/35 bg-white/3 hover:border-white/18'}`}>
-                        <p className="text-[10px] font-semibold">{sym}</p>
-                        <p className="text-[9px] text-white/40 mt-0.5 font-medium">{bal.toFixed(c === Currency.SKR ? 0 : 2)}</p>
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border transition-all ${active ? colActive : 'border-white/7 text-white/30 bg-white/3 hover:border-white/18'}`}>
+                        <span className="text-[10px] font-bold">{sym}</span>
+                        <span className="text-[8px] text-white/35 font-medium hidden sm:inline">{bal.toFixed(c === Currency.SKR ? 0 : 2)}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Custom entry amount */}
-              {selectedMode === Mode.SOLO && (
-                <div>
-                  <p className="text-[10px] font-semibold text-white/28 uppercase tracking-wider mb-1.5">{t('lobby.entryAmount')}</p>
-                  <div className="flex items-center gap-2 p-3 rounded-xl border border-white/[0.12] bg-white/3">
-                    <input
-                      type="number"
-                      min={minEntryFee}
-                      step={0.001}
-                      value={customFee !== null ? customFee : ''}
-                      placeholder={minEntryFee.toString()}
-                      onChange={e => {
-                        const v = parseFloat(e.target.value);
-                        setCustomFee(isNaN(v) ? null : v);
-                      }}
-                      className="flex-1 bg-transparent text-white text-sm font-semibold outline-none placeholder-white/25 tabular-nums"
-                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                    />
-                    <span className="text-xs font-semibold text-white/40 shrink-0">
-                      {entryCurrency === Currency.SOL ? 'SOL' : entryCurrency === Currency.USDC ? 'USDC' : 'SKR'}
+              {/* Custom entry amount — compact inline row */}
+              {selectedMode === Mode.SOLO && !pricesLoading && (
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/3">
+                  <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider shrink-0">{t('lobby.entryAmount')}</span>
+                  <input
+                    type="number"
+                    min={minEntryDisplay}
+                    step={curDecimals === 0 ? 1 : curDecimals === 2 ? 0.01 : 0.001}
+                    value={customFee !== null ? customFee : ''}
+                    placeholder={minEntryDisplay.toFixed(curDecimals)}
+                    onChange={e => {
+                      const v = parseFloat(e.target.value);
+                      setCustomFee(isNaN(v) ? null : v);
+                    }}
+                    className="flex-1 bg-transparent text-white text-sm font-semibold outline-none placeholder-white/20 tabular-nums min-w-0"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  />
+                  <span className="text-[9px] font-semibold text-white/35 shrink-0">{curSymbol}</span>
+                  {customFee !== null && customFee >= minEntryDisplay && (
+                    <span className="text-[8px] text-white/30 shrink-0 hidden sm:inline">
+                      max ~{(effectiveBase * 5.7 * displayRate).toFixed(curDecimals)} {curSymbol}
                     </span>
-                  </div>
-                  {customFee !== null && customFee >= minEntryFee && (
-                    <p className="text-[9px] text-white/35 mt-1 font-medium">
-                      {t('lobby.maxPayout', { amount: (effectiveBase * 6 * 0.8).toFixed(3) })}
-                    </p>
                   )}
-                  {customFee !== null && customFee < minEntryFee && (
-                    <p className="text-[9px] text-red-400 mt-1 font-medium">
-                      {t('lobby.minFee', { amount: `${minEntryFee} SOL` })}
-                    </p>
+                  {customFee !== null && customFee < minEntryDisplay && (
+                    <span className="text-[8px] text-red-400 shrink-0">min {minEntryDisplay.toFixed(curDecimals)}</span>
                   )}
                 </div>
               )}
 
-              {/* Ticket toggle */}
+              {/* Ticket toggle — compact */}
               {raidTickets > 0 && (
                 <button onClick={() => setUseTicket(p => !p)}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${applyTicket ? 'border-amber-500/40 bg-amber-500/8' : 'border-white/[0.12] bg-white/3'}`}>
+                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg border transition-all ${applyTicket ? 'border-amber-500/40 bg-amber-500/8' : 'border-white/[0.10] bg-white/3'}`}>
                   <div className="flex items-center gap-2">
-                    <span className="text-base">🎟️</span>
+                    <span className="text-sm">🎟️</span>
                     <div>
-                      <p className={`text-xs font-semibold ${applyTicket ? 'text-amber-400' : 'text-white/45'}`}>{t('lobby.useTicket')}</p>
-                      <p className="text-[9px] text-white/25 font-medium">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
+                      <p className={`text-[10px] font-semibold ${applyTicket ? 'text-amber-400' : 'text-white/45'}`}>{t('lobby.useTicket')}</p>
+                      <p className="text-[8px] text-white/25 font-medium">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
                     </div>
                   </div>
-                  <div className={`w-9 h-5 rounded-full transition-all relative ${applyTicket ? 'bg-amber-500' : 'bg-white/15'}`}>
-                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow ${applyTicket ? 'left-[18px]' : 'left-0.5'}`} />
+                  <div className={`w-8 h-4 rounded-full transition-all relative ${applyTicket ? 'bg-amber-500' : 'bg-white/15'}`}>
+                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow ${applyTicket ? 'left-[18px]' : 'left-0.5'}`} />
                   </div>
                 </button>
               )}
@@ -945,8 +946,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   )}
                 </div>
                 <button onClick={handleDeploy}
-                  disabled={pricesLoading || (totalCostSol > 0 && currentBalance < totalDisplay) || (customFee !== null && customFee < minEntryFee)}
-                  className="flex-1 py-3.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100"
+                  disabled={pricesLoading || (totalCostSol > 0 && currentBalance < totalDisplay) || (customFee !== null && customFee < minEntryDisplay)}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100"
                   style={{
                     background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)',
                     color: '#fff',

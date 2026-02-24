@@ -19,6 +19,8 @@ import { getCorsHeaders } from '../_shared/cors.ts';
  *  6. Atomically mark claimed + credit unclaimed_sol on profile.
  */
 
+const PLATFORM_FEE_RAID = 0.05; // 5% taken from round prize at claim time
+
 Deno.serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);
 
@@ -126,7 +128,10 @@ Deno.serve(async (req: Request) => {
 
     if (updateErr) throw new Error(`Claim update failed: ${updateErr.message}`);
 
-    // ── Credit unclaimed_sol on profile ──────────────────────────────────────
+    // ── Credit unclaimed_sol on profile (5% platform fee deducted) ───────────
+    const grossAllocation = Number(winner.sol_allocation);
+    const netAllocation   = grossAllocation * (1 - PLATFORM_FEE_RAID);
+
     const { data: prof } = await supabaseAdmin
       .from('profiles')
       .select('unclaimed_sol')
@@ -135,16 +140,18 @@ Deno.serve(async (req: Request) => {
 
     await supabaseAdmin
       .from('profiles')
-      .update({ unclaimed_sol: Number(prof?.unclaimed_sol ?? 0) + Number(winner.sol_allocation) })
+      .update({ unclaimed_sol: Number(prof?.unclaimed_sol ?? 0) + netAllocation })
       .eq('wallet_address', wallet_address);
 
-    console.log(`[claim-round-win] ${wallet_address} claimed rank ${winner.rank} — ${winner.sol_allocation} SOL`);
+    console.log(`[claim-round-win] ${wallet_address} claimed rank ${winner.rank} — gross=${grossAllocation.toFixed(6)} net=${netAllocation.toFixed(6)} SOL`);
 
     return new Response(
       JSON.stringify({
         success: true,
         rank: winner.rank,
-        sol_allocation: Number(winner.sol_allocation),
+        sol_allocation: netAllocation,
+        gross_allocation: grossAllocation,
+        platform_fee: grossAllocation - netAllocation,
         pool_sol: Number(winner.pool_sol),
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

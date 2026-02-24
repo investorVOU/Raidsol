@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const POOL_PCT = 0.70; // 70% of all entry fees → round pool
+// POOL_PCT (0.70) is applied server-side in submit-raid-result via increment_round_pool RPC
 export const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06]; // top 1-5 share of pool
 
 export interface RoundTopEntry {
@@ -83,8 +83,8 @@ export function useRoundData() {
     const roundEnded = end <= now;
     const isActive   = !roundEnded;
 
-    // ── Always fetch live leaders from raid_history ──────────────────────────
-    const [successRes, allRes] = await Promise.all([
+    // ── Always fetch live leaders from raid_history + pool from round_pools ──
+    const [successRes, poolRes] = await Promise.all([
       supabase
         .from('raid_history')
         .select('wallet_address, points')
@@ -94,13 +94,14 @@ export function useRoundData() {
         .order('points', { ascending: false })
         .limit(200),
       supabase
-        .from('raid_history')
-        .select('entry_fee')
-        .gte('created_at', start.toISOString())
-        .lt('created_at', end.toISOString()),
+        .from('round_pools')
+        .select('pool_sol')
+        .eq('round_number', roundNum)
+        .eq('round_date', dateStr)
+        .maybeSingle(),
     ]);
 
-    const poolSol = ((allRes.data ?? []).reduce((sum, r) => sum + Number(r.entry_fee), 0)) * POOL_PCT;
+    const poolSol = Number(poolRes.data?.pool_sol ?? 0);
 
     // Deduplicate: keep best points per wallet
     const bestByWallet = new Map<string, number>();
@@ -201,6 +202,17 @@ export function useRoundData() {
     fetchRound();
     const interval = setInterval(fetchRound, 30_000);
     return () => clearInterval(interval);
+  }, [fetchRound]);
+
+  // Realtime: re-fetch whenever round_pools updates (pool changes on every raid)
+  useEffect(() => {
+    const channel = supabase
+      .channel('round_pools_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'round_pools' }, () => {
+        fetchRound();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [fetchRound]);
 
   // Live countdown (every second)

@@ -111,6 +111,10 @@ export const RAID_PASSES: RaidPass[] = [
   },
 ];
 
+/** Platform fee deducted from winners. 5% on raid wins, 10% on PvP pot. */
+export const PLATFORM_FEE_RAID = 0.05;
+export const PLATFORM_FEE_PVP  = 0.10;
+
 export const ENTRY_FEES: Record<Mode, number> = {
   [Mode.SOLO]: 0.026,
   [Mode.TEAM]: 0.1,

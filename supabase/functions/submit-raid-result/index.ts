@@ -11,6 +11,10 @@ import { getCorsHeaders } from '../_shared/cors.ts';
  *     of the seed_id checked against the provided public key).
  */
 
+// Platform fees
+const PLATFORM_FEE_RAID = 0.05; // 5% of sol_amount on wins
+const PLATFORM_FEE_PVP  = 0.10; // 10% of PvP pot
+
 // Maximum yield rate per second per difficulty (points/s at mult=1.0)
 const MAX_YIELD_RATE: Record<string, number> = {
   EASY:       12.75,   // 15 * 0.85
@@ -19,8 +23,8 @@ const MAX_YIELD_RATE: Record<string, number> = {
   DEGEN:      37.5,    // 15 * 2.50
 };
 
-// Maximum sol reward multiplier we ever allow (protects against inflated claims)
-const MAX_PAYOUT_MULTIPLIER = 6.0;
+// Maximum sol reward multiplier we ever allow — net of 5% fee (6 * 0.95 = 5.7)
+const MAX_PAYOUT_MULTIPLIER = 5.7;
 
 // Minimum elapsed time (seconds) for any valid raid — prevents instant exploit
 const MIN_RAID_DURATION_SEC = 3;
@@ -71,9 +75,9 @@ function validateRaidResult(
     }
 
     // Verify sol_amount is consistent with points (allow ±20% for floating-point divergence)
-    // Reward formula: (points / 2500) * 6 * entry_fee  (max 6x the entry fee at max score)
-    const expectedSol = (points / 2500) * 6 * entry_fee;
-    const tolerance = expectedSol * 0.20;
+    // Reward formula (net of 5% platform fee): (points / 2500) * 6 * entry_fee * 0.95
+    const expectedSol = (points / 2500) * 6 * entry_fee * (1 - PLATFORM_FEE_RAID);
+    const tolerance = expectedSol * 0.22; // slightly wider to absorb golden window / early exit
     if (Math.abs(sol_amount - expectedSol) > tolerance + 0.0001) {
       return `sol_amount ${sol_amount} inconsistent with points ${points} (expected ~${expectedSol.toFixed(6)})`;
     }
@@ -193,7 +197,24 @@ Deno.serve(async (req: Request) => {
       tx_signature: client_seed || null,
     });
 
-    // ── 4b. Activity feed ──────────────────────────────────────────────
+    // ── 4b. Update round pool (non-PvP raids only) ────────────────────
+    if (!room_id && Number(entry_fee) > 0) {
+      const raidNow = new Date();
+      const utcHour = raidNow.getUTCHours();
+      const raidRoundNum  = Math.floor(utcHour / 6) + 1;
+      const ry = raidNow.getUTCFullYear();
+      const rm = raidNow.getUTCMonth() + 1;
+      const rd = raidNow.getUTCDate();
+      const raidRoundDate = `${ry}-${String(rm).padStart(2, '0')}-${String(rd).padStart(2, '0')}`;
+      const poolContribution = Number(entry_fee) * 0.70;
+      await supabase.rpc('increment_round_pool', {
+        p_round_number: raidRoundNum,
+        p_round_date:   raidRoundDate,
+        p_amount:       poolContribution,
+      });
+    }
+
+    // ── 4c. Activity feed ──────────────────────────────────────────────
     await supabase.from('activity_feed').insert({
       event_type: success ? 'EXTRACTED' : 'BUSTED',
       username: profile.username,
@@ -208,6 +229,7 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (treasury) {
+      const platformFeeRaid = success ? Number(sol_amount) * PLATFORM_FEE_RAID / (1 - PLATFORM_FEE_RAID) : 0;
       await supabase.from('treasury_stats').update({
         total_transactions: treasury.total_transactions + 1,
         payouts_24h_sol: success
@@ -215,6 +237,7 @@ Deno.serve(async (req: Request) => {
           : treasury.payouts_24h_sol,
         updated_at: new Date().toISOString(),
       }).eq('id', 1);
+      if (success) console.log(`[fee] raid net=${sol_amount} platform_fee≈${platformFeeRaid.toFixed(6)} SOL`);
     }
 
     // ── 6. PvP room: record result + determine winner if all done ──────
@@ -254,12 +277,16 @@ Deno.serve(async (req: Request) => {
           .eq('id', room_id)
           .single();
 
-        const pot = room
+        const grossPot = room
           ? Number(room.stake_per_player) * allPlayers.length
           : 0;
 
-        // Credit pot to winner's unclaimed_sol
-        if (pot > 0) {
+        // Apply 10% platform fee — winner receives 90% of pot
+        const netPot = grossPot * (1 - PLATFORM_FEE_PVP);
+        const platformFeePvp = grossPot - netPot;
+
+        // Credit net pot to winner's unclaimed_sol
+        if (netPot > 0) {
           const { data: wProfile } = await supabase
             .from('profiles')
             .select('unclaimed_sol')
@@ -270,7 +297,7 @@ Deno.serve(async (req: Request) => {
             await supabase
               .from('profiles')
               .update({
-                unclaimed_sol: Number(wProfile.unclaimed_sol) + pot,
+                unclaimed_sol: Number(wProfile.unclaimed_sol) + netPot,
                 updated_at: new Date().toISOString(),
               })
               .eq('wallet_address', winner.wallet_address);
@@ -287,14 +314,17 @@ Deno.serve(async (req: Request) => {
         await supabase.from('activity_feed').insert({
           event_type: 'PVP_WIN',
           username: winner.username || winner.wallet_address.slice(0, 8),
-          amount_sol: pot,
+          amount_sol: netPot,
         });
+
+        console.log(`[pvp] winner=${winner.wallet_address} grossPot=${grossPot} netPot=${netPot} fee=${platformFeePvp.toFixed(6)}`);
 
         pvpPayload = {
           pvp_resolved: true,
           winner_wallet: winner.wallet_address,
           winner_name: winner.username || winner.wallet_address.slice(0, 8),
-          pot_sol: pot,
+          pot_sol: netPot,
+          gross_pot_sol: grossPot,
           currency: room?.stake_currency ?? 'SOL',
           is_winner: winner.wallet_address === wallet_address,
         };
