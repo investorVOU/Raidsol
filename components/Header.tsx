@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
               style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.10)' }}
             >
-              <div className="w-1.5 h-1.5 rounded-full bg-[#14F195] animate-pulse shrink-0" />
+              <div className="w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse shrink-0" />
               <span className="text-[10px] text-white/55 truncate max-w-[120px]" style={INTER}>
                 {displayName}
               </span>
@@ -103,7 +103,7 @@ const Header: React.FC<HeaderProps> = ({
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: '2px solid #FF2929' }}
           >
             <p className="text-[9px] text-white/40 mb-0.5 uppercase tracking-wider" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>Balance</p>
-            <p className="text-[13px] leading-tight text-[#14F195]" style={SG_NUM}>
+            <p className="text-[13px] leading-tight text-[#FFB800]" style={SG_NUM}>
               {balance.toFixed(3)}
               <span className="text-[10px] text-white/30 ml-1" style={INTER}>SOL</span>
             </p>

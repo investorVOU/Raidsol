@@ -151,14 +151,14 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
           text: 'text-white/60',
           border: 'border-white/10',
           bg: 'bg-white/5',
-          button: 'bg-[#14F195] text-black',
-          shadow: 'hover:shadow-[0_0_20px_rgba(20,241,149,0.1)]'
+          button: 'bg-[#FF2929] text-white',
+          shadow: 'hover:shadow-[0_0_20px_rgba(255,41,41,0.1)]'
         };
     }
   };
 
   const currentBalance = selectedCurrency === Currency.SOL ? walletBalance : selectedCurrency === Currency.USDC ? usdcBalance : skrBalance;
-  const currencyColor = selectedCurrency === Currency.SOL ? 'text-[#14F195]' : selectedCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400';
+  const currencyColor = selectedCurrency === Currency.SOL ? 'text-white/70' : selectedCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400';
 
   return (
     <div className="h-full flex flex-col p-3 sm:p-6 lg:p-12 animate-in slide-in-from-bottom-4 duration-300 overflow-y-auto scrollbar-hide pb-24 relative">
@@ -218,7 +218,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         <div className="flex gap-1.5 mb-6 sm:mb-10">
           <button
             onClick={() => setActiveTab('GEAR')}
-            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'GEAR' ? 'border-[#14F195] text-[#14F195] bg-[#14F195]/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'GEAR' ? 'border-[#FF2929] text-[#FF2929] bg-[#FF2929]/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
             Gear
           </button>
@@ -302,13 +302,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                 const canAfford = !passesLoading && currentBalance >= priceValue;
                 const isLoading = passesLoading;
                 // tier accent: game palette — green / cyan / orange / purple / gold
-                const tierColor = pass.id === 'pass_basic'  ? '#14F195'
+                const tierColor = pass.id === 'pass_basic'  ? '#FF2929'
                                 : pass.id === 'pass_core'   ? '#22d3ee'
                                 : pass.id === 'pass_pro'    ? '#fb923c'
                                 : pass.id === 'pass_elite'  ? '#9945FF'
                                 : '#eab308';
                 const badgeColors = 'border-white/10 bg-white/[0.02]';
-                const btnColors = pass.id === 'pass_basic'  ? 'bg-[#14F195] text-black'
+                const btnColors = pass.id === 'pass_basic'  ? 'bg-[#FF2929] text-white'
                                 : pass.id === 'pass_core'   ? 'bg-cyan-400 text-black'
                                 : pass.id === 'pass_pro'    ? 'bg-orange-500 text-black'
                                 : pass.id === 'pass_elite'  ? 'bg-[#9945FF] text-white'
@@ -535,10 +535,10 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
               <div 
                 key={item.id} 
                 className={`bg-[#050505] border-2 p-6 tech-border group transition-all flex flex-col 
-                  ${isOwned ? 'border-green-500/20 bg-green-950/5' : levelLocked ? 'border-red-950/20 opacity-60 grayscale' : `border-white/5 ${rarityStyle.shadow}`}`}
+                  ${isOwned ? 'border-amber-500/20 bg-amber-950/5' : levelLocked ? 'border-red-950/20 opacity-60 grayscale' : `border-white/5 ${rarityStyle.shadow}`}`}
               >
                 <div className="flex gap-5 mb-5">
-                  <div className={`relative w-24 h-24 md:w-28 md:h-28 bg-black border ${isOwned ? 'border-green-500/50' : rarityStyle.border} flex items-center justify-center shrink-0 overflow-hidden`}>
+                  <div className={`relative w-24 h-24 md:w-28 md:h-28 bg-black border ${isOwned ? 'border-amber-500/50' : rarityStyle.border} flex items-center justify-center shrink-0 overflow-hidden`}>
                     {/* Image with Fallback and Ownership Overlay */}
                     <div className="w-full h-full relative">
                         {item.image && !item.image.startsWith('http') ? (
@@ -566,7 +566,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         {/* OWNED STAMP */}
                         {isOwned && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
-                                <span className="text-green-500 font-black uppercase -rotate-12 border-4 border-green-500 px-1 py-0.5 text-xs sm:text-sm tracking-widest opacity-90 shadow-[0_0_15px_rgba(34,197,94,0.5)]">
+                                <span className="text-amber-400 font-black uppercase -rotate-12 border-4 border-amber-400 px-1 py-0.5 text-xs sm:text-sm tracking-widest opacity-90 shadow-[0_0_15px_rgba(255,184,0,0.4)]">
                                     OWNED
                                 </span>
                             </div>
@@ -582,7 +582,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   
                   <div className="flex-1 flex flex-col">
                     <div className="flex justify-between items-start">
-                      <h4 className={`font-black uppercase tracking-tight text-base leading-tight ${isOwned ? 'text-green-500' : 'text-white'}`}>
+                      <h4 className={`font-black uppercase tracking-tight text-base leading-tight ${isOwned ? 'text-amber-400' : 'text-white'}`}>
                         {item.name}
                       </h4>
                     </div>
@@ -592,7 +592,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                       ) : (
                         <>
                           {item.effect && (
-                            <span className="block text-[10px] font-bold text-[#14F195]">{item.effect.replace('_', ' ')}</span>
+                            <span className="block text-[10px] font-bold text-[#FFB800]">{item.effect.replace('_', ' ')}</span>
                           )}
                           <span className="block text-[10px] font-bold text-yellow-500">+{srReward} $SR</span>
                         </>
@@ -612,7 +612,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   </div>
                   
                   {isOwned ? (
-                    <div className="px-8 py-3 font-bold uppercase tracking-wide text-xs tech-border bg-green-500/10 text-green-500 border-green-500/30 text-center cursor-default">
+                    <div className="px-8 py-3 font-bold uppercase tracking-wide text-xs tech-border bg-amber-500/10 text-amber-400 border-amber-500/30 text-center cursor-default">
                       Owned
                     </div>
                   ) : levelLocked ? (

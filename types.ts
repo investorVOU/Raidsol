@@ -183,7 +183,7 @@ export interface Rank {
 
 export const RANKS: Rank[] = [
   { level: 1, title: 'RECRUIT', minSR: 0, perks: ['Basic Solo Access'], color: '#94a3b8' },
-  { level: 5, title: 'RAIDER', minSR: 1000, perks: ['Unlocks TEAM_MODE', '5% Bonus SR'], color: '#14F195' },
+  { level: 5, title: 'RAIDER', minSR: 1000, perks: ['Unlocks TEAM_MODE', '5% Bonus SR'], color: '#FF6B35' },
   { level: 10, title: 'OPERATIVE', minSR: 3000, perks: ['Reduced RISK Drift', 'Store Discount 5%'], color: '#00FBFF' },
   { level: 15, title: 'COMMANDER', minSR: 7000, perks: ['Unlocks TOURNAMENT_MODE', '10% Yield Boost'], color: '#9945FF' },
   { level: 20, title: 'GHOST', minSR: 15000, perks: ['Exclusive GHOST Gear Access', '20% SR Bonus'], color: '#f59e0b' },

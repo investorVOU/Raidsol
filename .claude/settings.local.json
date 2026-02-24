@@ -16,7 +16,9 @@
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
       "Bash(dir:*)",
-      "WebFetch(domain:soltrivia.app)"
+      "WebFetch(domain:soltrivia.app)",
+      "Bash(py:*)",
+      "Bash(cat:*)"
     ]
   }
 }

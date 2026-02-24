@@ -39,7 +39,7 @@ interface LobbyScreenProps {
 }
 
 const DIFF_CONFIG = {
-  [Difficulty.EASY]:   { label: 'Easy',     emoji: '🟢', color: 'text-green-400',  ring: 'border-green-500/40',   bg: 'bg-green-500/10',  mult: '0.8×' },
+  [Difficulty.EASY]:   { label: 'Easy',     emoji: '🔵', color: 'text-sky-400',    ring: 'border-sky-500/40',     bg: 'bg-sky-500/10',    mult: '0.8×' },
   [Difficulty.MEDIUM]: { label: 'Standard', emoji: '🔵', color: 'text-cyan-400',   ring: 'border-cyan-500/40',    bg: 'bg-cyan-500/10',   mult: '1.0×' },
   [Difficulty.HARD]:   { label: 'Hardcore', emoji: '🟠', color: 'text-orange-400', ring: 'border-orange-500/40',  bg: 'bg-orange-500/10', mult: '1.4×' },
   [Difficulty.DEGEN]:  { label: 'Degen',    emoji: '🔴', color: 'text-red-400',    ring: 'border-red-500/40',     bg: 'bg-red-500/10',    mult: '2.5×' },
@@ -248,7 +248,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 {/* Pool */}
                 <div className="text-right shrink-0 ml-4">
                   <p className="text-[9px] text-white/40 mb-0.5 uppercase tracking-wider" style={INTER}>Prize pool</p>
-                  <p className="text-2xl leading-none text-[#14F195]" style={{ ...BN, letterSpacing: '1px' }}>
+                  <p className="text-2xl leading-none text-[#FFB800]" style={{ ...BN, letterSpacing: '1px' }}>
                     {currentRound.poolSol < 0.001 ? '0.000' : currentRound.poolSol.toFixed(3)}
                   </p>
                   <p className="text-[9px] text-white/40 mt-0.5" style={INTER}>SOL</p>
@@ -318,24 +318,25 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         {/* ── RAID PASS ── */}
         <button
           onClick={() => onNavigateStore?.('PASS')}
-          className="w-full rounded-xl bg-white/[0.025] border border-white/[0.14] p-3 text-left active:scale-[0.98] transition-all group hover:bg-white/[0.04]"
+          className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group"
+          style={{ background: 'rgba(255,184,0,0.05)', border: '1px solid rgba(255,184,0,0.22)' }}
         >
           <div className="flex items-center gap-3">
             <div className="text-xl shrink-0">🎟️</div>
             <div className="flex-1 min-w-0">
               {raidTickets > 0 ? (
                 <>
-                  <p className="text-white text-[15px] font-semibold" style={INTER}>{raidTickets}x Raid Pass active</p>
-                  <p className="text-[10px] text-white/40" style={{ ...INTER, fontWeight: 400 }}>50% off entry · 10% win boost</p>
+                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>{raidTickets}× RAID PASS ACTIVE</p>
+                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>50% off entry · 10% win boost</p>
                 </>
               ) : (
                 <>
-                  <p className="text-white/75 text-[15px] font-semibold" style={INTER}>Raid Pass — 50% off entry</p>
-                  <p className="text-[10px] text-white/70" style={{ ...INTER, fontWeight: 400 }}>SKR holders get extra 50% off</p>
+                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>RAID PASS</p>
+                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>50% off entry · SKR holders get extra 50% off</p>
                 </>
               )}
             </div>
-            <i className="fa-solid fa-chevron-right text-white text-xs shrink-0" />
+            <i className="fa-solid fa-chevron-right text-[#FFB800]/50 text-xs shrink-0" />
           </div>
         </button>
 
@@ -462,11 +463,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-2 space-y-4">
 
               {/* Prize pool banner */}
-              <div className="rounded-xl p-4" style={{ background: 'linear-gradient(135deg, rgba(153,69,255,0.14) 0%, rgba(20,241,149,0.06) 100%)', border: '1px solid rgba(153,69,255,0.22)' }}>
+              <div className="rounded-xl p-4" style={{ background: 'linear-gradient(135deg, rgba(255,41,41,0.10) 0%, rgba(255,184,0,0.06) 100%)', border: '1px solid rgba(255,41,41,0.22)' }}>
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-[9px] text-white/35 font-medium uppercase tracking-wider mb-0.5">Prize Pool</p>
-                    <p className="text-2xl font-black leading-none" style={{ background: 'linear-gradient(90deg, #9945FF, #14F195)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <p className="text-2xl font-black leading-none" style={{ background: 'linear-gradient(90deg, #FF2929, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                       {currentRound.poolSol < 0.001 ? '0.000' : currentRound.poolSol.toFixed(3)}
                       <span className="text-sm ml-1 text-white/40" style={{ WebkitTextFillColor: 'rgba(255,255,255,0.4)' }}>SOL</span>
                     </p>
@@ -474,7 +475,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <div className="text-right">
                     <p className="text-[9px] text-white/35 font-medium mb-0.5">Closes in</p>
                     <div className="flex items-center gap-1.5 justify-end">
-                      <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#9945FF' }} />
+                      <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#FF2929' }} />
                       <p className="text-sm font-bold tabular-nums text-white/80">{formatCountdown(currentRound.timeRemainingMs)}</p>
                     </div>
                   </div>
@@ -604,7 +605,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
                   const bal = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
                   const sym = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
-                  const colActive = c === Currency.SOL ? 'border-[#14F195]/45 bg-[#14F195]/8 text-[#14F195]'
+                  const colActive = c === Currency.SOL ? 'border-white/40 bg-white/8 text-white'
                     : c === Currency.USDC ? 'border-blue-400/45 bg-blue-400/8 text-blue-400'
                     : 'border-orange-400/45 bg-orange-400/8 text-orange-400';
                   const active = roundCurrency === c;
@@ -625,7 +626,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <p className="text-xl font-bold text-white leading-none">
                     {roundPricesLoading
                       ? <span className="text-white/28 text-sm animate-pulse">…</span>
-                      : <>{roundTotalDisplay.toFixed(roundCurDecimals)}<span className={`text-sm ml-1 font-semibold ${roundCurrency === Currency.SOL ? 'text-[#14F195]' : roundCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{roundCurSymbol}</span></>
+                      : <>{roundTotalDisplay.toFixed(roundCurDecimals)}<span className={`text-sm ml-1 font-semibold ${roundCurrency === Currency.SOL ? 'text-white/60' : roundCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{roundCurSymbol}</span></>
                     }
                   </p>
                   {!roundPricesLoading && roundBalance < roundTotalDisplay && (
@@ -660,10 +661,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
             {/* Modal header */}
             <div className="shrink-0 px-5 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-[#14F195]/12 flex items-center justify-center">
-                  <i className="fa-solid fa-bolt text-[#14F195] text-sm" />
-                </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-1 h-6 rounded-full bg-[#FF2929]" />
                 <h2 className="text-base font-semibold text-white">Configure Raid</h2>
               </div>
               <button onClick={() => setShowModal(false)}
@@ -691,18 +690,18 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         <button key={mode} onClick={() => !locked && setMode(mode)} disabled={locked}
                           className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
                             locked            ? 'opacity-35 cursor-not-allowed border-white/5 bg-transparent'
-                            : selectedMode === mode ? 'bg-[#14F195]/8 border-[#14F195]/35'
+                            : selectedMode === mode ? 'bg-[#FF2929]/8 border-[#FF2929]/35'
                             : 'bg-white/3 border-white/[0.12] hover:border-white/18 active:scale-[0.98]'
                           }`}>
-                          <i className={`fa-solid ${icon} text-sm shrink-0 ${selectedMode === mode && !locked ? 'text-[#14F195]' : 'text-white/40'}`} />
+                          <i className={`fa-solid ${icon} text-sm shrink-0 ${selectedMode === mode && !locked ? 'text-[#FF2929]' : 'text-white/40'}`} />
                           <div className="flex-1 text-left">
-                            <p className={`text-sm font-semibold ${selectedMode === mode ? 'text-[#14F195]' : 'text-white'}`}>{label}</p>
+                            <p className={`text-sm font-semibold ${selectedMode === mode ? 'text-white' : 'text-white/70'}`}>{label}</p>
                             <p className="text-[10px] text-white/28 font-medium">{desc}</p>
                           </div>
                           <div className="shrink-0 flex items-center gap-2">
                             {locked && <span className="text-[9px] bg-red-500/18 text-red-400 rounded-full px-2 py-0.5 font-semibold">Locked</span>}
                             <span className="text-xs text-white/35 font-medium">{ENTRY_FEES[mode]} SOL</span>
-                            {selectedMode === mode && !locked && <div className="w-1.5 h-1.5 rounded-full bg-[#14F195]" />}
+                            {selectedMode === mode && !locked && <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929]" />}
                           </div>
                         </button>
                       ))}
@@ -813,7 +812,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     <div className="grid grid-cols-3 gap-3 mb-3">
                       <div className="text-center">
                         <p className="text-[9px] text-white/28 mb-1 font-medium">Mult</p>
-                        <p className="font-bold text-[#14F195] text-lg leading-none">{totalMult}×</p>
+                        <p className="font-bold text-[#FFB800] text-lg leading-none">{totalMult}×</p>
                       </div>
                       <div className="text-center border-x border-white/5">
                         <p className="text-[9px] text-white/28 mb-1 font-medium">Risk</p>
@@ -827,12 +826,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     <div>
                       <div className="flex justify-between text-[9px] font-semibold mb-1.5">
                         <span className="text-white/28">Power</span>
-                        <span className={powerScore >= 50 ? 'text-[#14F195]' : powerScore >= 25 ? 'text-amber-400' : 'text-red-400'}>
+                        <span className={powerScore >= 50 ? 'text-[#FFB800]' : powerScore >= 25 ? 'text-amber-400' : 'text-red-400'}>
                           {powerScore >= 50 ? 'Strong' : powerScore >= 25 ? 'Moderate' : 'Weak'} · {powerScore}
                         </span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-500 ${powerScore >= 50 ? 'bg-[#14F195]' : powerScore >= 25 ? 'bg-amber-400' : 'bg-red-400'}`}
+                        <div className={`h-full rounded-full transition-all duration-500 ${powerScore >= 50 ? 'bg-[#FFB800]' : powerScore >= 25 ? 'bg-amber-400' : 'bg-red-400'}`}
                           style={{ width: `${powerScore}%` }} />
                       </div>
                     </div>
@@ -892,7 +891,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <p className="text-xl font-bold text-white leading-none">
                     {pricesLoading
                       ? <span className="text-white/28 text-sm animate-pulse">…</span>
-                      : <>{totalDisplay.toFixed(curDecimals)}<span className={`text-sm ml-1 font-semibold ${entryCurrency === Currency.SOL ? 'text-[#14F195]' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{curSymbol}</span></>
+                      : <>{totalDisplay.toFixed(curDecimals)}<span className={`text-sm ml-1 font-semibold ${entryCurrency === Currency.SOL ? 'text-white/60' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{curSymbol}</span></>
                     }
                   </p>
                   {applyTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">Ticket applied</p>}
