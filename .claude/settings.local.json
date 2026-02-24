@@ -18,7 +18,9 @@
       "Bash(dir:*)",
       "WebFetch(domain:soltrivia.app)",
       "Bash(py:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(supabase:*)",
+      "Bash(cd \"C:/Users/Admin/Documents/solana-raid\" && CREATOR_KEYPAIR=/tmp/creator-keypair.json RPC_URL=\"https://mainnet.helius-rpc.com/?api-key=085ad320-5d12-4e40-bd63-c97c145a1462\" node scripts/create-tree.mjs 2>&1)"
     ]
   }
 }

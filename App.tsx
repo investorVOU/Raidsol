@@ -46,7 +46,7 @@ const SKR_DECIMALS = 6;
 
 
 const AppInner: React.FC = () => {
-  const { connected, disconnect, publicKey, sendTransaction, signMessage } = useWallet();
+  const { connected, disconnect, publicKey, sendTransaction, signMessage, signTransaction } = useWallet();
   const { setVisible } = useWalletModal();
   const [introComplete, setIntroComplete] = useState(
     () => localStorage.getItem('solraid-intro-dismissed') === 'true'
@@ -830,6 +830,64 @@ const AppInner: React.FC = () => {
       alert('Claim failed: ' + String(err));
       return false;
     }
+  };
+
+  // ── cNFT Avatar Minting ──────────────────────────────────────────────────
+  const handleMintAvatar = async (avatarId: string): Promise<boolean> => {
+    if (!walletAddr || !signTransaction) return false;
+
+    // 1. Request partially-signed tx from edge function (server signs as tree creator)
+    const { data, error } = await supabase.functions.invoke('mint-avatar-nft', {
+      body: { wallet_address: walletAddr, avatar_id: avatarId, action: 'prepare' },
+    });
+
+    if (error || !data?.serializedTx) {
+      if (data?.error === 'already_minted') return true; // Already done — UI will show it
+      const errMsg = data?.error ?? (error as any)?.message ?? 'Unknown error';
+      alert(`Mint failed: ${errMsg}`);
+      return false;
+    }
+
+    // 2. Deserialize the partially-signed tx (tree creator already signed)
+    let tx: import('@solana/web3.js').Transaction;
+    try {
+      const txBytes = Uint8Array.from(atob(data.serializedTx), c => c.charCodeAt(0));
+      tx = Transaction.from(txBytes);
+    } catch (err) {
+      alert('Mint failed: could not deserialize transaction.');
+      return false;
+    }
+
+    // 3. User signs (adds fee-payer signature); may throw if wallet rejects
+    let signedTx: import('@solana/web3.js').Transaction;
+    try {
+      signedTx = await signTransaction(tx);
+    } catch {
+      // User rejected — clean up the pending minted_nfts row
+      await supabase.from('minted_nfts')
+        .delete()
+        .eq('wallet_address', walletAddr)
+        .eq('avatar_id', avatarId)
+        .is('tx_signature', null);
+      return false;
+    }
+
+    // 4. Send fully-signed transaction
+    let sig: string;
+    try {
+      sig = await connection.sendRawTransaction(signedTx.serialize());
+      await connection.confirmTransaction(sig, 'confirmed');
+    } catch (err) {
+      alert(`Mint failed: send error — ${String(err)}`);
+      return false;
+    }
+
+    // 5. Record the confirmed tx signature in Supabase
+    await supabase.functions.invoke('mint-avatar-nft', {
+      body: { wallet_address: walletAddr, avatar_id: avatarId, action: 'record', tx_signature: sig },
+    });
+
+    return true;
   };
 
   const handlePurchase = async (itemId: string, price: number, currency: Currency): Promise<boolean> => {
@@ -1653,6 +1711,7 @@ const AppInner: React.FC = () => {
             referralSREarned={profile?.referral_sr_earned ?? 0}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             onClaimRoundWin={handleClaimRoundWin}
+            onMintAvatar={handleMintAvatar}
           />
         );
       case Screen.STORE:

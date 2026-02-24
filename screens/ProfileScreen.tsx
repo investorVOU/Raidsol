@@ -5,6 +5,7 @@ import { Edit, Check, X, Lock, Wallet, ExternalLink } from 'lucide-react';
 import { useRaidHistory } from '../hooks/useRaidHistory';
 import { useWithdrawalHistory } from '../hooks/useWithdrawalHistory';
 import { usePlayerRoundWins } from '../hooks/usePlayerRoundWins';
+import { useAvatarNfts } from '../hooks/useAvatarNfts';
 import { getRoundBoundsFor, formatRoundWindow } from '../hooks/useRoundData';
 import { supabase } from '../lib/supabase';
 
@@ -28,6 +29,7 @@ interface ProfileScreenProps {
   referralSREarned?: number;
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
   onClaimRoundWin?: (roundNum: number, roundDate: string) => Promise<boolean>;
+  onMintAvatar?: (avatarId: string) => Promise<boolean>;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -50,6 +52,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   referralSREarned = 0,
   onNavigateStore,
   onClaimRoundWin,
+  onMintAvatar,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -59,6 +62,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [lastWithdrawTx, setLastWithdrawTx] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [showLockTip, setShowLockTip] = useState(false);
+  const [isMinting, setIsMinting] = useState(false);
+
+  // Minted NFT records for this wallet
+  const { mintedAvatars, refetch: refetchMints } = useAvatarNfts(walletAddress ?? null);
 
   // Real raid history from Supabase
   const { history: raidHistory, loading: historyLoading } = useRaidHistory(walletAddress ?? null);
@@ -182,6 +189,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     }
   };
 
+  const handleMintClick = async () => {
+    if (!equippedAvatarId || isMinting || !onMintAvatar) return;
+    setIsMinting(true);
+    try {
+      const ok = await onMintAvatar(equippedAvatarId);
+      if (ok) refetchMints();
+    } finally {
+      setIsMinting(false);
+    }
+  };
+
   const saveName = () => {
     if (editName.trim().length > 0) {
       onUpdateUsername(editName);
@@ -298,6 +316,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             )}
             {equippedAvatar && (
               <span className="text-[9px] font-bold text-white/40">{equippedAvatar.name}</span>
+            )}
+            {/* Mint — coming soon badge */}
+            {equippedAvatar && isConnected && ownedItemIds.includes(equippedAvatarId ?? '') && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 border border-white/10 bg-white/3">
+                <div className="w-1.5 h-1.5 bg-[#FFB800] rounded-full animate-pulse shrink-0" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-white/40">
+                  NFT Mint — Coming Soon
+                </span>
+              </div>
             )}
           </div>
 
