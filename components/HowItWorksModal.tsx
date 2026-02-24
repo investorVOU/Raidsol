@@ -28,7 +28,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
         <div className="p-5 border-b border-white/5 flex justify-between items-center shrink-0">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">How it works</h2>
-            <p className="text-xs text-white/40 mt-1">Mechanics v7.0</p>
+            <p className="text-xs text-white/40 mt-1">Mechanics v8.0</p>
           </div>
           <button onClick={onClose} className="text-white/40 hover:text-white transition-colors font-bold text-lg leading-none">✕</button>
         </div>
@@ -36,11 +36,11 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
         {/* Tabs — scrollable on small screens */}
         <div className="flex border-b border-white/5 bg-black/50 overflow-x-auto scrollbar-hide shrink-0">
           {([
-            { id: 'GUIDE',    label: 'Guide',      activeClass: 'bg-cyan-500/10 text-cyan-400 border-b-2 border-cyan-500' },
+            { id: 'GUIDE',    label: 'Guide',      activeClass: 'bg-white/8 text-white border-b-2 border-white/60' },
             { id: 'EVENTS',   label: 'Events',     activeClass: 'bg-orange-500/10 text-orange-400 border-b-2 border-orange-500' },
-            { id: 'PVP',      label: 'Multiplayer',activeClass: 'bg-purple-500/10 text-purple-400 border-b-2 border-purple-500' },
+            { id: 'PVP',      label: 'Multiplayer',activeClass: 'bg-red-500/10 text-[#FF2929] border-b-2 border-[#FF2929]' },
             { id: 'ECONOMY',  label: 'Economy',    activeClass: 'bg-yellow-500/10 text-yellow-400 border-b-2 border-yellow-500' },
-            { id: 'REFERRAL', label: 'Referral',   activeClass: 'bg-green-500/10 text-green-400 border-b-2 border-green-500' },
+            { id: 'REFERRAL', label: 'Referral',   activeClass: 'bg-amber-500/10 text-amber-400 border-b-2 border-amber-500' },
           ] as const).map(tab => (
             <button
               key={tab.id}
@@ -55,12 +55,12 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5 scrollbar-hide bg-black/40">
 
-          {/* ── GAME LOOP ── */}
+          {/* ── GUIDE ── */}
           {activeTab === 'GUIDE' && (
             <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
 
               <div className="bg-white/5 border border-white/10 p-4">
-                <h3 className="text-sm font-bold text-cyan-400 uppercase mb-2">Objective</h3>
+                <h3 className="text-sm font-bold text-white uppercase mb-2">Objective</h3>
                 <p className="text-xs text-white/70 leading-relaxed">
                   Enter a Raid. Watch your score multiply. <span className="text-white">Cash out before Risk hits 100%.</span> Stay longer = more reward, but higher bust probability. Skill, timing and gear decide your fate.
                 </p>
@@ -73,12 +73,12 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                     <span className="text-xs font-bold text-red-500 block mb-1">ATTACK</span>
                     <span className="text-[10px] text-white/50 leading-tight block">Boosts multiplier. Spikes risk. Combo chains for bonus pts.</span>
                   </div>
-                  <div className="p-3 border border-cyan-500/30 bg-cyan-950/10 text-center">
-                    <span className="text-xs font-bold text-cyan-500 block mb-1">DEFEND</span>
+                  <div className="p-3 border border-blue-500/30 bg-blue-950/10 text-center">
+                    <span className="text-xs font-bold text-blue-400 block mb-1">DEFEND</span>
                     <span className="text-[10px] text-white/50 leading-tight block">Cuts risk. Max 2 in a row, then 3s cooldown.</span>
                   </div>
-                  <div className="p-3 border border-green-500/30 bg-green-950/10 text-center">
-                    <span className="text-xs font-bold text-green-500 block mb-1">EXIT</span>
+                  <div className="p-3 border border-[#FFB800]/30 bg-[#FFB800]/5 text-center">
+                    <span className="text-xs font-bold text-[#FFB800] block mb-1">EXIT</span>
                     <span className="text-[10px] text-white/50 leading-tight block">Lock in earnings. Penalty if before 8s.</span>
                   </div>
                 </div>
@@ -91,8 +91,8 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                     <span className="text-[10px] font-bold text-yellow-400 block mb-0.5">COMBO</span>
                     <span className="text-[10px] text-white/50">Defend → Attack within 2.2s. +500 pts, -4 risk.</span>
                   </div>
-                  <div className="flex-1 p-3 border border-purple-500/20 bg-purple-500/5">
-                    <span className="text-[10px] font-bold text-purple-400 block mb-0.5">COUNTER</span>
+                  <div className="flex-1 p-3 border border-white/10 bg-white/5">
+                    <span className="text-[10px] font-bold text-white/70 block mb-0.5">COUNTER</span>
                     <span className="text-[10px] text-white/50">Attack → Defend within 2.2s. +350 pts, -10 risk.</span>
                   </div>
                 </div>
@@ -111,13 +111,19 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 </div>
               </div>
 
+              <div className="bg-white/5 border border-white/10 p-4 space-y-2">
+                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Two raid modes</h3>
+                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-white/75">Normal Raid</span> — Pay entry fee, extract SOL immediately on success. Reward paid out at end of session via Withdraw.</p>
+                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-[#FF2929]">Round-Based Raid</span> — Score points instead of SOL. Your best score in the 6-hour window competes on the leaderboard. Winnings are claimed after the round closes from Profile → Round Wins.</p>
+              </div>
+
               <div className="bg-white/5 border border-white/10 p-4">
                 <h3 className="text-sm font-bold text-white uppercase mb-3">Payment options</h3>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { token: 'SOL',  color: 'text-[#9945FF]', desc: 'Native Solana' },
+                    { token: 'SOL',  color: 'text-[#FFB800]', desc: 'Native Solana' },
                     { token: 'USDC', color: 'text-blue-400',  desc: 'USD Stablecoin' },
-                    { token: 'SKR',  color: 'text-[#14F195]', desc: 'Seeker Token' },
+                    { token: 'SKR',  color: 'text-[#FFB800]', desc: 'Seeker Token' },
                   ].map(t => (
                     <div key={t.token} className="text-center p-2 border border-white/10">
                       <span className={`text-sm font-bold block ${t.color}`}>{t.token}</span>
@@ -130,8 +136,8 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               <div className="bg-white/5 border border-white/10 p-4 space-y-2">
                 <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Gear & Passes</h3>
                 <p className="text-[10px] text-white/50 leading-relaxed">Buy <span className="text-white/75">Gear</span> from the Store to boost multiplier, reduce risk drift, or extend raid time. Equip up to 4 pieces per raid.</p>
-                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-yellow-400">Raid Passes</span> give 50% off entry fee + 10% win boost. Toggle at deployment if you own one.</p>
-                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-cyan-400">Avatars</span> must be purchased — equip from your Profile to set your identity.</p>
+                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-[#FFB800]">Raid Passes</span> give 50% off entry fee + 10% win boost. Toggle at deployment if you own one.</p>
+                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-white/60">Avatars</span> must be purchased — equip from your Profile to set your identity.</p>
               </div>
             </div>
           )}
@@ -165,9 +171,9 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 },
                 {
                   name: 'FIREWALL SAVE',
-                  color: 'text-cyan-400',
-                  border: 'border-cyan-500/30 bg-cyan-500/5',
-                  dot: 'bg-cyan-400',
+                  color: 'text-blue-400',
+                  border: 'border-blue-500/30 bg-blue-500/5',
+                  dot: 'bg-blue-400',
                   desc: '12% chance at the moment of bust. A last-second save resets risk to 72% and shows the SHIELD overlay. You survive — but don\'t push your luck twice.',
                 },
                 {
@@ -179,9 +185,9 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 },
                 {
                   name: 'HOT STREAK',
-                  color: 'text-[#14F195]',
-                  border: 'border-[#14F195]/20 bg-[#14F195]/5',
-                  dot: 'bg-[#14F195]',
+                  color: 'text-[#FFB800]',
+                  border: 'border-[#FFB800]/20 bg-[#FFB800]/5',
+                  dot: 'bg-[#FFB800]',
                   desc: 'Visual indicator on the multiplier bar after sustained aggressive play. No mechanical effect — just a heads-up that you\'re going hard.',
                 },
               ].map(ev => (
@@ -206,8 +212,8 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
           {/* ── MULTIPLAYER ── */}
           {activeTab === 'PVP' && (
             <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-[#9945FF]/10 border border-[#9945FF]/40 p-5 tech-border">
-                <h3 className="text-lg font-bold text-[#9945FF] uppercase mb-2">Winner takes all</h3>
+              <div className="bg-[#FF2929]/10 border border-[#FF2929]/40 p-5 tech-border">
+                <h3 className="text-lg font-bold text-[#FF2929] uppercase mb-2">Winner takes all</h3>
                 <p className="text-xs text-white/75 leading-relaxed">
                   In PvP all players raid the <span className="text-white">same RNG seed</span>. Same spikes, same drifts — pure skill separates you. The player who extracts with the <span className="text-white">highest score</span> wins the entire pot.
                 </p>
@@ -215,13 +221,13 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
 
               <div className="space-y-3">
                 {[
-                  { n: 1, title: 'Create & set stake', body: 'Host a lobby. Pick currency (SOL / USDC / SKR) and stake amount. Share the room code or QR — the QR scanner works directly from the Join screen.' },
+                  { n: 1, title: 'Create & set stake', body: 'Host a lobby. Pick currency (SOL / USDC / SKR) and stake amount — choose a preset or enter a custom amount. Share the room code or QR.' },
                   { n: 2, title: 'Join via code or QR', body: 'Enter the room code or tap the scan icon. Preview stake, currency and player count before paying. Confirm and pay in one tap.' },
-                  { n: 3, title: 'Live leaderboard', body: 'During the raid a real-time leaderboard on the right panel shows everyone\'s score, risk bar and status. Know exactly where you stand.' },
-                  { n: 4, title: 'Highest extract wins', body: 'When the host fires the round, everyone raids simultaneously. First to lock in the highest score takes the pool. No second place.' },
+                  { n: 3, title: 'Live leaderboard', body: 'During the raid a real-time leaderboard shows everyone\'s score, risk bar and status. Know exactly where you stand at all times.' },
+                  { n: 4, title: 'Highest score wins', body: 'Everyone raids simultaneously on the same seed. The player with the highest points when they extract takes the full pot. No second place payout.' },
                 ].map(step => (
                   <div key={step.n} className="flex gap-4 items-start">
-                    <div className="w-7 h-7 flex items-center justify-center bg-[#9945FF]/10 border border-[#9945FF]/30 text-[#9945FF] font-bold text-xs shrink-0">{step.n}</div>
+                    <div className="w-7 h-7 flex items-center justify-center bg-[#FF2929]/10 border border-[#FF2929]/30 text-[#FF2929] font-bold text-xs shrink-0">{step.n}</div>
                     <div>
                       <h4 className="text-xs font-bold uppercase text-white mb-1">{step.title}</h4>
                       <p className="text-xs text-white/60">{step.body}</p>
@@ -269,28 +275,51 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 </div>
               </div>
 
+              {/* Round Competition */}
+              <div className="border border-[#FF2929]/25 bg-[#FF2929]/5 p-4 space-y-3">
+                <h3 className="text-xs font-bold text-[#FF2929] uppercase tracking-wide">Raid Round competition</h3>
+                <p className="text-[10px] text-white/60 leading-relaxed">
+                  4 rounds run daily (UTC), each 6 hours. Enter a round-based raid to submit your <span className="text-white">best point score</span> to the leaderboard. No immediate SOL payout — prizes are distributed after the round ends.
+                </p>
+                <div className="space-y-1.5">
+                  {[
+                    { label: 'Prize pool', value: '8% of all round entry fees' },
+                    { label: 'Eligibility', value: 'Top 5 wallets by highest single score' },
+                    { label: '1st place', value: '40% of pool' },
+                    { label: '2nd place', value: '25% of pool' },
+                    { label: '3rd – 5th', value: '18% · 11% · 6%' },
+                    { label: 'Claiming', value: 'Profile → Round Wins tab' },
+                  ].map(row => (
+                    <div key={row.label} className="flex items-center justify-between">
+                      <span className="text-[10px] text-white/40">{row.label}</span>
+                      <span className="text-[10px] font-bold text-white/75 mono">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase text-white/40 tracking-wide">Bonuses & savings</h3>
-                <div className="flex items-center justify-between p-3 bg-yellow-500/5 border border-yellow-500/20">
+                <div className="flex items-center justify-between p-3 bg-[#FFB800]/5 border border-[#FFB800]/20">
                   <div>
-                    <span className="text-xs font-bold text-yellow-400 uppercase block">Raid Pass</span>
+                    <span className="text-xs font-bold text-[#FFB800] uppercase block">Raid Pass</span>
                     <span className="text-[10px] text-white/50">Buy in Store — 50% off entry + 10% win boost</span>
                   </div>
-                  <span className="text-xs font-bold text-yellow-400 mono shrink-0 ml-2">🎟️</span>
+                  <span className="text-xs font-bold text-[#FFB800] mono shrink-0 ml-2">PASS</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-[#14F195]/5 border border-[#14F195]/20">
+                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10">
                   <div>
-                    <span className="text-xs font-bold text-[#14F195] uppercase block">Daily Free Raid</span>
-                    <span className="text-[10px] text-white/50">First EASY solo raid each day costs nothing</span>
+                    <span className="text-xs font-bold text-white/75 uppercase block">Free Tickets</span>
+                    <span className="text-[10px] text-white/50">+1 free ticket per day, max 3 stockpiled. Toggle at deployment.</span>
                   </div>
-                  <span className="text-xs font-bold text-[#14F195] mono shrink-0 ml-2">FREE</span>
+                  <span className="text-xs font-bold text-white/50 mono shrink-0 ml-2">FREE</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-[#9945FF]/5 border border-[#9945FF]/20">
+                <div className="flex items-center justify-between p-3 bg-[#FFB800]/5 border border-[#FFB800]/20">
                   <div>
-                    <span className="text-xs font-bold text-[#9945FF] uppercase block">Win Streak Bonus</span>
+                    <span className="text-xs font-bold text-[#FFB800] uppercase block">Win Streak Bonus</span>
                     <span className="text-[10px] text-white/50">3+ consecutive wins → +0.15× starting multiplier</span>
                   </div>
-                  <span className="text-xs font-bold text-[#9945FF] mono shrink-0 ml-2">+0.15×</span>
+                  <span className="text-xs font-bold text-[#FFB800] mono shrink-0 ml-2">+0.15×</span>
                 </div>
               </div>
 
@@ -299,7 +328,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 <div className="space-y-2 text-xs text-white/60">
                   <p><span className="text-red-400">Greed</span> — Risk at 99% and you wait or attack. Most common loss.</p>
                   <p><span className="text-orange-400">Early exit</span> — Cashing out before 8s cuts reward by 50%.</p>
-                  <p><span className="text-purple-400">Bad RNG</span> — Spike pushes risk to 100% instantly. Rare but real.</p>
+                  <p><span className="text-white/50">Bad RNG</span> — Spike pushes risk to 100% instantly. Rare but real.</p>
                   <p><span className="text-white/50">Rage-quit protection</span> — 3 busts in 10 minutes locks you out briefly.</p>
                 </div>
               </div>
@@ -316,10 +345,10 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
           {/* ── REFERRAL ── */}
           {activeTab === 'REFERRAL' && (
             <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-green-500/5 border border-green-500/20 p-5">
-                <h3 className="text-lg font-bold text-[#14F195] uppercase mb-2">Recruit & earn</h3>
+              <div className="bg-white/5 border border-white/10 p-5">
+                <h3 className="text-lg font-bold text-white uppercase mb-2">Recruit & earn</h3>
                 <p className="text-xs text-white/75 leading-relaxed">
-                  Share your personal referral link. Every time a new player connects for the first time via your link, <span className="text-white">you earn 250 SR points</span> instantly.
+                  Share your personal referral link. Every time a new player connects for the first time via your link, <span className="text-[#FFB800]">you earn 250 SR points</span> instantly.
                 </p>
               </div>
 
@@ -331,7 +360,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                   { step: 4, title: 'Track recruits', body: 'Your profile shows total recruits and total SR earned from referrals in real time. Build your network.' },
                 ].map(s => (
                   <div key={s.step} className="flex gap-4 items-start">
-                    <div className="w-7 h-7 flex items-center justify-center bg-[#14F195]/10 border border-[#14F195]/30 text-[#14F195] font-bold text-xs shrink-0">{s.step}</div>
+                    <div className="w-7 h-7 flex items-center justify-center bg-white/8 border border-white/20 text-white font-bold text-xs shrink-0">{s.step}</div>
                     <div>
                       <h4 className="text-xs font-bold uppercase text-white mb-1">{s.title}</h4>
                       <p className="text-xs text-white/60">{s.body}</p>
@@ -342,7 +371,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
 
               <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10">
                 <span className="text-xs font-bold text-white/60 uppercase">SR per recruit</span>
-                <span className="text-xs font-bold text-[#14F195] mono">+250 SR</span>
+                <span className="text-xs font-bold text-[#FFB800] mono">+250 SR</span>
               </div>
             </div>
           )}
