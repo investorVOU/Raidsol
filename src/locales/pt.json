@@ -1,0 +1,108 @@
+{
+  "translation": {
+    "nav": {
+      "home": "Início",
+      "market": "Mercado",
+      "ranks": "Rankings",
+      "profile": "Perfil",
+      "deploy": "DEPLOYAR"
+    },
+    "header": {
+      "balance": "Saldo",
+      "rank": "Rank",
+      "srPoints": "Pontos SR",
+      "connect": "CONECTAR",
+      "disconnect": "Desconectar",
+      "notConnected": "Não conectado"
+    },
+    "lobby": {
+      "tagline": "Ganhe SOL. Não se deixe pegar.",
+      "readyToDeploy": "Pronto para deployar",
+      "connectToStart": "Conecte sua carteira para começar",
+      "enterRaid": "ENTRAR NO RAID",
+      "winSol": "Ganhe SOL · não se deixe pegar",
+      "configureRaid": "Configurar Raid",
+      "mode": "Modo",
+      "difficulty": "Dificuldade",
+      "boosts": "Boosts",
+      "loadout": "Loadout",
+      "payWith": "Pagar com",
+      "entryFee": "Taxa de entrada",
+      "entryAmount": "Valor de entrada",
+      "maxPayout": "Pagamento máx ~{{amount}} SOL",
+      "minFee": "Mín {{amount}}",
+      "entryTotal": "Custo de entrada",
+      "deploy": "DEPLOYAR",
+      "cancel": "Cancelar",
+      "ticketApplied": "Ticket aplicado",
+      "insufficientFunds": "Saldo insuficiente",
+      "useTicket": "Usar ticket — 50% off",
+      "ticketsLeft": "{{count}}x restantes",
+      "connectWalletStart": "Conecte sua carteira para começar a raiding",
+      "noGearShop": "Sem gear — visite a loja",
+      "noGearStore": "Sem gear — visite a loja",
+      "quickSwap": "Troca rápida",
+      "gearSlots": "{{count}}/4 slots",
+      "raidStats": "Stats do Raid",
+      "mult": "Mult",
+      "risk": "Risco",
+      "time": "Tempo",
+      "power": "Poder",
+      "strong": "Forte",
+      "moderate": "Moderado",
+      "weak": "Fraco",
+      "waitingSignature": "Aguardando assinatura",
+      "approveWallet": "Aprove na sua carteira",
+      "faq": {
+        "title": "Perguntas Frequentes",
+        "q1": "O que é Sol Raid?",
+        "a1": "Sol Raid é um jogo de extração on-chain na Solana. Você entra com uma aposta, escolhe a dificuldade e tenta acumular o máximo de pontos antes de ser pego. Saia no momento certo para converter sua pontuação em SOL. Quanto mais tempo ficar, maior a recompensa — mas o risco sobe a cada segundo.",
+        "q2": "Qual a diferença entre um raid normal e um raid por rodada?",
+        "a2": "Raids normais pagam SOL imediatamente ao ter sucesso — sua recompensa é baseada na pontuação e na taxa de entrada. Raids por rodada acumulam pontos em vez de pagar SOL na hora. Sua melhor pontuação em uma janela de 6 horas compete no ranking da rodada, e os prêmios são resgatados após o encerramento.",
+        "q3": "Como funcionam as Rodadas de Raid?",
+        "a3": "Há 4 rodadas por dia (UTC), cada uma durando 6 horas. Sua maior pontuação em uma rodada vai para o placar. Após o encerramento, 8% de todas as taxas de entrada dessa janela são divididas entre as 5 melhores carteiras: 1.º 40% · 2.º 25% · 3.º 18% · 4.º 11% · 5.º 6%.",
+        "q4": "Como resgato meus ganhos de rodada?",
+        "a4": "Após o encerramento de uma rodada, vá a Perfil → aba Vitórias de Rodada. Rodadas elegíveis mostram um botão Resgatar. Ao resgatar, SOL é creditado no seu saldo não resgatado — use o botão Sacar para enviá-lo on-chain à sua carteira.",
+        "q5": "O jogo é comprovadamente justo?",
+        "a5": "Sim. Antes de cada raid, um hash SHA-256 da semente do servidor é comprometido. Após o raid, a semente completa é revelada para você verificar que o RNG nunca foi manipulado. O histórico de sementes está visível no seu perfil.",
+        "q6": "Qual é a vantagem da casa?",
+        "a6": "A taxa de vitória base é de aproximadamente 25–30% sem gear. Gear e boosts podem elevar isso a até 45%. A margem da casa vem da mecânica de deriva de risco — quanto mais tempo você ficar, mais difícil fica.",
+        "q7": "O que são Raid Passes?",
+        "a7": "Raid Passes dão 50% de desconto na taxa de entrada mais um bônus de 10% nos seus ganhos em SOL. Você ganha 1 ticket grátis por dia (máximo 3 acumulados). Passes adicionais são comprados com SKR na Loja. Ative o ticket ao deployar se você tiver um.",
+        "q8": "O que é o token SKR?",
+        "a8": "SKR (Seeker) é o token de utilidade in-game na Solana. É usado para comprar Raid Passes, gear e avatares na Loja. SKR também é aceito como pagamento de taxas de entrada ao lado de SOL e USDC.",
+        "q9": "O que é o PvP Arena?",
+        "a9": "PvP permite que você aposte contra outros jogadores em uma sala compartilhada. Todos os jogadores fazem raid com a mesma semente RNG simultaneamente — pura habilidade decide o resultado. O jogador com a maior pontuação ao extrair vence o pote inteiro. Aposte qualquer valor em SOL, USDC ou SKR."
+      }
+    },
+    "result": {
+      "success": "EXTRAÍDO",
+      "bust": "PEGO",
+      "points": "Pontos",
+      "srEarned": "SR Ganho",
+      "collect": "COLETAR",
+      "retry": "TENTAR NOVAMENTE",
+      "backToLobby": "Voltar ao lobby",
+      "redeploy": "REPETIR MESMA CONFIG"
+    },
+    "store": {
+      "gear": "GEAR",
+      "pass": "PASSE",
+      "avatar": "AVATAR"
+    },
+    "howItWorks": {
+      "guide": "Guia",
+      "events": "Eventos",
+      "pvp": "Multijogador",
+      "economy": "Economia",
+      "referral": "Indicação"
+    },
+    "common": {
+      "loading": "Carregando…",
+      "error": "Erro",
+      "insufficient": "Saldo insuficiente",
+      "close": "Fechar",
+      "confirm": "Confirmar"
+    }
+  }
+}

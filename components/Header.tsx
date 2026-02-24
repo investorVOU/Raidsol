@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Rank } from '../types';
 
 interface HeaderProps {
@@ -29,6 +30,7 @@ const Header: React.FC<HeaderProps> = ({
   walletAddress,
   domainName,
 }) => {
+  const { t } = useTranslation();
   const domain = domainName ?? null;
   const shortAddress = walletAddress
     ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
@@ -58,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
             >
               <div className="w-1.5 h-1.5 rounded-full bg-white/25 shrink-0" />
-              <span className="text-[10px] text-white/35" style={INTER}>Not connected</span>
+              <span className="text-[10px] text-white/35" style={INTER}>{t('header.notConnected')}</span>
             </div>
           ) : null}
         </div>
@@ -79,7 +81,7 @@ const Header: React.FC<HeaderProps> = ({
               className="px-3 py-1.5 rounded-full text-white text-[13px] active:scale-95 transition-all"
               style={{ background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', boxShadow: '0 0 14px rgba(255,41,41,0.30)', ...BN }}
             >
-              CONNECT
+              {t('header.connect')}
             </button>
           ) : (
             <button
@@ -87,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({
               className="px-3 py-1.5 rounded-full text-[11px] font-bold text-red-400/70 hover:text-red-300 transition-colors"
               style={{ background: 'rgba(255,41,41,0.06)', border: '1px solid rgba(255,41,41,0.25)', ...INTER }}
             >
-              Disconnect
+              {t('header.disconnect')}
             </button>
           )}
         </div>
@@ -102,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({
             className="rounded-xl px-3 py-2 border-l-2"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: '2px solid #FF2929' }}
           >
-            <p className="text-[9px] text-white/40 mb-0.5 uppercase tracking-wider" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>Balance</p>
+            <p className="text-[9px] text-white/40 mb-0.5 uppercase tracking-wider" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>{t('header.balance')}</p>
             <p className="text-[13px] leading-tight text-white" style={SG_NUM}>
               {balance.toFixed(3)}
               <span className="text-[10px] text-white/30 ml-1" style={INTER}>SOL</span>
@@ -114,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({
             className="rounded-xl px-3 py-2"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: `2px solid ${currentRank.color}` }}
           >
-            <p className="text-[9px] text-white/40 mb-0.5 uppercase" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>Rank</p>
+            <p className="text-[9px] text-white/40 mb-0.5 uppercase" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>{t('header.rank')}</p>
             <p className="text-[13px] leading-tight truncate text-white" style={SG_NUM}>
               Lv.{currentRank.level}
               <span className="text-[11px] ml-1" style={{ ...INTER, color: currentRank.color }}>{currentRank.title}</span>
@@ -126,7 +128,7 @@ const Header: React.FC<HeaderProps> = ({
             className="rounded-xl px-3 py-2"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: '2px solid #f59e0b' }}
           >
-            <p className="text-[9px] text-white/40 mb-0.5 uppercase" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>SR Points</p>
+            <p className="text-[9px] text-white/40 mb-0.5 uppercase" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>{t('header.srPoints')}</p>
             <p className="text-[13px] leading-tight text-white" style={SG_NUM}>
               {srPoints.toLocaleString()}
             </p>

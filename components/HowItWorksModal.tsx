@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Screen } from '../types';
 
 interface HowItWorksModalProps {
@@ -9,6 +10,7 @@ interface HowItWorksModalProps {
 }
 
 const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNavigateLegal }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const [activeTab, setActiveTab] = useState<'GUIDE' | 'EVENTS' | 'PVP' | 'ECONOMY' | 'REFERRAL'>('GUIDE');
@@ -36,11 +38,11 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
         {/* Tabs — scrollable on small screens */}
         <div className="flex border-b border-white/5 bg-black/50 overflow-x-auto scrollbar-hide shrink-0">
           {([
-            { id: 'GUIDE',    label: 'Guide',      activeClass: 'bg-white/8 text-white border-b-2 border-white/60' },
-            { id: 'EVENTS',   label: 'Events',     activeClass: 'bg-orange-500/10 text-orange-400 border-b-2 border-orange-500' },
-            { id: 'PVP',      label: 'Multiplayer',activeClass: 'bg-red-500/10 text-[#FF2929] border-b-2 border-[#FF2929]' },
-            { id: 'ECONOMY',  label: 'Economy',    activeClass: 'bg-yellow-500/10 text-yellow-400 border-b-2 border-yellow-500' },
-            { id: 'REFERRAL', label: 'Referral',   activeClass: 'bg-amber-500/10 text-amber-400 border-b-2 border-amber-500' },
+            { id: 'GUIDE',    label: t('howItWorks.guide'),    activeClass: 'bg-white/8 text-white border-b-2 border-white/60' },
+            { id: 'EVENTS',   label: t('howItWorks.events'),   activeClass: 'bg-orange-500/10 text-orange-400 border-b-2 border-orange-500' },
+            { id: 'PVP',      label: t('howItWorks.pvp'),      activeClass: 'bg-red-500/10 text-[#FF2929] border-b-2 border-[#FF2929]' },
+            { id: 'ECONOMY',  label: t('howItWorks.economy'),  activeClass: 'bg-yellow-500/10 text-yellow-400 border-b-2 border-yellow-500' },
+            { id: 'REFERRAL', label: t('howItWorks.referral'), activeClass: 'bg-amber-500/10 text-amber-400 border-b-2 border-amber-500' },
           ] as const).map(tab => (
             <button
               key={tab.id}

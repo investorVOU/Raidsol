@@ -1,6 +1,8 @@
 import { Buffer } from 'buffer';
 (window as any).Buffer = Buffer;
 
+import './src/i18n';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

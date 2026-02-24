@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Screen } from '../types';
 
 interface NavigationProps {
@@ -9,13 +10,14 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roundWinCount = 0 }) => {
+  const { t } = useTranslation();
   const leftTabs = [
-    { label: 'Home',    icon: 'fa-solid fa-house',   screen: Screen.LOBBY      },
-    { label: 'Market',  icon: 'fa-solid fa-store',    screen: Screen.STORE      },
+    { label: t('nav.home'),    icon: 'fa-solid fa-house',   screen: Screen.LOBBY      },
+    { label: t('nav.market'),  icon: 'fa-solid fa-store',    screen: Screen.STORE      },
   ];
   const rightTabs = [
-    { label: 'Ranks',   icon: 'fa-solid fa-trophy',  screen: Screen.TOURNAMENT },
-    { label: 'Profile', icon: 'fa-solid fa-user',     screen: Screen.PROFILE    },
+    { label: t('nav.ranks'),   icon: 'fa-solid fa-trophy',  screen: Screen.TOURNAMENT },
+    { label: t('nav.profile'), icon: 'fa-solid fa-user',     screen: Screen.PROFILE    },
   ];
 
   const handleDeploy = () => {
@@ -54,7 +56,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
             >
               <i className="fa-solid fa-person-running" style={{ fontSize: '20px', color: '#fff' }} />
             </button>
-            <span className="text-[9px] font-medium text-[#FF4444]/80 mt-1">Deploy</span>
+            <span className="text-[9px] font-medium text-[#FF4444]/80 mt-1">{t('nav.deploy')}</span>
           </div>
 
           {rightTabs.map(tab => (
@@ -106,7 +108,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
             >
               <i className="fa-solid fa-person-running" style={{ fontSize: '18px', color: '#fff' }} />
               <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.9)', letterSpacing: '1.5px' }}>
-                DEPLOY
+                {t('nav.deploy')}
               </span>
             </button>
           </div>

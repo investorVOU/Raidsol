@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RaidEvent } from '../types';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
 import { formatCountdown } from '../hooks/useRoundData';
@@ -52,6 +53,7 @@ const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06];
 const ROUND_PCT_LABELS  = ['40%', '25%', '18%', '11%', '6%'];
 
 const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvents, onPlayAgain, onRedeploy, onClaim, isRoundEntry, roundInfo }) => {
+  const { t } = useTranslation();
   const [debriefOpen, setDebriefOpen] = useState(true);
 
   const handleShareToX = () => {
@@ -464,7 +466,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
               onClick={onClaim}
               className="w-full bg-[#FF2929] text-white py-4 sm:py-5 tech-border font-bold uppercase tracking-tight text-lg sm:text-xl shadow-[0_0_30px_rgba(255,41,41,0.35)] active:scale-95 transition-all hover:bg-[#CC0000]"
             >
-              Collect harvest
+              {t('result.collect')}
             </button>
           </>
         )}
@@ -475,7 +477,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
             onClick={onRedeploy ?? onPlayAgain}
             className="w-full bg-red-600 text-white py-4 sm:py-5 tech-border font-bold uppercase tracking-tight text-lg sm:text-xl active:scale-95 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
           >
-            {onRedeploy ? 'Retry same config' : 'Back to lobby'}
+            {onRedeploy ? t('result.redeploy') : t('result.backToLobby')}
           </button>
         )}
 

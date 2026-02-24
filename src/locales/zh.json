@@ -1,0 +1,108 @@
+{
+  "translation": {
+    "nav": {
+      "home": "首页",
+      "market": "市场",
+      "ranks": "排名",
+      "profile": "个人",
+      "deploy": "出击"
+    },
+    "header": {
+      "balance": "余额",
+      "rank": "等级",
+      "srPoints": "SR积分",
+      "connect": "连接钱包",
+      "disconnect": "断开连接",
+      "notConnected": "未连接"
+    },
+    "lobby": {
+      "tagline": "赢取SOL。别被抓住。",
+      "readyToDeploy": "准备出击",
+      "connectToStart": "连接钱包以开始",
+      "enterRaid": "进入突袭",
+      "winSol": "赢取SOL · 别被抓住",
+      "configureRaid": "配置突袭",
+      "mode": "模式",
+      "difficulty": "难度",
+      "boosts": "增益",
+      "loadout": "装备",
+      "payWith": "支付方式",
+      "entryFee": "入场费",
+      "entryAmount": "入场金额",
+      "maxPayout": "最高赔付 ~{{amount}} SOL",
+      "minFee": "最低 {{amount}}",
+      "entryTotal": "入场费用",
+      "deploy": "出击",
+      "cancel": "取消",
+      "ticketApplied": "已使用票券",
+      "insufficientFunds": "余额不足",
+      "useTicket": "使用票券 — 5折优惠",
+      "ticketsLeft": "剩余 {{count}} 张",
+      "connectWalletStart": "连接钱包以开始突袭",
+      "noGearShop": "无装备 — 前往商店",
+      "noGearStore": "无装备 — 前往商店",
+      "quickSwap": "快速更换",
+      "gearSlots": "{{count}}/4 槽位",
+      "raidStats": "突袭属性",
+      "mult": "倍率",
+      "risk": "风险",
+      "time": "时间",
+      "power": "战力",
+      "strong": "强",
+      "moderate": "中等",
+      "weak": "弱",
+      "waitingSignature": "等待签名",
+      "approveWallet": "在钱包中确认",
+      "faq": {
+        "title": "常见问题",
+        "q1": "Sol Raid是什么？",
+        "a1": "Sol Raid是Solana上的链上提取游戏。您带着赌注进场，选择难度，并在被抓住之前尽可能多地积分。在合适的时机撤出，将分数转换成SOL。持续时间越长，奖励越高——但每秒风险也在上升。",
+        "q2": "普通突袭和轮次突袭有什么区别？",
+        "a2": "普通突袭在成功时立即支付SOL——奖励基于您的分数和入场费。轮次突袭积累积分而非立即支付SOL。您在6小时窗口内的最高分参与轮次排行榜竞争，奖金在轮次结束后领取。",
+        "q3": "突袭轮次如何运作？",
+        "a3": "每天有4个轮次（UTC），每个持续6小时。您在轮次中的最高分上榜。轮次结束后，该窗口所有入场费的8%在前5名钱包中分配：第1名40% · 第2名25% · 第3名18% · 第4名11% · 第5名6%。",
+        "q4": "如何领取轮次奖励？",
+        "a4": "轮次结束后，前往个人 → 轮次获胜标签。符合条件的轮次显示领取按钮。领取后SOL记入您的未领取余额——然后使用提现按钮将其链上转账至您的钱包。",
+        "q5": "游戏是可验证公平的吗？",
+        "a5": "是的。每次突袭前，服务器种子的SHA-256哈希被提交。突袭后，完整种子被公开，您可以验证RNG从未被操纵。种子历史在您的个人资料中可见。",
+        "q6": "庄家优势是多少？",
+        "a6": "无装备时基础胜率约为25–30%。装备和增益可将其提高至45%。庄家优势来自风险漂移机制——停留时间越长，难度越大。",
+        "q7": "突袭通行证是什么？",
+        "a7": "突袭通行证提供入场费5折优惠以及SOL奖励10%加成。每天获得1张免费票（最多积累3张）。额外通行证在商店用SKR购买。如果您有票券，在部署时切换使用。",
+        "q8": "SKR代币是什么？",
+        "a8": "SKR（Seeker）是Solana上的游戏内实用代币。用于在商店购买突袭通行证、装备和头像。SKR也与SOL和USDC一起被接受为突袭入场费的支付方式。",
+        "q9": "PvP竞技场是什么？",
+        "a9": "PvP让您在共享房间内与其他玩家对赌。所有玩家同时突袭相同的RNG种子——纯粹的技巧决定结果。提取时分数最高的玩家赢得全部奖池。可用SOL、USDC或SKR下注任意金额。"
+      }
+    },
+    "result": {
+      "success": "已提取",
+      "bust": "被抓",
+      "points": "积分",
+      "srEarned": "获得SR",
+      "collect": "领取",
+      "retry": "重试",
+      "backToLobby": "返回大厅",
+      "redeploy": "重新部署相同配置"
+    },
+    "store": {
+      "gear": "装备",
+      "pass": "通行证",
+      "avatar": "头像"
+    },
+    "howItWorks": {
+      "guide": "指南",
+      "events": "事件",
+      "pvp": "多人游戏",
+      "economy": "经济",
+      "referral": "推荐"
+    },
+    "common": {
+      "loading": "加载中…",
+      "error": "错误",
+      "insufficient": "余额不足",
+      "close": "关闭",
+      "confirm": "确认"
+    }
+  }
+}

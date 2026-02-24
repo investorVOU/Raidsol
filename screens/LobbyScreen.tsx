@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Mode, ENTRY_FEES, Difficulty, DIFFICULTY_CONFIG, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency } from '../types';
 import type { LivePrices } from '../hooks/usePrices';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
@@ -14,7 +15,7 @@ const BC:     React.CSSProperties = { fontFamily: "'Barlow Condensed', sans-seri
 const BN:     React.CSSProperties = { fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' };
 
 interface LobbyScreenProps {
-  onEnterRaid: (mode: Mode, difficulty?: Difficulty, boosts?: string[], currency?: Currency, useTicket?: boolean) => Promise<void> | void;
+  onEnterRaid: (mode: Mode, difficulty?: Difficulty, boosts?: string[], currency?: Currency, useTicket?: boolean, customFeeOverride?: number) => Promise<void> | void;
   isConnected: boolean;
   onConnect: () => void;
   currentLevel: number;
@@ -54,6 +55,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   drillCount = 0, drillWindowStart = 0,
   currencyRates, currentRound,
 }) => {
+  const { t } = useTranslation();
   const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
   // Normal raid modal
   const [showModal, setShowModal]           = useState(false);
@@ -63,6 +65,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const [entryCurrency, setCurrency]        = useState<Currency>(Currency.SOL);
   const [isDeploying, setIsDeploying]       = useState(false);
   const [useTicket, setUseTicket]           = useState(false);
+  const [customFee, setCustomFee]           = useState<number | null>(null);
 
   // Round raid modal
   const [showRoundModal, setShowRoundModal]     = useState(false);
@@ -89,14 +92,14 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const drillCapHit        = isConnected && drillsRemaining === 0;
 
 
-  const handleOpenModal = () => { setBoosts([]); setUseTicket(false); setShowModal(true); };
+  const handleOpenModal = () => { setBoosts([]); setUseTicket(false); setCustomFee(null); setShowModal(true); };
 
   const handleDeploy = async () => {
     onRequestFullscreen?.(); // must be called synchronously before any await
     setShowModal(false);
     setIsDeploying(true);
     try {
-      await onEnterRaid(selectedMode, selectedDifficulty, selectedBoosts, entryCurrency, useTicket && raidTickets > 0);
+      await onEnterRaid(selectedMode, selectedDifficulty, selectedBoosts, entryCurrency, useTicket && raidTickets > 0, effectiveBase > minEntryFee ? effectiveBase : undefined);
     } finally {
       if (mountedRef.current) setIsDeploying(false);
     }
@@ -118,9 +121,10 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   };
 
   // Cost calc
-  const entryFeeBase   = ENTRY_FEES[selectedMode];
+  const minEntryFee    = ENTRY_FEES[selectedMode];
+  const effectiveBase  = customFee !== null && customFee >= minEntryFee ? customFee : minEntryFee;
   const applyTicket    = useTicket && raidTickets > 0;
-  const entryFee       = applyTicket ? entryFeeBase * 0.5 : entryFeeBase;
+  const entryFee       = applyTicket ? effectiveBase * 0.5 : effectiveBase;
   const boostCost      = selectedBoosts.reduce((s, id) => s + (RAID_BOOSTS.find(b => b.id === id)?.cost ?? 0), 0);
   const totalCostSol   = entryFee + boostCost;
   const currencyRate   = rates[entryCurrency];
@@ -173,7 +177,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               SOL RAID
             </p>
             <p className="text-[11px] text-white/38 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
-              Win SOL. Don't get caught.
+              {t('lobby.tagline')}
             </p>
           </div>
           {/* FAQ button */}
@@ -201,10 +205,10 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           <div className="relative z-10 flex items-center justify-between px-5 py-2 sm:py-2.5">
             <div>
               <p className="text-white/55 mb-0.5 text-[11px]" style={INTER}>
-                {isConnected ? 'Ready to deploy' : 'Connect wallet to start'}
+                {isConnected ? t('lobby.readyToDeploy') : t('lobby.connectToStart')}
               </p>
-              <p className="text-white leading-none" style={{ ...BC, fontSize: '32px', letterSpacing: '-0.5px' }}>ENTER RAID</p>
-              <p className="text-white/50 mt-0.5 text-[11px]" style={INTER}>Win SOL · don't get caught</p>
+              <p className="text-white leading-none" style={{ ...BC, fontSize: '32px', letterSpacing: '-0.5px' }}>{t('lobby.enterRaid')}</p>
+              <p className="text-white/50 mt-0.5 text-[11px]" style={INTER}>{t('lobby.winSol')}</p>
             </div>
             <div className="flex flex-col items-center gap-1.5 shrink-0">
               <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/18 transition-colors">
@@ -343,7 +347,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
         {!isConnected && (
           <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 text-center">
-            <p className="text-xs text-white/35 font-medium">Connect your wallet to start raiding</p>
+            <p className="text-xs text-white/35 font-medium">{t('lobby.connectWalletStart')}</p>
           </div>
         )}
       </div>
@@ -352,8 +356,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       {isDeploying && (
         <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center p-8" style={INTER}>
           <i className="fa-solid fa-person-running text-[#FF2929] text-3xl mb-5" />
-          <p className="text-white text-base font-medium mb-1">Waiting for signature</p>
-          <p className="text-white/35 text-sm">Approve in your wallet</p>
+          <p className="text-white text-base font-medium mb-1">{t('lobby.waitingSignature')}</p>
+          <p className="text-white/35 text-sm">{t('lobby.approveWallet')}</p>
         </div>
       )}
 
@@ -372,7 +376,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 <div className="w-8 h-8 rounded-xl bg-white/8 flex items-center justify-center">
                   <i className="fa-solid fa-question text-white/60 text-sm" />
                 </div>
-                <h2 className="text-base font-semibold text-white">FAQ</h2>
+                <h2 className="text-base font-semibold text-white">{t('lobby.faq.title')}</h2>
               </div>
               <button onClick={() => setShowFaq(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
                 <i className="fa-solid fa-xmark text-sm" />
@@ -559,7 +563,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                       })}
                     </div>
                   ) : (
-                    <p className="text-[10px] text-white/22 text-center py-1" style={INTER}>No gear — visit the store</p>
+                    <p className="text-[10px] text-white/22 text-center py-1" style={INTER}>{t('lobby.noGearStore')}</p>
                   )}
                 </div>
 
@@ -628,15 +632,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {/* Cost + enter */}
               <div className="flex items-center gap-3">
                 <div className="shrink-0">
-                  <p className="text-[9px] text-white/28 font-semibold uppercase mb-0.5">Entry cost</p>
+                  <p className="text-[9px] text-white/28 font-semibold uppercase mb-0.5">{t('lobby.entryTotal')}</p>
                   <p className="text-xl font-bold text-white leading-none">
                     {roundPricesLoading
-                      ? <span className="text-white/28 text-sm animate-pulse">…</span>
+                      ? <span className="text-white/28 text-sm animate-pulse">{t('common.loading')}</span>
                       : <>{roundTotalDisplay.toFixed(roundCurDecimals)}<span className={`text-sm ml-1 font-semibold ${roundCurrency === Currency.SOL ? 'text-white/60' : roundCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{roundCurSymbol}</span></>
                     }
                   </p>
                   {!roundPricesLoading && roundBalance < roundTotalDisplay && (
-                    <p className="text-[9px] text-red-400 font-semibold mt-0.5">Insufficient funds</p>
+                    <p className="text-[9px] text-red-400 font-semibold mt-0.5">{t('common.insufficient')}</p>
                   )}
                 </div>
                 <button
@@ -669,7 +673,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="shrink-0 px-5 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2.5">
                 <div className="w-1 h-6 rounded-full bg-[#FF2929]" />
-                <h2 className="text-base font-semibold text-white">Configure Raid</h2>
+                <h2 className="text-base font-semibold text-white">{t('lobby.configureRaid')}</h2>
               </div>
               <button onClick={() => setShowModal(false)}
                 className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
@@ -686,14 +690,14 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
                   {/* Mode */}
                   <section>
-                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">Mode</p>
+                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">{t('lobby.mode')}</p>
                     <div className="space-y-2">
                       {[
                         { mode: Mode.SOLO,       label: 'Solo',       desc: 'Play alone',        icon: 'fa-user',   locked: false             },
                         { mode: Mode.TEAM,       label: 'Squad',      desc: '4-player team',     icon: 'fa-users',  locked: currentLevel < 5  },
                         { mode: Mode.TOURNAMENT, label: 'Tournament', desc: 'Compete for glory', icon: 'fa-trophy', locked: currentLevel < 15 },
                       ].map(({ mode, label, desc, icon, locked }) => (
-                        <button key={mode} onClick={() => !locked && setMode(mode)} disabled={locked}
+                        <button key={mode} onClick={() => { if (!locked) { setMode(mode); setCustomFee(null); } }} disabled={locked}
                           className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
                             locked            ? 'opacity-35 cursor-not-allowed border-white/5 bg-transparent'
                             : selectedMode === mode ? 'bg-[#FF2929]/8 border-[#FF2929]/35'
@@ -716,7 +720,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
                   {/* Difficulty */}
                   <section>
-                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">Difficulty</p>
+                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">{t('lobby.difficulty')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {Object.values(Difficulty).map(diff => {
                         const cfg = DIFF_CONFIG[diff];
@@ -738,7 +742,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
                   {/* Boosts */}
                   <section>
-                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">Boosts</p>
+                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">{t('lobby.boosts')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {RAID_BOOSTS.map(boost => {
                         const active = selectedBoosts.includes(boost.id);
@@ -760,8 +764,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 {/* ── Right col: loadout ── */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider">Loadout</p>
-                    <span className="text-[10px] text-white/25 font-medium">{equippedGear.length}/4 slots</span>
+                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider">{t('lobby.loadout')}</p>
+                    <span className="text-[10px] text-white/25 font-medium">{t('lobby.gearSlots', { count: equippedGear.length })}</span>
                   </div>
 
                   {/* Gear slots */}
@@ -790,7 +794,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   {/* Quick-swap */}
                   {ownedGear.length > 0 ? (
                     <div className="rounded-xl bg-white/3 border border-white/[0.12] p-3">
-                      <p className="text-[10px] font-semibold text-white/25 uppercase mb-2">Quick swap</p>
+                      <p className="text-[10px] font-semibold text-white/25 uppercase mb-2">{t('lobby.quickSwap')}</p>
                       <div className="flex flex-wrap gap-2">
                         {ownedGear.map(gear => {
                           const isEquipped = equippedGearIds.includes(gear.id);
@@ -808,32 +812,32 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     </div>
                   ) : (
                     <div className="rounded-xl bg-white/3 border border-white/[0.12] p-3 text-center">
-                      <p className="text-[10px] text-white/22 font-medium">No gear — visit the shop</p>
+                      <p className="text-[10px] text-white/22 font-medium">{t('lobby.noGearShop')}</p>
                     </div>
                   )}
 
                   {/* Stats card */}
                   <div className="rounded-xl bg-black/50 border border-white/[0.12] p-4">
-                    <p className="text-[10px] font-semibold text-white/25 uppercase mb-3">Raid Stats</p>
+                    <p className="text-[10px] font-semibold text-white/25 uppercase mb-3">{t('lobby.raidStats')}</p>
                     <div className="grid grid-cols-3 gap-3 mb-3">
                       <div className="text-center">
-                        <p className="text-[9px] text-white/28 mb-1 font-medium">Mult</p>
+                        <p className="text-[9px] text-white/28 mb-1 font-medium">{t('lobby.mult')}</p>
                         <p className="font-bold text-[#FFB800] text-lg leading-none">{totalMult}×</p>
                       </div>
                       <div className="text-center border-x border-white/5">
-                        <p className="text-[9px] text-white/28 mb-1 font-medium">Risk</p>
+                        <p className="text-[9px] text-white/28 mb-1 font-medium">{t('lobby.risk')}</p>
                         <p className="font-bold text-cyan-400 text-lg leading-none">-{totalRisk}%</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-[9px] text-white/28 mb-1 font-medium">Time</p>
+                        <p className="text-[9px] text-white/28 mb-1 font-medium">{t('lobby.time')}</p>
                         <p className="font-bold text-purple-400 text-lg leading-none">{totalTime}s</p>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-[9px] font-semibold mb-1.5">
-                        <span className="text-white/28">Power</span>
+                        <span className="text-white/28">{t('lobby.power')}</span>
                         <span className={powerScore >= 50 ? 'text-[#FFB800]' : powerScore >= 25 ? 'text-amber-400' : 'text-red-400'}>
-                          {powerScore >= 50 ? 'Strong' : powerScore >= 25 ? 'Moderate' : 'Weak'} · {powerScore}
+                          {powerScore >= 50 ? t('lobby.strong') : powerScore >= 25 ? t('lobby.moderate') : t('lobby.weak')} · {powerScore}
                         </span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
@@ -851,7 +855,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
               {/* Currency selector */}
               <div>
-                <p className="text-[10px] font-semibold text-white/28 uppercase tracking-wider mb-2">Pay with</p>
+                <p className="text-[10px] font-semibold text-white/28 uppercase tracking-wider mb-2">{t('lobby.payWith')}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
                     const bal = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
@@ -873,6 +877,41 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 </div>
               </div>
 
+              {/* Custom entry amount */}
+              {selectedMode === Mode.SOLO && (
+                <div>
+                  <p className="text-[10px] font-semibold text-white/28 uppercase tracking-wider mb-1.5">{t('lobby.entryAmount')}</p>
+                  <div className="flex items-center gap-2 p-3 rounded-xl border border-white/[0.12] bg-white/3">
+                    <input
+                      type="number"
+                      min={minEntryFee}
+                      step={0.001}
+                      value={customFee !== null ? customFee : ''}
+                      placeholder={minEntryFee.toString()}
+                      onChange={e => {
+                        const v = parseFloat(e.target.value);
+                        setCustomFee(isNaN(v) ? null : v);
+                      }}
+                      className="flex-1 bg-transparent text-white text-sm font-semibold outline-none placeholder-white/25 tabular-nums"
+                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                    />
+                    <span className="text-xs font-semibold text-white/40 shrink-0">
+                      {entryCurrency === Currency.SOL ? 'SOL' : entryCurrency === Currency.USDC ? 'USDC' : 'SKR'}
+                    </span>
+                  </div>
+                  {customFee !== null && customFee >= minEntryFee && (
+                    <p className="text-[9px] text-white/35 mt-1 font-medium">
+                      {t('lobby.maxPayout', { amount: (effectiveBase * 6 * 0.8).toFixed(3) })}
+                    </p>
+                  )}
+                  {customFee !== null && customFee < minEntryFee && (
+                    <p className="text-[9px] text-red-400 mt-1 font-medium">
+                      {t('lobby.minFee', { amount: `${minEntryFee} SOL` })}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Ticket toggle */}
               {raidTickets > 0 && (
                 <button onClick={() => setUseTicket(p => !p)}
@@ -880,8 +919,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-base">🎟️</span>
                     <div>
-                      <p className={`text-xs font-semibold ${applyTicket ? 'text-amber-400' : 'text-white/45'}`}>Use ticket — 50% off</p>
-                      <p className="text-[9px] text-white/25 font-medium">{raidTickets}x left</p>
+                      <p className={`text-xs font-semibold ${applyTicket ? 'text-amber-400' : 'text-white/45'}`}>{t('lobby.useTicket')}</p>
+                      <p className="text-[9px] text-white/25 font-medium">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
                     </div>
                   </div>
                   <div className={`w-9 h-5 rounded-full transition-all relative ${applyTicket ? 'bg-amber-500' : 'bg-white/15'}`}>
@@ -893,20 +932,20 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {/* Cost + deploy */}
               <div className="flex items-center gap-3">
                 <div className="shrink-0">
-                  <p className="text-[9px] text-white/28 font-semibold uppercase mb-0.5">Entry cost</p>
+                  <p className="text-[9px] text-white/28 font-semibold uppercase mb-0.5">{t('lobby.entryTotal')}</p>
                   <p className="text-xl font-bold text-white leading-none">
                     {pricesLoading
-                      ? <span className="text-white/28 text-sm animate-pulse">…</span>
+                      ? <span className="text-white/28 text-sm animate-pulse">{t('common.loading')}</span>
                       : <>{totalDisplay.toFixed(curDecimals)}<span className={`text-sm ml-1 font-semibold ${entryCurrency === Currency.SOL ? 'text-white/60' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{curSymbol}</span></>
                     }
                   </p>
-                  {applyTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">Ticket applied</p>}
+                  {applyTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">{t('lobby.ticketApplied')}</p>}
                   {!pricesLoading && currentBalance < totalDisplay && totalCostSol > 0 && (
-                    <p className="text-[9px] text-red-400 font-semibold mt-0.5">Insufficient funds</p>
+                    <p className="text-[9px] text-red-400 font-semibold mt-0.5">{t('common.insufficient')}</p>
                   )}
                 </div>
                 <button onClick={handleDeploy}
-                  disabled={pricesLoading || (totalCostSol > 0 && currentBalance < totalDisplay)}
+                  disabled={pricesLoading || (totalCostSol > 0 && currentBalance < totalDisplay) || (customFee !== null && customFee < minEntryFee)}
                   className="flex-1 py-3.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100"
                   style={{
                     background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)',
@@ -916,7 +955,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     fontSize: '15px',
                   }}
                 >
-                  DEPLOY
+                  {t('lobby.deploy')}
                 </button>
               </div>
             </div>

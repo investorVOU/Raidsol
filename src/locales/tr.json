@@ -1,0 +1,108 @@
+{
+  "translation": {
+    "nav": {
+      "home": "Ana Sayfa",
+      "market": "Market",
+      "ranks": "Sıralama",
+      "profile": "Profil",
+      "deploy": "BASKINI BAŞLAT"
+    },
+    "header": {
+      "balance": "Bakiye",
+      "rank": "Rütbe",
+      "srPoints": "SR Puanı",
+      "connect": "BAĞLAN",
+      "disconnect": "Bağlantıyı Kes",
+      "notConnected": "Bağlı değil"
+    },
+    "lobby": {
+      "tagline": "SOL kazan. Yakalanma.",
+      "readyToDeploy": "Baskına hazır",
+      "connectToStart": "Başlamak için cüzdanı bağla",
+      "enterRaid": "BASKINA GİR",
+      "winSol": "SOL kazan · yakalanma",
+      "configureRaid": "Baskını Ayarla",
+      "mode": "Mod",
+      "difficulty": "Zorluk",
+      "boosts": "Güçlendiriciler",
+      "loadout": "Donanım",
+      "payWith": "Ödeme ile",
+      "entryFee": "Giriş ücreti",
+      "entryAmount": "Giriş miktarı",
+      "maxPayout": "Maks ödeme ~{{amount}} SOL",
+      "minFee": "Min {{amount}}",
+      "entryTotal": "Giriş maliyeti",
+      "deploy": "BAŞLAT",
+      "cancel": "İptal",
+      "ticketApplied": "Bilet uygulandı",
+      "insufficientFunds": "Yetersiz bakiye",
+      "useTicket": "Bilet kullan — %50 indirim",
+      "ticketsLeft": "{{count}}x kaldı",
+      "connectWalletStart": "Baskın yapmak için cüzdanı bağla",
+      "noGearShop": "Ekipman yok — mağazayı ziyaret et",
+      "noGearStore": "Ekipman yok — mağazayı ziyaret et",
+      "quickSwap": "Hızlı değişim",
+      "gearSlots": "{{count}}/4 slot",
+      "raidStats": "Baskın İstatistikleri",
+      "mult": "Çarpan",
+      "risk": "Risk",
+      "time": "Süre",
+      "power": "Güç",
+      "strong": "Güçlü",
+      "moderate": "Orta",
+      "weak": "Zayıf",
+      "waitingSignature": "İmza bekleniyor",
+      "approveWallet": "Cüzdanda onayla",
+      "faq": {
+        "title": "SSS",
+        "q1": "Sol Raid nedir?",
+        "a1": "Sol Raid, Solana üzerinde bir zincir içi çıkarma oyunudur. Bir bahisle girersiniz, zorluğunuzu seçersiniz ve yakalanmadan önce olabildiğince çok puan toplamaya çalışırsınız. Puanınızı SOL'a dönüştürmek için doğru anda çekilin. Ne kadar uzun kalırsanız ödül o kadar yüksek — ama risk her saniye artar.",
+        "q2": "Normal baskın ile tur bazlı baskın arasındaki fark nedir?",
+        "a2": "Normal baskınlar başarı durumunda hemen SOL öder — ödülünüz puanınıza ve giriş ücretine göre hesaplanır. Tur bazlı baskınlar anında SOL ödemek yerine puan biriktirir. 6 saatlik bir penceredeki en yüksek puanınız tur liderlik tablosunda rekabet eder ve ödüller tur sona erince talep edilir.",
+        "q3": "Baskın Turları nasıl çalışır?",
+        "a3": "Günde 4 tur (UTC) bulunur, her biri 6 saat sürer. Bir turdaki en yüksek puanınız tabloya girer. Tur kapandıktan sonra, o penceredeki tüm giriş ücretlerinin %8'i puan sıralamasına göre ilk 5 cüzdan arasında paylaşılır: 1. %40 · 2. %25 · 3. %18 · 4. %11 · 5. %6.",
+        "q4": "Tur kazançlarımı nasıl talep ederim?",
+        "a4": "Bir tur kapandıktan sonra Profil → Tur Kazanımları sekmesine gidin. Uygun turlar Talep Et düğmesi gösterir. Talep etmek SOL'u talep edilmemiş bakiyenize ekler — ardından cüzdanınıza zincir içi göndermek için Çek düğmesini kullanın.",
+        "q5": "Oyun kanıtlanabilir biçimde adil mi?",
+        "a5": "Evet. Her baskından önce bir SHA-256 sunucu tohumu karması taahhüt edilir. Baskından sonra tam tohum açıklanarak RNG'nin hiçbir zaman manipüle edilmediğini doğrulayabilirsiniz. Tohum geçmişi profilinizde görünür.",
+        "q6": "Ev avantajı nedir?",
+        "a6": "Ekipman olmadan temel kazanma oranı yaklaşık %25–30'dur. Ekipman ve güçlendiriciler bunu %45'e kadar çıkarabilir. Ev marjı risk kayması mekaniklerinden gelir — ne kadar uzun kalırsanız o kadar zorlaşır.",
+        "q7": "Baskın Pasları nedir?",
+        "a7": "Baskın Pasları giriş ücretinde %50 indirim ve SOL kazançlarınıza %10 bonus sağlar. Günde 1 ücretsiz bilet kazanırsınız (en fazla 3 biriktirebilirsiniz). Ek paslar Mağaza'da SKR ile satın alınır. Sahipseniz dağıtım sırasında bileti etkinleştirin.",
+        "q8": "SKR token nedir?",
+        "a8": "SKR (Seeker), Solana'daki oyun içi yardımcı tokendir. Mağaza'da Baskın Pasları, ekipman ve avatarlar satın almak için kullanılır. SKR ayrıca SOL ve USDC'nin yanı sıra baskın giriş ücretleri için ödeme olarak kabul edilir.",
+        "q9": "PvP Arenası nedir?",
+        "a9": "PvP, diğer oyuncularla paylaşılan bir odada bahis yapmanıza olanak tanır. Tüm oyuncular aynı RNG tohumunu eş zamanlı olarak baskınlar — saf beceri sonucu belirler. Çıkarırken en yüksek puana sahip oyuncu tüm potu kazanır. SOL, USDC veya SKR cinsinden herhangi bir miktarda bahis yapın."
+      }
+    },
+    "result": {
+      "success": "ÇIKARILDI",
+      "bust": "YAKALANDI",
+      "points": "Puan",
+      "srEarned": "Kazanılan SR",
+      "collect": "TOPLA",
+      "retry": "TEKRAR DENE",
+      "backToLobby": "Lobiye Dön",
+      "redeploy": "AYNI KONFİGÜRASYONU TEKRARLA"
+    },
+    "store": {
+      "gear": "EKİPMAN",
+      "pass": "PAS",
+      "avatar": "AVATAR"
+    },
+    "howItWorks": {
+      "guide": "Rehber",
+      "events": "Olaylar",
+      "pvp": "Çok Oyunculu",
+      "economy": "Ekonomi",
+      "referral": "Referans"
+    },
+    "common": {
+      "loading": "Yükleniyor…",
+      "error": "Hata",
+      "insufficient": "Yetersiz bakiye",
+      "close": "Kapat",
+      "confirm": "Onayla"
+    }
+  }
+}

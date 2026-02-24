@@ -1352,6 +1352,7 @@ const AppInner: React.FC = () => {
     boosts: string[] = [],
     currency: Currency = Currency.SOL,
     useTicket: boolean = false,
+    customFeeOverride?: number,
   ) => {
     if (!requireWallet()) return;
     if (mode === Mode.PVP) {
@@ -1389,7 +1390,7 @@ const AppInner: React.FC = () => {
     const freeRaidToday = gameState.lastFreeRaidDate === todayStr;
 
     const applyTicket = useTicket && gameState.raidTickets > 0;
-    const entryFeeBase = ENTRY_FEES[mode]; // always in SOL units
+    const entryFeeBase = customFeeOverride ?? ENTRY_FEES[mode]; // always in SOL units
     // Daily free raid: EASY mode, first raid of the day is free
     const isFreeRaid = !freeRaidToday && difficulty === Difficulty.EASY && mode === Mode.SOLO;
     const entryFee = isFreeRaid ? 0 : applyTicket ? entryFeeBase * 0.5 : entryFeeBase;

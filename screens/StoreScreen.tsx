@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GEAR_ITEMS, AVATAR_ITEMS, RAID_PASSES, Currency, CURRENCY_RATES, Equipment } from '../types';
 import type { LivePrices } from '../hooks/usePrices';
 
@@ -25,6 +26,7 @@ interface PurchasePopup {
 }
 
 const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, onForgeGear, initialTab, currencyRates }) => {
+  const { t } = useTranslation();
   const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
   const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS' | 'FORGE'>(initialTab ?? 'GEAR');
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(Currency.SKR);
@@ -220,19 +222,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             onClick={() => setActiveTab('GEAR')}
             className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'GEAR' ? 'border-[#FF2929] text-[#FF2929] bg-[#FF2929]/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
-            Gear
+            {t('store.gear')}
           </button>
           <button
             onClick={() => setActiveTab('AVATAR')}
             className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'AVATAR' ? 'border-white text-white bg-white/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
-            Avatars
+            {t('store.avatar')}
           </button>
           <button
             onClick={() => setActiveTab('PASS')}
             className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all relative ${activeTab === 'PASS' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
           >
-            Pass
+            {t('store.pass')}
             {raidTickets > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-yellow-500 text-black text-[9px] font-black px-1.5 rounded-full min-w-[18px] text-center">
                 {raidTickets}

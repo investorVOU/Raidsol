@@ -1,0 +1,108 @@
+{
+  "translation": {
+    "nav": {
+      "home": "Start",
+      "market": "Markt",
+      "ranks": "Rangliste",
+      "profile": "Profil",
+      "deploy": "STARTEN"
+    },
+    "header": {
+      "balance": "Guthaben",
+      "rank": "Rang",
+      "srPoints": "SR-Punkte",
+      "connect": "VERBINDEN",
+      "disconnect": "Trennen",
+      "notConnected": "Nicht verbunden"
+    },
+    "lobby": {
+      "tagline": "Verdiene SOL. Werde nicht erwischt.",
+      "readyToDeploy": "Bereit zum Starten",
+      "connectToStart": "Wallet verbinden, um zu starten",
+      "enterRaid": "RAID STARTEN",
+      "winSol": "Verdiene SOL · werde nicht erwischt",
+      "configureRaid": "Raid konfigurieren",
+      "mode": "Modus",
+      "difficulty": "Schwierigkeit",
+      "boosts": "Boosts",
+      "loadout": "Ausrüstung",
+      "payWith": "Bezahlen mit",
+      "entryFee": "Eintrittsgebühr",
+      "entryAmount": "Eintrittsbetrag",
+      "maxPayout": "Max. Auszahlung ~{{amount}} SOL",
+      "minFee": "Min. {{amount}}",
+      "entryTotal": "Gesamtkosten",
+      "deploy": "STARTEN",
+      "cancel": "Abbrechen",
+      "ticketApplied": "Ticket angewendet",
+      "insufficientFunds": "Unzureichendes Guthaben",
+      "useTicket": "Ticket nutzen — 50% Rabatt",
+      "ticketsLeft": "Noch {{count}}x",
+      "connectWalletStart": "Wallet verbinden, um Raids zu starten",
+      "noGearShop": "Keine Ausrüstung — Shop besuchen",
+      "noGearStore": "Keine Ausrüstung — Store besuchen",
+      "quickSwap": "Schnellwechsel",
+      "gearSlots": "{{count}}/4 Slots",
+      "raidStats": "Raid-Statistiken",
+      "mult": "Mult.",
+      "risk": "Risiko",
+      "time": "Zeit",
+      "power": "Stärke",
+      "strong": "Stark",
+      "moderate": "Mittel",
+      "weak": "Schwach",
+      "waitingSignature": "Warte auf Signatur",
+      "approveWallet": "In der Wallet bestätigen",
+      "faq": {
+        "title": "FAQ",
+        "q1": "Was ist Sol Raid?",
+        "a1": "Sol Raid ist ein On-Chain-Extraktionsspiel auf Solana. Du gehst mit einem Einsatz rein, wählst deinen Schwierigkeitsgrad und versuchst, so viele Punkte wie möglich zu sammeln, bevor du erwischt wirst. Steige zum richtigen Moment aus, um deinen Score in SOL umzuwandeln. Je länger du bleibst, desto höher die Belohnung — aber das Risiko steigt jede Sekunde.",
+        "q2": "Was ist der Unterschied zwischen einem normalen Raid und einem Runden-Raid?",
+        "a2": "Normale Raids zahlen bei Erfolg sofort SOL aus — deine Belohnung basiert auf deinem Score und der Eintrittsgebühr. Runden-Raids sammeln Punkte statt sofort SOL auszuzahlen. Dein bester Score in einem 6-Stunden-Fenster konkurriert auf der Runden-Rangliste, und Preise werden nach Ende der Runde beansprucht.",
+        "q3": "Wie funktionieren Raid-Runden?",
+        "a3": "Es gibt 4 Runden pro Tag (UTC), jede 6 Stunden lang. Dein höchster Score in einer Runde kommt ins Leaderboard. Nach Rundenende werden 8% aller Eintrittsgebühren dieses Fensters auf die Top-5-Wallets aufgeteilt: 1. 40% · 2. 25% · 3. 18% · 4. 11% · 5. 6%.",
+        "q4": "Wie beanspruche ich meine Runden-Gewinne?",
+        "a4": "Nach Rundenende gehst du zu Profil → Tab Runden-Gewinne. Berechtigte Runden zeigen einen Beanspruchen-Button. Das Beanspruchen schreibt SOL deinem unabgehobenen Guthaben gut — nutze dann den Abheben-Button, um es on-chain an deine Wallet zu senden.",
+        "q5": "Ist das Spiel nachweislich fair?",
+        "a5": "Ja. Vor jedem Raid wird ein SHA-256-Hash des Server-Seeds übermittelt. Nach dem Raid wird der vollständige Seed enthüllt, damit du überprüfen kannst, dass der RNG nie manipuliert wurde. Die Seed-Historie ist in deinem Profil sichtbar.",
+        "q6": "Wie hoch ist der Hausvorteil?",
+        "a6": "Die Basis-Gewinnrate liegt ohne Ausrüstung bei etwa 25–30%. Ausrüstung und Boosts können diese auf bis zu 45% steigern. Die Hausmarge ergibt sich aus der Risikoabdrift-Mechanik — je länger du bleibst, desto schwieriger wird es.",
+        "q7": "Was sind Raid Passes?",
+        "a7": "Raid Passes geben 50% Rabatt auf die Eintrittsgebühr plus 10% Bonus auf deine SOL-Gewinne. Du verdienst täglich 1 kostenloses Ticket (maximal 3 auf Vorrat). Zusätzliche Passes werden im Store mit SKR gekauft. Aktiviere das Ticket beim Starten, wenn du eines hast.",
+        "q8": "Was ist der SKR-Token?",
+        "a8": "SKR (Seeker) ist der In-Game-Utility-Token auf Solana. Er wird zum Kauf von Raid Passes, Ausrüstung und Avataren im Store verwendet. SKR wird neben SOL und USDC auch als Zahlung für Raid-Eintrittsgebühren akzeptiert.",
+        "q9": "Was ist die PvP-Arena?",
+        "a9": "PvP ermöglicht dir, in einem gemeinsamen Raum gegen andere Spieler zu staken. Alle Spieler raiden gleichzeitig denselben RNG-Seed — pures Können entscheidet das Ergebnis. Der Spieler mit dem höchsten Score bei der Extraktion gewinnt den gesamten Pot. Setze jeden Betrag in SOL, USDC oder SKR."
+      }
+    },
+    "result": {
+      "success": "EXTRAHIERT",
+      "bust": "ERWISCHT",
+      "points": "Punkte",
+      "srEarned": "SR verdient",
+      "collect": "EINSAMMELN",
+      "retry": "NOCHMAL",
+      "backToLobby": "Zurück zur Lobby",
+      "redeploy": "GLEICHE KONFIGURATION WIEDERHOLEN"
+    },
+    "store": {
+      "gear": "AUSRÜSTUNG",
+      "pass": "PASS",
+      "avatar": "AVATAR"
+    },
+    "howItWorks": {
+      "guide": "Anleitung",
+      "events": "Ereignisse",
+      "pvp": "Mehrspieler",
+      "economy": "Wirtschaft",
+      "referral": "Empfehlung"
+    },
+    "common": {
+      "loading": "Laden…",
+      "error": "Fehler",
+      "insufficient": "Unzureichendes Guthaben",
+      "close": "Schließen",
+      "confirm": "Bestätigen"
+    }
+  }
+}
