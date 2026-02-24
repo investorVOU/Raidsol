@@ -83,8 +83,8 @@ export function useRoundData() {
     const roundEnded = end <= now;
     const isActive   = !roundEnded;
 
-    // ── Always fetch live leaders from raid_history + pool from round_pools ──
-    const [successRes, poolRes] = await Promise.all([
+    // ── Fetch leaders, round_pools, and raw entry fees in parallel ───────────
+    const [successRes, poolRes, feesRes] = await Promise.all([
       supabase
         .from('raid_history')
         .select('wallet_address, points')
@@ -93,15 +93,25 @@ export function useRoundData() {
         .lt('created_at', end.toISOString())
         .order('points', { ascending: false })
         .limit(200),
+      // round_pools: populated by submit-raid-result once migrations are applied
       supabase
         .from('round_pools')
         .select('pool_sol')
         .eq('round_number', roundNum)
         .eq('round_date', dateStr)
         .maybeSingle(),
+      // fallback: sum all entry fees in the round window directly from raid_history
+      supabase
+        .from('raid_history')
+        .select('entry_fee')
+        .gte('created_at', start.toISOString())
+        .lt('created_at', end.toISOString()),
     ]);
 
-    const poolSol = Number(poolRes.data?.pool_sol ?? 0);
+    const poolFromTable   = Number(poolRes.data?.pool_sol ?? 0);
+    const poolFromHistory = ((feesRes.data ?? []).reduce((s, r) => s + Number(r.entry_fee), 0)) * 0.70;
+    // Prefer the dedicated table; fall back to raid_history sum if the table is empty
+    const poolSol = poolFromTable > 0 ? poolFromTable : poolFromHistory;
 
     // Deduplicate: keep best points per wallet
     const bestByWallet = new Map<string, number>();

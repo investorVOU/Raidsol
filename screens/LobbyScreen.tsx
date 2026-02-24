@@ -692,7 +692,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
 
             {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto min-h-0 p-5">
+            <div className="relative flex-1 min-h-0">
+            {/* Gradient fade — mobile scroll hint */}
+            <div className="sm:hidden pointer-events-none absolute bottom-0 left-0 right-0 h-10 z-10"
+              style={{ background: 'linear-gradient(to top, #080814 0%, transparent 100%)' }} />
+            <div className="h-full overflow-y-auto p-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
 
                 {/* ── Left col: settings ── */}
@@ -859,6 +863,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 </div>
               </div>
             </div>
+            </div>{/* end scroll wrapper */}
 
             {/* ── Modal footer ── */}
             <div className="shrink-0 border-t border-white/5 p-3 sm:p-4 bg-[#060612] rounded-b-3xl sm:rounded-b-2xl space-y-2">
