@@ -36,6 +36,7 @@ interface LobbyScreenProps {
   drillCount?: number;
   drillWindowStart?: number;
   currencyRates?: LivePrices['currencyRates'];
+  pricesFailed?: boolean;
   currentRound?: CurrentRoundInfo | null;
 }
 
@@ -53,7 +54,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onToggleGear, onNavigateTreasury, onNavigateStore, onEnterRound, onRequestFullscreen,
   raidTickets = 0, lastFreeRaidDate = null,
   drillCount = 0, drillWindowStart = 0,
-  currencyRates, currentRound,
+  currencyRates, pricesFailed = false, currentRound,
 }) => {
   const { t } = useTranslation();
   const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
@@ -86,8 +87,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     return () => window.removeEventListener('solraid:openRaidModal', handler);
   }, []);
 
-  // Reset custom fee whenever currency changes (values are currency-specific)
+  // customFee is in the display currency — reset when currency changes so stale values don't carry over
   useEffect(() => { setCustomFee(null); }, [entryCurrency]);
+
 
   // Drill cap
   const drillWindowExpired = (Date.now() - drillWindowStart) >= 6 * 60 * 60 * 1000;
@@ -123,23 +125,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     }
   };
 
-  // Cost calc
+  // Cost calc — customFee is typed in the selected currency; converted to SOL for internal math
   const minEntryFee    = ENTRY_FEES[selectedMode];
   const currencyRate   = rates[entryCurrency];
-  const pricesLoading  = entryCurrency !== Currency.SOL && currencyRate === 0;
   const curSymbol      = entryCurrency === Currency.SOL ? 'SOL' : entryCurrency === Currency.USDC ? 'USDC' : 'SKR';
   const curDecimals    = entryCurrency === Currency.SOL ? 3 : entryCurrency === Currency.USDC ? 2 : 0;
   const currentBalance = entryCurrency === Currency.SOL ? walletBalance : entryCurrency === Currency.USDC ? usdcBalance : skrBalance;
-  const displayRate    = currencyRate || 1; // safe divisor; pricesLoading=true when currencyRate=0
-  // customFee is typed in the selected currency (SOL/USDC/SKR); convert to SOL for all math
-  const customFeeSol   = customFee !== null ? customFee / displayRate : null;
+  const rateReady      = entryCurrency === Currency.SOL || currencyRate > 0;
+  const displayRate    = currencyRate > 0 ? currencyRate : 1;
   const minEntryDisplay = minEntryFee * displayRate;
+  // customFee stored in display currency → convert back to SOL for game math
+  const customFeeSol   = customFee !== null && rateReady ? customFee / displayRate : null;
   const effectiveBase  = customFeeSol !== null && customFeeSol >= minEntryFee ? customFeeSol : minEntryFee;
   const applyTicket    = useTicket && raidTickets > 0;
   const entryFee       = applyTicket ? effectiveBase * 0.5 : effectiveBase;
   const boostCost      = selectedBoosts.reduce((s, id) => s + (RAID_BOOSTS.find(b => b.id === id)?.cost ?? 0), 0);
   const totalCostSol   = entryFee + boostCost;
   const totalDisplay   = totalCostSol * displayRate;
+  const insufficientBal = rateReady && totalCostSol > 0 && currentBalance < totalDisplay;
 
   // Round cost calc (always SOLO, no boosts)
   const roundFeeBase       = ENTRY_FEES[Mode.SOLO];
@@ -860,32 +863,45 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             {/* ── Modal footer ── */}
             <div className="shrink-0 border-t border-white/5 p-3 sm:p-4 bg-[#060612] rounded-b-3xl sm:rounded-b-2xl space-y-2">
 
-              {/* Currency selector — compact pill row */}
+              {/* ── Pay With — each pill shows currency, your cost, and balance ── */}
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-semibold text-white/28 uppercase tracking-wider shrink-0">{t('lobby.payWith')}</span>
                 <div className="flex gap-1.5 flex-1">
                   {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
-                    const bal = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
-                    const sym = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
-                    const colActive = c === Currency.SOL
+                    const cBal    = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
+                    const cSym    = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
+                    const cRate   = rates[c];
+                    const cDec    = c === Currency.SOL ? 3 : c === Currency.USDC ? 2 : 0;
+                    const cCost   = cRate > 0 ? totalCostSol * cRate : null;
+                    const isLoading  = c !== Currency.SOL && cRate === 0 && !pricesFailed;
+                    const isFailed   = c !== Currency.SOL && cRate === 0 && pricesFailed;
+                    const isActive   = entryCurrency === c;
+                    const colActive  = c === Currency.SOL
                       ? 'border-[#FFB800]/50 bg-[#FFB800]/10 text-[#FFB800]'
-                      : c === Currency.USDC
-                      ? 'border-blue-400/50 bg-blue-400/10 text-blue-400'
+                      : c === Currency.USDC ? 'border-blue-400/50 bg-blue-400/10 text-blue-400'
                       : 'border-orange-400/50 bg-orange-400/10 text-orange-400';
-                    const active = entryCurrency === c;
                     return (
-                      <button key={c} onClick={() => setCurrency(c)}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border transition-all ${active ? colActive : 'border-white/7 text-white/30 bg-white/3 hover:border-white/18'}`}>
-                        <span className="text-[10px] font-bold">{sym}</span>
-                        <span className="text-[8px] text-white/35 font-medium hidden sm:inline">{bal.toFixed(c === Currency.SKR ? 0 : 2)}</span>
+                      <button key={c}
+                        onClick={() => !isFailed && setCurrency(c)}
+                        disabled={isFailed}
+                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border transition-all ${
+                          isFailed   ? 'opacity-25 cursor-not-allowed border-white/5 bg-white/[0.02]'
+                          : isActive ? colActive
+                          : 'border-white/7 text-white/30 bg-white/3 hover:border-white/18'
+                        }`}>
+                        <span className="text-[10px] font-bold leading-none">{cSym}</span>
+                        <span className={`text-[9px] font-semibold leading-none tabular-nums ${isLoading ? 'animate-pulse text-white/25' : ''}`}>
+                          {isLoading ? '···' : isFailed ? 'N/A' : cCost !== null ? cCost.toFixed(cDec) : '—'}
+                        </span>
+                        <span className="text-[8px] text-white/22 leading-none tabular-nums">{cBal.toFixed(cDec)}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Custom entry amount — compact inline row */}
-              {selectedMode === Mode.SOLO && !pricesLoading && (
+              {/* Custom entry amount — in selected currency; hidden while rate is loading */}
+              {selectedMode === Mode.SOLO && rateReady && (
                 <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/3">
                   <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider shrink-0">{t('lobby.entryAmount')}</span>
                   <input
@@ -912,6 +928,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   )}
                 </div>
               )}
+              {selectedMode === Mode.SOLO && !rateReady && !pricesFailed && (
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02]">
+                  <span className="text-[9px] font-semibold text-white/20 uppercase tracking-wider">{t('lobby.entryAmount')}</span>
+                  <span className="text-[9px] text-white/20 animate-pulse ml-1">fetching {curSymbol} rate…</span>
+                </div>
+              )}
 
               {/* Ticket toggle — compact */}
               {raidTickets > 0 && (
@@ -935,18 +957,18 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 <div className="shrink-0">
                   <p className="text-[9px] text-white/28 font-semibold uppercase mb-0.5">{t('lobby.entryTotal')}</p>
                   <p className="text-xl font-bold text-white leading-none">
-                    {pricesLoading
-                      ? <span className="text-white/28 text-sm animate-pulse">{t('common.loading')}</span>
-                      : <>{totalDisplay.toFixed(curDecimals)}<span className={`text-sm ml-1 font-semibold ${entryCurrency === Currency.SOL ? 'text-white/60' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{curSymbol}</span></>
+                    {rateReady
+                      ? <>{totalDisplay.toFixed(curDecimals)}<span className={`text-sm ml-1 font-semibold ${entryCurrency === Currency.SOL ? 'text-white/60' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{curSymbol}</span></>
+                      : <span className="text-white/25 text-sm animate-pulse">···</span>
                     }
                   </p>
                   {applyTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">{t('lobby.ticketApplied')}</p>}
-                  {!pricesLoading && currentBalance < totalDisplay && totalCostSol > 0 && (
+                  {insufficientBal && (
                     <p className="text-[9px] text-red-400 font-semibold mt-0.5">{t('common.insufficient')}</p>
                   )}
                 </div>
                 <button onClick={handleDeploy}
-                  disabled={pricesLoading || (totalCostSol > 0 && currentBalance < totalDisplay) || (customFee !== null && customFee < minEntryDisplay)}
+                  disabled={!rateReady || insufficientBal || (customFee !== null && customFee < minEntryFee)}
                   className="flex-1 py-3 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100"
                   style={{
                     background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)',

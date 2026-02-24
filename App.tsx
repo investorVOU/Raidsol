@@ -62,7 +62,7 @@ const AppInner: React.FC = () => {
   const { profile, loading: profileLoading, updateProfile } = useProfile(walletAddr, incomingRefCode);
   // Resolved once here — passed as prop to Header + ProfileScreen to avoid duplicate API calls
   const domainName = useDomainName(walletAddr);
-  const { currencyRates: liveCurrencyRates, pricesReady } = usePrices();
+  const { currencyRates: liveCurrencyRates, pricesReady, pricesFailed: livePricesFailed } = usePrices();
   const { info: currentRound, refetch: refetchRound } = useRoundData();
   const { wins: roundWins } = usePlayerRoundWins(walletAddr);
   const unclaimedRoundWins = roundWins.filter(w => !w.claimed);
@@ -1560,6 +1560,7 @@ const AppInner: React.FC = () => {
             drillCount={gameState.drillCount}
             drillWindowStart={gameState.drillWindowStart}
             currencyRates={liveCurrencyRates}
+            pricesFailed={livePricesFailed}
             currentRound={currentRound}
             onEnterRound={enterRoundRaid}
             onRequestFullscreen={enterFullscreen}
@@ -1718,6 +1719,7 @@ const AppInner: React.FC = () => {
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             currencyRates={liveCurrencyRates}
+            pricesFailed={livePricesFailed}
             currentRound={currentRound}
             onEnterRound={enterRoundRaid}
             onRequestFullscreen={enterFullscreen}

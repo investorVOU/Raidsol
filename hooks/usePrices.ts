@@ -5,7 +5,7 @@ import { Currency } from '../types';
 const SKR_MINT = import.meta.env.VITE_SKR_MINT ?? 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
-// SOL: 1 (base). USDC/SKR: 0 means "still loading" — not a valid rate
+// SOL: 1 (base). USDC/SKR: 0 means not yet loaded
 const LOADING_RATES: Record<Currency, number> = {
   [Currency.SOL]:  1,
   [Currency.USDC]: 0,
@@ -17,45 +17,83 @@ export interface LivePrices {
   skrUsd: number;
   currencyRates: Record<Currency, number>;
   pricesReady: boolean;
+  pricesFailed: boolean; // true after first attempt returned no data
+}
+
+/** fetch with hard timeout — returns null on error or timeout */
+async function timedFetch(url: string, ms = 4000): Promise<Response | null> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    return res.ok ? res : null;
+  } catch {
+    clearTimeout(timer);
+    return null;
+  }
 }
 
 async function fetchLivePrices(): Promise<{ solUsd: number; skrUsd: number } | null> {
-  // ── Primary: Jupiter Price API ───────────────────────────────────────────
-  // Solana-native — works reliably in Phantom, Solflare, and all dapp browsers.
-  // Single request returns both SOL and SKR prices in USD.
-  try {
-    const res = await fetch(
-      `https://api.jup.ag/price/v2?ids=${SOL_MINT},${SKR_MINT}`,
-    );
-    if (res.ok) {
+  // Run all sources in parallel — first valid data wins; merge partial results
+  const [dsResult, jupResult, bnResult] = await Promise.allSettled([
+
+    // ── DexScreener (user-preferred, DEX-native, no geo-blocks) ──────────────
+    (async () => {
+      const res = await timedFetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${SKR_MINT}`,
+      );
+      if (!res) return null;
       const json = await res.json();
-      const solUsd = parseFloat(json.data?.[SOL_MINT]?.price ?? '0');
-      const skrUsd = parseFloat(json.data?.[SKR_MINT]?.price ?? '0');
-      if (solUsd > 0) return { solUsd, skrUsd };
-    }
-  } catch { /* fall through to backup */ }
-
-  // ── Fallback: Binance (SOL) + DexScreener (SKR) ──────────────────────────
-  const [solResult, skrResult] = await Promise.allSettled([
-    fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT').then(r => r.json()),
-    fetch(`https://api.dexscreener.com/latest/dex/tokens/${SKR_MINT}`).then(r => r.json()),
-  ]);
-
-  const solUsd =
-    solResult.status === 'fulfilled' ? parseFloat(solResult.value?.price ?? '0') : 0;
-
-  let skrUsd = 0;
-  if (skrResult.status === 'fulfilled') {
-    const pairs = skrResult.value?.pairs;
-    if (Array.isArray(pairs) && pairs.length > 0) {
+      const pairs: any[] = json?.pairs ?? [];
+      if (!pairs.length) return null;
       const sorted = [...pairs].sort(
         (a, b) => parseFloat(b.liquidity?.usd ?? '0') - parseFloat(a.liquidity?.usd ?? '0'),
       );
-      skrUsd = parseFloat(sorted[0].priceUsd ?? '0');
-    }
+      const skrUsd = parseFloat(sorted[0]?.priceUsd ?? '0');
+      if (skrUsd <= 0) return null;
+      // Try to derive SOL price: find a pair where quote is SOL → solUsd = skrUsd / priceNative
+      let solUsd = 0;
+      const skrSolPair = sorted.find(
+        (p) => p.quoteToken?.address === SOL_MINT && parseFloat(p.priceNative ?? '0') > 0,
+      );
+      if (skrSolPair) solUsd = skrUsd / parseFloat(skrSolPair.priceNative);
+      return { skrUsd, solUsd };
+    })(),
+
+    // ── Jupiter Price API (Solana-native, single call for both) ──────────────
+    (async () => {
+      const res = await timedFetch(
+        `https://api.jup.ag/price/v2?ids=${SOL_MINT},${SKR_MINT}`,
+      );
+      if (!res) return null;
+      const json = await res.json();
+      const solUsd = parseFloat(json.data?.[SOL_MINT]?.price ?? '0');
+      const skrUsd = parseFloat(json.data?.[SKR_MINT]?.price ?? '0');
+      return solUsd > 0 ? { solUsd, skrUsd } : null;
+    })(),
+
+    // ── Binance (SOL-only fallback) ───────────────────────────────────────────
+    (async () => {
+      const res = await timedFetch(
+        'https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT',
+      );
+      if (!res) return null;
+      const json = await res.json();
+      const solUsd = parseFloat(json.price ?? '0');
+      return solUsd > 0 ? { solUsd, skrUsd: 0 } : null;
+    })(),
+  ]);
+
+  // Merge: take best solUsd and skrUsd from whichever sources responded
+  let solUsd = 0;
+  let skrUsd = 0;
+  for (const r of [dsResult, jupResult, bnResult]) {
+    if (r.status !== 'fulfilled' || !r.value) continue;
+    if (r.value.solUsd > 0 && solUsd === 0) solUsd = r.value.solUsd;
+    if (r.value.skrUsd > 0 && skrUsd === 0) skrUsd = r.value.skrUsd;
   }
 
-  // Return as long as SOL price is available — SKR is optional
   return solUsd > 0 ? { solUsd, skrUsd } : null;
 }
 
@@ -65,6 +103,7 @@ export function usePrices(): LivePrices {
     skrUsd: 0,
     currencyRates: LOADING_RATES,
     pricesReady: false,
+    pricesFailed: false,
   });
 
   useEffect(() => {
@@ -78,16 +117,18 @@ export function usePrices(): LivePrices {
         setState({
           solUsd,
           skrUsd,
-          // Ready once SOL price is known — USDC rate is derived from SOL alone
           pricesReady: true,
+          pricesFailed: false,
           currencyRates: {
             [Currency.SOL]:  1,
-            [Currency.USDC]: solUsd,                               // always available with SOL price
-            [Currency.SKR]:  skrUsd > 0 ? solUsd / skrUsd : 0,   // 0 means SKR price still unavailable
+            [Currency.USDC]: solUsd,
+            [Currency.SKR]:  skrUsd > 0 ? solUsd / skrUsd : 0,
           },
         });
+      } else {
+        // Only flag as failed on the FIRST attempt (don't wipe valid cached rates on a refresh blip)
+        setState(prev => prev.pricesReady ? prev : { ...prev, pricesFailed: true });
       }
-      // If SOL price fetch failed entirely, keep loading state
     };
 
     update();
