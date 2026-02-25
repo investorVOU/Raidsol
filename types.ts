@@ -45,6 +45,14 @@ export const DIFFICULTY_CONFIG: Record<Difficulty, { riskMod: number, driftMod: 
   [Difficulty.DEGEN]: { riskMod: 30, driftMod: 1.8, multMod: 2.5, label: 'DEGEN_SUICIDE', color: 'text-red-600' }
 };
 
+/** Maximum SOL payout at 5,000 points (no bonuses, pre-platform-fee) — decoupled from entry fee */
+export const DIFFICULTY_MAX_WIN: Record<Difficulty, number> = {
+  [Difficulty.EASY]:   0.03,
+  [Difficulty.MEDIUM]: 0.07,
+  [Difficulty.HARD]:   0.20,
+  [Difficulty.DEGEN]:  0.60,
+};
+
 export enum Currency {
   SOL = 'SOL',
   USDC = 'USDC',
@@ -299,6 +307,7 @@ export interface GameState {
   activeRaidFee: number;
   activeRaidDifficulty: Difficulty;
   activeRaidBoosts: string[];
+  activeRaidIsRound: boolean;       // true when raid was entered as round competition
   activeRoom?: Room;
   activeSeedId?: string;          // provably-fair: seed DB row id
   activeServerSeedHash?: string;  // provably-fair: shown to player pre-raid

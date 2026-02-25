@@ -13,10 +13,11 @@ class CanvasErrorBoundary extends Component<{ children: React.ReactNode }, { err
     return this.props.children;
   }
 }
-import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent, PLATFORM_FEE_RAID } from '../types';
+import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent, PLATFORM_FEE_RAID, DIFFICULTY_MAX_WIN } from '../types';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sparkles, useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
+import { SkeletonUtils } from 'three-stdlib';
 import { useGameSounds } from '../hooks/useGameSounds';
 
 interface RaidScreenProps {
@@ -30,6 +31,7 @@ interface RaidScreenProps {
   streakBonus?: number;    // +0.15x starting multiplier per 3-win streak
   dailyStreak?: number;    // consecutive days played — bonus firewall save %
   personalBestPoints?: number; // show PB highlight when beaten mid-raid
+  isRoundEntry?: boolean;  // true when this raid counts toward the active round competition
 }
 
 interface Spark {
@@ -200,6 +202,8 @@ const RobotModel: React.FC<{
 }> = ({ action, position, rotation, scale = 1.2, riskLevel = 0 }) => {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF('/RobotExpressive.glb');
+  // Clone per-instance so both player + enemy animate independently (SkeletonUtils preserves skin/bones)
+  const clonedScene = useMemo(() => SkeletonUtils.clone(scene) as THREE.Object3D, [scene]);
   const { actions } = useAnimations(animations, group);
   const prevAnimRef = useRef('Idle');
 
@@ -226,7 +230,7 @@ const RobotModel: React.FC<{
 
   return (
     <group ref={group} position={position} rotation={rotation} scale={scale}>
-      <primitive object={scene} />
+      <primitive object={clonedScene} />
     </group>
   );
 };
@@ -369,6 +373,7 @@ const FighterModel: React.FC<FighterProps> = ({
 const RaidScreen: React.FC<RaidScreenProps> = ({
   onFinish, equippedGearIds, entryFee, difficulty, activeBoosts, equippedAvatarId,
   ticketBoost = false, streakBonus = 0, dailyStreak = 0, personalBestPoints = 0,
+  isRoundEntry = false,
 }) => {
   const sounds = useGameSounds();
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -640,8 +645,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setSkillCheckResult(null);
     skillCheckRef.current = null;
     // Near-miss: show what they could have extracted
-    const wouldHave = (stateRef.current.points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0);
-    if (wouldHave >= entryFee * 0.4) setNearMissSOL(parseFloat(wouldHave.toFixed(4)));
+    const wouldHave = (stateRef.current.points / 5000) * DIFFICULTY_MAX_WIN[difficulty] * (ticketBoost ? 1.1 : 1.0) * (1 - PLATFORM_FEE_RAID);
+    if (wouldHave >= DIFFICULTY_MAX_WIN[difficulty] * 0.12) setNearMissSOL(parseFloat(wouldHave.toFixed(4)));
     bustTimeRef.current = stateRef.current.timeLeft >= 0
       ? Math.max(3, (initialTime - stateRef.current.timeLeft))
       : initialTime;
@@ -663,7 +668,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     spawnSparks('#EF4444', '#ff6600', 22);
     addDmgPopup('BUSTED!', '#EF4444', true);
     setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current), 2500);
-  }, [onFinish, initialTime, entryFee, ticketBoost, sounds, spawnSparks, addDmgPopup]);
+  }, [onFinish, initialTime, difficulty, ticketBoost, sounds, spawnSparks, addDmgPopup]);
 
   const handleBustRef = useRef(handleBust);
   useEffect(() => { handleBustRef.current = handleBust; }, [handleBust]);
@@ -870,7 +875,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   }, []); // eslint-disable-line
 
   const handleCashOut = () => {
-    if (isEnding || !hasInteracted || graceActive || ambushed) return;
+    const elapsedSec = Math.max(3, initialTime - timeLeft);
+    if (isEnding || !hasInteracted || graceActive || ambushed || elapsedSec < 20) return;
     if (defendLockRef.current)    { clearInterval(defendLockRef.current);  defendLockRef.current = null; }
     if (goldenWindowRef.current)  { clearInterval(goldenWindowRef.current); goldenWindowRef.current = null; }
     if (hotStreakTimerRef.current) { clearTimeout(hotStreakTimerRef.current); hotStreakTimerRef.current = null; }
@@ -885,11 +891,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setIsEnding('WIN');
     setUserAction('Dance');
     setEnemyAction('Death');
-    const elapsedSec  = Math.max(3, initialTime - timeLeft);
-    const earlyMult   = elapsedSec < 15 ? 0.5 : 1.0;   // Rule: early exit penalty
     const goldenMult  = goldenWindow ? 1.05 : 1.0;      // Rule: golden window bonus
     const donMult     = solMultiplierRef.current;        // 2.0 if player pushed Double or Nothing
-    const solReward   = (points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0) * earlyMult * goldenMult * donMult * (1 - PLATFORM_FEE_RAID);
+    const solReward   = (points / 5000) * DIFFICULTY_MAX_WIN[difficulty] * (ticketBoost ? 1.1 : 1.0) * goldenMult * donMult * (1 - PLATFORM_FEE_RAID);
     sounds.playCashOut();
     sounds.hapticExtract();
     if (donMult >= 2.0) {
@@ -900,10 +904,6 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       logEvent('CASHOUT', 'Extracted during Golden Window', `+5% bonus → ${solReward.toFixed(4)} SOL`, 'bonus');
       spawnSparks('#FFD700', '#14F195', 32);
       addDmgPopup('GOLDEN EXIT! +5%', '#FFD700', true);
-    } else if (elapsedSec < 15) {
-      logEvent('CASHOUT', 'Early exit before 15s full-value window', `-50% penalty → ${solReward.toFixed(4)} SOL`, 'warning');
-      spawnSparks('#f97316', '#EF4444', 14);
-      addDmgPopup('EARLY EXIT! -50%', '#f97316', true);
     } else {
       logEvent('CASHOUT', 'Clean extraction at full value', `${solReward.toFixed(4)} SOL secured`, 'bonus');
       spawnSparks('#14F195', '#00FBFF', 22);
@@ -1061,13 +1061,13 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     }
   };
 
-  const elapsedSec     = Math.max(0, initialTime - timeLeft);
-  const earlyExitWarn  = elapsedSec < 15 && hasInteracted && !graceActive;
-  const currentYield   = (
-    (points / 2500) * 6 * entryFee
+  const elapsedSec         = Math.max(0, initialTime - timeLeft);
+  const cashoutLocked      = elapsedSec < 20 && !graceActive;
+  const lockSecsRemaining  = Math.max(0, 20 - elapsedSec);
+  const currentYield       = (
+    (points / 5000) * DIFFICULTY_MAX_WIN[difficulty]
     * (ticketBoost ? 1.1 : 1.0)
-    * (earlyExitWarn ? 0.5 : 1.0)
-    * (goldenWindow  ? 1.05 : 1.0)
+    * (goldenWindow ? 1.05 : 1.0)
     * (1 - PLATFORM_FEE_RAID)
   ).toFixed(4);
   const isUrgent       = timeLeft < 10;
@@ -1216,9 +1216,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
         {/* ── TOP HUD ── */}
         <div className="shrink-0 flex justify-between items-center gap-2 mb-2">
-          <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : earlyExitWarn ? 'border-orange-500/40' : 'border-white/10'}`}>
-            <p className={`text-[9px] font-bold leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : earlyExitWarn ? 'text-orange-500/60' : 'text-white/60'}`}>
-              {goldenWindow ? 'Golden extract' : earlyExitWarn ? 'Early exit -50%' : 'Yield'}
+          <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : 'border-white/10'}`}>
+            <p className={`text-[9px] font-bold leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : 'text-white/60'}`}>
+              {goldenWindow ? 'Golden extract' : 'Yield'}
             </p>
             <div className="flex items-baseline gap-2">
               <span className={`mono text-xl font-black ${goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-red-500' : 'text-white'}`}>{currentYield}</span>
@@ -1241,6 +1241,17 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           )}
         </div>
 
+        {/* ── Round competition badge ── */}
+        {isRoundEntry && !isEnding && (
+          <div className="shrink-0 flex justify-center mb-1.5">
+            <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full"
+              style={{ background: 'rgba(255,41,41,0.15)', border: '1px solid rgba(255,41,41,0.45)' }}>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929] animate-pulse" />
+              <span className="text-[9px] font-black text-[#FF2929] uppercase tracking-widest">Round Competition</span>
+            </div>
+          </div>
+        )}
+
         {/* ── 3D ARENA ── */}
         <div className="flex-1 relative flex items-center justify-center min-h-0">
           {/* Logs bg */}
@@ -1255,15 +1266,21 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           {/* Three.js Canvas — sized to match the risk circle */}
           <div className="absolute w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden z-[5]">
             <CanvasErrorBoundary>
-            <Canvas camera={{ position: [0, 0, 3.8], fov: 62 }}>
+            <Canvas
+              camera={{ position: [0, 0, 3.8], fov: 62 }}
+              gl={{ antialias: false, powerPreference: 'high-performance', alpha: false }}
+              dpr={[1, 1.5]}
+            >
               <ambientLight intensity={0.8} />
               <directionalLight position={[5, 8, 5]} intensity={1.5} />
               <pointLight position={[-6, 4, -4]} intensity={1.5} color="cyan" />
               <pointLight position={[6, 4, -4]} intensity={1.5} color="red" />
               <Suspense fallback={null}>
-                <RobotModel action={userAction} position={[-0.5, -1.6, 0]} rotation={[0, Math.PI * 0.15, 0]} scale={1.4} riskLevel={risk} />
+                {/* Player robot — faces right toward enemy */}
+                <RobotModel action={userAction} position={[-0.55, -1.6, 0]} rotation={[0, 0.45, 0]} scale={1.25} riskLevel={risk} />
+                {/* Enemy robot — faces left toward player, same model */}
+                <RobotModel action={enemyAction} position={[0.55, -1.6, 0]} rotation={[0, Math.PI + 0.45, 0]} scale={1.25} riskLevel={risk} />
               </Suspense>
-              <FighterModel action={enemyAction} position={[0.85, -1.75, 0]}  rotation={[0,  Math.PI / 2, 0]} scale={1.8} color="#EF4444" isEnemy riskLevel={risk} />
               <OrbitControls enableZoom={false} enablePan={false} minPolarAngle={Math.PI / 2.5} maxPolarAngle={Math.PI / 1.8} />
             </Canvas>
             </CanvasErrorBoundary>
@@ -1314,8 +1331,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                 <div className="flex flex-col gap-2 w-full mt-1">
                   <div className="text-center mb-1">
                     <p className="text-[9px] text-white/35 uppercase tracking-wider">Current payout</p>
-                    <p className="text-lg font-black text-white">{currentYield.toFixed(4)} SOL</p>
-                    <p className="text-[9px] text-[#FFB800] font-bold">→ {(currentYield * 2).toFixed(4)} SOL if you push</p>
+                    <p className="text-lg font-black text-white">{currentYield} SOL</p>
+                    <p className="text-[9px] text-[#FFB800] font-bold">→ {(parseFloat(currentYield) * 2).toFixed(4)} SOL if you push</p>
                   </div>
                   <button
                     onClick={() => { setDonActive(false); if (donTimerRef.current) clearTimeout(donTimerRef.current); solMultiplierRef.current = 2.0; addComboPopup('2× ACTIVATED!', '#FFB800'); spawnSparks('#FFB800', '#FF2929', 20); }}
@@ -1567,16 +1584,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               </div>
 
               {/* CASHOUT button */}
-              <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed}
+              <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed || cashoutLocked}
                 className={`col-span-2 p-4 tech-border transition-all duration-300 relative overflow-hidden disabled:opacity-80 ${
                   ambushed
                     ? 'bg-red-950/40 text-red-500/40 border-red-900/20 cursor-not-allowed'
-                    : !hasInteracted || graceActive
+                    : !hasInteracted || graceActive || cashoutLocked
                     ? 'bg-[#1a1a1a] text-white/40 border-white/5 cursor-not-allowed grayscale'
                     : goldenWindow
                     ? 'bg-yellow-500 text-black active:translate-y-1 golden-glow'
-                    : earlyExitWarn
-                    ? 'bg-orange-900/80 text-orange-300 border border-orange-600 active:translate-y-1 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
                     : `bg-[#14F195] text-black active:translate-y-1 ${multiplier > 3 ? 'shadow-[0_0_35px_rgba(20,241,149,0.6)]' : multiplier > 2 ? 'shadow-[0_0_22px_rgba(20,241,149,0.4)]' : 'shadow-[0_0_12px_rgba(20,241,149,0.2)]'}`
                 }`}>
                 <div className="flex flex-col items-center">
@@ -1585,21 +1600,21 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                       ? 'Ambush! Locked'
                       : graceActive ? 'Get ready...'
                       : !hasInteracted ? 'Act to unlock'
+                      : cashoutLocked ? `Ready in ${lockSecsRemaining}s`
                       : goldenWindow ? `GOLDEN EXIT +5%`
-                      : earlyExitWarn ? 'EARLY EXIT -50%'
                       : 'EXIT & CASH OUT'}
                   </span>
-                  {hasInteracted && !graceActive && !ambushed && (
-                    <span className={`mono text-sm font-black mt-1 ${goldenWindow ? 'text-black/70' : earlyExitWarn ? 'text-orange-400' : 'text-black/70'}`}>
+                  {hasInteracted && !graceActive && !ambushed && !cashoutLocked && (
+                    <span className="mono text-sm font-black mt-1 text-black/70">
                       {currentYield} SOL
                     </span>
                   )}
-                  <span className={`text-[9px] font-bold mt-0.5 ${goldenWindow || earlyExitWarn ? 'opacity-80' : 'opacity-60'}`}>
+                  <span className="text-[9px] font-bold mt-0.5 opacity-60">
                     {ambushed ? 'Wait for clear'
                       : graceActive ? 'Arming...'
                       : !hasInteracted ? 'Idle'
+                      : cashoutLocked ? 'Hold position...'
                       : goldenWindow ? `${goldenCountdown}s remaining`
-                      : earlyExitWarn ? `${8 - elapsedSec}s to full value`
                       : 'Secure profits'}
                   </span>
                 </div>

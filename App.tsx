@@ -93,6 +93,7 @@ const AppInner: React.FC = () => {
       activeRaidFee: ENTRY_FEES[Mode.SOLO],
       activeRaidDifficulty: Difficulty.MEDIUM,
       activeRaidBoosts: [],
+      activeRaidIsRound: false,
       raidTickets: 0,
       lastFreeTicketDate: null,
       ticketBoostActive: false,
@@ -1556,6 +1557,7 @@ const AppInner: React.FC = () => {
       skrBalance:    currency === Currency.SKR  ? prev.skrBalance    - totalCostCurrency : prev.skrBalance,
       activeRaidDifficulty: difficulty,
       activeRaidBoosts: boosts,
+      activeRaidIsRound: isRoundEntry,
       activeSeedId: undefined,
       activeServerSeedHash: undefined,
       // Remember config so "Redeploy" button reuses same settings
@@ -1664,6 +1666,7 @@ const AppInner: React.FC = () => {
             streakBonus={gameState.activeStreakBonus}
             dailyStreak={gameState.dailyStreak}
             personalBestPoints={gameState.personalBestPoints}
+            isRoundEntry={gameState.activeRaidIsRound}
           />
         );
       case Screen.TEAM:

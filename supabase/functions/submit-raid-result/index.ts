@@ -23,14 +23,21 @@ const MAX_YIELD_RATE: Record<string, number> = {
   DEGEN:      37.5,    // 15 * 2.50
 };
 
-// Maximum sol reward multiplier we ever allow — net of 5% fee (6 * 0.95 = 5.7)
-const MAX_PAYOUT_MULTIPLIER = 5.7;
+// Max SOL payout per difficulty at 5,000 points (must match client DIFFICULTY_MAX_WIN in types.ts)
+const DIFFICULTY_MAX_WIN: Record<string, number> = {
+  EASY:   0.03,
+  MEDIUM: 0.07,
+  HARD:   0.20,
+  DEGEN:  0.60,
+};
 
 // Minimum elapsed time (seconds) for any valid raid — prevents instant exploit
 const MIN_RAID_DURATION_SEC = 3;
+// Minimum elapsed for a successful cashout (client enforces 20s lock)
+const MIN_CASHOUT_SEC = 18; // 2s tolerance for clock skew
 
-// Max elapsed time = raid timer + grace window (extra 10s for network/client clock skew)
-const MAX_RAID_DURATION_SEC = 70;
+// Max elapsed time = raid timer + grace window (extra 15s for network/client clock skew)
+const MAX_RAID_DURATION_SEC = 110;
 
 function validateRaidResult(
   success: boolean,
@@ -53,8 +60,9 @@ function validateRaidResult(
     return 'Successful raid must have positive sol_amount';
   }
 
-  if (success && entry_fee <= 0) {
-    return 'entry_fee required for payout validation';
+  // Cashout requires minimum time in raid
+  if (success && elapsed_sec < MIN_CASHOUT_SEC) {
+    return `Cashout too early: ${elapsed_sec}s < minimum ${MIN_CASHOUT_SEC}s`;
   }
 
   // Max achievable points in elapsed_sec at highest possible multiplier (mult can reach ~5x with gear+attacks)
@@ -69,17 +77,18 @@ function validateRaidResult(
   }
 
   if (success) {
-    const maxPayout = entry_fee * MAX_PAYOUT_MULTIPLIER;
+    // Max payout = difficulty cap × 2× DON × 1.1 ticket × 1.05 golden × 1.15 tolerance
+    const maxForDiff = DIFFICULTY_MAX_WIN[difficulty] ?? DIFFICULTY_MAX_WIN.MEDIUM;
+    const maxPayout = maxForDiff * 2.0 * 1.1 * 1.05 * 1.15;
     if (sol_amount > maxPayout) {
-      return `Inflated payout: ${sol_amount} SOL > max allowed ${maxPayout} SOL`;
+      return `Inflated payout: ${sol_amount} SOL > max allowed ${maxPayout.toFixed(6)} SOL for ${difficulty}`;
     }
 
-    // Only reject overclaiming — underclaiming is valid (early-exit -50%, ticket discount, etc.)
-    // Base formula: (points / 2500) * 6 * entry_fee * (1 - fee). Allow +30% for ticket+golden bonuses.
-    const expectedSol = (points / 2500) * 6 * entry_fee * (1 - PLATFORM_FEE_RAID);
-    const maxExpected = expectedSol * 1.30 + 0.0001;
+    // Cross-check: expected base payout + generous tolerance for bonuses
+    const expectedBase = (points / 5000) * maxForDiff * (1 - PLATFORM_FEE_RAID);
+    const maxExpected = expectedBase * 2.5 + 0.0001; // allows DON 2× + all bonuses + tolerance
     if (sol_amount > maxExpected) {
-      return `Inflated payout: ${sol_amount} SOL > max expected ${maxExpected.toFixed(6)} SOL for ${points} pts`;
+      return `Inflated payout: ${sol_amount} SOL > max expected ${maxExpected.toFixed(6)} SOL for ${points} pts on ${difficulty}`;
     }
   }
 
