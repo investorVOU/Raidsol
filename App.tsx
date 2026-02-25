@@ -28,7 +28,7 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey, Connection } from '@solana/web3.js';
 import { getRpcList, makeConnection } from './lib/rpc';
-import { getAssociatedTokenAddressSync, createTransferInstruction } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync, createTransferInstruction, createAssociatedTokenAccountIdempotentInstruction } from '@solana/spl-token';
 import { useProfile } from './hooks/useProfile';
 import { useDomainName } from './hooks/useDomainName';
 import { usePrices } from './hooks/usePrices';
@@ -947,6 +947,7 @@ const AppInner: React.FC = () => {
         const sourceATA = getAssociatedTokenAddressSync(USDC_MINT, publicKey!);
         const destATA = getAssociatedTokenAddressSync(USDC_MINT, TREASURY_PUBKEY);
         tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, USDC_MINT),
           createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(expectedUnits)),
         );
       } else {
@@ -955,6 +956,7 @@ const AppInner: React.FC = () => {
         const sourceATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
         const destATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
         tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, SKR_MINT),
           createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(expectedUnits)),
         );
       }
@@ -1045,12 +1047,14 @@ const AppInner: React.FC = () => {
         const sourceATA = getAssociatedTokenAddressSync(USDC_MINT, publicKey!);
         const destATA   = getAssociatedTokenAddressSync(USDC_MINT, TREASURY_PUBKEY);
         tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, USDC_MINT),
           createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(Math.round(price * 1_000_000))),
         );
       } else {
         const sourceATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
         const destATA   = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
         tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, SKR_MINT),
           createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(Math.round(price * Math.pow(10, SKR_DECIMALS)))),
         );
       }
@@ -1153,12 +1157,18 @@ const AppInner: React.FC = () => {
         const atoms = Math.round(stake * 1_000_000);
         const srcATA = getAssociatedTokenAddressSync(USDC_MINT, publicKey!);
         const dstATA = getAssociatedTokenAddressSync(USDC_MINT, TREASURY_PUBKEY);
-        tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
+        tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, USDC_MINT),
+          createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+        );
       } else {
         const atoms = Math.round(stake * Math.pow(10, SKR_DECIMALS));
         const srcATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
         const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
-        tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
+        tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, SKR_MINT),
+          createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+        );
       }
       const { sig: _stakeSig, conn: _stakeConn } = await sendWithFallback(tx);
       stakeTxSig = _stakeSig;
@@ -1336,12 +1346,18 @@ const AppInner: React.FC = () => {
           const atoms = Math.round(stake * 1_000_000);
           const srcATA = getAssociatedTokenAddressSync(USDC_MINT, publicKey!);
           const dstATA = getAssociatedTokenAddressSync(USDC_MINT, TREASURY_PUBKEY);
-          tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
+          tx = new Transaction().add(
+            createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, USDC_MINT),
+            createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+          );
         } else {
           const atoms = Math.round(stake * Math.pow(10, SKR_DECIMALS));
           const srcATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
           const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
-          tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
+          tx = new Transaction().add(
+            createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, SKR_MINT),
+            createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+          );
         }
         const { sig: _joinSig, conn: _joinConn } = await sendWithFallback(tx);
         stakeTxSig = _joinSig;
@@ -1535,13 +1551,19 @@ const AppInner: React.FC = () => {
           const atoms = Math.round(totalCostCurrency * 1_000_000);
           const srcATA = getAssociatedTokenAddressSync(USDC_MINT, publicKey!);
           const dstATA = getAssociatedTokenAddressSync(USDC_MINT, TREASURY_PUBKEY);
-          tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
+          tx = new Transaction().add(
+            createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, USDC_MINT),
+            createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+          );
         } else {
           // SKR Seeker token
           const atoms = Math.round(totalCostCurrency * Math.pow(10, SKR_DECIMALS));
           const srcATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
           const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
-          tx = new Transaction().add(createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)));
+          tx = new Transaction().add(
+            createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, SKR_MINT),
+            createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+          );
         }
         const { sig, conn: raidConn } = await sendWithFallback(tx);
         await raidConn.confirmTransaction(sig, 'confirmed');

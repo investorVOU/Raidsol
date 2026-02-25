@@ -27,7 +27,7 @@ const PERIOD_LABELS: { id: LeaderboardPeriod; label: string; srLabel: string }[]
   { id: 'alltime', label: 'All Time', srLabel: 'Total SR' },
   { id: 'weekly',  label: 'Weekly',   srLabel: 'SR This Week' },
   { id: 'monthly', label: 'Monthly',  srLabel: 'SR This Month' },
-  { id: 'skr',     label: '✦ SKR',    srLabel: 'Total SR'     },
+  { id: 'skr',     label: 'SKR',       srLabel: 'Total SR'     },
 ];
 const ALLOC_PCT  = [40, 25, 18, 11, 6];
 const RANK_MEDALS = ['🥇', '🥈', '🥉', '4th', '5th'];
@@ -199,7 +199,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
         {/* SKR holders banner */}
         {mainTab === 'leaderboard' && period === 'skr' && (
           <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: 'rgba(255,184,0,0.06)', border: '1px solid rgba(255,184,0,0.20)' }}>
-            <span className="text-xl shrink-0">✦</span>
+            <span className="text-xl shrink-0"></span>
             <div>
               <p className="text-xs font-black text-[#FFB800]">Seeker Domain Holders</p>
               <p className="text-[10px] text-white/40 mt-0.5">Raiders with a verified .skr domain — top 50 by SR</p>
