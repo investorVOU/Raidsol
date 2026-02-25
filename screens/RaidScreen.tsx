@@ -126,7 +126,59 @@ const GameStyles = `
   .hot-streak-text{ animation: hot-streak 0.6s ease-in-out infinite; }
   .firewall-pop   { animation: firewall-pop 1.2s ease-out forwards; pointer-events:none; }
   .combo-pop      { position:absolute; animation: combo-pop 0.9s ease-out forwards; pointer-events:none; font-family:'JetBrains Mono',monospace; font-weight:900; text-transform:uppercase; }
+  @keyframes sc-cursor {
+    0%,100% { left: 4%; }
+    50%     { left: 80%; }
+  }
+  @keyframes sc-in {
+    0%   { transform: translateY(24px); opacity: 0; }
+    100% { transform: translateY(0);    opacity: 1; }
+  }
+  @keyframes sc-result-pop {
+    0%   { transform: scale(0.6); opacity: 0; }
+    40%  { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1.0); opacity: 1; }
+  }
+  @keyframes sc-bar-drain {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+  @keyframes sc-target-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,41,41,0.5); }
+    50%     { box-shadow: 0 0 0 10px rgba(255,41,41,0); }
+  }
+  .sc-panel       { animation: sc-in 0.18s ease-out forwards; }
+  .sc-cursor      { position: absolute; top: 0; width: 14px; height: 100%; background: #fff; border-radius: 3px;
+                    box-shadow: 0 0 10px #fff, 0 0 20px rgba(255,255,255,0.5);
+                    animation: sc-cursor 1.8s linear infinite; pointer-events: none; }
+  .sc-result-pop  { animation: sc-result-pop 0.3s ease-out forwards; }
+  .sc-target-btn  { animation: sc-target-pulse 0.6s ease-in-out infinite; }
 `;
+
+
+// ─── Skill Check ──────────────────────────────────────────────────────────────
+type SkillCheckType = 'TAP_ZONE' | 'QUICK_TAP' | 'CODE_BREACH' | 'PATTERN_DODGE';
+
+interface SkillCheck {
+  type: SkillCheckType;
+  startTime: number;   // Date.now() when triggered
+  duration: number;    // ms the player has to respond
+  phase: 'SHOW' | 'INPUT';  // CODE_BREACH: SHOW flashes the target, INPUT is pick-time
+  data: {
+    codes?: string[];    // CODE_BREACH: 4 hex codes
+    targetIdx?: number;  // CODE_BREACH: which code was highlighted
+    safeIdx?: number;    // PATTERN_DODGE: which of 4 slots is safe
+  };
+}
+
+const BREACH_CODES = ['0xF3A7','0x8B2C','0x4D91','0xE5F6','0xA2B8','0x7C3E','0xD140','0x9FF2','0xC03B','0x61EA'];
+
+const SC_META: Record<SkillCheckType, { label: string; sub: string; successMsg: string; failMsg: string; successRisk: number; failRisk: number; successPts: number; successMult: number }> = {
+  TAP_ZONE:      { label: 'INTERCEPT SIGNAL',  sub: 'Press when bar enters green zone',   successMsg: '-18 RISK', failMsg: '+8 RISK',  successRisk: -18, failRisk: 8,  successPts: 0,   successMult: 0    },
+  QUICK_TAP:     { label: 'BREACH WINDOW',     sub: 'Tap the target before it closes',    successMsg: '-15 RISK +150pts', failMsg: '+10 RISK', successRisk: -15, failRisk: 10, successPts: 150, successMult: 0    },
+  CODE_BREACH:   { label: 'MEMORY BREACH',     sub: 'Memorise then select the lit code',  successMsg: '+0.25x MULT', failMsg: '+12 RISK', successRisk: 0,  failRisk: 12, successPts: 0,   successMult: 0.25 },
+  PATTERN_DODGE: { label: 'FIREWALL BYPASS',   sub: 'Find the safe path',                 successMsg: '-12 RISK +200pts', failMsg: '+20 RISK', successRisk: -12, failRisk: 20, successPts: 200, successMult: 0    },
+};
 
 // ─── 3D Fighter ───────────────────────────────────────────────────────────────
 const getAvatarColor = (id?: string) => {
@@ -330,6 +382,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const [nearMissSOL,     setNearMissSOL]     = useState<number | null>(null);
   const [comboPopups,     setComboPopups]     = useState<Array<{ id: number; text: string; color: string }>>([]);
 
+  // ── Skill check state ─────────────────────────────────────────────────────
+  const [skillCheck,       setSkillCheck]       = useState<SkillCheck | null>(null);
+  const [skillCheckResult, setSkillCheckResult] = useState<'SUCCESS' | 'FAIL' | null>(null);
+  const skillCheckRef         = useRef<SkillCheck | null>(null);
+  const lastSkillCheckTimeRef = useRef(0);
+  const skillCheckTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { skillCheckRef.current = skillCheck; }, [skillCheck]);
+
   const lastActionTimeRef   = useRef<number>(0);
   const lastActionTypeRef   = useRef<'ATTACK' | 'DEFEND' | null>(null);
   const peakMultRef         = useRef(initialMultiplier);
@@ -344,6 +404,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     if (goldenWindowRef.current) clearInterval(goldenWindowRef.current);
     if (ambushTimeoutRef.current) clearTimeout(ambushTimeoutRef.current);
     if (hotStreakTimerRef.current) clearTimeout(hotStreakTimerRef.current);
+    if (skillCheckTimeoutRef.current) clearTimeout(skillCheckTimeoutRef.current);
   }, []);
 
   const addComboPopup = useCallback((text: string, color: string) => {
@@ -419,6 +480,77 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
   const addLog = (msg: string) => setLogs(prev => [msg, ...prev].slice(0, 2));
 
+  // ── Skill check callbacks (after spawnSparks / logEvent are defined) ───────
+  const applySkillCheckResult = useCallback((success: boolean) => {
+    const sc = skillCheckRef.current;
+    if (!sc || stateRef.current.isEnding) return;
+    if (skillCheckTimeoutRef.current) { clearTimeout(skillCheckTimeoutRef.current); skillCheckTimeoutRef.current = null; }
+    const meta = SC_META[sc.type];
+    if (success) {
+      setSkillCheckResult('SUCCESS');
+      if (meta.successRisk !== 0) setRisk(prev => Math.max(0, prev + meta.successRisk));
+      if (meta.successPts > 0)    setPoints(prev => prev + meta.successPts);
+      if (meta.successMult > 0)   setMultiplier(prev => { const n = prev + meta.successMult; if (n > peakMultRef.current) peakMultRef.current = n; return n; });
+      addComboPopup(meta.successMsg, '#14F195');
+      spawnSparks('#14F195', '#FFD700', 14);
+      sounds.playCashOut();
+      logEvent('SKILL_CHECK', `${meta.label} — Success`, meta.successMsg, 'bonus');
+    } else {
+      setSkillCheckResult('FAIL');
+      setRisk(prev => Math.min(98, prev + meta.failRisk));
+      addComboPopup(meta.failMsg, '#EF4444');
+      spawnSparks('#EF4444', '#f97316', 10);
+      sounds.playDefend();
+      logEvent('SKILL_CHECK', `${meta.label} — Fail`, meta.failMsg, 'warning');
+    }
+    skillCheckTimeoutRef.current = setTimeout(() => {
+      setSkillCheck(null);
+      skillCheckRef.current = null;
+      setSkillCheckResult(null);
+      skillCheckTimeoutRef.current = null;
+      lastSkillCheckTimeRef.current = Date.now();
+    }, 1200);
+  }, [addComboPopup, spawnSparks, sounds, logEvent]); // eslint-disable-line
+
+  const applySkillCheckResultRef = useRef(applySkillCheckResult);
+  useEffect(() => { applySkillCheckResultRef.current = applySkillCheckResult; }, [applySkillCheckResult]);
+
+  const triggerSkillCheck = useCallback(() => {
+    if (skillCheckRef.current || stateRef.current.isEnding) return;
+    const types: SkillCheckType[] = ['TAP_ZONE', 'QUICK_TAP', 'CODE_BREACH', 'PATTERN_DODGE'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    let data: SkillCheck['data'] = {};
+    let duration = 3000;
+    const phase: SkillCheck['phase'] = (type === 'CODE_BREACH' || type === 'PATTERN_DODGE') ? 'SHOW' : 'INPUT';
+    if (type === 'QUICK_TAP')     { data.targetIdx = Math.floor(Math.random() * 4); duration = 1800; }
+    else if (type === 'CODE_BREACH') {
+      const shuffled = [...BREACH_CODES].sort(() => Math.random() - 0.5);
+      data.codes = shuffled.slice(0, 4);
+      data.targetIdx = Math.floor(Math.random() * 4);
+      duration = 3000;
+    } else if (type === 'PATTERN_DODGE') { data.safeIdx = Math.floor(Math.random() * 4); duration = 2000; }
+    else { duration = 4000; } // TAP_ZONE
+    const sc: SkillCheck = { type, startTime: Date.now(), duration, phase, data };
+    setSkillCheck(sc);
+    skillCheckRef.current = sc;
+    if (type === 'CODE_BREACH' || type === 'PATTERN_DODGE') {
+      const showMs = type === 'CODE_BREACH' ? 1500 : 1000;
+      skillCheckTimeoutRef.current = setTimeout(() => {
+        const updated: SkillCheck = { ...sc, phase: 'INPUT', startTime: Date.now() };
+        setSkillCheck(updated);
+        skillCheckRef.current = updated;
+        skillCheckTimeoutRef.current = setTimeout(() => applySkillCheckResultRef.current(false), duration);
+      }, showMs);
+    } else {
+      skillCheckTimeoutRef.current = setTimeout(() => applySkillCheckResultRef.current(false), duration);
+    }
+    setLogs(prev => ['Skill check!', ...prev].slice(0, 2));
+    sounds.hapticWarning();
+  }, [sounds]); // eslint-disable-line
+
+  const triggerSkillCheckRef = useRef(triggerSkillCheck);
+  useEffect(() => { triggerSkillCheckRef.current = triggerSkillCheck; }, [triggerSkillCheck]);
+
   const bustTimeRef = useRef(0);
   const handleBust = useCallback((reason: string = 'PROTOCOL_FAILURE') => {
     if (stateRef.current.isEnding) return;
@@ -427,11 +559,15 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     if (goldenWindowRef.current)  { clearInterval(goldenWindowRef.current); goldenWindowRef.current = null; }
     if (ambushTimeoutRef.current) { clearTimeout(ambushTimeoutRef.current); ambushTimeoutRef.current = null; }
     if (hotStreakTimerRef.current) { clearTimeout(hotStreakTimerRef.current); hotStreakTimerRef.current = null; }
+    if (skillCheckTimeoutRef.current) { clearTimeout(skillCheckTimeoutRef.current); skillCheckTimeoutRef.current = null; }
     setDefendLocked(false);
     setDefendLockTimer(0);
     setGoldenWindow(false);
     setAmbushed(false);
     setHotStreak(false);
+    setSkillCheck(null);
+    setSkillCheckResult(null);
+    skillCheckRef.current = null;
     // Near-miss: show what they could have extracted
     const wouldHave = (stateRef.current.points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0);
     if (wouldHave >= entryFee * 0.4) setNearMissSOL(parseFloat(wouldHave.toFixed(4)));
@@ -561,13 +697,24 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         }, 2200);
       }
 
-      const timePenalty = (elapsedSeconds - 3) * 0.09;  // faster late-game escalation
-      const greedFactor  = state.multiplier > 2.0 ? 2.5 : state.multiplier > 1.5 ? 1.9 : 1.0;
-      const houseEdge    = 1.55;  // ~25-30% base win rate, ~45% max with full gear
-      const baseDrift    = (2.0 + (Math.random() * 3.5)) + timePenalty;  // higher variance for near-miss feel
+      // ── Skill check trigger: ~12% per tick after 8s, 15s cooldown ──────
+      if (
+        elapsedSeconds > 8 &&
+        !skillCheckRef.current &&
+        (Date.now() - lastSkillCheckTimeRef.current) > 15000 &&
+        Math.random() < 0.12 &&
+        !state.isEnding
+      ) {
+        triggerSkillCheckRef.current();
+      }
+
+      const timePenalty = (elapsedSeconds - 3) * 0.11;  // faster late-game escalation
+      const greedFactor  = state.multiplier > 2.0 ? 2.8 : state.multiplier > 1.5 ? 2.1 : 1.0;
+      const houseEdge    = 1.85;  // ~18-22% base win rate, ~36% max with full gear
+      const baseDrift    = (2.2 + (Math.random() * 4.0)) + timePenalty;  // higher variance for near-miss feel
       const totalDrift   = baseDrift * diffConfig.driftMod * boostStats.driftMultiplier * greedFactor * houseEdge * gearRiskFactor;
       const spikeRoll    = Math.random();
-      const randomSpike  = spikeRoll > 0.91 ? (spikeRoll > 0.96 ? 20 : 16) : 0;  // 9% spike chance
+      const randomSpike  = spikeRoll > 0.88 ? (spikeRoll > 0.94 ? 22 : 17) : 0;  // 12% spike chance
       if (randomSpike > 0 && !state.isEnding) {
         logEvent('NETWORK_SURGE', 'Random protocol traffic spike — occurs ~9% of ticks', `+${randomSpike} RISK applied`, 'danger');
         addLog('Network surge');
@@ -577,8 +724,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       const nextRisk = state.risk + totalDrift + randomSpike;
 
-      // ── LAST-SECOND SAVE: 7% chance right at 100 — heart-stopping ──────
-      if (nextRisk >= 100 && Math.random() < 0.07 && !state.isEnding) {
+      // ── LAST-SECOND SAVE: 4% chance right at 100 — heart-stopping ──────
+      if (nextRisk >= 100 && Math.random() < 0.04 && !state.isEnding) {
         logEvent('FIREWALL', 'Emergency firewall activated just before bust — 7% chance', 'Risk reset to 75, raid continues', 'bonus');
         addLog('Firewall activated');
         spawnSparks('#14F195', '#00FBFF', 32);
@@ -646,10 +793,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     if (defendLockRef.current)    { clearInterval(defendLockRef.current);  defendLockRef.current = null; }
     if (goldenWindowRef.current)  { clearInterval(goldenWindowRef.current); goldenWindowRef.current = null; }
     if (hotStreakTimerRef.current) { clearTimeout(hotStreakTimerRef.current); hotStreakTimerRef.current = null; }
+    if (skillCheckTimeoutRef.current) { clearTimeout(skillCheckTimeoutRef.current); skillCheckTimeoutRef.current = null; }
     setDefendLocked(false);
     setDefendLockTimer(0);
     setGoldenWindow(false);
     setHotStreak(false);
+    setSkillCheck(null);
+    setSkillCheckResult(null);
+    skillCheckRef.current = null;
     setIsEnding('WIN');
     setUserAction('Dance');
     setEnemyAction('Death');
@@ -1100,95 +1251,232 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {/* ATTACK button */}
-            <button onClick={handleAttack} disabled={!!isEnding || graceActive || ambushed}
-              className={`col-span-1 bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
-                ambushed ? 'border-red-900/30 opacity-30' : 'border-red-600/50'
-              }`}>
-              <div className="flex flex-col items-center group-active:scale-95 transition-transform">
-                <span className="text-base font-bold uppercase text-red-500">ATTACK</span>
-                <span className="text-[8px] font-bold text-red-500/40 uppercase">
-                  {attackCount >= 4 ? `Rage ${attackCount}/5` : 'RISK ++'}
-                </span>
+          {skillCheck && !isEnding ? (
+            /* ── SKILL CHECK PANEL ─────────────────────────────────────────── */
+            <div className="sc-panel space-y-2">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2929]">{SC_META[skillCheck.type].label}</p>
+                  <p className="text-[8px] text-white/40 font-bold mt-0.5">{SC_META[skillCheck.type].sub}</p>
+                </div>
+                {skillCheckResult && (
+                  <div className={`sc-result-pop px-3 py-1 border font-black text-xs uppercase ${
+                    skillCheckResult === 'SUCCESS'
+                      ? 'border-[#14F195]/60 text-[#14F195] bg-[#14F195]/10'
+                      : 'border-[#EF4444]/60 text-[#EF4444] bg-[#EF4444]/10'
+                  }`}>
+                    {skillCheckResult}
+                  </div>
+                )}
               </div>
-            </button>
 
-            {/* DEFEND button */}
-            <div className="col-span-1 relative">
-              {/* Cooldown SVG ring — depletes as timer counts down */}
-              {defendLocked && (() => {
-                const r = 46;
-                const circ = 2 * Math.PI * r;
-                const offset = circ * (1 - defendLockTimer / 3);
-                return (
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r={r} fill="none" stroke="#f97316" strokeWidth="3.5"
-                      strokeDasharray={circ} strokeDashoffset={offset}
-                      strokeLinecap="round" transform="rotate(-90 50 50)"
-                      style={{ transition: 'stroke-dashoffset 1s linear' }} />
-                  </svg>
-                );
-              })()}
-              <button onClick={handleDefend} disabled={!!isEnding || graceActive || defendLocked || ambushed}
-                className={`w-full bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
-                  ambushed ? 'border-cyan-900/30 opacity-30' :
-                  defendLocked ? 'border-orange-500/60 bg-orange-950/20' : 'border-[#00FBFF]/50'
+              {/* Timer drain bar — only during INPUT phase */}
+              {!skillCheckResult && skillCheck.phase === 'INPUT' && (
+                <div className="h-0.5 bg-white/10 overflow-hidden">
+                  <div className="h-full bg-[#FF2929]"
+                       style={{ animation: `sc-bar-drain ${skillCheck.duration}ms linear forwards` }} />
+                </div>
+              )}
+
+              {/* TAP_ZONE */}
+              {skillCheck.type === 'TAP_ZONE' && !skillCheckResult && (
+                <>
+                  <div className="relative h-10 bg-white/5 border border-white/10 overflow-hidden">
+                    <div className="absolute top-0 bottom-0 bg-[#14F195]/20 border-l border-r border-[#14F195]/50"
+                         style={{ left: '35%', width: '20%' }} />
+                    <div className="sc-cursor" />
+                    <p className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white/25 pointer-events-none">HIT GREEN ZONE</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const elapsed = (Date.now() - skillCheck.startTime) % 1800;
+                      const t = elapsed / 1800;
+                      const pos = t <= 0.5 ? 4 + 76 * t * 2 : 80 - 76 * (t - 0.5) * 2;
+                      applySkillCheckResult(pos >= 35 && pos <= 55);
+                    }}
+                    className="w-full py-3 bg-[#FF2929]/10 border border-[#FF2929]/40 font-black uppercase text-[#FF2929] text-sm active:scale-95 transition-transform"
+                  >
+                    TAP!
+                  </button>
+                </>
+              )}
+
+              {/* QUICK_TAP */}
+              {skillCheck.type === 'QUICK_TAP' && !skillCheckResult && (
+                <div className="grid grid-cols-2 gap-2">
+                  {[0, 1, 2, 3].map(i => (
+                    <button
+                      key={i}
+                      onClick={() => applySkillCheckResult(i === skillCheck.data.targetIdx)}
+                      className={`py-3 border font-black uppercase text-sm active:scale-95 transition-all ${
+                        i === skillCheck.data.targetIdx
+                          ? 'sc-target-btn border-[#FF2929] bg-[#FF2929]/20 text-[#FF2929]'
+                          : 'border-white/10 bg-white/5 text-white/25'
+                      }`}
+                    >
+                      {i === skillCheck.data.targetIdx ? 'TAP!' : `NODE ${String.fromCharCode(65 + i)}`}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* CODE_BREACH */}
+              {skillCheck.type === 'CODE_BREACH' && (
+                <>
+                  <p className={`text-[8px] font-bold text-center ${
+                    skillCheck.phase === 'SHOW' ? 'text-[#FFB800]/70 animate-pulse' : 'text-white/30'
+                  }`}>
+                    {skillCheck.phase === 'SHOW' ? 'MEMORISE THE HIGHLIGHTED CODE' : 'SELECT THE CODE YOU SAW'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(skillCheck.data.codes ?? []).map((code, i) => (
+                      <button
+                        key={i}
+                        onClick={() => skillCheck.phase === 'INPUT' && !skillCheckResult && applySkillCheckResult(i === skillCheck.data.targetIdx)}
+                        disabled={skillCheck.phase === 'SHOW' || !!skillCheckResult}
+                        className={`py-3 border mono font-bold text-sm active:scale-95 transition-all disabled:cursor-default ${
+                          skillCheck.phase === 'SHOW' && i === skillCheck.data.targetIdx
+                            ? 'border-[#FFB800] bg-[#FFB800]/20 text-[#FFB800]'
+                            : skillCheck.phase === 'INPUT' && !skillCheckResult
+                            ? 'border-white/20 bg-white/5 text-white/70 hover:border-white/40'
+                            : 'border-white/10 bg-white/5 text-white/30'
+                        }`}
+                      >
+                        {code}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* PATTERN_DODGE */}
+              {skillCheck.type === 'PATTERN_DODGE' && (
+                <>
+                  <p className={`text-[8px] font-bold text-center ${
+                    skillCheck.phase === 'SHOW' ? 'text-[#14F195]/70 animate-pulse' : 'text-white/30'
+                  }`}>
+                    {skillCheck.phase === 'SHOW' ? 'MEMORISE THE SAFE NODE' : skillCheckResult ? '' : 'SELECT THE SAFE NODE'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[0, 1, 2, 3].map(i => {
+                      const isSafe = i === skillCheck.data.safeIdx;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => skillCheck.phase === 'INPUT' && !skillCheckResult && applySkillCheckResult(isSafe)}
+                          disabled={skillCheck.phase === 'SHOW' || !!skillCheckResult}
+                          className={`py-3 border font-black uppercase text-sm active:scale-95 transition-all disabled:cursor-default ${
+                            skillCheck.phase === 'SHOW' && isSafe
+                              ? 'border-[#14F195] bg-[#14F195]/20 text-[#14F195]'
+                              : skillCheck.phase === 'INPUT' && !skillCheckResult
+                              ? 'border-white/20 bg-white/5 text-white/60 hover:border-white/40'
+                              : 'border-white/10 bg-white/5 text-white/30'
+                          }`}
+                        >
+                          {`NODE ${String.fromCharCode(65 + i)}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {skillCheckResult && (
+                <p className="text-[8px] text-white/30 text-center font-bold animate-pulse">Resuming...</p>
+              )}
+            </div>
+          ) : !isEnding && (
+            /* ── NORMAL CONTROLS ───────────────────────────────────────────── */
+            <div className="grid grid-cols-2 gap-2">
+              {/* ATTACK button */}
+              <button onClick={handleAttack} disabled={!!isEnding || graceActive || ambushed}
+                className={`col-span-1 bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
+                  ambushed ? 'border-red-900/30 opacity-30' : 'border-red-600/50'
                 }`}>
                 <div className="flex flex-col items-center group-active:scale-95 transition-transform">
-                  <span className={`text-base font-bold uppercase ${
-                    defendLocked ? 'text-orange-400 animate-pulse' : 'text-[#00FBFF]'
-                  }`}>
-                    {defendLocked ? `Cooldown ${defendLockTimer}s` : 'DEFEND'}
+                  <span className="text-base font-bold uppercase text-red-500">ATTACK</span>
+                  <span className="text-[8px] font-bold text-red-500/40 uppercase">
+                    {attackCount >= 4 ? `Rage ${attackCount}/5` : 'RISK ++'}
                   </span>
-                  <span className={`text-[8px] font-bold uppercase ${
-                    defendLocked ? 'text-orange-500/60' : 'text-[#00FBFF]/40'
+                </div>
+              </button>
+
+              {/* DEFEND button */}
+              <div className="col-span-1 relative">
+                {defendLocked && (() => {
+                  const r = 46;
+                  const circ = 2 * Math.PI * r;
+                  const offset = circ * (1 - defendLockTimer / 3);
+                  return (
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r={r} fill="none" stroke="#f97316" strokeWidth="3.5"
+                        strokeDasharray={circ} strokeDashoffset={offset}
+                        strokeLinecap="round" transform="rotate(-90 50 50)"
+                        style={{ transition: 'stroke-dashoffset 1s linear' }} />
+                    </svg>
+                  );
+                })()}
+                <button onClick={handleDefend} disabled={!!isEnding || graceActive || defendLocked || ambushed}
+                  className={`w-full bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
+                    ambushed ? 'border-cyan-900/30 opacity-30' :
+                    defendLocked ? 'border-orange-500/60 bg-orange-950/20' : 'border-[#00FBFF]/50'
                   }`}>
-                    {defendLocked ? 'Shield overload' : consecutiveDefends >= 1 ? 'CHAIN RISK' : 'RISK --'}
+                  <div className="flex flex-col items-center group-active:scale-95 transition-transform">
+                    <span className={`text-base font-bold uppercase ${
+                      defendLocked ? 'text-orange-400 animate-pulse' : 'text-[#00FBFF]'
+                    }`}>
+                      {defendLocked ? `Cooldown ${defendLockTimer}s` : 'DEFEND'}
+                    </span>
+                    <span className={`text-[8px] font-bold uppercase ${
+                      defendLocked ? 'text-orange-500/60' : 'text-[#00FBFF]/40'
+                    }`}>
+                      {defendLocked ? 'Shield overload' : consecutiveDefends >= 1 ? 'CHAIN RISK' : 'RISK --'}
+                    </span>
+                  </div>
+                </button>
+              </div>
+
+              {/* CASHOUT button */}
+              <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed}
+                className={`col-span-2 p-4 tech-border transition-all duration-300 relative overflow-hidden disabled:opacity-80 ${
+                  ambushed
+                    ? 'bg-red-950/40 text-red-500/40 border-red-900/20 cursor-not-allowed'
+                    : !hasInteracted || graceActive
+                    ? 'bg-[#1a1a1a] text-white/40 border-white/5 cursor-not-allowed grayscale'
+                    : goldenWindow
+                    ? 'bg-yellow-500 text-black active:translate-y-1 golden-glow'
+                    : earlyExitWarn
+                    ? 'bg-orange-900/80 text-orange-300 border border-orange-600 active:translate-y-1 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+                    : `bg-[#14F195] text-black active:translate-y-1 ${multiplier > 3 ? 'shadow-[0_0_35px_rgba(20,241,149,0.6)]' : multiplier > 2 ? 'shadow-[0_0_22px_rgba(20,241,149,0.4)]' : 'shadow-[0_0_12px_rgba(20,241,149,0.2)]'}`
+                }`}>
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl font-bold uppercase leading-none">
+                    {ambushed
+                      ? 'Ambush! Locked'
+                      : graceActive ? 'Get ready...'
+                      : !hasInteracted ? 'Act to unlock'
+                      : goldenWindow ? `GOLDEN EXIT +5%`
+                      : earlyExitWarn ? 'EARLY EXIT -50%'
+                      : 'EXIT & CASH OUT'}
+                  </span>
+                  {hasInteracted && !graceActive && !ambushed && (
+                    <span className={`mono text-sm font-black mt-1 ${goldenWindow ? 'text-black/70' : earlyExitWarn ? 'text-orange-400' : 'text-black/70'}`}>
+                      {currentYield} SOL
+                    </span>
+                  )}
+                  <span className={`text-[9px] font-bold mt-0.5 ${goldenWindow || earlyExitWarn ? 'opacity-80' : 'opacity-60'}`}>
+                    {ambushed ? 'Wait for clear'
+                      : graceActive ? 'Arming...'
+                      : !hasInteracted ? 'Idle'
+                      : goldenWindow ? `${goldenCountdown}s remaining`
+                      : earlyExitWarn ? `${8 - elapsedSec}s to full value`
+                      : 'Secure profits'}
                   </span>
                 </div>
               </button>
             </div>
-
-            {/* CASHOUT button */}
-            <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed}
-              className={`col-span-2 p-4 tech-border transition-all duration-300 relative overflow-hidden disabled:opacity-80 ${
-                ambushed
-                  ? 'bg-red-950/40 text-red-500/40 border-red-900/20 cursor-not-allowed'
-                  : !hasInteracted || graceActive
-                  ? 'bg-[#1a1a1a] text-white/40 border-white/5 cursor-not-allowed grayscale'
-                  : goldenWindow
-                  ? 'bg-yellow-500 text-black active:translate-y-1 golden-glow'
-                  : earlyExitWarn
-                  ? 'bg-orange-900/80 text-orange-300 border border-orange-600 active:translate-y-1 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
-                  : `bg-[#14F195] text-black active:translate-y-1 ${multiplier > 3 ? 'shadow-[0_0_35px_rgba(20,241,149,0.6)]' : multiplier > 2 ? 'shadow-[0_0_22px_rgba(20,241,149,0.4)]' : 'shadow-[0_0_12px_rgba(20,241,149,0.2)]'}`
-              }`}>
-              <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold uppercase leading-none">
-                  {ambushed
-                    ? 'Ambush! Locked'
-                    : graceActive ? 'Get ready...'
-                    : !hasInteracted ? 'Act to unlock'
-                    : goldenWindow ? `GOLDEN EXIT +5%`
-                    : earlyExitWarn ? 'EARLY EXIT -50%'
-                    : 'EXIT & CASH OUT'}
-                </span>
-                {hasInteracted && !graceActive && !ambushed && (
-                  <span className={`mono text-sm font-black mt-1 ${goldenWindow ? 'text-black/70' : earlyExitWarn ? 'text-orange-400' : 'text-black/70'}`}>
-                    {currentYield} SOL
-                  </span>
-                )}
-                <span className={`text-[9px] font-bold mt-0.5 ${goldenWindow || earlyExitWarn ? 'opacity-80' : 'opacity-60'}`}>
-                  {ambushed ? 'Wait for clear'
-                    : graceActive ? 'Arming...'
-                    : !hasInteracted ? 'Idle'
-                    : goldenWindow ? `${goldenCountdown}s remaining`
-                    : earlyExitWarn ? `${8 - elapsedSec}s to full value`
-                    : 'Secure profits'}
-                </span>
-              </div>
-            </button>
-          </div>
+          )}
         </div>
 
       </div>

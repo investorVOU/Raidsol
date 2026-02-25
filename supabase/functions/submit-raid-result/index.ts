@@ -60,8 +60,8 @@ function validateRaidResult(
   // Max achievable points in elapsed_sec at highest possible multiplier (mult can reach ~5x with gear+attacks)
   const maxMultiplier = 5.0;
   const maxRate = (MAX_YIELD_RATE[difficulty] ?? MAX_YIELD_RATE.MEDIUM) * maxMultiplier;
-  // Attacks give +200 points; cap at 30 attacks in a run
-  const maxAttackBonus = 30 * 200;
+  // Attacks give +200 points (cap 30); skill checks give up to +200 pts each (cap 6 triggers)
+  const maxAttackBonus = 30 * 200 + 6 * 200;
   const maxPoints = Math.ceil(maxRate * elapsed_sec) + maxAttackBonus;
 
   if (points > maxPoints) {
@@ -74,12 +74,12 @@ function validateRaidResult(
       return `Inflated payout: ${sol_amount} SOL > max allowed ${maxPayout} SOL`;
     }
 
-    // Verify sol_amount is consistent with points (allow ±20% for floating-point divergence)
-    // Reward formula (net of 5% platform fee): (points / 2500) * 6 * entry_fee * 0.95
+    // Only reject overclaiming — underclaiming is valid (early-exit -50%, ticket discount, etc.)
+    // Base formula: (points / 2500) * 6 * entry_fee * (1 - fee). Allow +30% for ticket+golden bonuses.
     const expectedSol = (points / 2500) * 6 * entry_fee * (1 - PLATFORM_FEE_RAID);
-    const tolerance = expectedSol * 0.22; // slightly wider to absorb golden window / early exit
-    if (Math.abs(sol_amount - expectedSol) > tolerance + 0.0001) {
-      return `sol_amount ${sol_amount} inconsistent with points ${points} (expected ~${expectedSol.toFixed(6)})`;
+    const maxExpected = expectedSol * 1.30 + 0.0001;
+    if (sol_amount > maxExpected) {
+      return `Inflated payout: ${sol_amount} SOL > max expected ${maxExpected.toFixed(6)} SOL for ${points} pts`;
     }
   }
 

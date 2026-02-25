@@ -244,9 +244,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,41,41,0.5), transparent)' }} />
 
             <div className="px-4 py-3">
-              {/* Top row: title + pool */}
+              {/* Top row: title + live standings */}
               <div className="flex items-start justify-between mb-2">
-                <div>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[9px] px-2 py-0.5 rounded-full text-[#FF2929]/80 uppercase tracking-wider"
                       style={{ background: 'rgba(255,41,41,0.12)', border: '1px solid rgba(255,41,41,0.20)', ...INTER, fontWeight: 500 }}>
@@ -256,16 +256,21 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   </div>
                   <p className="leading-none" style={{ ...BN, fontSize: '22px', color: '#fff', letterSpacing: '1.5px' }}>RAID ROUND</p>
                   <p className="text-[10px] text-white/40 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
-                    Top 5 after round ends share the pool
+                    Top 5 earn prizes — fight for your rank
                   </p>
                 </div>
-                {/* Pool */}
-                <div className="text-right shrink-0 ml-4">
-                  <p className="text-[9px] text-white/40 mb-0.5 uppercase tracking-wider" style={INTER}>Prize pool</p>
-                  <p className="text-2xl leading-none text-[#FFB800]" style={{ ...BN, letterSpacing: '1px' }}>
-                    {currentRound.poolSol < 0.001 ? '0.000' : currentRound.poolSol.toFixed(3)}
-                  </p>
-                  <p className="text-[9px] text-white/40 mt-0.5" style={INTER}>SOL</p>
+                {/* Live mini-leaderboard */}
+                <div className="shrink-0 ml-4 min-w-[96px]">
+                  <p className="text-[8px] text-white/30 uppercase tracking-wider mb-1 text-right" style={INTER}>Live</p>
+                  {currentRound.currentLeaders.slice(0, 3).map((leader, i) => (
+                    <div key={i} className="flex items-center gap-1.5 justify-end mb-0.5">
+                      <span className="text-[8px] text-white/25 shrink-0" style={INTER}>{['1st','2nd','3rd'][i]}</span>
+                      <span className="text-[9px] font-semibold text-white/50 truncate max-w-[52px]" style={INTER}>{leader.username}</span>
+                      <span className="text-[9px] font-black tabular-nums shrink-0" style={{ ...SG_NUM, color: i === 0 ? '#FFB800' : i === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                        {leader.pointsScored.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -287,6 +292,17 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
           </button>
         )}
+        {/* ── X (Twitter) follow button ── */}
+        <a
+          href="https://x.com/solraid_app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl active:scale-[0.98] transition-all duration-150"
+          style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.15)' }}
+        >
+          <i className="fa-brands fa-x-twitter text-[15px] text-white" />
+          <span className="text-[12px] font-semibold text-white" style={INTER}>Follow us on X</span>
+        </a>
 
         {/* ── SECONDARY MODES ── */}
         <div className="grid grid-cols-2 gap-2">
@@ -480,54 +496,69 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-2 space-y-4">
 
-              {/* Prize pool banner */}
-              <div className="rounded-xl p-4" style={{ background: 'linear-gradient(135deg, rgba(255,41,41,0.10) 0%, rgba(255,184,0,0.06) 100%)', border: '1px solid rgba(255,41,41,0.22)' }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-[9px] text-white/35 font-medium uppercase tracking-wider mb-0.5">Prize Pool</p>
-                    <p className="text-2xl font-black leading-none" style={{ background: 'linear-gradient(90deg, #FF2929, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                      {currentRound.poolSol < 0.001 ? '0.000' : currentRound.poolSol.toFixed(3)}
-                      <span className="text-sm ml-1 text-white/40" style={{ WebkitTextFillColor: 'rgba(255,255,255,0.4)' }}>SOL</span>
-                    </p>
+              {/* Battle standings banner */}
+              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,41,41,0.22)' }}>
+                {/* Header row */}
+                <div className="flex items-center justify-between px-4 pt-3 pb-2"
+                  style={{ background: 'linear-gradient(135deg, rgba(255,41,41,0.12) 0%, rgba(20,20,40,0.0) 100%)' }}>
+                  <div className="flex items-center gap-2">
+                    <i className="fa-solid fa-ranking-star text-[#FF2929]/70 text-sm" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/70" style={SG}>Battle Standings</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[9px] text-white/35 font-medium mb-0.5">Closes in</p>
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#FF2929' }} />
-                      <p className="text-sm font-bold tabular-nums text-white/80">{formatCountdown(currentRound.timeRemainingMs)}</p>
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#FF2929' }} />
+                    <p className="text-[10px] font-bold tabular-nums text-white/55" style={SG_NUM}>{formatCountdown(currentRound.timeRemainingMs)}</p>
                   </div>
                 </div>
 
-                {/* Prize breakdown */}
-                <div className="space-y-1.5">
+                {/* Rank rows */}
+                <div className="px-3 pb-3 space-y-1.5">
                   {[
-                    { rank: 1, pct: 40, medal: '🥇' },
-                    { rank: 2, pct: 25, medal: '🥈' },
-                    { rank: 3, pct: 18, medal: '🥉' },
-                    { rank: 4, pct: 11, medal: '4th' },
-                    { rank: 5, pct:  6, medal: '5th' },
-                  ].map(({ rank, pct, medal }) => {
-                    const allocation = currentRound.poolSol * (pct / 100);
-                    const topEntry   = currentRound.currentLeaders.find(e => e.rank === rank);
+                    { rank: 1, pct: 40, color: '#FFD700',           label: '1st' },
+                    { rank: 2, pct: 25, color: '#C0C0C0',           label: '2nd' },
+                    { rank: 3, pct: 18, color: '#CD7F32',           label: '3rd' },
+                    { rank: 4, pct: 11, color: 'rgba(255,255,255,0.35)', label: '4th' },
+                    { rank: 5, pct:  6, color: 'rgba(255,255,255,0.20)', label: '5th' },
+                  ].map(({ rank, pct, color, label }) => {
+                    const entry = currentRound.currentLeaders.find(e => e.rank === rank);
+                    const topScore = currentRound.currentLeaders[0]?.pointsScored ?? 0;
+                    const barWidth = entry && topScore > 0 ? Math.max(6, Math.round((entry.pointsScored / topScore) * 100)) : 0;
                     return (
-                      <div key={rank} className="flex items-center gap-2">
-                        <span className="text-xs w-7 shrink-0 text-center">{medal}</span>
-                        <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : 'rgba(255,255,255,0.25)' }} />
+                      <div key={rank} className="flex items-center gap-2.5">
+                        {/* Rank badge */}
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-black"
+                          style={{ background: entry ? `${color}18` : 'rgba(255,255,255,0.04)', border: `1px solid ${entry ? `${color}40` : 'rgba(255,255,255,0.08)'}`, color: entry ? color : 'rgba(255,255,255,0.2)' }}>
+                          {label}
                         </div>
-                        <span className="text-[9px] text-white/40 font-medium w-7 text-right shrink-0">{pct}%</span>
-                        <span className="text-[9px] font-bold text-white/60 w-16 text-right shrink-0 tabular-nums">
-                          {allocation < 0.001 ? '—' : `${allocation.toFixed(3)} SOL`}
+                        {/* Name + score bar */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[10px] font-semibold truncate" style={{ ...INTER, color: entry ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.18)' }}>
+                              {entry ? entry.username : '— open slot —'}
+                            </span>
+                            <span className="text-[9px] font-black tabular-nums ml-2 shrink-0" style={{ color: entry ? color : 'rgba(255,255,255,0.15)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                              {entry ? entry.pointsScored.toLocaleString() + ' pts' : ''}
+                            </span>
+                          </div>
+                          <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-700"
+                              style={{ width: entry ? `${barWidth}%` : '0%', background: color, opacity: 0.7 }} />
+                          </div>
+                        </div>
+                        {/* Prize pct */}
+                        <span className="text-[9px] font-bold shrink-0 w-8 text-right tabular-nums" style={{ color: entry ? color : 'rgba(255,255,255,0.18)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                          {pct}%
                         </span>
-                        {topEntry && (
-                          <span className="text-[9px] text-white/30 truncate max-w-[80px]">
-                            {topEntry.username} · {topEntry.pointsScored.toLocaleString()}pts
-                          </span>
-                        )}
                       </div>
                     );
                   })}
+                </div>
+
+                {/* Footer note */}
+                <div className="px-4 py-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
+                  <p className="text-[8px] text-white/25 text-center" style={INTER}>
+                    Top 5 scores share the prize pool · Winners announced after round closes
+                  </p>
                 </div>
               </div>
 
