@@ -1657,7 +1657,12 @@ const AppInner: React.FC = () => {
     const { data, error } = await supabase.functions.invoke('claim-social-bounty', {
       body: { wallet_address: walletAddr, action_type: actionType, twitter_handle: twitterHandle },
     });
-    if (error || data?.error) throw new Error(data?.error ?? 'Failed to claim reward');
+    if (error) {
+      let msg = 'Failed to claim reward';
+      try { const body = await (error as any).context?.json?.(); if (body?.error) msg = body.error; } catch {}
+      throw new Error(msg);
+    }
+    if (data?.error) throw new Error(data.error);
     if (data.reward_sr) setGameState(prev => ({ ...prev, srPoints: prev.srPoints + Number(data.reward_sr) }));
     return data as { reward_sr: number };
   };
