@@ -20,7 +20,8 @@ export enum Screen {
   STORE = 'STORE',
   MULTIPLAYER_SETUP = 'MULTIPLAYER_SETUP', // New: Menu/Create/Join/Lobby
   MULTIPLAYER_GAME = 'MULTIPLAYER_GAME',    // New: The PvP Raid
-  TREASURY = 'TREASURY' // New: Treasury Page
+  TREASURY = 'TREASURY', // New: Treasury Page
+  BOUNTY = 'BOUNTY',     // Bounty Board
 }
 
 export enum Mode {
@@ -359,4 +360,22 @@ export interface GameState {
   dailyStreak: number;                 // consecutive calendar days played
   lastPlayedDate: string | null;       // ISO date "YYYY-MM-DD" of last play
   personalBestPoints: number;          // highest points scored in a single raid
+}
+
+// ── Bounty Board ─────────────────────────────────────────────────────────────
+export interface Bounty {
+  id: string;
+  poster_wallet: string;
+  poster_username: string;
+  difficulty: Difficulty;
+  target_points: number;
+  reward_type: 'SOL' | 'SR';
+  reward_amount: number;
+  status: 'OPEN' | 'CLAIMED' | 'CANCELLED';
+  claimed_by_wallet?: string;
+  claimed_by_username?: string;
+  claimed_raid_id?: string;
+  claimed_at?: string;
+  expires_at: string;
+  created_at: string;
 }

@@ -110,6 +110,7 @@ export function useProfile(walletAddress: string | null, incomingRefCode?: strin
         referral_code: referralCode,
         referred_by: referredBy,
         referral_sr_earned: 0,
+        raid_tickets: 1,   // one-time welcome pass (50% off first raid)
       };
 
       const { data: inserted, error: insertError } = await supabase

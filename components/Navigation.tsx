@@ -16,8 +16,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
     { label: t('nav.market'),  icon: 'fa-solid fa-store',    screen: Screen.STORE      },
   ];
   const rightTabs = [
-    { label: t('nav.ranks'),   icon: 'fa-solid fa-trophy',  screen: Screen.TOURNAMENT },
-    { label: t('nav.profile'), icon: 'fa-solid fa-user',     screen: Screen.PROFILE    },
+    { label: t('nav.bounties'), icon: 'fa-solid fa-crosshairs', screen: Screen.BOUNTY     },
+    { label: t('nav.ranks'),    icon: 'fa-solid fa-trophy',     screen: Screen.TOURNAMENT },
+    { label: t('nav.profile'),  icon: 'fa-solid fa-user',       screen: Screen.PROFILE    },
   ];
 
   const handleDeploy = () => {

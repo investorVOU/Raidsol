@@ -12,6 +12,7 @@ const StoreScreen = lazy(() => import('./screens/StoreScreen'));
 const TreasuryScreen = lazy(() => import('./screens/TreasuryScreen'));
 const MultiplayerSetupScreen = lazy(() => import('./screens/MultiplayerSetupScreen'));
 const MultiplayerRaidScreen = lazy(() => import('./screens/MultiplayerRaidScreen'));
+const BountyScreen = lazy(() => import('./screens/BountyScreen'));
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 const HowItWorksModal = lazy(() => import('./components/HowItWorksModal'));
@@ -72,7 +73,7 @@ const AppInner: React.FC = () => {
   const RESTORABLE_SCREENS = new Set<Screen>([
     Screen.LOBBY, Screen.STORE, Screen.TREASURY, Screen.PROFILE,
     Screen.TEAM, Screen.TOURNAMENT, Screen.PRIVACY, Screen.TERMS,
-    Screen.MULTIPLAYER_SETUP,
+    Screen.MULTIPLAYER_SETUP, Screen.BOUNTY,
   ]);
 
   const [gameState, setGameState] = useState<GameState>(() => {
@@ -1623,6 +1624,34 @@ const AppInner: React.FC = () => {
     );
   };
 
+  // ── Bounty Board ──────────────────────────────────────────────────────────
+  const handlePostBounty = async (
+    difficulty: Difficulty,
+    targetPoints: number,
+    rewardType: 'SOL' | 'SR',
+    rewardAmount: number,
+    durationHours: number,
+  ) => {
+    if (!walletAddr) throw new Error('Wallet not connected');
+    const { data, error } = await supabase.functions.invoke('post-bounty', {
+      body: { wallet_address: walletAddr, difficulty, target_points: targetPoints, reward_type: rewardType, reward_amount: rewardAmount, duration_hours: durationHours },
+    });
+    if (error || data?.error) throw new Error(data?.error ?? 'Failed to post bounty');
+    if (rewardType === 'SOL') setGameState(prev => ({ ...prev, unclaimedBalance: Math.max(0, prev.unclaimedBalance - rewardAmount) }));
+    if (rewardType === 'SR')  setGameState(prev => ({ ...prev, srPoints: Math.max(0, prev.srPoints - Math.floor(rewardAmount)) }));
+  };
+
+  const handleClaimBounty = async (bountyId: string): Promise<{ reward_type: string; reward_amount: number } | null> => {
+    if (!walletAddr) throw new Error('Wallet not connected');
+    const { data, error } = await supabase.functions.invoke('claim-bounty', {
+      body: { wallet_address: walletAddr, bounty_id: bountyId },
+    });
+    if (error || data?.error) throw new Error(data?.error ?? 'Failed to claim bounty');
+    if (data.reward_type === 'SOL') setGameState(prev => ({ ...prev, unclaimedBalance: prev.unclaimedBalance + Number(data.reward_amount) }));
+    if (data.reward_type === 'SR')  setGameState(prev => ({ ...prev, srPoints: prev.srPoints + Math.floor(Number(data.reward_amount)) }));
+    return data as { reward_type: string; reward_amount: number };
+  };
+
   const renderScreen = () => {
     switch (gameState.currentScreen) {
       case Screen.LOBBY:
@@ -1758,6 +1787,17 @@ const AppInner: React.FC = () => {
             onForgeGear={handleForgeGear}
             initialTab={gameState.storeInitialTab}
             currencyRates={liveCurrencyRates}
+          />
+        );
+      case Screen.BOUNTY:
+        return (
+          <BountyScreen
+            walletAddress={walletAddr}
+            unclaimedSol={gameState.unclaimedBalance}
+            srPoints={gameState.srPoints}
+            onPostBounty={handlePostBounty}
+            onClaimBounty={handleClaimBounty}
+            onBack={() => navigateTo(Screen.LOBBY)}
           />
         );
       case Screen.TREASURY:
