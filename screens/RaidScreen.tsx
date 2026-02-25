@@ -784,10 +784,10 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         triggerSkillCheckRef.current();
       }
 
-      const timePenalty = Math.max(0, (elapsedSeconds - 30) * 0.12);  // flat first 30s, then escalates hard
-      const greedFactor  = state.multiplier > 2.0 ? 2.8 : state.multiplier > 1.5 ? 2.1 : 1.0;
-      const houseEdge    = 1.85;  // ~18-22% base win rate, ~36% max with full gear
-      const baseDrift    = (0.5 + (Math.random() * 1.5)) + timePenalty;  // gentle early, brutal after 30s
+      const timePenalty = Math.max(0, (elapsedSeconds - 20) * 0.18);  // flat first 20s, then escalates hard
+      const greedFactor  = state.multiplier > 1.7 ? 3.0 : state.multiplier > 1.2 ? 2.2 : 1.0;
+      const houseEdge    = 1.85;
+      const baseDrift    = (1.0 + (Math.random() * 2.0)) + timePenalty;  // higher floor from the start
       const totalDrift   = baseDrift * diffConfig.driftMod * boostStats.driftMultiplier * greedFactor * houseEdge * gearRiskFactor;
       const spikeRoll    = Math.random();
       const randomSpike  = spikeRoll > 0.88 ? (spikeRoll > 0.94 ? 22 : 17) : 0;  // 12% spike chance
@@ -1281,10 +1281,10 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               <pointLight position={[-6, 4, -4]} intensity={1.5} color="cyan" />
               <pointLight position={[6, 4, -4]} intensity={1.5} color="red" />
               <Suspense fallback={null}>
-                {/* Player robot — faces +x toward enemy */}
-                <RobotModel action={userAction} position={[-0.5, -1.55, 0]} rotation={[0, -Math.PI / 2, 0]} scale={0.85} riskLevel={risk} />
-                {/* Enemy robot — faces -x toward player */}
-                <RobotModel action={enemyAction} position={[0.5, -1.55, 0]} rotation={[0, Math.PI / 2, 0]} scale={0.85} riskLevel={risk} />
+                {/* Player robot — rotated to face +x (toward enemy) */}
+                <RobotModel action={userAction} position={[-0.5, -1.55, 0]} rotation={[0, Math.PI / 2, 0]} scale={0.85} riskLevel={risk} />
+                {/* Enemy robot — rotated to face -x (toward player) */}
+                <RobotModel action={enemyAction} position={[0.5, -1.55, 0]} rotation={[0, -Math.PI / 2, 0]} scale={0.85} riskLevel={risk} />
               </Suspense>
               <OrbitControls enableZoom={false} enablePan={false} minPolarAngle={Math.PI / 2.5} maxPolarAngle={Math.PI / 1.8} />
             </Canvas>
