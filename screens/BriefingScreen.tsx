@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useDailyBriefing } from '../hooks/useDailyBriefing';
 
+const DECODER_COST = 75; // SR cost to unlock the full cipher key
+
 interface BriefingScreenProps {
   walletAddress: string | null;
   srPoints: number;
   onCheckBriefing: (answer: string, date: string) => Promise<{ correct: boolean; reward_sr?: number; isFirst?: boolean }>;
+  onSpendSR: (amount: number) => void;
   onBack: () => void;
 }
 
@@ -66,6 +69,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
   walletAddress,
   srPoints,
   onCheckBriefing,
+  onSpendSR,
   onBack,
 }) => {
   const todayDate = getTodayUTC();
@@ -74,10 +78,19 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
 
   const [answer, setAnswer] = useState('');
   const [showHint, setShowHint] = useState(false);
+  const [decoderUnlocked, setDecoderUnlocked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ correct: boolean; reward_sr?: number; isFirst?: boolean } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [countdown, setCountdown] = useState(formatCountdown());
+
+  const canAffordDecoder = srPoints >= DECODER_COST;
+
+  const handleUnlockDecoder = () => {
+    if (!canAffordDecoder || decoderUnlocked) return;
+    onSpendSR(DECODER_COST);
+    setDecoderUnlocked(true);
+  };
 
   // Live countdown to next briefing
   useEffect(() => {
@@ -194,11 +207,92 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
             {showHint ? 'Hide hint' : 'Show hint'}
           </button>
           {showHint && (
-            <p className="text-xs text-[#FFB800]/80 font-bold animate-in fade-in duration-200">
-              💡 {puzzle.hint}
-            </p>
+            <div className="space-y-2 animate-in fade-in duration-200">
+              <p className="text-xs text-[#FFB800]/80 font-bold">💡 {puzzle.hint}</p>
+              {/* Letter-count slots derived from cipher (spaces preserved) */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {puzzle.cipher.split(' ').map((word, wi) => (
+                  <div key={wi} className="flex items-center gap-1">
+                    {wi > 0 && <span className="text-white/20 text-xs mx-1">·</span>}
+                    {Array.from(word).map((_, li) => (
+                      <div
+                        key={li}
+                        className="w-4 h-0.5 bg-[#FFB800]/50 rounded-full"
+                      />
+                    ))}
+                    <span className="text-[9px] text-white/25 font-bold ml-0.5">{word.length}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
+
+        {/* ── CIPHER KEY (locked behind SR) ── */}
+        {!decoderUnlocked ? (
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            {/* Blurred preview of the table */}
+            <div className="relative px-4 py-3 select-none" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="blur-sm pointer-events-none font-mono text-[10px] text-white/40 leading-5 space-y-0.5">
+                <p>Plain&nbsp;&nbsp;A B C D E F G H I J K L M</p>
+                <p>Cipher D E F G H I J K L M N O P</p>
+              </div>
+              {/* Lock overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <i className="fa-solid fa-lock text-white/30 text-base" />
+                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Cipher Key</p>
+              </div>
+            </div>
+            {/* Unlock button */}
+            <button
+              onClick={handleUnlockDecoder}
+              disabled={!canAffordDecoder || !walletAddress}
+              className="w-full py-2.5 text-xs font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={
+                canAffordDecoder && walletAddress
+                  ? { background: 'rgba(255,184,0,0.10)', borderTop: '1px solid rgba(255,184,0,0.20)', color: '#FFB800' }
+                  : { background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.25)' }
+              }
+            >
+              <i className="fa-solid fa-unlock text-[10px]" />
+              {!walletAddress
+                ? 'Connect wallet'
+                : !canAffordDecoder
+                ? `Need ${DECODER_COST} SR to unlock`
+                : `Unlock full key · ${DECODER_COST} SR`}
+            </button>
+          </div>
+        ) : (
+          <div
+            className="rounded-xl p-4 space-y-2 animate-in fade-in duration-300"
+            style={{ background: 'rgba(255,184,0,0.05)', border: '1px solid rgba(255,184,0,0.20)' }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <i className="fa-solid fa-key text-[#FFB800] text-[10px]" />
+              <p className="text-[10px] font-black text-[#FFB800] uppercase tracking-widest">Cipher Key — Caesar +3</p>
+            </div>
+            <div className="font-mono text-[10px] leading-6 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-0 min-w-max">
+                <span className="text-white/40 w-14 shrink-0">Plain</span>
+                {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c => (
+                  <span key={c} className="w-[18px] text-center text-white/60">{c}</span>
+                ))}
+              </div>
+              <div className="flex gap-0 min-w-max">
+                <span className="text-[#FFB800]/60 w-14 shrink-0">Cipher</span>
+                {'DEFGHIJKLMNOPQRSTUVWXYZABC'.split('').map((c, i) => (
+                  <span key={i} className="w-[18px] text-center font-black text-[#FFB800]">{c}</span>
+                ))}
+              </div>
+            </div>
+            <p className="text-[9px] text-white/25 pt-1">
+              To decode: find the Cipher letter → read the Plain letter above it.
+            </p>
+          </div>
+        )}
 
         {/* Already claimed state */}
         {claimed ? (

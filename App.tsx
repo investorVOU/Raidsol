@@ -1864,6 +1864,11 @@ const AppInner: React.FC = () => {
             walletAddress={walletAddr}
             srPoints={gameState.srPoints}
             onCheckBriefing={handleCheckBriefing}
+            onSpendSR={(amount) => {
+              const newSR = Math.max(0, gameState.srPoints - amount);
+              setGameState(prev => ({ ...prev, srPoints: newSR }));
+              updateProfile({ sr_points: newSR });
+            }}
             onBack={() => navigateTo(Screen.LOBBY)}
           />
         );

@@ -110,23 +110,17 @@ Deno.serve(async (req: Request) => {
     const isFirst = !briefing?.winner_wallet;
     const rewardSR = isFirst ? SR_FIRST : SR_OTHERS;
 
-    // Credit SR to profile
-    const { error: srErr } = await supabase.rpc('increment_sr', {
-      p_wallet: wallet_address,
-      p_amount: rewardSR,
-    }).throwOnError();
-    // If rpc not available fall back to direct update
-    if (srErr) {
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('sr_points')
-        .eq('wallet_address', wallet_address)
-        .single();
-      await supabase
-        .from('profiles')
-        .update({ sr_points: (prof?.sr_points ?? 0) + rewardSR })
-        .eq('wallet_address', wallet_address);
-    }
+    // Credit SR to profile — fetch current value then increment
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('sr_points')
+      .eq('wallet_address', wallet_address)
+      .single();
+
+    await supabase
+      .from('profiles')
+      .update({ sr_points: (prof?.sr_points ?? 0) + rewardSR })
+      .eq('wallet_address', wallet_address);
 
     // Insert briefing_claims row (UNIQUE guard prevents double-claim race)
     const { error: claimErr } = await supabase
