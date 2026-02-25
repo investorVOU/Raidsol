@@ -464,7 +464,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
           <div
             className="relative w-full sm:max-w-lg bg-[#08060f] border-t sm:border rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[90svh] sm:max-h-[85vh]"
-            style={{ borderColor: 'rgba(153,69,255,0.25)', ...SG }}
+            style={{ borderColor: 'rgba(255,41,41,0.25)', ...SG }}
           >
             {/* Drag handle */}
             <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
@@ -474,13 +474,13 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             {/* Header */}
             <div className="shrink-0 px-5 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(153,69,255,0.18)', border: '1px solid rgba(153,69,255,0.30)' }}>
-                  <i className="fa-solid fa-trophy" style={{ color: '#b77aff', fontSize: '15px' }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,41,41,0.18)', border: '1px solid rgba(255,41,41,0.30)' }}>
+                  <i className="fa-solid fa-trophy" style={{ color: '#FF2929', fontSize: '15px' }} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-black text-white">Raid Round</h2>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(153,69,255,0.18)', color: '#b77aff', border: '1px solid rgba(153,69,255,0.25)' }}>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,41,41,0.18)', color: '#FF4444', border: '1px solid rgba(255,41,41,0.25)' }}>
                       Round {currentRound.roundNum} / 4
                     </span>
                   </div>
@@ -565,14 +565,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-1">
                 <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">How it works</p>
                 {[
-                  'Enter this round with any difficulty',
-                  'Win as much SOL as possible in your raid',
-                  'Your best result is tracked on the leaderboard',
-                  'Top 5 wallets at round close share the prize pool',
-                ].map((t, i) => (
+                  'Pay an entry fee to compete — 70% goes straight into the prize pool',
+                  'Score as many points as possible during your raid',
+                  'Your highest score this round is tracked on the live leaderboard',
+                  'Round closes every 6 hours — top 5 scores split the pool',
+                  'Prizes: 1st 40% · 2nd 25% · 3rd 18% · 4th 11% · 5th 6%',
+                ].map((line, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="text-[9px] text-white/20 font-bold shrink-0 mt-0.5">{i + 1}.</span>
-                    <p className="text-[10px] text-white/45 font-medium leading-snug">{t}</p>
+                    <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: '#FF2929' }}>{i + 1}.</span>
+                    <p className="text-[10px] text-white/45 font-medium leading-snug">{line}</p>
                   </div>
                 ))}
               </div>
@@ -581,7 +582,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <section>
                 <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Battle Tools</p>
                 {/* Gear quick-swap */}
-                <div className="rounded-xl p-3 mb-2" style={{ background: 'rgba(153,69,255,0.06)', border: '1px solid rgba(153,69,255,0.14)' }}>
+                <div className="rounded-xl p-3 mb-2" style={{ background: 'rgba(255,41,41,0.04)', border: '1px solid rgba(255,41,41,0.14)' }}>
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[9px] text-white/28 uppercase tracking-wider" style={{ ...INTER, fontWeight: 500 }}>Gear loadout</p>
                     <span className="text-[9px] text-white/22" style={INTER}>{equippedGear.length}/4 slots</span>
@@ -593,7 +594,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         return (
                           <button key={gear.id} onClick={() => onToggleGear(gear.id)}
                             title={`${gear.name} — ${gear.description}`}
-                            className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center active:scale-95 ${isEquipped ? 'border-purple-500/50 bg-purple-500/12' : 'border-white/[0.12] hover:border-white/22 bg-white/3'}`}>
+                            className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center active:scale-95 ${isEquipped ? 'border-[#FF2929]/50 bg-[#FF2929]/10' : 'border-white/[0.12] hover:border-white/22 bg-white/3'}`}>
                             {gear.image && !gear.image.startsWith('http')
                               ? <span className="text-lg leading-none">{gear.image}</span>
                               : <img src={gear.image} className="w-full h-full object-contain rounded-xl" alt="gear" />
