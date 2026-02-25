@@ -212,7 +212,7 @@ Deno.serve(async (req: Request) => {
       }, 400, corsH);
     }
 
-    console.log(`[payout] START wallet=${wallet_address} amount=${amount_sol} rpc=${RPC}`);
+    console.log(`[payout] START wallet=${wallet_address} amount=${amount_sol} rpc=${RPC_URLS[0]}`);
 
     // ── Load treasury keypair ─────────────────────────────────────────
     const keypairJson = Deno.env.get('TREASURY_WALLET_KEYPAIR');
