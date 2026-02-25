@@ -891,7 +891,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setUserAction('Dance');
     setEnemyAction('Death');
     const elapsedSec  = Math.max(3, initialTime - timeLeft);
-    const earlyMult   = elapsedSec < 20 ? 0.5 : 1.0;   // early exit: 50% penalty before 20s
+    const earlyMult   = elapsedSec < 20 ? 0.3 : 1.0;   // early exit: 70% penalty before 20s
     const goldenMult  = goldenWindow ? 1.05 : 1.0;
     const donMult     = solMultiplierRef.current;
     const solReward   = (points / 5000) * DIFFICULTY_MAX_WIN[difficulty] * (ticketBoost ? 1.1 : 1.0) * earlyMult * goldenMult * donMult * (1 - PLATFORM_FEE_RAID);
@@ -906,9 +906,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       spawnSparks('#FFD700', '#14F195', 32);
       addDmgPopup('GOLDEN EXIT! +5%', '#FFD700', true);
     } else if (elapsedSec < 20) {
-      logEvent('CASHOUT', 'Early exit before 20s — penalty applied', `-50% payout → ${solReward.toFixed(4)} SOL`, 'warning');
+      logEvent('CASHOUT', 'Early exit before 20s — penalty applied', `-70% payout → ${solReward.toFixed(4)} SOL`, 'warning');
       spawnSparks('#f97316', '#EF4444', 14);
-      addDmgPopup('EARLY EXIT! -50%', '#f97316', true);
+      addDmgPopup('EARLY EXIT! -70%', '#f97316', true);
     } else {
       logEvent('CASHOUT', 'Clean extraction at full value', `${solReward.toFixed(4)} SOL secured`, 'bonus');
       spawnSparks('#14F195', '#00FBFF', 22);
@@ -1072,7 +1072,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     (points / 5000) * DIFFICULTY_MAX_WIN[difficulty]
     * (ticketBoost ? 1.1 : 1.0)
     * (goldenWindow ? 1.05 : 1.0)
-    * (earlyExitWarn ? 0.5 : 1.0)
+    * (earlyExitWarn ? 0.3 : 1.0)
     * (1 - PLATFORM_FEE_RAID)
   ).toFixed(4);
   const isUrgent       = timeLeft < 10;
@@ -1223,7 +1223,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         <div className="shrink-0 flex justify-between items-center gap-2 mb-2">
           <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : earlyExitWarn ? 'border-orange-500/50' : 'border-white/10'}`}>
             <p className={`text-[9px] font-bold leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : earlyExitWarn ? 'text-orange-400' : 'text-white/60'}`}>
-              {goldenWindow ? 'Golden extract' : earlyExitWarn ? 'Early exit -50%' : 'Yield'}
+              {goldenWindow ? 'Golden extract' : earlyExitWarn ? 'Early exit' : 'Yield'}
             </p>
             <div className="flex items-baseline gap-2">
               <span className={`mono text-xl font-black ${earlyExitWarn ? 'text-orange-400' : goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-red-500' : 'text-white'}`}>{currentYield}</span>
@@ -1607,7 +1607,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                       ? 'Ambush! Locked'
                       : graceActive ? 'Get ready...'
                       : !hasInteracted ? 'Act to unlock'
-                      : earlyExitWarn ? 'EARLY EXIT -50%'
+                      : earlyExitWarn ? 'EARLY EXIT'
                       : goldenWindow ? `GOLDEN EXIT +5%`
                       : 'EXIT & CASH OUT'}
                   </span>
