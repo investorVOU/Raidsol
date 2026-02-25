@@ -13,6 +13,8 @@ const TreasuryScreen = lazy(() => import('./screens/TreasuryScreen'));
 const MultiplayerSetupScreen = lazy(() => import('./screens/MultiplayerSetupScreen'));
 const MultiplayerRaidScreen = lazy(() => import('./screens/MultiplayerRaidScreen'));
 const BountyScreen = lazy(() => import('./screens/BountyScreen'));
+const WalletRoastScreen = lazy(() => import('./screens/WalletRoastScreen'));
+const BriefingScreen = lazy(() => import('./screens/BriefingScreen'));
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 const HowItWorksModal = lazy(() => import('./components/HowItWorksModal'));
@@ -73,7 +75,7 @@ const AppInner: React.FC = () => {
   const RESTORABLE_SCREENS = new Set<Screen>([
     Screen.LOBBY, Screen.STORE, Screen.TREASURY, Screen.PROFILE,
     Screen.TEAM, Screen.TOURNAMENT, Screen.PRIVACY, Screen.TERMS,
-    Screen.MULTIPLAYER_SETUP, Screen.BOUNTY,
+    Screen.MULTIPLAYER_SETUP, Screen.BOUNTY, Screen.ROAST, Screen.BRIEFING,
   ]);
 
   const [gameState, setGameState] = useState<GameState>(() => {
@@ -248,6 +250,13 @@ const AppInner: React.FC = () => {
     );
     setLastLevel(hydratedRank.level);
   }, [profile]);
+
+  // Persist resolved .skr domain to Supabase profile (Seeker Domain Flex)
+  useEffect(() => {
+    if (!domainName || !profile) return;
+    if (domainName === (profile as any).skr_domain) return; // already saved
+    updateProfile({ skr_domain: domainName } as any);
+  }, [domainName, profile?.wallet_address]);
 
   // One-time free ticket for first-time Seeker users (SKR balance > 0, never had tickets before)
   useEffect(() => {
@@ -1672,6 +1681,23 @@ const AppInner: React.FC = () => {
     return data as { reward_sr: number };
   };
 
+  const handleCheckBriefing = async (answer: string, date: string): Promise<{ correct: boolean; reward_sr?: number; isFirst?: boolean }> => {
+    if (!walletAddr) throw new Error('Wallet not connected');
+    const { data, error } = await supabase.functions.invoke('check-briefing', {
+      body: { wallet_address: walletAddr, answer, date },
+    });
+    if (error) {
+      let msg = 'Failed to check answer';
+      try { const body = await (error as any).context?.json?.(); if (body?.error) msg = body.error; } catch {}
+      throw new Error(msg);
+    }
+    if (data?.error) throw new Error(data.error);
+    if (data.correct && data.reward_sr) {
+      setGameState(prev => ({ ...prev, srPoints: prev.srPoints + Number(data.reward_sr) }));
+    }
+    return data as { correct: boolean; reward_sr?: number; isFirst?: boolean };
+  };
+
   const renderScreen = () => {
     switch (gameState.currentScreen) {
       case Screen.LOBBY:
@@ -1692,6 +1718,8 @@ const AppInner: React.FC = () => {
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             onNavigateBounty={() => navigateTo(Screen.BOUNTY)}
+            onNavigateRoast={() => navigateTo(Screen.ROAST)}
+            onNavigateBriefing={() => navigateTo(Screen.BRIEFING)}
             raidTickets={gameState.raidTickets}
             lastFreeRaidDate={gameState.lastFreeRaidDate}
             drillCount={gameState.drillCount}
@@ -1822,6 +1850,23 @@ const AppInner: React.FC = () => {
             onBack={() => navigateTo(Screen.LOBBY)}
           />
         );
+      case Screen.ROAST:
+        return (
+          <WalletRoastScreen
+            walletAddress={walletAddr}
+            walletBalance={gameState.walletBalance}
+            onBack={() => navigateTo(Screen.LOBBY)}
+          />
+        );
+      case Screen.BRIEFING:
+        return (
+          <BriefingScreen
+            walletAddress={walletAddr}
+            srPoints={gameState.srPoints}
+            onCheckBriefing={handleCheckBriefing}
+            onBack={() => navigateTo(Screen.LOBBY)}
+          />
+        );
       case Screen.TREASURY:
         return <TreasuryScreen onBack={() => navigateTo(Screen.LOBBY)} />;
       case Screen.MULTIPLAYER_SETUP:
@@ -1872,6 +1917,8 @@ const AppInner: React.FC = () => {
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             onNavigateBounty={() => navigateTo(Screen.BOUNTY)}
+            onNavigateRoast={() => navigateTo(Screen.ROAST)}
+            onNavigateBriefing={() => navigateTo(Screen.BRIEFING)}
             currencyRates={liveCurrencyRates}
             pricesFailed={livePricesFailed}
             currentRound={currentRound}

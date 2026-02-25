@@ -30,6 +30,8 @@ interface LobbyScreenProps {
   onNavigateTreasury: () => void;
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
   onNavigateBounty?: () => void;
+  onNavigateRoast?: () => void;
+  onNavigateBriefing?: () => void;
   onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency) => Promise<void>;
   onRequestFullscreen?: () => void;
   raidTickets?: number;
@@ -52,7 +54,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onEnterRaid, isConnected, onConnect, currentLevel,
   walletBalance, usdcBalance, skrBalance,
   equippedGearIds, equippedAvatarId, ownedItemIds,
-  onToggleGear, onNavigateTreasury, onNavigateStore, onNavigateBounty, onEnterRound, onRequestFullscreen,
+  onToggleGear, onNavigateTreasury, onNavigateStore, onNavigateBounty, onNavigateRoast, onNavigateBriefing, onEnterRound, onRequestFullscreen,
   raidTickets = 0, lastFreeRaidDate = null,
   drillCount = 0, drillWindowStart = 0,
   currencyRates, pricesFailed = false, currentRound,
@@ -377,6 +379,35 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <i className="fa-solid fa-chevron-right text-white/25 text-xs shrink-0" />
           </div>
         </button>
+
+        {/* ── WALLET ROAST + DAILY BRIEFING ── */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => onNavigateRoast?.()}
+            className="relative overflow-hidden rounded-xl p-3 text-left active:scale-[0.97] transition-all"
+            style={{ background: 'rgba(255,41,41,0.05)', border: '1px solid rgba(255,41,41,0.22)' }}
+          >
+            <div className="absolute top-2.5 right-2.5">
+              <i className="fa-solid fa-fire text-[#FF2929]/60 text-base" />
+            </div>
+            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>On-chain</p>
+            <p className="leading-none mb-1" style={{ ...BN, fontSize: '20px', color: '#FF2929', letterSpacing: '1.5px' }}>WALLET ROAST</p>
+            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Share the burn</p>
+          </button>
+
+          <button
+            onClick={() => onNavigateBriefing?.()}
+            className="relative overflow-hidden rounded-xl p-3 text-left active:scale-[0.97] transition-all"
+            style={{ background: 'rgba(255,184,0,0.05)', border: '1px solid rgba(255,184,0,0.20)' }}
+          >
+            <div className="absolute top-2.5 right-2.5">
+              <i className="fa-solid fa-radio text-[#FFB800]/60 text-base" />
+            </div>
+            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>Daily</p>
+            <p className="leading-none mb-1" style={{ ...BN, fontSize: '20px', color: '#FFB800', letterSpacing: '1.5px' }}>THE BRIEFING</p>
+            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Cipher · +SR reward</p>
+          </button>
+        </div>
 
         {/* ── X (Twitter) follow button ── */}
         <a

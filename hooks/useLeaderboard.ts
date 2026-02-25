@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { RANKS, AVATAR_ITEMS } from '../types';
 
-export type LeaderboardPeriod = 'weekly' | 'monthly' | 'alltime';
+export type LeaderboardPeriod = 'weekly' | 'monthly' | 'alltime' | 'skr';
 
 export interface LeaderboardEntry {
   wallet_address: string;
@@ -12,6 +12,7 @@ export interface LeaderboardEntry {
   rank_title: string;
   rank_color: string;
   avatarImage: string | null; // null = no avatar equipped
+  skr_domain?: string | null; // .skr domain if resolved
 }
 
 function resolveRank(srPoints: number) {
@@ -41,17 +42,19 @@ export function useLeaderboard(period: LeaderboardPeriod = 'alltime') {
     setEntries([]);
 
     const load = async () => {
-      if (period === 'alltime') {
+      if (period === 'skr') {
+        // SKR tab: only profiles with a resolved .skr domain, top 50 by SR
         const { data, error } = await supabase
           .from('profiles')
-          .select('wallet_address, username, sr_points, equipped_avatar_id')
+          .select('wallet_address, username, sr_points, equipped_avatar_id, skr_domain')
+          .not('skr_domain', 'is', null)
           .order('sr_points', { ascending: false })
-          .limit(20);
+          .limit(50);
 
         if (!mounted) return;
         if (!error && data) {
           setEntries(
-            (data as { wallet_address: string; username: string; sr_points: number; equipped_avatar_id: string | null }[]).map(row => {
+            (data as { wallet_address: string; username: string; sr_points: number; equipped_avatar_id: string | null; skr_domain: string | null }[]).map(row => {
               const rank = resolveRank(row.sr_points);
               return {
                 wallet_address: row.wallet_address,
@@ -61,6 +64,36 @@ export function useLeaderboard(period: LeaderboardPeriod = 'alltime') {
                 rank_title: rank.title,
                 rank_color: rank.color,
                 avatarImage: getAvatarImage(row.equipped_avatar_id),
+                skr_domain: row.skr_domain,
+              };
+            }),
+          );
+        }
+        if (mounted) setLoading(false);
+        return;
+      }
+
+      if (period === 'alltime') {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('wallet_address, username, sr_points, equipped_avatar_id, skr_domain')
+          .order('sr_points', { ascending: false })
+          .limit(20);
+
+        if (!mounted) return;
+        if (!error && data) {
+          setEntries(
+            (data as { wallet_address: string; username: string; sr_points: number; equipped_avatar_id: string | null; skr_domain: string | null }[]).map(row => {
+              const rank = resolveRank(row.sr_points);
+              return {
+                wallet_address: row.wallet_address,
+                username: row.username,
+                sr_points: row.sr_points,
+                rank_level: rank.level,
+                rank_title: rank.title,
+                rank_color: rank.color,
+                avatarImage: getAvatarImage(row.equipped_avatar_id),
+                skr_domain: row.skr_domain,
               };
             }),
           );

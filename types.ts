@@ -22,6 +22,8 @@ export enum Screen {
   MULTIPLAYER_GAME = 'MULTIPLAYER_GAME',    // New: The PvP Raid
   TREASURY = 'TREASURY', // New: Treasury Page
   BOUNTY = 'BOUNTY',     // Bounty Board
+  ROAST = 'ROAST',       // Wallet Roast
+  BRIEFING = 'BRIEFING', // Daily Briefing cipher puzzle
 }
 
 export enum Mode {

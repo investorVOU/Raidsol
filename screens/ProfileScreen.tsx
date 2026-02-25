@@ -381,9 +381,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               </div>
             </div>
             
-            <p className="text-xs sm:text-sm font-bold uppercase tracking-wider leading-tight" style={{ color: currentRank.color }}>
-              {currentRank.title}
-            </p>
+            <div className="flex items-center gap-2 justify-center md:justify-start flex-wrap">
+              <p className="text-xs sm:text-sm font-bold uppercase tracking-wider leading-tight" style={{ color: currentRank.color }}>
+                {currentRank.title}
+              </p>
+              {domain && (
+                <div
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full shrink-0"
+                  style={{ border: '1px solid rgba(255,184,0,0.4)', background: 'rgba(255,184,0,0.10)' }}
+                >
+                  <i className="fa-solid fa-shield-halved text-[#FFB800]" style={{ fontSize: '9px' }} />
+                  <span className="text-[10px] font-black text-[#FFB800]">{domain}</span>
+                </div>
+              )}
+            </div>
 
             {/* Wallet — shows .skr domain if owned, else truncated address */}
             <div className="flex items-center gap-2 justify-center md:justify-start">

@@ -27,6 +27,7 @@ const PERIOD_LABELS: { id: LeaderboardPeriod; label: string; srLabel: string }[]
   { id: 'alltime', label: 'All Time', srLabel: 'Total SR' },
   { id: 'weekly',  label: 'Weekly',   srLabel: 'SR This Week' },
   { id: 'monthly', label: 'Monthly',  srLabel: 'SR This Month' },
+  { id: 'skr',     label: '✦ SKR',    srLabel: 'Total SR'     },
 ];
 const ALLOC_PCT  = [40, 25, 18, 11, 6];
 const RANK_MEDALS = ['🥇', '🥈', '🥉', '4th', '5th'];
@@ -195,6 +196,17 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
       {/* SCROLL BODY */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-4 py-3 pb-36 space-y-3">
 
+        {/* SKR holders banner */}
+        {mainTab === 'leaderboard' && period === 'skr' && (
+          <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: 'rgba(255,184,0,0.06)', border: '1px solid rgba(255,184,0,0.20)' }}>
+            <span className="text-xl shrink-0">✦</span>
+            <div>
+              <p className="text-xs font-black text-[#FFB800]">Seeker Domain Holders</p>
+              <p className="text-[10px] text-white/40 mt-0.5">Raiders with a verified .skr domain — top 50 by SR</p>
+            </div>
+          </div>
+        )}
+
         {/* ── LEADERBOARD TAB ─────────────────────────────────── */}
         {mainTab === 'leaderboard' && (loading ? (
           <div className="space-y-2">
@@ -211,7 +223,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="text-5xl mb-4">🏴</div>
             <p className="text-white/40 font-bold text-sm">No players yet</p>
-            <p className="text-white/20 text-xs mt-1">{period === 'alltime' ? 'Be the first to raid.' : 'No raids this period.'}</p>
+            <p className="text-white/20 text-xs mt-1">{period === 'skr' ? 'No .skr domain holders yet.' : period === 'alltime' ? 'Be the first to raid.' : 'No raids this period.'}</p>
           </div>
         ) : (
           <>
@@ -235,6 +247,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-black text-sm text-white leading-none truncate">{entry.username}</p>
                       {isMe && <span className="text-[9px] font-bold bg-[#FF2929]/15 text-[#FF2929] border border-[#FF2929]/25 rounded-full px-1.5 py-0.5 shrink-0">you</span>}
+                      {entry.skr_domain && <span className="text-[8px] font-black text-[#FFB800] border border-[#FFB800]/30 bg-[#FFB800]/10 rounded-full px-1.5 py-0.5 shrink-0">{entry.skr_domain}</span>}
                     </div>
                     <p className="text-[10px] font-bold mt-0.5" style={{ color: entry.rank_color }}>Lv.{entry.rank_level} {entry.rank_title}</p>
                   </div>
@@ -259,9 +272,10 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                         <AvatarImg src={entry.avatarImage} size={32} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <p className="font-bold text-sm text-white truncate">{entry.username}</p>
                           {isMe && <span className="text-[8px] font-bold bg-[#FF2929]/10 text-[#FF2929] rounded-full px-1.5 py-0.5 shrink-0">you</span>}
+                          {entry.skr_domain && <span className="text-[8px] font-black text-[#FFB800] border border-[#FFB800]/25 bg-[#FFB800]/8 rounded-full px-1.5 py-0.5 shrink-0">{entry.skr_domain}</span>}
                         </div>
                         <p className="text-[9px] font-medium" style={{ color: entry.rank_color }}>Lv.{entry.rank_level} {entry.rank_title}</p>
                       </div>
