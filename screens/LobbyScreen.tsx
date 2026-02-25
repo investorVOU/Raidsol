@@ -292,18 +292,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
           </button>
         )}
-        {/* ── X (Twitter) follow button ── */}
-        <a
-          href="https://x.com/solraid_app"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl active:scale-[0.98] transition-all duration-150"
-          style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.15)' }}
-        >
-          <i className="fa-brands fa-x-twitter text-[15px] text-white" />
-          <span className="text-[12px] font-semibold text-white" style={INTER}>Follow us on X</span>
-        </a>
-
         {/* ── SECONDARY MODES ── */}
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -370,6 +358,17 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </div>
         </button>
 
+        {/* ── X (Twitter) follow button ── */}
+        <a
+          href="https://x.com/solraid_app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl active:scale-[0.98] transition-all duration-150"
+          style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.15)' }}
+        >
+          <i className="fa-brands fa-x-twitter text-[15px] text-white" />
+          <span className="text-[12px] font-semibold text-white" style={INTER}>Follow us on X</span>
+        </a>
 
         {!isConnected && (
           <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 text-center">
