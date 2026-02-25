@@ -58,6 +58,7 @@ export default defineConfig(({ mode }) => {
             clientsClaim: true,
             // Exclude static legal pages from the SPA navigation fallback
             // so the SW doesn't serve index.html when users visit /privacy.html etc.
+            navigateFallback: 'index.html',
             navigateFallbackDenylist: [/^\/privacy\.html$/, /^\/terms\.html$/],
             globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
             // Don't precache GLB models (too large, cache at runtime)
@@ -65,6 +66,16 @@ export default defineConfig(({ mode }) => {
             // Raise limit to cover the large React+Three.js bundle
             maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB
             runtimeCaching: [
+              {
+                // Navigation requests (HTML) — always try network first so deploys
+                // are picked up immediately without requiring a cache clear.
+                urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'html-cache',
+                  networkTimeoutSeconds: 3,
+                },
+              },
               {
                 urlPattern: /\.glb$/,
                 handler: 'CacheFirst',

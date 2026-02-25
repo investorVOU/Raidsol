@@ -11,9 +11,9 @@ interface HowItWorksModalProps {
 
 const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNavigateLegal }) => {
   const { t } = useTranslation();
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = useState<'GUIDE' | 'EVENTS' | 'PVP' | 'ECONOMY' | 'REFERRAL'>('GUIDE');
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
