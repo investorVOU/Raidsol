@@ -4,19 +4,14 @@ import { getCorsHeaders } from '../_shared/cors.ts';
 /**
  * claim-social-bounty
  *
- * Handles two categories of one-time SR rewards:
+ * Honour-system SR rewards for:
  *  A) Daily score challenges — verified against raid_history
- *  B) Social tasks — Follow / Retweet / Like @solraid_app
- *     Retweet is verified via X API v2 (requires TWITTER_BEARER_TOKEN secret).
- *     Follow and Like use honour system (one-time per wallet).
+ *  B) Social tasks (Follow / Retweet / Like @solraid_app) — honour system,
+ *     one-time per wallet per action, user-provided X handle stored for reference.
  *
- * Supabase secrets required:
- *   TWITTER_BEARER_TOKEN  — X API v2 app-only bearer token
- *   SOLRAID_TWITTER_ID    — numeric user ID of @solraid_app
- *   SOLRAID_TWEET_ID      — tweet ID for retweet/like verification
+ * social_claims UNIQUE(wallet_address, action_type) prevents double-claims.
  */
 
-// ── SR reward table ────────────────────────────────────────────────────────────
 const REWARDS: Record<string, number> = {
   CHALLENGE_EASY:   120,
   CHALLENGE_MEDIUM: 250,
@@ -27,7 +22,6 @@ const REWARDS: Record<string, number> = {
   LIKE:             100,
 };
 
-// ── Challenge requirements (min points on the given difficulty) ────────────────
 const CHALLENGE_REQ: Record<string, { difficulty: string; min_points: number }> = {
   CHALLENGE_EASY:   { difficulty: 'EASY',   min_points: 800  },
   CHALLENGE_MEDIUM: { difficulty: 'MEDIUM', min_points: 1800 },
@@ -41,54 +35,6 @@ const json = (body: object, status = 200, corsH: Record<string, string>) =>
     headers: { ...corsH, 'Content-Type': 'application/json' },
   });
 
-// ── X API helpers ──────────────────────────────────────────────────────────────
-async function lookupXUserId(handle: string, bearerToken: string): Promise<string | null> {
-  try {
-    const res = await fetch(
-      `https://api.twitter.com/2/users/by/username/${encodeURIComponent(handle)}`,
-      { headers: { Authorization: `Bearer ${bearerToken}` } },
-    );
-    const data = await res.json();
-    return data?.data?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
-async function verifyRetweet(twitterHandle: string, bearerToken: string, tweetId: string): Promise<boolean> {
-  try {
-    // Paginate retweeters of the target tweet (up to 100 per page, 1 page for typical volume)
-    const res = await fetch(
-      `https://api.twitter.com/2/tweets/${tweetId}/retweeted_by?user.fields=username&max_results=100`,
-      { headers: { Authorization: `Bearer ${bearerToken}` } },
-    );
-    const data = await res.json();
-    if (!data?.data) return false;
-    const lower = twitterHandle.toLowerCase().replace(/^@/, '');
-    return data.data.some((u: { username: string }) => u.username.toLowerCase() === lower);
-  } catch {
-    return false;
-  }
-}
-
-async function verifyFollow(twitterHandle: string, bearerToken: string, solraidUserId: string): Promise<boolean> {
-  try {
-    const userId = await lookupXUserId(twitterHandle, bearerToken);
-    if (!userId) return false;
-    // Check if @solraid_app appears in the user's following list (first page, 1000 max)
-    const res = await fetch(
-      `https://api.twitter.com/2/users/${userId}/following?user.fields=username&max_results=1000`,
-      { headers: { Authorization: `Bearer ${bearerToken}` } },
-    );
-    const data = await res.json();
-    if (!data?.data) return false;
-    return data.data.some((u: { id: string }) => u.id === solraidUserId);
-  } catch {
-    return false;
-  }
-}
-
-// ── Main handler ───────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   const corsH = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsH });
@@ -122,57 +68,36 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'Already claimed this reward' }, 409, corsH);
     }
 
-    // ── A) Daily score challenge verification ─────────────────────────────────
+    // ── Score challenge: verify against raid_history ──────────────────────────
     if (action_type.startsWith('CHALLENGE_')) {
-      const req_config = CHALLENGE_REQ[action_type];
-      if (!req_config) return json({ error: 'Unknown challenge' }, 400, corsH);
+      const req_cfg = CHALLENGE_REQ[action_type];
+      if (!req_cfg) return json({ error: 'Unknown challenge' }, 400, corsH);
 
       const { data: qualifying } = await supabase
         .from('raid_history')
         .select('raid_id')
         .eq('wallet_address', wallet_address)
-        .eq('difficulty', req_config.difficulty)
+        .eq('difficulty', req_cfg.difficulty)
         .eq('success', true)
-        .gte('points', req_config.min_points)
+        .gte('points', req_cfg.min_points)
         .limit(1);
 
       if (!qualifying || qualifying.length === 0) {
         return json({
-          error: `No qualifying raid found. Complete a successful ${req_config.difficulty} raid with ${req_config.min_points}+ points first.`
+          error: `No qualifying raid found. Complete a successful ${req_cfg.difficulty} raid scoring ${req_cfg.min_points}+ points first.`,
         }, 422, corsH);
       }
     }
 
-    // ── B) Social task verification ───────────────────────────────────────────
+    // ── Social tasks: require X handle provided, honour system ───────────────
     if (['FOLLOW', 'RETWEET', 'LIKE'].includes(action_type)) {
       const handle = (twitter_handle ?? '').replace(/^@/, '').trim();
       if (!handle) {
-        return json({ error: 'twitter_handle required for social tasks' }, 400, corsH);
-      }
-
-      const bearerToken  = Deno.env.get('TWITTER_BEARER_TOKEN') ?? '';
-      const solraidId    = Deno.env.get('SOLRAID_TWITTER_ID')   ?? '';
-      const tweetId      = Deno.env.get('SOLRAID_TWEET_ID')     ?? '';
-
-      // Only verify if secrets are configured; otherwise use honour system
-      if (bearerToken) {
-        if (action_type === 'RETWEET' && tweetId) {
-          const verified = await verifyRetweet(handle, bearerToken, tweetId);
-          if (!verified) {
-            return json({ error: 'Retweet not found. Please retweet the pinned post on @solraid_app and try again.' }, 422, corsH);
-          }
-        }
-        if (action_type === 'FOLLOW' && solraidId) {
-          const verified = await verifyFollow(handle, bearerToken, solraidId);
-          if (!verified) {
-            return json({ error: 'Follow not found. Please follow @solraid_app on X and try again.' }, 422, corsH);
-          }
-        }
-        // LIKE: X API free tier does not expose liked_tweets for app-only auth → honour system
+        return json({ error: 'twitter_handle required' }, 400, corsH);
       }
     }
 
-    // ── Fetch + update profile ────────────────────────────────────────────────
+    // ── Fetch profile ─────────────────────────────────────────────────────────
     const { data: profile } = await supabase
       .from('profiles')
       .select('sr_points')
@@ -181,20 +106,34 @@ Deno.serve(async (req: Request) => {
 
     if (!profile) return json({ error: 'Profile not found' }, 404, corsH);
 
+    // ── Credit SR ─────────────────────────────────────────────────────────────
     await supabase.from('profiles').update({
       sr_points:  Number(profile.sr_points) + reward_sr,
       updated_at: new Date().toISOString(),
     }).eq('wallet_address', wallet_address);
 
-    // ── Record claim (idempotency guard) ──────────────────────────────────────
-    await supabase.from('social_claims').insert({
+    // ── Record claim (UNIQUE constraint is the real guard) ────────────────────
+    const { error: insertErr } = await supabase.from('social_claims').insert({
       wallet_address,
       action_type,
-      twitter_handle: twitter_handle ?? null,
+      twitter_handle: twitter_handle ? String(twitter_handle).replace(/^@/, '').trim() : null,
       reward_sr,
     });
 
-    console.log(`[social-claim] wallet=${wallet_address} action=${action_type} reward=${reward_sr}SR`);
+    if (insertErr) {
+      // Unique violation means race condition — another request got there first
+      if (insertErr.code === '23505') {
+        return json({ error: 'Already claimed this reward' }, 409, corsH);
+      }
+      // Rollback SR credit on unexpected insert failure
+      await supabase.from('profiles').update({
+        sr_points:  Number(profile.sr_points),
+        updated_at: new Date().toISOString(),
+      }).eq('wallet_address', wallet_address);
+      return json({ error: 'Failed to record claim' }, 500, corsH);
+    }
+
+    console.log(`[social-claim] wallet=${wallet_address} action=${action_type} reward=${reward_sr}SR handle=${twitter_handle ?? '-'}`);
 
     return json({ success: true, reward_sr }, 200, corsH);
 

@@ -312,28 +312,16 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </button>
 
           <button
-            onClick={() => {
-              if (!isConnected) { onConnect(); return; }
-              if (drillCapHit) return;
-              onEnterRaid(Mode.DRILL, Difficulty.MEDIUM, []);
-            }}
-            disabled={drillCapHit}
-            className={`relative overflow-hidden rounded-xl p-3 text-left transition-all group ${
-              drillCapHit ? 'opacity-35 cursor-not-allowed' : 'active:scale-[0.97]'
-            }`}
-            style={{
-              background: drillCapHit ? 'rgba(255,255,255,0.02)' : 'rgba(77,166,255,0.05)',
-              border: `1px solid ${drillCapHit ? 'rgba(255,255,255,0.06)' : 'rgba(77,166,255,0.22)'}`,
-            }}
+            onClick={() => onNavigateBounty?.()}
+            className="relative overflow-hidden rounded-xl p-3 text-left transition-all active:scale-[0.97]"
+            style={{ background: 'rgba(255,41,41,0.06)', border: '1px solid rgba(255,41,41,0.22)' }}
           >
             <div className="absolute top-2.5 right-2.5">
-              <i className="fa-solid fa-dumbbell text-[#4da6ff]/60 text-base" />
+              <i className="fa-solid fa-crosshairs text-[#FF2929]/50 text-base" />
             </div>
-            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>Training</p>
-            <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#4da6ff', letterSpacing: '1.5px' }}>FREE DRILL</p>
-            <p className={`text-[10px] ${drillCapHit ? 'text-white/25' : 'text-white/45'}`} style={{ ...INTER, fontWeight: 400 }}>
-              {isConnected ? (drillCapHit ? 'Limit reached' : `${drillsRemaining}/3 left`) : 'No entry fee'}
-            </p>
+            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>Earn SR</p>
+            <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#FF2929', letterSpacing: '1.5px' }}>BOUNTIES</p>
+            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Tasks · Challenges</p>
           </button>
         </div>
 
@@ -359,22 +347,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               )}
             </div>
             <i className="fa-solid fa-chevron-right text-[#FFB800]/50 text-xs shrink-0" />
-          </div>
-        </button>
-
-        {/* ── BOUNTY BOARD ── */}
-        <button
-          onClick={() => onNavigateBounty?.()}
-          className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all"
-          style={{ background: 'rgba(255,41,41,0.06)', border: '1px solid rgba(255,41,41,0.22)' }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="text-xl shrink-0">🎯</div>
-            <div className="flex-1 min-w-0">
-              <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FF2929', letterSpacing: '1.5px' }}>BOUNTY BOARD</p>
-              <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Earn SR · Post bounties · Social rewards</p>
-            </div>
-            <i className="fa-solid fa-chevron-right text-[#FF2929]/50 text-xs shrink-0" />
           </div>
         </button>
 
