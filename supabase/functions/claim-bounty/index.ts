@@ -37,18 +37,27 @@ Deno.serve(async (req: Request) => {
       return json({ error: bounty.status === 'CLAIMED' ? 'Bounty already claimed' : 'Bounty is no longer available' }, 409, corsH);
     }
     if (new Date(bounty.expires_at) < new Date()) {
-      // Auto-cancel and refund expired bounty
+      // Auto-cancel and refund poster
       await supabase.from('bounties').update({ status: 'CANCELLED' }).eq('id', bounty_id);
-      const refundField = bounty.reward_type === 'SOL'
-        ? { unclaimed_sol: supabase.rpc, updated_at: new Date().toISOString() }
-        : {};
-      // Refund poster
-      const { data: poster } = await supabase.from('profiles').select('unclaimed_sol, sr_points').eq('wallet_address', bounty.poster_wallet).single();
+      const { data: poster } = await supabase
+        .from('profiles')
+        .select('unclaimed_sol, sr_points')
+        .eq('wallet_address', bounty.poster_wallet)
+        .single();
       if (poster) {
-        if (bounty.reward_type === 'SOL') await supabase.from('profiles').update({ unclaimed_sol: Number(poster.unclaimed_sol) + Number(bounty.reward_amount), updated_at: new Date().toISOString() }).eq('wallet_address', bounty.poster_wallet);
-        if (bounty.reward_type === 'SR')  await supabase.from('profiles').update({ sr_points: Number(poster.sr_points) + Math.floor(bounty.reward_amount), updated_at: new Date().toISOString() }).eq('wallet_address', bounty.poster_wallet);
+        if (bounty.reward_type === 'SOL') {
+          await supabase.from('profiles').update({
+            unclaimed_sol: Number(poster.unclaimed_sol) + Number(bounty.reward_amount),
+            updated_at: new Date().toISOString(),
+          }).eq('wallet_address', bounty.poster_wallet);
+        } else {
+          await supabase.from('profiles').update({
+            sr_points:  Number(poster.sr_points) + Math.floor(bounty.reward_amount),
+            updated_at: new Date().toISOString(),
+          }).eq('wallet_address', bounty.poster_wallet);
+        }
       }
-      return json({ error: 'Bounty has expired' }, 410, corsH);
+      return json({ error: 'Bounty has expired — reward refunded to poster' }, 410, corsH);
     }
     if (bounty.poster_wallet === wallet_address) {
       return json({ error: 'Cannot claim your own bounty' }, 403, corsH);

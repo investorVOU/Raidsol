@@ -1652,6 +1652,16 @@ const AppInner: React.FC = () => {
     return data as { reward_type: string; reward_amount: number };
   };
 
+  const handleClaimSocialBounty = async (actionType: string, twitterHandle?: string): Promise<{ reward_sr: number } | null> => {
+    if (!walletAddr) throw new Error('Wallet not connected');
+    const { data, error } = await supabase.functions.invoke('claim-social-bounty', {
+      body: { wallet_address: walletAddr, action_type: actionType, twitter_handle: twitterHandle },
+    });
+    if (error || data?.error) throw new Error(data?.error ?? 'Failed to claim reward');
+    if (data.reward_sr) setGameState(prev => ({ ...prev, srPoints: prev.srPoints + Number(data.reward_sr) }));
+    return data as { reward_sr: number };
+  };
+
   const renderScreen = () => {
     switch (gameState.currentScreen) {
       case Screen.LOBBY:
@@ -1671,6 +1681,7 @@ const AppInner: React.FC = () => {
             onEquipAvatar={handleEquipAvatar}
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
+            onNavigateBounty={() => navigateTo(Screen.BOUNTY)}
             raidTickets={gameState.raidTickets}
             lastFreeRaidDate={gameState.lastFreeRaidDate}
             drillCount={gameState.drillCount}
@@ -1797,6 +1808,7 @@ const AppInner: React.FC = () => {
             srPoints={gameState.srPoints}
             onPostBounty={handlePostBounty}
             onClaimBounty={handleClaimBounty}
+            onClaimSocialBounty={handleClaimSocialBounty}
             onBack={() => navigateTo(Screen.LOBBY)}
           />
         );
@@ -1849,6 +1861,7 @@ const AppInner: React.FC = () => {
             onEquipAvatar={handleEquipAvatar}
             onNavigateTreasury={() => navigateTo(Screen.TREASURY)}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
+            onNavigateBounty={() => navigateTo(Screen.BOUNTY)}
             currencyRates={liveCurrencyRates}
             pricesFailed={livePricesFailed}
             currentRound={currentRound}

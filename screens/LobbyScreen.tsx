@@ -29,6 +29,7 @@ interface LobbyScreenProps {
   onEquipAvatar: (avatarId: string) => void;
   onNavigateTreasury: () => void;
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
+  onNavigateBounty?: () => void;
   onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency) => Promise<void>;
   onRequestFullscreen?: () => void;
   raidTickets?: number;
@@ -51,7 +52,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onEnterRaid, isConnected, onConnect, currentLevel,
   walletBalance, usdcBalance, skrBalance,
   equippedGearIds, equippedAvatarId, ownedItemIds,
-  onToggleGear, onNavigateTreasury, onNavigateStore, onEnterRound, onRequestFullscreen,
+  onToggleGear, onNavigateTreasury, onNavigateStore, onNavigateBounty, onEnterRound, onRequestFullscreen,
   raidTickets = 0, lastFreeRaidDate = null,
   drillCount = 0, drillWindowStart = 0,
   currencyRates, pricesFailed = false, currentRound,
@@ -358,6 +359,22 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               )}
             </div>
             <i className="fa-solid fa-chevron-right text-[#FFB800]/50 text-xs shrink-0" />
+          </div>
+        </button>
+
+        {/* ── BOUNTY BOARD ── */}
+        <button
+          onClick={() => onNavigateBounty?.()}
+          className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all"
+          style={{ background: 'rgba(255,41,41,0.06)', border: '1px solid rgba(255,41,41,0.22)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="text-xl shrink-0">🎯</div>
+            <div className="flex-1 min-w-0">
+              <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FF2929', letterSpacing: '1.5px' }}>BOUNTY BOARD</p>
+              <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Earn SR · Post bounties · Social rewards</p>
+            </div>
+            <i className="fa-solid fa-chevron-right text-[#FF2929]/50 text-xs shrink-0" />
           </div>
         </button>
 
