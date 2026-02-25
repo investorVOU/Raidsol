@@ -26,6 +26,8 @@ interface ResultScreenProps {
   onClaim: () => void;
   isRoundEntry?: boolean;
   roundInfo?: CurrentRoundInfo | null;
+  equippedGearCount?: number;
+  onNavigateStore?: () => void;
 }
 
 const SEVERITY_STYLES: Record<RaidEvent['severity'], { border: string; dot: string; text: string; badge: string }> = {
@@ -54,7 +56,7 @@ const TYPE_LABELS: Record<string, string> = {
 const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06];
 const ROUND_PCT_LABELS  = ['40%', '25%', '18%', '11%', '6%'];
 
-const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvents, onPlayAgain, onRedeploy, onClaim, isRoundEntry, roundInfo }) => {
+const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvents, onPlayAgain, onRedeploy, onClaim, isRoundEntry, roundInfo, equippedGearCount = 0, onNavigateStore }) => {
   const { t } = useTranslation();
   const [debriefOpen, setDebriefOpen] = useState(true);
 
@@ -285,6 +287,61 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
               )}
             </div>
           )}
+
+          {/* ── GEAR TIP ── */}
+          {(() => {
+            const gearCount = equippedGearCount;
+            const isBust = !result.success;
+
+            // Fully geared + won → no tip needed
+            if (gearCount >= 4 && !isBust) return null;
+
+            let title: string;
+            let body: string;
+            let borderCls: string;
+            let titleCls: string;
+
+            if (gearCount === 0) {
+              title = 'No loadout detected';
+              body = isBust
+                ? 'Gear cuts drift, extends time and boosts your multiplier. Even one piece changes the raid.'
+                : 'You won without gear — imagine the yield with a full loadout equipped.';
+              borderCls = 'border-[#FFB800]/25';
+              titleCls  = 'text-[#FFB800]';
+            } else if (gearCount < 4) {
+              const open = 4 - gearCount;
+              title = `${gearCount}/4 gear slots loaded`;
+              body = isBust
+                ? `${open} slot${open > 1 ? 's' : ''} still open — fill them in the Market before your next raid.`
+                : `${open} slot${open > 1 ? 's' : ''} still open. A full loadout would have pushed that yield higher.`;
+              borderCls = 'border-white/12';
+              titleCls  = 'text-white/70';
+            } else {
+              // 4 gear + bust
+              title = 'Full loadout, still cracked';
+              body  = 'A Raid Pass cuts entry 50% and adds a 10% win boost — pick one up in the Market.';
+              borderCls = 'border-red-500/20';
+              titleCls  = 'text-red-400/80';
+            }
+
+            return (
+              <div
+                onClick={onNavigateStore}
+                className={`bg-black border p-4 tech-border flex items-start gap-3 ${borderCls} ${onNavigateStore ? 'cursor-pointer hover:bg-white/4 active:scale-[0.99] transition-all' : ''}`}
+              >
+                <i className={`fa-solid fa-microchip text-sm shrink-0 mt-0.5 ${titleCls}`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[11px] font-bold uppercase tracking-wide ${titleCls}`}>{title}</p>
+                  <p className="text-[10px] text-white/40 mt-0.5 leading-relaxed">{body}</p>
+                </div>
+                {onNavigateStore && (
+                  <span className={`text-[9px] font-bold uppercase shrink-0 whitespace-nowrap ${titleCls} opacity-70`}>
+                    Market →
+                  </span>
+                )}
+              </div>
+            );
+          })()}
 
           {/* ── ROUND STANDING ── */}
           {isRoundEntry && roundInfo && (() => {

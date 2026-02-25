@@ -1801,6 +1801,8 @@ const AppInner: React.FC = () => {
             result={gameState.lastResult!}
             entryFee={gameState.activeRaidFee}
             raidEvents={gameState.lastRaidEvents}
+            equippedGearCount={gameState.equippedGearIds.length}
+            onNavigateStore={() => navigateTo(Screen.STORE)}
             onPlayAgain={() => navigateTo(Screen.LOBBY)}
             onRedeploy={gameState.lastRaidConfig
               ? () => enterRaid(

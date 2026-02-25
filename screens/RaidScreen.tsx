@@ -1169,6 +1169,24 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               <p className="text-[8px] font-bold text-red-500/40 mt-1">Could have extracted</p>
             </div>
           )}
+          {(() => {
+            const g = equippedGearIds.length;
+            if (g >= 4) return (
+              <p className="text-[9px] font-bold text-white/30 mt-2 px-4 text-center">
+                Full loadout — try a Raid Pass for 50% off + 10% boost
+              </p>
+            );
+            if (g === 0) return (
+              <p className="text-[9px] font-bold text-[#FFB800]/50 mt-2 px-4 text-center">
+                No gear loaded — equip from the Market to cut drift
+              </p>
+            );
+            return (
+              <p className="text-[9px] font-bold text-white/30 mt-2 px-4 text-center">
+                {g}/4 gear slots — {4 - g} more slot{4 - g > 1 ? 's' : ''} open in the Market
+              </p>
+            );
+          })()}
         </div>
       )}
 
