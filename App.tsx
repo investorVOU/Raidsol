@@ -1652,10 +1652,10 @@ const AppInner: React.FC = () => {
     return data as { reward_type: string; reward_amount: number };
   };
 
-  const handleClaimSocialBounty = async (actionType: string, twitterHandle?: string): Promise<{ reward_sr: number } | null> => {
+  const handleClaimSocialBounty = async (actionType: string, twitterHandle?: string, tweetUrl?: string): Promise<{ reward_sr: number } | null> => {
     if (!walletAddr) throw new Error('Wallet not connected');
     const { data, error } = await supabase.functions.invoke('claim-social-bounty', {
-      body: { wallet_address: walletAddr, action_type: actionType, twitter_handle: twitterHandle },
+      body: { wallet_address: walletAddr, action_type: actionType, twitter_handle: twitterHandle, tweet_url: tweetUrl },
     });
     if (error) {
       let msg = 'Failed to claim reward';

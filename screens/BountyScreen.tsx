@@ -14,7 +14,7 @@ interface BountyScreenProps {
     durationHours: number,
   ) => Promise<void>;
   onClaimBounty: (bountyId: string) => Promise<{ reward_type: string; reward_amount: number } | null>;
-  onClaimSocialBounty: (actionType: string, twitterHandle?: string) => Promise<{ reward_sr: number } | null>;
+  onClaimSocialBounty: (actionType: string, twitterHandle?: string, tweetUrl?: string) => Promise<{ reward_sr: number } | null>;
   onBack: () => void;
 }
 
@@ -71,6 +71,17 @@ const SOCIAL_TASKS = [
     rewardSR: 100,
     needsHandle: true,
     verifiable: false,
+    needsUrl: false,
+  },
+  {
+    actionType: 'POST_TWEET',
+    icon: 'fa-solid fa-pen-nib',
+    label: 'Post about SolRaid',
+    sub: 'Tweet your score, extraction, or anything SolRaid',
+    rewardSR: 250,
+    needsHandle: true,
+    verifiable: false,
+    needsUrl: true,
   },
 ];
 
@@ -199,20 +210,28 @@ const PostBountyModal: React.FC<{
 // ── Social Task Claim Modal ────────────────────────────────────────────────────
 const SocialClaimModal: React.FC<{
   task: typeof SOCIAL_TASKS[0];
-  onClaim: (handle: string) => Promise<void>;
+  onClaim: (handle: string, tweetUrl?: string) => Promise<void>;
   onClose: () => void;
 }> = ({ task, onClaim, onClose }) => {
   const [handle,   setHandle]   = useState('');
+  const [tweetUrl, setTweetUrl] = useState('');
   const [claiming, setClaiming] = useState(false);
   const [err,      setErr]      = useState<string | null>(null);
 
   const handleClaim = async () => {
     const h = handle.replace(/^@/, '').trim();
     if (!h) { setErr('Enter your X username'); return; }
+    if (task.needsUrl) {
+      const u = tweetUrl.trim();
+      if (!u || !/(twitter\.com|x\.com)\//.test(u)) {
+        setErr('Paste your tweet URL (twitter.com or x.com)');
+        return;
+      }
+    }
     setErr(null);
     setClaiming(true);
     try {
-      await onClaim(h);
+      await onClaim(h, task.needsUrl ? tweetUrl.trim() : undefined);
       onClose();
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Failed to verify');
@@ -232,29 +251,41 @@ const SocialClaimModal: React.FC<{
           <button onClick={onClose} className="text-white/40 hover:text-white text-xl leading-none">×</button>
         </div>
 
-        <div className="bg-[#14F195]/10 border border-[#14F195]/20 rounded-xl px-3 py-2.5">
-          <p className="text-[#14F195] text-sm font-black text-center">+{task.rewardSR.toLocaleString()} SR</p>
+        <div className="bg-[#FFB800]/10 border border-[#FFB800]/20 rounded-xl px-3 py-2.5">
+          <p className="text-[#FFB800] text-sm font-black text-center">+{task.rewardSR.toLocaleString()} SR</p>
         </div>
 
-        <div>
-          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Your X / Twitter username</p>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
-            <input
-              value={handle}
-              onChange={e => setHandle(e.target.value.replace(/^@/, ''))}
-              placeholder="yourhandle"
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#FF2929]/50"
-            />
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Your X / Twitter username</p>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
+              <input
+                value={handle}
+                onChange={e => setHandle(e.target.value.replace(/^@/, ''))}
+                placeholder="yourhandle"
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#FF2929]/50"
+              />
+            </div>
           </div>
-          {task.verifiable && (
-            <p className="text-[9px] text-white/30 mt-1.5">
-              <i className="fa-solid fa-circle-check text-[#14F195] mr-1" />
-              Retweet is verified via X API — make sure the action is completed first.
-            </p>
+
+          {task.needsUrl && (
+            <div>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Your tweet URL</p>
+              <input
+                value={tweetUrl}
+                onChange={e => setTweetUrl(e.target.value)}
+                placeholder="https://x.com/yourhandle/status/..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#FF2929]/50"
+              />
+              <p className="text-[9px] text-white/30 mt-1.5">
+                Post your raid score, extraction, or anything SolRaid on X, then paste the link here.
+              </p>
+            </div>
           )}
-          {!task.verifiable && (
-            <p className="text-[9px] text-white/30 mt-1.5">
+
+          {!task.needsUrl && (
+            <p className="text-[9px] text-white/30">
               Complete the action on X before claiming. Honour system — one-time per wallet.
             </p>
           )}
@@ -264,7 +295,7 @@ const SocialClaimModal: React.FC<{
 
         <button onClick={handleClaim} disabled={claiming}
           className="w-full py-3 rounded-xl bg-[#FF2929] text-white font-black text-sm uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-transform">
-          {claiming ? 'Verifying...' : 'Claim SR Reward'}
+          {claiming ? 'Claiming...' : 'Claim SR Reward'}
         </button>
       </div>
     </div>
@@ -339,11 +370,19 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
   const [socialModal,  setSocialModal]  = useState<typeof SOCIAL_TASKS[0] | null>(null);
   const [claiming,     setClaiming]     = useState<string | null>(null);
   const [claimResult,  setClaimResult]  = useState<string | null>(null);
+  const [claimErr,     setClaimErr]     = useState<string | null>(null);
   const [diffFilter,   setDiffFilter]   = useState<Difficulty | 'ALL'>('ALL');
 
   const showToast = (msg: string) => {
     setClaimResult(msg);
+    setClaimErr(null);
     setTimeout(() => setClaimResult(null), 4000);
+  };
+
+  const showErr = (msg: string) => {
+    setClaimErr(msg);
+    setClaimResult(null);
+    setTimeout(() => setClaimErr(null), 5000);
   };
 
   const handleClaimBounty = async (bountyId: string) => {
@@ -374,14 +413,14 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
         refresh();
       }
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Not qualified yet');
+      showErr(e instanceof Error ? e.message : 'Not qualified yet');
     } finally {
       setClaiming(null);
     }
   };
 
-  const handleSocialClaim = async (actionType: string, handle: string) => {
-    const result = await onClaimSocialBounty(actionType, handle);
+  const handleSocialClaim = async (actionType: string, handle: string, tweetUrl?: string) => {
+    const result = await onClaimSocialBounty(actionType, handle, tweetUrl);
     if (result) {
       showToast(`+${result.reward_sr.toLocaleString()} SR claimed!`);
       refresh();
@@ -418,6 +457,12 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
         <div className="shrink-0 mx-4 mt-3 px-4 py-2.5 rounded-xl bg-[#14F195]/15 border border-[#14F195]/30 flex items-center gap-2">
           <i className="fa-solid fa-check-circle text-[#14F195] text-sm" />
           <span className="text-[12px] font-black text-[#14F195]">{claimResult}</span>
+        </div>
+      )}
+      {claimErr && (
+        <div className="shrink-0 mx-4 mt-3 px-4 py-2.5 rounded-xl bg-[#FF2929]/15 border border-[#FF2929]/30 flex items-center gap-2">
+          <i className="fa-solid fa-circle-exclamation text-[#FF2929] text-sm" />
+          <span className="text-[12px] font-bold text-[#FF2929]">{claimErr}</span>
         </div>
       )}
 
@@ -593,7 +638,7 @@ Score Challenges — one-time SR
       {socialModal && (
         <SocialClaimModal
           task={socialModal}
-          onClaim={(handle) => handleSocialClaim(socialModal.actionType, handle)}
+          onClaim={(handle, url) => handleSocialClaim(socialModal.actionType, handle, url)}
           onClose={() => setSocialModal(null)}
         />
       )}

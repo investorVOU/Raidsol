@@ -6,7 +6,7 @@ import { getCorsHeaders } from '../_shared/cors.ts';
  *
  * Honour-system SR rewards for:
  *  A) Daily score challenges — verified against raid_history
- *  B) Social tasks (Follow / Retweet / Like @solraid_app) — honour system,
+ *  B) Social tasks (Follow / Retweet / Like / Post Tweet @solraid_app) — honour system,
  *     one-time per wallet per action, user-provided X handle stored for reference.
  *
  * social_claims UNIQUE(wallet_address, action_type) prevents double-claims.
@@ -20,6 +20,7 @@ const REWARDS: Record<string, number> = {
   FOLLOW:           300,
   RETWEET:          150,
   LIKE:             100,
+  POST_TWEET:       250,
 };
 
 const CHALLENGE_REQ: Record<string, { difficulty: string; min_points: number }> = {
@@ -40,7 +41,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsH });
 
   try {
-    const { wallet_address, action_type, twitter_handle } = await req.json();
+    const { wallet_address, action_type, twitter_handle, tweet_url } = await req.json();
 
     if (!wallet_address || !action_type) {
       return json({ error: 'wallet_address and action_type required' }, 400, corsH);
@@ -73,7 +74,7 @@ Deno.serve(async (req: Request) => {
       const req_cfg = CHALLENGE_REQ[action_type];
       if (!req_cfg) return json({ error: 'Unknown challenge' }, 400, corsH);
 
-      const { data: qualifying } = await supabase
+      const { data: qualifying, error: queryErr } = await supabase
         .from('raid_history')
         .select('raid_id')
         .eq('wallet_address', wallet_address)
@@ -82,6 +83,11 @@ Deno.serve(async (req: Request) => {
         .gte('points', req_cfg.min_points)
         .limit(1);
 
+      if (queryErr) {
+        console.error('[social-claim] raid_history query error:', queryErr);
+        return json({ error: 'Failed to verify raid history' }, 500, corsH);
+      }
+
       if (!qualifying || qualifying.length === 0) {
         return json({
           error: `No qualifying raid found. Complete a successful ${req_cfg.difficulty} raid scoring ${req_cfg.min_points}+ points first.`,
@@ -89,11 +95,19 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── Social tasks: require X handle provided, honour system ───────────────
-    if (['FOLLOW', 'RETWEET', 'LIKE'].includes(action_type)) {
+    // ── Social tasks: require X handle ───────────────────────────────────────
+    if (['FOLLOW', 'RETWEET', 'LIKE', 'POST_TWEET'].includes(action_type)) {
       const handle = (twitter_handle ?? '').replace(/^@/, '').trim();
       if (!handle) {
         return json({ error: 'twitter_handle required' }, 400, corsH);
+      }
+
+      // POST_TWEET: also require a tweet URL (x.com or twitter.com)
+      if (action_type === 'POST_TWEET') {
+        const url = (tweet_url ?? '').trim();
+        if (!url || !/(twitter\.com|x\.com)\//.test(url)) {
+          return json({ error: 'Valid tweet URL required (twitter.com or x.com link)' }, 400, corsH);
+        }
       }
     }
 
@@ -113,10 +127,16 @@ Deno.serve(async (req: Request) => {
     }).eq('wallet_address', wallet_address);
 
     // ── Record claim (UNIQUE constraint is the real guard) ────────────────────
+    const claimHandle = twitter_handle ? String(twitter_handle).replace(/^@/, '').trim() : null;
+    // For POST_TWEET store tweet URL alongside handle in twitter_handle field
+    const storedHandle = action_type === 'POST_TWEET' && tweet_url
+      ? `${claimHandle ?? ''}|${tweet_url.trim()}`
+      : claimHandle;
+
     const { error: insertErr } = await supabase.from('social_claims').insert({
       wallet_address,
       action_type,
-      twitter_handle: twitter_handle ? String(twitter_handle).replace(/^@/, '').trim() : null,
+      twitter_handle: storedHandle,
       reward_sr,
     });
 
@@ -133,7 +153,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'Failed to record claim' }, 500, corsH);
     }
 
-    console.log(`[social-claim] wallet=${wallet_address} action=${action_type} reward=${reward_sr}SR handle=${twitter_handle ?? '-'}`);
+    console.log(`[social-claim] wallet=${wallet_address} action=${action_type} reward=${reward_sr}SR handle=${twitter_handle ?? '-'} url=${tweet_url ?? '-'}`);
 
     return json({ success: true, reward_sr }, 200, corsH);
 
