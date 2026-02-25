@@ -17,6 +17,9 @@ export interface Profile {
   last_free_raid_date: string | null;    // "YYYY-MM-DD" — daily free EASY raid
   drill_count: number;                   // drills used in current 6h window
   drill_window_start: number;            // epoch ms when current 6h window started
+  daily_streak: number;                  // consecutive calendar days played
+  last_played_date: string | null;       // "YYYY-MM-DD"
+  personal_best_points: number;          // highest single-raid points
 }
 
 type ProfileUpdate = Partial<Omit<Profile, 'wallet_address'>>;

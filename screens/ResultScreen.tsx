@@ -16,6 +16,8 @@ interface ResultScreenProps {
     userWallet: string;
     txSignature: string;
     peakMult?: number;
+    nearWinCount?: number;
+    dailyStreak?: number;
   };
   entryFee: number;
   raidEvents?: RaidEvent[];
@@ -260,6 +262,29 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
               ))}
             </div>
           </div>
+
+          {/* ── META-LOOP STATS (near-win + streak) ── */}
+          {((result.nearWinCount ?? 0) > 0 || (result.dailyStreak ?? 0) >= 2) && (
+            <div className="bg-black border-2 border-white/10 p-4 tech-border flex items-center justify-around gap-4">
+              {(result.nearWinCount ?? 0) > 0 && (
+                <div className="text-center">
+                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider mb-1">Near misses</p>
+                  <p className="mono text-3xl font-black text-white">⚡ {result.nearWinCount}</p>
+                  <p className="text-[8px] text-white/30 mt-0.5">Firewall saved you</p>
+                </div>
+              )}
+              {(result.nearWinCount ?? 0) > 0 && (result.dailyStreak ?? 0) >= 2 && (
+                <div className="w-px h-12 bg-white/10" />
+              )}
+              {(result.dailyStreak ?? 0) >= 2 && (
+                <div className="text-center">
+                  <p className="text-[9px] font-bold text-[#FFB800]/50 uppercase tracking-wider mb-1">Daily streak</p>
+                  <p className="mono text-3xl font-black text-[#FFB800]">🔥 {result.dailyStreak}d</p>
+                  <p className="text-[8px] text-[#FFB800]/40 mt-0.5">+{Math.min(14, (result.dailyStreak ?? 0) * 2)}% firewall bonus</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── ROUND STANDING ── */}
           {isRoundEntry && roundInfo && (() => {

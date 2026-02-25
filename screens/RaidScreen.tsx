@@ -15,12 +15,12 @@ class CanvasErrorBoundary extends Component<{ children: React.ReactNode }, { err
 }
 import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent, PLATFORM_FEE_RAID } from '../types';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sparkles } from '@react-three/drei';
+import { OrbitControls, Sparkles, useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameSounds } from '../hooks/useGameSounds';
 
 interface RaidScreenProps {
-  onFinish: (success: boolean, solAmount: number, points: number, elapsedSec: number, events?: RaidEvent[], peakMult?: number) => void;
+  onFinish: (success: boolean, solAmount: number, points: number, elapsedSec: number, events?: RaidEvent[], peakMult?: number, nearWinCount?: number) => void;
   equippedGearIds: string[];
   entryFee: number;
   difficulty: Difficulty;
@@ -28,6 +28,8 @@ interface RaidScreenProps {
   equippedAvatarId?: string;
   ticketBoost?: boolean;   // +10% win reward when true
   streakBonus?: number;    // +0.15x starting multiplier per 3-win streak
+  dailyStreak?: number;    // consecutive days played — bonus firewall save %
+  personalBestPoints?: number; // show PB highlight when beaten mid-raid
 }
 
 interface Spark {
@@ -180,6 +182,56 @@ const SC_META: Record<SkillCheckType, { label: string; sub: string; successMsg: 
   PATTERN_DODGE: { label: 'FIREWALL BYPASS',   sub: 'Find the safe path',                 successMsg: '-12 RISK +200pts', failMsg: '+20 RISK', successRisk: -12, failRisk: 20, successPts: 200, successMult: 0    },
 };
 
+// ─── Robot GLB model (player side) ───────────────────────────────────────────
+const ROBOT_ANIM: Record<string, string> = {
+  'Idle':    'Idle',
+  'Walking': 'Walk',
+  'Punch':   'Punch',
+  'Jump':    'Jump',
+  'Dance':   'ThumbsUp',
+  'Death':   'Death',
+};
+const RobotModel: React.FC<{
+  action: string;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale?: number;
+  riskLevel?: number;
+}> = ({ action, position, rotation, scale = 1.2, riskLevel = 0 }) => {
+  const group = useRef<THREE.Group>(null);
+  const { scene, animations } = useGLTF('/RobotExpressive.glb');
+  const { actions } = useAnimations(animations, group);
+  const prevAnimRef = useRef('Idle');
+
+  useEffect(() => {
+    const animName = ROBOT_ANIM[action] ?? 'Idle';
+    if (prevAnimRef.current === animName) return;
+    actions[prevAnimRef.current]?.fadeOut(0.25);
+    const next = actions[animName];
+    if (next) {
+      next.reset().fadeIn(0.25).play();
+      if (animName === 'Death') { next.setLoop(THREE.LoopOnce, 1); next.clampWhenFinished = true; }
+    }
+    prevAnimRef.current = animName;
+  }, [action, actions]);
+
+  useFrame(() => {
+    if (!group.current) return;
+    if (riskLevel > 85) {
+      group.current.rotation.z += ((Math.random() - 0.5) * 0.06 - group.current.rotation.z) * 0.3;
+    } else {
+      group.current.rotation.z *= 0.85;
+    }
+  });
+
+  return (
+    <group ref={group} position={position} rotation={rotation} scale={scale}>
+      <primitive object={scene} />
+    </group>
+  );
+};
+useGLTF.preload('/RobotExpressive.glb');
+
 // ─── 3D Fighter ───────────────────────────────────────────────────────────────
 const getAvatarColor = (id?: string) => {
   if (!id) return '#00FBFF';
@@ -315,7 +367,8 @@ const FighterModel: React.FC<FighterProps> = ({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const RaidScreen: React.FC<RaidScreenProps> = ({
-  onFinish, equippedGearIds, entryFee, difficulty, activeBoosts, equippedAvatarId, ticketBoost = false, streakBonus = 0,
+  onFinish, equippedGearIds, entryFee, difficulty, activeBoosts, equippedAvatarId,
+  ticketBoost = false, streakBonus = 0, dailyStreak = 0, personalBestPoints = 0,
 }) => {
   const sounds = useGameSounds();
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -348,7 +401,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const gearRiskFactor  = Math.max(0.60, 1 - gearStats.riskReduc / 100);
   const baseRisk        = Math.max(0, diffConfig.riskMod - gearStats.riskReduc);
   const initialMultiplier = 1.0 + gearStats.mult + boostStats.startMultBonus + streakBonus;
-  const initialTime     = 30 + gearStats.timeBoost;
+  const initialTime     = 90 + gearStats.timeBoost;
 
   const [points,     setPoints]     = useState(0);
   const [risk,       setRisk]       = useState(baseRisk);
@@ -390,6 +443,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const skillCheckTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => { skillCheckRef.current = skillCheck; }, [skillCheck]);
 
+  // ── Meta-loop hook refs ────────────────────────────────────────────────────
+  const nearWinCountRef   = useRef(0);           // firewall saves this raid
+  const newPbShownRef     = useRef(false);        // only flash PB popup once
+  const donShownRef       = useRef(false);        // Double or Nothing shown once
+  const donTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const solMultiplierRef  = useRef(1.0);          // 2.0 when player pushes DON
+  const [donActive, setDonActive] = useState(false);
+
   const lastActionTimeRef   = useRef<number>(0);
   const lastActionTypeRef   = useRef<'ATTACK' | 'DEFEND' | null>(null);
   const peakMultRef         = useRef(initialMultiplier);
@@ -405,6 +466,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     if (ambushTimeoutRef.current) clearTimeout(ambushTimeoutRef.current);
     if (hotStreakTimerRef.current) clearTimeout(hotStreakTimerRef.current);
     if (skillCheckTimeoutRef.current) clearTimeout(skillCheckTimeoutRef.current);
+    if (donTimerRef.current) clearTimeout(donTimerRef.current);
   }, []);
 
   const addComboPopup = useCallback((text: string, color: string) => {
@@ -551,6 +613,15 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const triggerSkillCheckRef = useRef(triggerSkillCheck);
   useEffect(() => { triggerSkillCheckRef.current = triggerSkillCheck; }, [triggerSkillCheck]);
 
+  // ── Personal Best mid-raid highlight ─────────────────────────────────────
+  useEffect(() => {
+    if (!newPbShownRef.current && personalBestPoints > 0 && points > personalBestPoints && !isEnding) {
+      newPbShownRef.current = true;
+      addComboPopup('🏆 NEW BEST!', '#FFD700');
+      spawnSparks('#FFD700', '#FFB800', 16);
+    }
+  }, [points]); // eslint-disable-line
+
   const bustTimeRef = useRef(0);
   const handleBust = useCallback((reason: string = 'PROTOCOL_FAILURE') => {
     if (stateRef.current.isEnding) return;
@@ -591,7 +662,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     sounds.hapticBust();
     spawnSparks('#EF4444', '#ff6600', 22);
     addDmgPopup('BUSTED!', '#EF4444', true);
-    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current), 2500);
+    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current), 2500);
   }, [onFinish, initialTime, entryFee, ticketBoost, sounds, spawnSparks, addDmgPopup]);
 
   const handleBustRef = useRef(handleBust);
@@ -682,8 +753,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         sounds.hapticWarning();
       }
 
-      // ── AMBUSH: 10% chance after 8s, throttled by ambushTimeoutRef ─────
-      if (elapsedSeconds > 8 && Math.random() < 0.10 && !ambushTimeoutRef.current && !state.isEnding) {
+      // ── AMBUSH: 10% chance after 20s, throttled by ambushTimeoutRef ─────
+      if (elapsedSeconds > 20 && Math.random() < 0.10 && !ambushTimeoutRef.current && !state.isEnding) {
         logEvent('AMBUSH', 'Enemy flanked your position — random event', '+14 RISK + 2.2s controls locked', 'danger');
         setAmbushed(true);
         addLog('Ambush detected');
@@ -697,21 +768,21 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         }, 2200);
       }
 
-      // ── Skill check trigger: ~12% per tick after 8s, 15s cooldown ──────
+      // ── Skill check trigger: ~12% per tick after 15s, 10s cooldown ──────
       if (
-        elapsedSeconds > 8 &&
+        elapsedSeconds > 15 &&
         !skillCheckRef.current &&
-        (Date.now() - lastSkillCheckTimeRef.current) > 15000 &&
+        (Date.now() - lastSkillCheckTimeRef.current) > 10000 &&
         Math.random() < 0.12 &&
         !state.isEnding
       ) {
         triggerSkillCheckRef.current();
       }
 
-      const timePenalty = (elapsedSeconds - 3) * 0.11;  // faster late-game escalation
+      const timePenalty = Math.max(0, (elapsedSeconds - 30) * 0.12);  // flat first 30s, then escalates hard
       const greedFactor  = state.multiplier > 2.0 ? 2.8 : state.multiplier > 1.5 ? 2.1 : 1.0;
       const houseEdge    = 1.85;  // ~18-22% base win rate, ~36% max with full gear
-      const baseDrift    = (2.2 + (Math.random() * 4.0)) + timePenalty;  // higher variance for near-miss feel
+      const baseDrift    = (0.5 + (Math.random() * 1.5)) + timePenalty;  // gentle early, brutal after 30s
       const totalDrift   = baseDrift * diffConfig.driftMod * boostStats.driftMultiplier * greedFactor * houseEdge * gearRiskFactor;
       const spikeRoll    = Math.random();
       const randomSpike  = spikeRoll > 0.88 ? (spikeRoll > 0.94 ? 22 : 17) : 0;  // 12% spike chance
@@ -724,9 +795,19 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       const nextRisk = state.risk + totalDrift + randomSpike;
 
-      // ── LAST-SECOND SAVE: 4% chance right at 100 — heart-stopping ──────
-      if (nextRisk >= 100 && Math.random() < 0.04 && !state.isEnding) {
-        logEvent('FIREWALL', 'Emergency firewall activated just before bust — 7% chance', 'Risk reset to 75, raid continues', 'bonus');
+      // ── Double or Nothing: trigger once at ~60% risk after 20s ──────────
+      if (state.risk >= 58 && state.risk < 65 && !donShownRef.current && elapsedSeconds > 20 && !state.isEnding) {
+        donShownRef.current = true;
+        setDonActive(true);
+        if (donTimerRef.current) clearTimeout(donTimerRef.current);
+        donTimerRef.current = setTimeout(() => setDonActive(false), 9000);
+      }
+
+      // ── LAST-SECOND SAVE: base 4% + 2% per daily streak day (max 14%) ──
+      const firewallChance = Math.min(0.14, 0.04 + dailyStreak * 0.02);
+      if (nextRisk >= 100 && Math.random() < firewallChance && !state.isEnding) {
+        nearWinCountRef.current += 1;
+        logEvent('FIREWALL', `Emergency firewall — streak day ${dailyStreak} boosted save chance`, 'Risk reset to 75, raid continues', 'bonus');
         addLog('Firewall activated');
         spawnSparks('#14F195', '#00FBFF', 32);
         setFirewallSave(true);
@@ -805,17 +886,22 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setUserAction('Dance');
     setEnemyAction('Death');
     const elapsedSec  = Math.max(3, initialTime - timeLeft);
-    const earlyMult   = elapsedSec < 8 ? 0.5 : 1.0;    // Rule: early exit penalty
+    const earlyMult   = elapsedSec < 15 ? 0.5 : 1.0;   // Rule: early exit penalty
     const goldenMult  = goldenWindow ? 1.05 : 1.0;      // Rule: golden window bonus
-    const solReward   = (points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0) * earlyMult * goldenMult * (1 - PLATFORM_FEE_RAID);
+    const donMult     = solMultiplierRef.current;        // 2.0 if player pushed Double or Nothing
+    const solReward   = (points / 2500) * 6 * entryFee * (ticketBoost ? 1.1 : 1.0) * earlyMult * goldenMult * donMult * (1 - PLATFORM_FEE_RAID);
     sounds.playCashOut();
     sounds.hapticExtract();
-    if (goldenWindow) {
+    if (donMult >= 2.0) {
+      logEvent('CASHOUT', 'Double or Nothing — you pushed and WON', `2× payout → ${solReward.toFixed(4)} SOL`, 'bonus');
+      spawnSparks('#FFD700', '#14F195', 40);
+      addDmgPopup('2× PAYOUT! 🔥', '#FFD700', true);
+    } else if (goldenWindow) {
       logEvent('CASHOUT', 'Extracted during Golden Window', `+5% bonus → ${solReward.toFixed(4)} SOL`, 'bonus');
       spawnSparks('#FFD700', '#14F195', 32);
       addDmgPopup('GOLDEN EXIT! +5%', '#FFD700', true);
-    } else if (elapsedSec < 8) {
-      logEvent('CASHOUT', 'Early exit before 8s full-value window', `-50% penalty → ${solReward.toFixed(4)} SOL`, 'warning');
+    } else if (elapsedSec < 15) {
+      logEvent('CASHOUT', 'Early exit before 15s full-value window', `-50% penalty → ${solReward.toFixed(4)} SOL`, 'warning');
       spawnSparks('#f97316', '#EF4444', 14);
       addDmgPopup('EARLY EXIT! -50%', '#f97316', true);
     } else {
@@ -823,7 +909,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       spawnSparks('#14F195', '#00FBFF', 22);
       addDmgPopup('EXTRACTED!', '#14F195', true);
     }
-    setTimeout(() => onFinish(true, solReward, points, elapsedSec, [...raidEventsRef.current], peakMultRef.current), 2500);
+    setTimeout(() => onFinish(true, solReward, points, elapsedSec, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current), 2500);
   };
 
   const handleAttack = () => {
@@ -976,7 +1062,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   };
 
   const elapsedSec     = Math.max(0, initialTime - timeLeft);
-  const earlyExitWarn  = elapsedSec < 8 && hasInteracted && !graceActive;
+  const earlyExitWarn  = elapsedSec < 15 && hasInteracted && !graceActive;
   const currentYield   = (
     (points / 2500) * 6 * entryFee
     * (ticketBoost ? 1.1 : 1.0)
@@ -1146,6 +1232,13 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               <span className="text-[10px] font-bold text-white/40">s</span>
             </div>
           </div>
+          {dailyStreak >= 2 && (
+            <div className="flex flex-col items-center justify-center px-2 py-1 rounded-lg"
+              style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.35)' }}>
+              <span className="text-[14px] leading-none">🔥</span>
+              <span className="text-[9px] font-black text-[#FFB800] leading-none mt-0.5">{dailyStreak}d</span>
+            </div>
+          )}
         </div>
 
         {/* ── 3D ARENA ── */}
@@ -1167,7 +1260,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               <directionalLight position={[5, 8, 5]} intensity={1.5} />
               <pointLight position={[-6, 4, -4]} intensity={1.5} color="cyan" />
               <pointLight position={[6, 4, -4]} intensity={1.5} color="red" />
-              <FighterModel action={userAction} position={[-0.85, -1.75, 0]} rotation={[0, -Math.PI / 2, 0]} scale={1.8} color={userColor} gearIds={equippedGearIds} riskLevel={risk} />
+              <Suspense fallback={null}>
+                <RobotModel action={userAction} position={[-0.5, -1.6, 0]} rotation={[0, Math.PI * 0.15, 0]} scale={1.4} riskLevel={risk} />
+              </Suspense>
               <FighterModel action={enemyAction} position={[0.85, -1.75, 0]}  rotation={[0,  Math.PI / 2, 0]} scale={1.8} color="#EF4444" isEnemy riskLevel={risk} />
               <OrbitControls enableZoom={false} enablePan={false} minPolarAngle={Math.PI / 2.5} maxPolarAngle={Math.PI / 1.8} />
             </Canvas>
@@ -1201,6 +1296,40 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               <div className="relative flex flex-col items-center gap-1">
                 <span className="text-4xl font-black text-red-500 uppercase animate-pulse" style={{ textShadow: '0 0 30px #ef4444' }}>AMBUSH!</span>
                 <span className="text-xs font-bold text-red-400/70">Controls locked</span>
+              </div>
+            </div>
+          )}
+
+          {/* ── DOUBLE OR NOTHING overlay ── */}
+          {donActive && !isEnding && (
+            <div className="absolute inset-0 z-[60] flex items-center justify-center" style={{ animation: 'ambush-in 0.25s ease-out' }}>
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+              <div className="relative flex flex-col items-center gap-3 px-6 py-5 rounded-2xl text-center max-w-[260px]"
+                style={{ background: 'rgba(10,4,0,0.95)', border: '2px solid #FFB800', boxShadow: '0 0 40px rgba(255,184,0,0.4)' }}>
+                <p className="text-[10px] font-bold text-[#FFB800]/70 uppercase tracking-widest">Danger Zone</p>
+                <p className="text-2xl font-black text-white leading-none" style={{ textShadow: '0 0 20px #FFB800' }}>DOUBLE OR NOTHING</p>
+                <p className="text-[11px] text-white/55 leading-snug">
+                  Risk is climbing. Push for <span className="text-[#FFB800] font-bold">2× payout</span> or extract now?
+                </p>
+                <div className="flex flex-col gap-2 w-full mt-1">
+                  <div className="text-center mb-1">
+                    <p className="text-[9px] text-white/35 uppercase tracking-wider">Current payout</p>
+                    <p className="text-lg font-black text-white">{currentYield.toFixed(4)} SOL</p>
+                    <p className="text-[9px] text-[#FFB800] font-bold">→ {(currentYield * 2).toFixed(4)} SOL if you push</p>
+                  </div>
+                  <button
+                    onClick={() => { setDonActive(false); if (donTimerRef.current) clearTimeout(donTimerRef.current); solMultiplierRef.current = 2.0; addComboPopup('2× ACTIVATED!', '#FFB800'); spawnSparks('#FFB800', '#FF2929', 20); }}
+                    className="w-full py-2.5 rounded-xl font-black text-sm uppercase tracking-wider active:scale-95 transition-all"
+                    style={{ background: 'linear-gradient(135deg, #FF2929, #CC0000)', color: '#fff', boxShadow: '0 0 16px rgba(255,41,41,0.5)' }}>
+                    🔥 PUSH — 2× PAYOUT
+                  </button>
+                  <button
+                    onClick={() => { setDonActive(false); if (donTimerRef.current) clearTimeout(donTimerRef.current); handleCashOut(); }}
+                    className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider active:scale-95 transition-all"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.6)' }}>
+                    Extract Now
+                  </button>
+                </div>
               </div>
             </div>
           )}

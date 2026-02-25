@@ -312,6 +312,8 @@ export interface GameState {
     userWallet: string;
     txSignature: string;
     peakMult?: number;
+    nearWinCount?: number;
+    dailyStreak?: number;
   };
   isRaidLoading?: boolean;          // true while 2.5s pre-raid loading screen shows
   pvpWinnerResult?: {               // set when all PvP players have finished
@@ -344,4 +346,8 @@ export interface GameState {
   // Drill cap: 3 free drills per 6-hour rolling window
   drillCount: number;                  // drills used in current 6h window
   drillWindowStart: number;            // epoch ms when current 6h window started
+  // Meta-loop hooks
+  dailyStreak: number;                 // consecutive calendar days played
+  lastPlayedDate: string | null;       // ISO date "YYYY-MM-DD" of last play
+  personalBestPoints: number;          // highest points scored in a single raid
 }

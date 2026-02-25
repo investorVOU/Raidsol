@@ -261,7 +261,10 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 </div>
                 {/* Live mini-leaderboard */}
                 <div className="shrink-0 ml-4 min-w-[96px]">
-                  <p className="text-[8px] text-white/30 uppercase tracking-wider mb-1 text-right" style={INTER}>Live</p>
+                  <div className="flex items-center justify-end gap-1 mb-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929] animate-pulse" />
+                    <span className="text-[8px] font-bold text-[#FF2929]/80 uppercase tracking-wider" style={INTER}>Live</span>
+                  </div>
                   {currentRound.currentLeaders.slice(0, 3).map((leader, i) => (
                     <div key={i} className="flex items-center gap-1.5 justify-end mb-0.5">
                       <span className="text-[8px] text-white/25 shrink-0" style={INTER}>{['1st','2nd','3rd'][i]}</span>

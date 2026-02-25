@@ -102,6 +102,9 @@ const AppInner: React.FC = () => {
       activeStreakBonus: 0,
       drillCount: 0,
       drillWindowStart: 0,
+      dailyStreak: 0,
+      lastPlayedDate: null,
+      personalBestPoints: 0,
     };
   });
 
@@ -229,8 +232,11 @@ const AppInner: React.FC = () => {
       raidTickets:        profile.raid_tickets ?? 0,
       lastFreeTicketDate: profile.last_free_ticket_date ?? null,
       lastFreeRaidDate:   profile.last_free_raid_date ?? null,
-      drillCount:         profile.drill_count ?? 0,
-      drillWindowStart:   profile.drill_window_start ?? 0,
+      drillCount:           profile.drill_count ?? 0,
+      drillWindowStart:     profile.drill_window_start ?? 0,
+      dailyStreak:          profile.daily_streak ?? 0,
+      lastPlayedDate:       profile.last_played_date ?? null,
+      personalBestPoints:   profile.personal_best_points ?? 0,
     }));
     // Silently sync lastLevel to the profile's actual rank so we don't fire
     // a level-up modal just because srPoints jumped from 0 → real value on hydration.
@@ -621,7 +627,7 @@ const AppInner: React.FC = () => {
     updateProfile({ username: name });
   };
 
-  const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10, events?: import('./types').RaidEvent[], peakMult?: number) => {
+  const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10, events?: import('./types').RaidEvent[], peakMult?: number, nearWinCount?: number) => {
     const baseSR = success ? 100 : 25;
     const performanceSR = Math.floor(points / 200);
     const localSREarned = baseSR + performanceSR;
@@ -661,12 +667,20 @@ const AppInner: React.FC = () => {
         userWallet,
         txSignature: '',
         peakMult,
+        nearWinCount,
+        dailyStreak: prev.dailyStreak,
       },
+      personalBestPoints: points > prev.personalBestPoints ? points : prev.personalBestPoints,
       activeRaidBoosts: [],
       activeRoom: undefined,
       pvpWaiting: isPvp,   // waiting for other players to finish
       pvpWinnerResult: null,
     }));
+
+    // Persist personal best if beaten
+    if (points > gameState.personalBestPoints) {
+      updateProfile({ personal_best_points: points } as any);
+    }
 
     // Background: call edge function for authoritative result + recording
     if (walletAddr && gameState.activeSeedId) {
@@ -1465,6 +1479,17 @@ const AppInner: React.FC = () => {
     // Streak bonus: 3+ consecutive wins → +0.15x starting multiplier (applied via boosts passthrough)
     const streakBonus = gameState.raidStreak >= 3 ? 0.15 : 0;
 
+    // Daily play streak — update if first raid today
+    const todayDateStr = new Date().toISOString().slice(0, 10);
+    const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (gameState.lastPlayedDate !== todayDateStr) {
+      const newDailyStreak = gameState.lastPlayedDate === yesterdayStr
+        ? gameState.dailyStreak + 1
+        : 1;
+      updateProfile({ daily_streak: newDailyStreak, last_played_date: todayDateStr } as any);
+      setGameState(prev => ({ ...prev, dailyStreak: newDailyStreak, lastPlayedDate: todayDateStr }));
+    }
+
     // Prices must be loaded before paying in USDC/SKR
     if (currency !== Currency.SOL && !pricesReady) {
       alert('Prices still loading — please wait a moment, then try again.');
@@ -1637,6 +1662,8 @@ const AppInner: React.FC = () => {
             equippedAvatarId={gameState.equippedAvatarId}
             ticketBoost={gameState.ticketBoostActive}
             streakBonus={gameState.activeStreakBonus}
+            dailyStreak={gameState.dailyStreak}
+            personalBestPoints={gameState.personalBestPoints}
           />
         );
       case Screen.TEAM:
