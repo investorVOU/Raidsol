@@ -1646,7 +1646,12 @@ const AppInner: React.FC = () => {
     const { data, error } = await supabase.functions.invoke('claim-bounty', {
       body: { wallet_address: walletAddr, bounty_id: bountyId },
     });
-    if (error || data?.error) throw new Error(data?.error ?? 'Failed to claim bounty');
+    if (error) {
+      let msg = 'Failed to claim bounty';
+      try { const body = await (error as any).context?.json?.(); if (body?.error) msg = body.error; } catch {}
+      throw new Error(msg);
+    }
+    if (data?.error) throw new Error(data.error);
     if (data.reward_type === 'SOL') setGameState(prev => ({ ...prev, unclaimedBalance: prev.unclaimedBalance + Number(data.reward_amount) }));
     if (data.reward_type === 'SR')  setGameState(prev => ({ ...prev, srPoints: prev.srPoints + Math.floor(Number(data.reward_amount)) }));
     return data as { reward_type: string; reward_amount: number };

@@ -397,7 +397,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
         refresh();
       }
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Failed to claim bounty');
+      showErr(e instanceof Error ? e.message : 'Failed to claim bounty');
     } finally {
       setClaiming(null);
     }
