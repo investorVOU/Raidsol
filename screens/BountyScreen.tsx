@@ -442,7 +442,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
             {/* Daily score challenges */}
             <div>
               <p className="text-[9px] text-[#FFB800]/70 uppercase tracking-widest font-bold mb-2">
-                <i className="fa-solid fa-bolt mr-1" />Score Challenges — one-time SR
+Score Challenges — one-time SR
               </p>
               <div className="flex flex-col gap-2">
                 {DAILY_CHALLENGES.map(c => {

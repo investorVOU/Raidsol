@@ -358,7 +358,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}
         >
           <div className="flex items-center gap-3">
-            <div className="text-xl shrink-0">⚡</div>
             <div className="flex-1 min-w-0">
               {drillCapHit ? (
                 <>
