@@ -33,8 +33,6 @@ const DIFFICULTY_MAX_WIN: Record<string, number> = {
 
 // Minimum elapsed time (seconds) for any valid raid — prevents instant exploit
 const MIN_RAID_DURATION_SEC = 3;
-// Minimum elapsed for a successful cashout (client enforces 20s lock)
-const MIN_CASHOUT_SEC = 18; // 2s tolerance for clock skew
 
 // Max elapsed time = raid timer + grace window (extra 15s for network/client clock skew)
 const MAX_RAID_DURATION_SEC = 110;
@@ -58,11 +56,6 @@ function validateRaidResult(
 
   if (success && sol_amount <= 0) {
     return 'Successful raid must have positive sol_amount';
-  }
-
-  // Cashout requires minimum time in raid
-  if (success && elapsed_sec < MIN_CASHOUT_SEC) {
-    return `Cashout too early: ${elapsed_sec}s < minimum ${MIN_CASHOUT_SEC}s`;
   }
 
   // Max achievable points in elapsed_sec at highest possible multiplier (mult can reach ~5x with gear+attacks)
