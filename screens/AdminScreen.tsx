@@ -1,60 +1,103 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
-// Password is baked at build time from VITE_ADMIN_PWD env variable.
-// Set it in .env (gitignored). Fallback only for local dev.
-const ADMIN_PWD = import.meta.env.VITE_ADMIN_PWD ?? '';
-const SESSION_KEY = '__sr_admin';
+const ADMIN_PWD    = import.meta.env.VITE_ADMIN_PWD ?? '';
+const SESSION_KEY  = '__sr_admin';
+const TREASURY     = import.meta.env.VITE_TREASURY_ADDRESS ?? '';
+const USDC_MINT    = import.meta.env.VITE_USDC_MINT ?? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const SKR_MINT     = import.meta.env.VITE_SKR_MINT  ?? 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
+const RPC_URL      = import.meta.env.VITE_HELIUS_RPC_URL ?? import.meta.env.VITE_SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
 
-type Tab = 'OVERVIEW' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS';
+type Tab = 'OVERVIEW' | 'STATS' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS';
 
-interface RaidRow {
-  raid_id: string;
-  wallet_address: string;
-  difficulty: string;
-  success: boolean;
-  points: number;
-  sol_amount: number;
-  elapsed_sec: number;
-  created_at: string;
-}
-
-interface UserRow {
-  wallet_address: string;
-  username: string;
-  sr_points: number;
-  unclaimed_sol: number;
-  raid_tickets: number;
-  created_at: string;
-}
-
-interface ClaimRow {
-  id: string;
-  wallet_address: string;
-  action_type: string;
-  reward_sr: number;
-  twitter_handle: string | null;
-  created_at: string;
-}
-
-interface RoundWinnerRow {
-  id: string;
-  round_number: number;
-  round_date: string;
-  rank: number;
-  wallet_address: string;
-  prize_sol: number;
-  claimed: boolean;
-}
+interface RaidRow   { raid_id: string; wallet_address: string; difficulty: string; success: boolean; points: number; sol_amount: number; elapsed_sec: number; created_at: string; }
+interface UserRow   { wallet_address: string; username: string; sr_points: number; unclaimed_sol: number; raid_tickets: number; created_at: string; }
+interface ClaimRow  { id: string; wallet_address: string; action_type: string; reward_sr: number; twitter_handle: string | null; created_at: string; }
+interface WinnerRow { id: string; round_number: number; round_date: string; rank: number; wallet_address: string; prize_sol: number; claimed: boolean; }
 
 interface Overview {
-  totalUsers: number;
-  totalRaids: number;
-  totalWins: number;
-  totalSolWagered: number;
-  totalSR: number;
-  openBounties: number;
+  totalUsers: number; totalRaids: number; totalWins: number;
+  totalSolWagered: number; totalSR: number; openBounties: number;
 }
+
+interface TreasuryStats {
+  solBalance: number | null;
+  usdcBalance: number | null;
+  skrBalance: number | null;
+  totalUnclaimed: number;
+  totalPaidOut: number;
+  todayRaids: number;
+  weekRaids: number;
+  byDifficulty: { difficulty: string; total: number; wins: number }[];
+  byClaimType: { action_type: string; count: number; total_sr: number }[];
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+async function rpcPost(method: string, params: unknown[]): Promise<unknown> {
+  const res = await fetch(RPC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  const json = await res.json() as { result?: unknown };
+  return json.result;
+}
+
+async function fetchSolBalance(address: string): Promise<number> {
+  const result = await rpcPost('getBalance', [address, { commitment: 'confirmed' }]) as { value?: number } | null;
+  return (result?.value ?? 0) / 1e9;
+}
+
+async function fetchTokenBalance(owner: string, mint: string): Promise<number> {
+  const result = await rpcPost('getTokenAccountsByOwner', [
+    owner,
+    { mint },
+    { encoding: 'jsonParsed', commitment: 'confirmed' },
+  ]) as { value?: { account: { data: { parsed: { info: { tokenAmount: { uiAmount: number } } } } } }[] } | null;
+  const accounts = result?.value ?? [];
+  if (accounts.length === 0) return 0;
+  return accounts[0].account.data.parsed.info.tokenAmount.uiAmount ?? 0;
+}
+
+// ── Copy button ────────────────────────────────────────────────────────────────
+const CopyBtn: React.FC<{ text: string }> = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <button onClick={copy}
+      className="ml-1.5 text-white/20 hover:text-white/60 transition-colors shrink-0 align-middle"
+      title={text}>
+      {copied
+        ? <i className="fa-solid fa-check text-[#14F195] text-[9px]" />
+        : <i className="fa-regular fa-copy text-[9px]" />}
+    </button>
+  );
+};
+
+// ── Wallet cell (truncated + copy btn) ────────────────────────────────────────
+const WalletCell: React.FC<{ address: string }> = ({ address }) => (
+  <td className="py-1.5 pr-3">
+    <span className="flex items-center gap-0.5">
+      <span className="font-mono text-white/50 text-[10px]">{address.slice(0, 6)}…{address.slice(-4)}</span>
+      <CopyBtn text={address} />
+    </span>
+  </td>
+);
+
+// ── Stat card ─────────────────────────────────────────────────────────────────
+const Stat: React.FC<{ label: string; value: string | number; sub?: string; color?: string }> = ({ label, value, sub, color = 'text-white' }) => (
+  <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3">
+    <p className="text-[9px] text-white/35 uppercase tracking-widest mb-1">{label}</p>
+    <p className={`text-xl font-black mono leading-none ${color}`}>{value}</p>
+    {sub && <p className="text-[9px] text-white/30 mt-0.5">{sub}</p>}
+  </div>
+);
 
 // ── Password gate ─────────────────────────────────────────────────────────────
 const PasswordGate: React.FC<{ onAuth: () => void }> = ({ onAuth }) => {
@@ -80,27 +123,17 @@ const PasswordGate: React.FC<{ onAuth: () => void }> = ({ onAuth }) => {
           <h1 className="text-2xl font-black text-white uppercase tracking-widest">RUSHTIK</h1>
           <p className="text-[10px] text-white/30 mt-1">Admin Panel — SolRaid</p>
         </div>
-
         <div className={`border rounded-xl p-1 transition-colors ${err ? 'border-[#FF2929]/60' : 'border-white/10'}`}>
-          <input
-            type="password"
-            value={pwd}
+          <input type="password" value={pwd}
             onChange={e => setPwd(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && attempt()}
-            placeholder="Access key"
-            autoFocus
+            placeholder="Access key" autoFocus
             className="w-full bg-transparent px-4 py-3 text-white text-sm font-mono focus:outline-none placeholder:text-white/20"
           />
         </div>
-
-        {err && (
-          <p className="text-[11px] text-[#FF2929] font-bold text-center -mt-2">Access denied</p>
-        )}
-
-        <button
-          onClick={attempt}
-          className="w-full py-3 rounded-xl bg-[#FF2929] text-white font-black text-sm uppercase tracking-wider active:scale-95 transition-transform"
-        >
+        {err && <p className="text-[11px] text-[#FF2929] font-bold text-center -mt-2">Access denied</p>}
+        <button onClick={attempt}
+          className="w-full py-3 rounded-xl bg-[#FF2929] text-white font-black text-sm uppercase tracking-wider active:scale-95 transition-transform">
           Enter
         </button>
       </div>
@@ -108,27 +141,20 @@ const PasswordGate: React.FC<{ onAuth: () => void }> = ({ onAuth }) => {
   );
 };
 
-// ── Stat card ─────────────────────────────────────────────────────────────────
-const Stat: React.FC<{ label: string; value: string | number; sub?: string; color?: string }> = ({ label, value, sub, color = 'text-white' }) => (
-  <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3">
-    <p className="text-[9px] text-white/35 uppercase tracking-widest mb-1">{label}</p>
-    <p className={`text-xl font-black mono leading-none ${color}`}>{value}</p>
-    {sub && <p className="text-[9px] text-white/30 mt-0.5">{sub}</p>}
-  </div>
-);
-
 // ── Main dashboard ────────────────────────────────────────────────────────────
 const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  const [tab, setTab] = useState<Tab>('OVERVIEW');
-  const [overview, setOverview] = useState<Overview | null>(null);
-  const [raids, setRaids] = useState<RaidRow[]>([]);
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [claims, setClaims] = useState<ClaimRow[]>([]);
-  const [winners, setWinners] = useState<RoundWinnerRow[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [finalizing, setFinalizing] = useState(false);
-  const [finalizeMsg, setFinalizeMsg] = useState<string | null>(null);
-  const [raidFilter, setRaidFilter] = useState<'ALL' | 'WIN' | 'BUST'>('ALL');
+  const [tab, setTab]             = useState<Tab>('OVERVIEW');
+  const [overview, setOverview]   = useState<Overview | null>(null);
+  const [treasury, setTreasury]   = useState<TreasuryStats | null>(null);
+  const [raids, setRaids]         = useState<RaidRow[]>([]);
+  const [users, setUsers]         = useState<UserRow[]>([]);
+  const [claims, setClaims]       = useState<ClaimRow[]>([]);
+  const [winners, setWinners]     = useState<WinnerRow[]>([]);
+  const [loading, setLoading]     = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [finalizing, setFinalizing]     = useState(false);
+  const [finalizeMsg, setFinalizeMsg]   = useState<string | null>(null);
+  const [raidFilter, setRaidFilter]     = useState<'ALL' | 'WIN' | 'BUST'>('ALL');
 
   const load = useCallback(async (t: Tab) => {
     setLoading(true);
@@ -140,69 +166,132 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           supabase.from('bounties').select('id', { count: 'exact' }).eq('status', 'OPEN').gt('expires_at', new Date().toISOString()),
           supabase.from('profiles').select('sr_points'),
         ]);
-        const totalUsers = usersRes.count ?? 0;
-        const totalRaids = raidsRes.count ?? 0;
         const totalWins = (raidsRes.data ?? []).filter((r: { success: boolean }) => r.success).length;
-        const totalSolWagered = (raidsRes.data ?? []).reduce((s: number, r: { sol_amount: number }) => s + Number(r.sol_amount), 0);
-        const totalSR = (profilesRes.data ?? []).reduce((s: number, p: { sr_points: number }) => s + Number(p.sr_points), 0);
-        setOverview({ totalUsers, totalRaids, totalWins, totalSolWagered, totalSR, openBounties: bountiesRes.count ?? 0 });
+        setOverview({
+          totalUsers:     usersRes.count ?? 0,
+          totalRaids:     raidsRes.count ?? 0,
+          totalWins,
+          totalSolWagered: (raidsRes.data ?? []).reduce((s: number, r: { sol_amount: number }) => s + Number(r.sol_amount), 0),
+          totalSR:         (profilesRes.data ?? []).reduce((s: number, p: { sr_points: number }) => s + Number(p.sr_points), 0),
+          openBounties:    bountiesRes.count ?? 0,
+        });
       }
-
       if (t === 'RAIDS') {
         const { data } = await supabase.from('raid_history').select('*').order('created_at', { ascending: false }).limit(200);
         setRaids((data ?? []) as RaidRow[]);
       }
-
       if (t === 'USERS') {
         const { data } = await supabase.from('profiles').select('wallet_address, username, sr_points, unclaimed_sol, raid_tickets, created_at').order('sr_points', { ascending: false }).limit(200);
         setUsers((data ?? []) as UserRow[]);
       }
-
       if (t === 'CLAIMS') {
         const { data } = await supabase.from('social_claims').select('*').order('created_at', { ascending: false }).limit(300);
         setClaims((data ?? []) as ClaimRow[]);
       }
-
       if (t === 'ROUNDS') {
         const { data } = await supabase.from('round_winners').select('*').order('round_date', { ascending: false }).order('rank').limit(100);
-        setWinners((data ?? []) as RoundWinnerRow[]);
+        setWinners((data ?? []) as WinnerRow[]);
       }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(tab); }, [tab, load]);
+  const loadStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const now      = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      const weekAgo  = new Date(now.getTime() - 7 * 86400_000).toISOString();
+
+      const [
+        solBal, usdcBal, skrBal,
+        unclaimedRes, paidRes,
+        allRaidsRes, todayRaidsRes, weekRaidsRes,
+        claimTypesRes,
+      ] = await Promise.all([
+        TREASURY ? fetchSolBalance(TREASURY).catch(() => null) : Promise.resolve(null),
+        TREASURY ? fetchTokenBalance(TREASURY, USDC_MINT).catch(() => null) : Promise.resolve(null),
+        TREASURY ? fetchTokenBalance(TREASURY, SKR_MINT).catch(() => null) : Promise.resolve(null),
+        supabase.from('profiles').select('unclaimed_sol'),
+        supabase.from('withdrawals').select('amount_sol').eq('status', 'completed'),
+        supabase.from('raid_history').select('difficulty, success'),
+        supabase.from('raid_history').select('raid_id', { count: 'exact' }).gte('created_at', `${todayStr}T00:00:00Z`),
+        supabase.from('raid_history').select('raid_id', { count: 'exact' }).gte('created_at', weekAgo),
+        supabase.from('social_claims').select('action_type, reward_sr'),
+      ]);
+
+      const totalUnclaimed = (unclaimedRes.data ?? []).reduce((s: number, p: { unclaimed_sol: number }) => s + Number(p.unclaimed_sol), 0);
+      const totalPaidOut   = (paidRes.data ?? []).reduce((s: number, w: { amount_sol: number }) => s + Number(w.amount_sol), 0);
+
+      // Group raids by difficulty
+      const diffMap: Record<string, { total: number; wins: number }> = {};
+      for (const r of (allRaidsRes.data ?? []) as { difficulty: string; success: boolean }[]) {
+        if (!diffMap[r.difficulty]) diffMap[r.difficulty] = { total: 0, wins: 0 };
+        diffMap[r.difficulty].total++;
+        if (r.success) diffMap[r.difficulty].wins++;
+      }
+      const byDifficulty = ['EASY', 'MEDIUM', 'HARD', 'DEGEN']
+        .filter(d => diffMap[d])
+        .map(d => ({ difficulty: d, ...diffMap[d] }));
+
+      // Group claims by action type
+      const typeMap: Record<string, { count: number; total_sr: number }> = {};
+      for (const c of (claimTypesRes.data ?? []) as { action_type: string; reward_sr: number }[]) {
+        if (!typeMap[c.action_type]) typeMap[c.action_type] = { count: 0, total_sr: 0 };
+        typeMap[c.action_type].count++;
+        typeMap[c.action_type].total_sr += Number(c.reward_sr);
+      }
+      const byClaimType = Object.entries(typeMap)
+        .map(([action_type, v]) => ({ action_type, ...v }))
+        .sort((a, b) => b.count - a.count);
+
+      setTreasury({
+        solBalance:  solBal,
+        usdcBalance: usdcBal,
+        skrBalance:  skrBal,
+        totalUnclaimed,
+        totalPaidOut,
+        todayRaids:  todayRaidsRes.count ?? 0,
+        weekRaids:   weekRaidsRes.count ?? 0,
+        byDifficulty,
+        byClaimType,
+      });
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === 'STATS') loadStats();
+    else load(tab);
+  }, [tab, load, loadStats]);
 
   const handleFinalizeRound = async () => {
     setFinalizing(true);
     setFinalizeMsg(null);
     try {
       const now = new Date();
-      const roundH = now.getUTCHours();
-      const roundNum = Math.floor(roundH / 6) + 1;
+      const roundNum  = Math.floor(now.getUTCHours() / 6) + 1;
       const roundDate = now.toISOString().slice(0, 10);
       const { data, error } = await supabase.functions.invoke('finalize-round', {
         body: { round_number: roundNum, round_date: roundDate },
       });
-      if (error || data?.error) {
-        setFinalizeMsg(`Error: ${data?.error ?? error?.message ?? 'Unknown'}`);
-      } else {
-        setFinalizeMsg(`Round R${roundNum} finalized — ${data?.winners_inserted ?? 0} winners recorded`);
-        load('ROUNDS');
-      }
+      if (error || data?.error) setFinalizeMsg(`Error: ${data?.error ?? error?.message ?? 'Unknown'}`);
+      else { setFinalizeMsg(`R${roundNum} finalized — ${data?.winners_inserted ?? 0} winners recorded`); load('ROUNDS'); }
     } catch (e) {
       setFinalizeMsg(`Error: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setFinalizing(false);
-    }
+    } finally { setFinalizing(false); }
   };
 
   const filteredRaids = raidFilter === 'ALL' ? raids
     : raidFilter === 'WIN' ? raids.filter(r => r.success)
     : raids.filter(r => !r.success);
 
-  const TABS: Tab[] = ['OVERVIEW', 'RAIDS', 'USERS', 'CLAIMS', 'ROUNDS'];
+  const TABS: Tab[] = ['OVERVIEW', 'STATS', 'RAIDS', 'USERS', 'CLAIMS', 'ROUNDS'];
+
+  const diffColor = (d: string) =>
+    d === 'DEGEN' ? 'text-[#FF2929]' : d === 'HARD' ? 'text-orange-400' : d === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400';
 
   return (
     <div className="min-h-screen bg-[#07070f] text-white flex flex-col">
@@ -219,7 +308,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       </div>
 
       {/* Tabs */}
-      <div className="shrink-0 flex gap-1 px-4 pt-3 overflow-x-auto">
+      <div className="shrink-0 flex gap-1 px-4 pt-3 overflow-x-auto pb-1">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all shrink-0 ${
@@ -232,7 +321,9 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {loading && (
+
+        {/* ── Loading spinner ── */}
+        {(loading || (tab === 'STATS' && statsLoading)) && (
           <div className="flex items-center justify-center py-20">
             <p className="text-white/30 text-xs animate-pulse">Loading...</p>
           </div>
@@ -242,11 +333,11 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         {!loading && tab === 'OVERVIEW' && overview && (
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <Stat label="Total Users" value={overview.totalUsers.toLocaleString()} color="text-white" />
-              <Stat label="Total Raids" value={overview.totalRaids.toLocaleString()} color="text-white" />
-              <Stat label="Win Rate" value={`${overview.totalRaids > 0 ? ((overview.totalWins / overview.totalRaids) * 100).toFixed(1) : 0}%`} color="text-[#FFB800]" />
-              <Stat label="SOL Wagered" value={`${overview.totalSolWagered.toFixed(3)} SOL`} color="text-[#FFB800]" />
-              <Stat label="Total SR" value={overview.totalSR.toLocaleString()} color="text-white/70" />
+              <Stat label="Total Users"   value={overview.totalUsers.toLocaleString()} />
+              <Stat label="Total Raids"   value={overview.totalRaids.toLocaleString()} />
+              <Stat label="Win Rate"      value={`${overview.totalRaids > 0 ? ((overview.totalWins / overview.totalRaids) * 100).toFixed(1) : 0}%`} color="text-[#FFB800]" />
+              <Stat label="SOL Wagered"   value={`${overview.totalSolWagered.toFixed(3)}`} sub="SOL (all raids)" color="text-[#FFB800]" />
+              <Stat label="Total SR"      value={overview.totalSR.toLocaleString()} color="text-white/70" />
               <Stat label="Open Bounties" value={overview.openBounties} color="text-[#FF2929]" />
             </div>
 
@@ -263,10 +354,117 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 </button>
               </div>
               {finalizeMsg && (
-                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#FF2929]' : 'text-[#14F195]'}`}>
-                  {finalizeMsg}
-                </p>
+                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#FF2929]' : 'text-[#14F195]'}`}>{finalizeMsg}</p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ── STATS ── */}
+        {!statsLoading && tab === 'STATS' && treasury && (
+          <div className="flex flex-col gap-5">
+
+            {/* Treasury balances */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[9px] text-[#FFB800]/70 uppercase tracking-widest font-bold">Treasury Wallet</p>
+                <div className="flex items-center gap-2">
+                  {TREASURY && (
+                    <span className="flex items-center gap-1 text-[9px] font-mono text-white/30">
+                      {TREASURY.slice(0, 6)}…{TREASURY.slice(-4)}
+                      <CopyBtn text={TREASURY} />
+                    </span>
+                  )}
+                  <button onClick={loadStats}
+                    className="text-[9px] text-white/30 hover:text-white/60 font-bold uppercase tracking-wider transition-colors">
+                    <i className="fa-solid fa-rotate-right text-[9px]" /> Refresh
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Stat label="SOL Balance"
+                  value={treasury.solBalance !== null ? `${treasury.solBalance.toFixed(4)}` : '—'}
+                  sub="SOL" color="text-[#FFB800]" />
+                <Stat label="USDC Balance"
+                  value={treasury.usdcBalance !== null ? `$${treasury.usdcBalance.toFixed(2)}` : '—'}
+                  sub="USDC" color="text-green-400" />
+                <Stat label="SKR Balance"
+                  value={treasury.skrBalance !== null ? Math.floor(treasury.skrBalance).toLocaleString() : '—'}
+                  sub="SKR" color="text-white/70" />
+              </div>
+            </div>
+
+            {/* Financial flow */}
+            <div>
+              <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-2">Financial Flow</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Stat label="Total Unclaimed (all users)" value={`${treasury.totalUnclaimed.toFixed(4)}`} sub="SOL owed to players" color="text-[#FF2929]" />
+                <Stat label="Total Paid Out" value={`${treasury.totalPaidOut.toFixed(4)}`} sub="SOL withdrawn (all time)" color="text-[#14F195]" />
+              </div>
+            </div>
+
+            {/* Activity */}
+            <div>
+              <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-2">Raid Activity</p>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <Stat label="Today's Raids"      value={treasury.todayRaids} color="text-white" />
+                <Stat label="Last 7 Days Raids"  value={treasury.weekRaids}  color="text-white" />
+              </div>
+              {/* By difficulty */}
+              <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+                <table className="w-full text-[10px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      <th className="text-left px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Difficulty</th>
+                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Raids</th>
+                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Wins</th>
+                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Win %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {treasury.byDifficulty.map(d => (
+                      <tr key={d.difficulty} className="border-b border-white/[0.04]">
+                        <td className={`px-3 py-1.5 font-black ${diffColor(d.difficulty)}`}>{d.difficulty}</td>
+                        <td className="px-3 py-1.5 text-right text-white/60">{d.total.toLocaleString()}</td>
+                        <td className="px-3 py-1.5 text-right text-[#14F195]">{d.wins.toLocaleString()}</td>
+                        <td className="px-3 py-1.5 text-right text-[#FFB800] font-bold">
+                          {d.total > 0 ? ((d.wins / d.total) * 100).toFixed(1) : 0}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Claims breakdown */}
+            <div>
+              <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-2">Bounty / Social Claims</p>
+              <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+                <table className="w-full text-[10px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      <th className="text-left px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Action Type</th>
+                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Claims</th>
+                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Total SR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {treasury.byClaimType.map(c => (
+                      <tr key={c.action_type} className="border-b border-white/[0.04]">
+                        <td className={`px-3 py-1.5 font-bold ${c.action_type.startsWith('PASS_DISC') ? 'text-[#FFB800]' : c.action_type.startsWith('CHALLENGE') ? 'text-cyan-400' : 'text-white/60'}`}>
+                          {c.action_type}
+                        </td>
+                        <td className="px-3 py-1.5 text-right text-white/60">{c.count}</td>
+                        <td className="px-3 py-1.5 text-right text-[#14F195] font-bold">+{c.total_sr.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                    {treasury.byClaimType.length === 0 && (
+                      <tr><td colSpan={3} className="px-3 py-4 text-center text-white/20">No claims yet</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -280,12 +478,11 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase border transition-all ${
                     raidFilter === f ? 'border-[#FF2929]/50 text-[#FF2929] bg-[#FF2929]/10' : 'border-white/10 text-white/30'
                   }`}>
-                  {f} {f !== 'ALL' && `(${f === 'WIN' ? raids.filter(r => r.success).length : raids.filter(r => !r.success).length})`}
+                  {f}{f !== 'ALL' && ` (${f === 'WIN' ? raids.filter(r => r.success).length : raids.filter(r => !r.success).length})`}
                 </button>
               ))}
               <span className="ml-auto text-[9px] text-white/25 self-center">{filteredRaids.length} raids</span>
             </div>
-
             <div className="overflow-x-auto">
               <table className="w-full text-[10px] border-collapse">
                 <thead>
@@ -295,23 +492,15 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Result</th>
                     <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Pts</th>
                     <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SOL</th>
-                    <th className="text-right py-2 font-bold uppercase tracking-wider">Time</th>
+                    <th className="text-right py-2 font-bold uppercase tracking-wider">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRaids.map(r => (
                     <tr key={r.raid_id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                      <td className="py-1.5 pr-3 font-mono text-white/50">{r.wallet_address.slice(0, 6)}…{r.wallet_address.slice(-4)}</td>
-                      <td className="py-1.5 pr-3">
-                        <span className={`font-bold ${r.difficulty === 'DEGEN' ? 'text-[#FF2929]' : r.difficulty === 'HARD' ? 'text-orange-400' : r.difficulty === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400'}`}>
-                          {r.difficulty}
-                        </span>
-                      </td>
-                      <td className="py-1.5 pr-3">
-                        <span className={`font-black ${r.success ? 'text-[#14F195]' : 'text-[#FF2929]/70'}`}>
-                          {r.success ? 'WIN' : 'BUST'}
-                        </span>
-                      </td>
+                      <WalletCell address={r.wallet_address} />
+                      <td className="py-1.5 pr-3"><span className={`font-bold ${diffColor(r.difficulty)}`}>{r.difficulty}</span></td>
+                      <td className="py-1.5 pr-3"><span className={`font-black ${r.success ? 'text-[#14F195]' : 'text-[#FF2929]/70'}`}>{r.success ? 'WIN' : 'BUST'}</span></td>
                       <td className="py-1.5 pr-3 text-right font-mono text-white/70">{r.points.toLocaleString()}</td>
                       <td className="py-1.5 pr-3 text-right font-mono text-[#FFB800]">{Number(r.sol_amount).toFixed(4)}</td>
                       <td className="py-1.5 text-right text-white/30">{new Date(r.created_at).toLocaleDateString()}</td>
@@ -333,7 +522,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
                   <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Username</th>
                   <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SR</th>
-                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Unclaimed</th>
+                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Unclaimed SOL</th>
                   <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Tickets</th>
                   <th className="text-right py-2 font-bold uppercase tracking-wider">Joined</th>
                 </tr>
@@ -341,7 +530,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
               <tbody>
                 {users.map(u => (
                   <tr key={u.wallet_address} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                    <td className="py-1.5 pr-3 font-mono text-white/50">{u.wallet_address.slice(0, 6)}…{u.wallet_address.slice(-4)}</td>
+                    <WalletCell address={u.wallet_address} />
                     <td className="py-1.5 pr-3 text-white/70">{u.username || <span className="text-white/20">—</span>}</td>
                     <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(u.sr_points).toLocaleString()}</td>
                     <td className="py-1.5 pr-3 text-right font-mono text-white/60">{Number(u.unclaimed_sol).toFixed(4)}</td>
@@ -371,14 +560,14 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
               <tbody>
                 {claims.map(c => (
                   <tr key={c.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                    <td className="py-1.5 pr-3 font-mono text-white/50">{c.wallet_address.slice(0, 6)}…{c.wallet_address.slice(-4)}</td>
+                    <WalletCell address={c.wallet_address} />
                     <td className="py-1.5 pr-3">
                       <span className={`font-bold ${c.action_type.startsWith('PASS_DISC') ? 'text-[#FFB800]' : c.action_type.startsWith('CHALLENGE') ? 'text-cyan-400' : 'text-white/60'}`}>
                         {c.action_type}
                       </span>
                     </td>
                     <td className="py-1.5 pr-3 text-right text-[#14F195] font-bold">+{c.reward_sr}</td>
-                    <td className="py-1.5 pr-3 text-white/40 max-w-[140px] truncate">{c.twitter_handle ?? '—'}</td>
+                    <td className="py-1.5 pr-3 text-white/40 max-w-[160px] truncate">{c.twitter_handle ?? '—'}</td>
                     <td className="py-1.5 text-right text-white/30">{new Date(c.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
@@ -391,19 +580,16 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         {!loading && tab === 'ROUNDS' && (
           <div className="flex flex-col gap-4">
             <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
-              <p className="text-[9px] text-white/35 uppercase tracking-widest mb-3">Finalize Round</p>
+              <p className="text-[9px] text-white/35 uppercase tracking-widest mb-2">Finalize Round</p>
               <p className="text-[10px] text-white/40 mb-3">
-                Manually finalize the current active round. Only run after a round ends (every 6h UTC).
-                The edge function is idempotent — safe to re-run.
+                Manually finalize the current active round. Only run after a round ends (every 6h UTC). Idempotent — safe to re-run.
               </p>
               <button onClick={handleFinalizeRound} disabled={finalizing}
                 className="w-full py-2.5 rounded-xl bg-[#FF2929]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
                 {finalizing ? 'Finalizing...' : 'Finalize Current Round'}
               </button>
               {finalizeMsg && (
-                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#FF2929]' : 'text-[#14F195]'}`}>
-                  {finalizeMsg}
-                </p>
+                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#FF2929]' : 'text-[#14F195]'}`}>{finalizeMsg}</p>
               )}
             </div>
 
@@ -426,16 +612,12 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       <td className="py-1.5 pr-3 font-bold text-[#FF2929]">R{w.round_number}</td>
                       <td className="py-1.5 pr-3 text-white/40">{w.round_date}</td>
                       <td className="py-1.5 pr-3 text-center">
-                        <span className={`font-black ${w.rank === 1 ? 'text-[#FFB800]' : w.rank === 2 ? 'text-white/70' : 'text-white/40'}`}>
-                          #{w.rank}
-                        </span>
+                        <span className={`font-black ${w.rank === 1 ? 'text-[#FFB800]' : w.rank === 2 ? 'text-white/70' : 'text-white/40'}`}>#{w.rank}</span>
                       </td>
-                      <td className="py-1.5 pr-3 font-mono text-white/50">{w.wallet_address.slice(0, 6)}…{w.wallet_address.slice(-4)}</td>
+                      <WalletCell address={w.wallet_address} />
                       <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(w.prize_sol).toFixed(4)} SOL</td>
                       <td className="py-1.5 text-center">
-                        <span className={w.claimed ? 'text-[#14F195] font-bold' : 'text-white/20'}>
-                          {w.claimed ? '✓' : '—'}
-                        </span>
+                        <span className={w.claimed ? 'text-[#14F195] font-bold' : 'text-white/20'}>{w.claimed ? '✓' : '—'}</span>
                       </td>
                     </tr>
                   ))}
@@ -452,12 +634,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 // ── Root export ───────────────────────────────────────────────────────────────
 const AdminScreen: React.FC = () => {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem(SESSION_KEY) === '1');
-
-  const logout = () => {
-    sessionStorage.removeItem(SESSION_KEY);
-    setAuthed(false);
-  };
-
+  const logout = () => { sessionStorage.removeItem(SESSION_KEY); setAuthed(false); };
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
   return <Dashboard onLogout={logout} />;
 };
