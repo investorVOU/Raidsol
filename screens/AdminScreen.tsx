@@ -214,7 +214,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         TREASURY ? fetchTokenBalance(TREASURY, USDC_MINT).catch(() => null) : Promise.resolve(null),
         TREASURY ? fetchTokenBalance(TREASURY, SKR_MINT).catch(() => null) : Promise.resolve(null),
         supabase.from('profiles').select('unclaimed_sol'),
-        supabase.from('withdrawals').select('amount_sol').eq('status', 'completed'),
+        supabase.from('withdrawals').select('amount_sol').eq('status', 'CONFIRMED'),
         supabase.from('raid_history').select('difficulty, success'),
         supabase.from('raid_history').select('raid_id', { count: 'exact' }).gte('created_at', `${todayStr}T00:00:00Z`),
         supabase.from('raid_history').select('raid_id', { count: 'exact' }).gte('created_at', weekAgo),
@@ -294,7 +294,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     d === 'DEGEN' ? 'text-[#FF2929]' : d === 'HARD' ? 'text-orange-400' : d === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400';
 
   return (
-    <div className="min-h-screen bg-[#07070f] text-white flex flex-col">
+    <div className="h-full bg-[#07070f] text-white flex flex-col">
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
         <div>
