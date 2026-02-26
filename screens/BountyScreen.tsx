@@ -35,8 +35,23 @@ function timeLeft(expiresAt: string): string {
   return `${m}m`;
 }
 
+// ── Shared task type used by SocialClaimModal ─────────────────────────────────
+interface ClaimableTask {
+  actionType: string;
+  icon: string;
+  label: string;
+  sub: string;
+  rewardSR: number;
+  needsHandle: boolean;
+  needsUrl?: boolean;
+}
+
+interface PassDiscountTask extends ClaimableTask {
+  discountPct: number;
+}
+
 // ── Pass discount tasks ────────────────────────────────────────────────────────
-const PASS_DISCOUNT_TASKS = [
+const PASS_DISCOUNT_TASKS: PassDiscountTask[] = [
   {
     actionType: 'PASS_DISC_20_TWEET',
     icon: 'fa-solid fa-pen-nib',
@@ -77,7 +92,7 @@ const PASS_DISCOUNT_TASKS = [
     needsHandle: false,
     needsUrl: false,
   },
-] as const;
+];
 
 // ── Hardcoded daily challenges ─────────────────────────────────────────────────
 const DAILY_CHALLENGES = [
@@ -88,7 +103,7 @@ const DAILY_CHALLENGES = [
 ];
 
 // ── Social tasks ───────────────────────────────────────────────────────────────
-const SOCIAL_TASKS = [
+const SOCIAL_TASKS: ClaimableTask[] = [
   {
     actionType: 'FOLLOW',
     icon: 'fa-brands fa-x-twitter',
@@ -253,7 +268,7 @@ const PostBountyModal: React.FC<{
 
 // ── Social Task Claim Modal ────────────────────────────────────────────────────
 const SocialClaimModal: React.FC<{
-  task: typeof SOCIAL_TASKS[0];
+  task: ClaimableTask;
   onClaim: (handle: string, tweetUrl?: string) => Promise<void>;
   onClose: () => void;
 }> = ({ task, onClaim, onClose }) => {
@@ -411,7 +426,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
   const { openBounties, myBounties, claimedActions, loading, refresh } = useBounties(walletAddress);
   const [tab,          setTab]          = useState<'OPEN' | 'SOCIAL' | 'MINE'>('SOCIAL');
   const [showPost,     setShowPost]     = useState(false);
-  const [socialModal,  setSocialModal]  = useState<typeof SOCIAL_TASKS[0] | null>(null);
+  const [socialModal,  setSocialModal]  = useState<ClaimableTask | null>(null);
   const [claiming,     setClaiming]     = useState<string | null>(null);
   const [claimResult,  setClaimResult]  = useState<string | null>(null);
   const [claimErr,     setClaimErr]     = useState<string | null>(null);
@@ -539,17 +554,29 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
               {(() => {
                 const earned = PASS_DISCOUNT_TASKS.filter(t => claimedActions.includes(t.actionType));
                 if (earned.length === 0) return null;
+                const bestPct = earned.some(t => t.discountPct === 50) ? 50 : 20;
                 return (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {earned.map(t => (
-                      <div key={t.actionType}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
-                        style={{ background: 'rgba(255,184,0,0.12)', border: '1px dashed rgba(255,184,0,0.50)' }}>
-                        <i className="fa-solid fa-ticket text-[#FFB800] text-[10px]" />
-                        <span className="text-[10px] font-black text-[#FFB800]">{t.discountPct}% OFF PASS</span>
-                        <span className="text-[8px] text-white/35 ml-1">· use in Market</span>
-                      </div>
-                    ))}
+                  <div className="flex flex-col gap-2 mb-3">
+                    {/* Active discount highlight */}
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                      style={{ background: 'rgba(255,184,0,0.15)', border: '1px solid rgba(255,184,0,0.45)' }}>
+                      <i className="fa-solid fa-tag text-[#FFB800] text-xs shrink-0" />
+                      <p className="text-[11px] font-black text-[#FFB800]">
+                        Active discount: <span className="text-base">{bestPct}%</span> OFF all passes — applied at Store checkout
+                      </p>
+                    </div>
+                    {/* Individual coupon badges */}
+                    <div className="flex flex-wrap gap-2">
+                      {earned.map(t => (
+                        <div key={t.actionType}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
+                          style={{ background: 'rgba(255,184,0,0.12)', border: '1px dashed rgba(255,184,0,0.50)' }}>
+                          <i className="fa-solid fa-ticket text-[#FFB800] text-[10px]" />
+                          <span className="text-[10px] font-black text-[#FFB800]">{t.discountPct}% OFF PASS</span>
+                          <span className="text-[8px] text-white/35 ml-1">· use in Store</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 );
               })()}
@@ -589,7 +616,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
                           </span>
                         ) : task.needsHandle ? (
                           <button
-                            onClick={() => setSocialModal(task as unknown as typeof SOCIAL_TASKS[0])}
+                            onClick={() => setSocialModal(task)}
                             disabled={!walletAddress}
                             className="shrink-0 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all"
                             style={{ background: task.discountPct === 50 ? '#FF2929' : '#CC8800' }}>

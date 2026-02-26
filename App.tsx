@@ -574,20 +574,19 @@ const AppInner: React.FC = () => {
 
   // ── Pass discount: fetch best earned coupon from bounty tasks ─────────────────
   const [passDiscountPct, setPassDiscountPct] = useState(0);
-  useEffect(() => {
+  const fetchPassDiscount = useCallback(async () => {
     if (!walletAddr) { setPassDiscountPct(0); return; }
-    supabase
+    const { data } = await supabase
       .from('social_claims')
       .select('action_type')
       .eq('wallet_address', walletAddr)
-      .like('action_type', 'PASS_DISC_%')
-      .then(({ data }) => {
-        const types = (data ?? []).map((c: { action_type: string }) => c.action_type);
-        const pct = types.some(a => a.includes('_50_')) ? 50
-                  : types.some(a => a.includes('_20_')) ? 20 : 0;
-        setPassDiscountPct(pct);
-      });
+      .like('action_type', 'PASS_DISC_%');
+    const types = (data ?? []).map((c: { action_type: string }) => c.action_type);
+    const pct = types.some(a => a.includes('_50_')) ? 50
+              : types.some(a => a.includes('_20_')) ? 20 : 0;
+    setPassDiscountPct(pct);
   }, [walletAddr]);
+  useEffect(() => { fetchPassDiscount(); }, [fetchPassDiscount]);
 
   const currentRank = useMemo(() => {
     let best = RANKS[0];
@@ -1725,6 +1724,8 @@ const AppInner: React.FC = () => {
     }
     if (data?.error) throw new Error(data.error);
     if (data.reward_sr) setGameState(prev => ({ ...prev, srPoints: prev.srPoints + Number(data.reward_sr) }));
+    // Refresh pass discount immediately if a PASS_DISC_* task was just claimed
+    if (actionType.startsWith('PASS_DISC_')) fetchPassDiscount();
     return data as { reward_sr: number };
   };
 

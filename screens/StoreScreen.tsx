@@ -316,7 +316,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   : selectedCurrency === Currency.SOL ? finalPrice.toFixed(4)
                   : Math.ceil(finalPrice).toLocaleString();
                 const displayFull = fullPrice && !passesLoading
-                  ? Math.ceil(fullPrice).toLocaleString()
+                  ? selectedCurrency === Currency.SOL ? fullPrice.toFixed(4) : Math.ceil(fullPrice).toLocaleString()
                   : null;
                 const priceValue = passesLoading ? Infinity : (selectedCurrency === Currency.SOL ? finalPrice : Math.ceil(finalPrice));
                 const canAfford = !passesLoading && currentBalance >= priceValue;

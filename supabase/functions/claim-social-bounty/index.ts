@@ -41,7 +41,7 @@ const CHALLENGE_REQ: Record<string, { difficulty: string; min_points: number }> 
   // Pass discount score tasks — same raid_history verification path
   PASS_DISC_20_SCORE:  { difficulty: 'MEDIUM', min_points: 2000 },
   PASS_DISC_50_HARD:   { difficulty: 'HARD',   min_points: 3500 },
-  PASS_DISC_50_DEGEN:  { difficulty: 'DEGEN',  min_points: 1    },
+  PASS_DISC_50_DEGEN:  { difficulty: 'DEGEN',  min_points: 500  },
 };
 
 const json = (body: object, status = 200, corsH: Record<string, string>) =>
