@@ -1,0 +1,465 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+
+// Password is baked at build time from VITE_ADMIN_PWD env variable.
+// Set it in .env (gitignored). Fallback only for local dev.
+const ADMIN_PWD = import.meta.env.VITE_ADMIN_PWD ?? '';
+const SESSION_KEY = '__sr_admin';
+
+type Tab = 'OVERVIEW' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS';
+
+interface RaidRow {
+  raid_id: string;
+  wallet_address: string;
+  difficulty: string;
+  success: boolean;
+  points: number;
+  sol_amount: number;
+  elapsed_sec: number;
+  created_at: string;
+}
+
+interface UserRow {
+  wallet_address: string;
+  username: string;
+  sr_points: number;
+  unclaimed_sol: number;
+  raid_tickets: number;
+  created_at: string;
+}
+
+interface ClaimRow {
+  id: string;
+  wallet_address: string;
+  action_type: string;
+  reward_sr: number;
+  twitter_handle: string | null;
+  created_at: string;
+}
+
+interface RoundWinnerRow {
+  id: string;
+  round_number: number;
+  round_date: string;
+  rank: number;
+  wallet_address: string;
+  prize_sol: number;
+  claimed: boolean;
+}
+
+interface Overview {
+  totalUsers: number;
+  totalRaids: number;
+  totalWins: number;
+  totalSolWagered: number;
+  totalSR: number;
+  openBounties: number;
+}
+
+// ── Password gate ─────────────────────────────────────────────────────────────
+const PasswordGate: React.FC<{ onAuth: () => void }> = ({ onAuth }) => {
+  const [pwd, setPwd] = useState('');
+  const [err, setErr] = useState(false);
+
+  const attempt = () => {
+    if (ADMIN_PWD && pwd === ADMIN_PWD) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      onAuth();
+    } else {
+      setErr(true);
+      setPwd('');
+      setTimeout(() => setErr(false), 1800);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#07070f] flex items-center justify-center p-6">
+      <div className="w-full max-w-xs flex flex-col gap-5">
+        <div className="text-center">
+          <p className="text-[10px] text-white/25 uppercase tracking-[0.3em] mb-1">RESTRICTED</p>
+          <h1 className="text-2xl font-black text-white uppercase tracking-widest">RUSHTIK</h1>
+          <p className="text-[10px] text-white/30 mt-1">Admin Panel — SolRaid</p>
+        </div>
+
+        <div className={`border rounded-xl p-1 transition-colors ${err ? 'border-[#FF2929]/60' : 'border-white/10'}`}>
+          <input
+            type="password"
+            value={pwd}
+            onChange={e => setPwd(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && attempt()}
+            placeholder="Access key"
+            autoFocus
+            className="w-full bg-transparent px-4 py-3 text-white text-sm font-mono focus:outline-none placeholder:text-white/20"
+          />
+        </div>
+
+        {err && (
+          <p className="text-[11px] text-[#FF2929] font-bold text-center -mt-2">Access denied</p>
+        )}
+
+        <button
+          onClick={attempt}
+          className="w-full py-3 rounded-xl bg-[#FF2929] text-white font-black text-sm uppercase tracking-wider active:scale-95 transition-transform"
+        >
+          Enter
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ── Stat card ─────────────────────────────────────────────────────────────────
+const Stat: React.FC<{ label: string; value: string | number; sub?: string; color?: string }> = ({ label, value, sub, color = 'text-white' }) => (
+  <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3">
+    <p className="text-[9px] text-white/35 uppercase tracking-widest mb-1">{label}</p>
+    <p className={`text-xl font-black mono leading-none ${color}`}>{value}</p>
+    {sub && <p className="text-[9px] text-white/30 mt-0.5">{sub}</p>}
+  </div>
+);
+
+// ── Main dashboard ────────────────────────────────────────────────────────────
+const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  const [tab, setTab] = useState<Tab>('OVERVIEW');
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [raids, setRaids] = useState<RaidRow[]>([]);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [claims, setClaims] = useState<ClaimRow[]>([]);
+  const [winners, setWinners] = useState<RoundWinnerRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
+  const [finalizeMsg, setFinalizeMsg] = useState<string | null>(null);
+  const [raidFilter, setRaidFilter] = useState<'ALL' | 'WIN' | 'BUST'>('ALL');
+
+  const load = useCallback(async (t: Tab) => {
+    setLoading(true);
+    try {
+      if (t === 'OVERVIEW') {
+        const [usersRes, raidsRes, bountiesRes, profilesRes] = await Promise.all([
+          supabase.from('profiles').select('sr_points, unclaimed_sol', { count: 'exact' }),
+          supabase.from('raid_history').select('sol_amount, success', { count: 'exact' }),
+          supabase.from('bounties').select('id', { count: 'exact' }).eq('status', 'OPEN').gt('expires_at', new Date().toISOString()),
+          supabase.from('profiles').select('sr_points'),
+        ]);
+        const totalUsers = usersRes.count ?? 0;
+        const totalRaids = raidsRes.count ?? 0;
+        const totalWins = (raidsRes.data ?? []).filter((r: { success: boolean }) => r.success).length;
+        const totalSolWagered = (raidsRes.data ?? []).reduce((s: number, r: { sol_amount: number }) => s + Number(r.sol_amount), 0);
+        const totalSR = (profilesRes.data ?? []).reduce((s: number, p: { sr_points: number }) => s + Number(p.sr_points), 0);
+        setOverview({ totalUsers, totalRaids, totalWins, totalSolWagered, totalSR, openBounties: bountiesRes.count ?? 0 });
+      }
+
+      if (t === 'RAIDS') {
+        const { data } = await supabase.from('raid_history').select('*').order('created_at', { ascending: false }).limit(200);
+        setRaids((data ?? []) as RaidRow[]);
+      }
+
+      if (t === 'USERS') {
+        const { data } = await supabase.from('profiles').select('wallet_address, username, sr_points, unclaimed_sol, raid_tickets, created_at').order('sr_points', { ascending: false }).limit(200);
+        setUsers((data ?? []) as UserRow[]);
+      }
+
+      if (t === 'CLAIMS') {
+        const { data } = await supabase.from('social_claims').select('*').order('created_at', { ascending: false }).limit(300);
+        setClaims((data ?? []) as ClaimRow[]);
+      }
+
+      if (t === 'ROUNDS') {
+        const { data } = await supabase.from('round_winners').select('*').order('round_date', { ascending: false }).order('rank').limit(100);
+        setWinners((data ?? []) as RoundWinnerRow[]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(tab); }, [tab, load]);
+
+  const handleFinalizeRound = async () => {
+    setFinalizing(true);
+    setFinalizeMsg(null);
+    try {
+      const now = new Date();
+      const roundH = now.getUTCHours();
+      const roundNum = Math.floor(roundH / 6) + 1;
+      const roundDate = now.toISOString().slice(0, 10);
+      const { data, error } = await supabase.functions.invoke('finalize-round', {
+        body: { round_number: roundNum, round_date: roundDate },
+      });
+      if (error || data?.error) {
+        setFinalizeMsg(`Error: ${data?.error ?? error?.message ?? 'Unknown'}`);
+      } else {
+        setFinalizeMsg(`Round R${roundNum} finalized — ${data?.winners_inserted ?? 0} winners recorded`);
+        load('ROUNDS');
+      }
+    } catch (e) {
+      setFinalizeMsg(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setFinalizing(false);
+    }
+  };
+
+  const filteredRaids = raidFilter === 'ALL' ? raids
+    : raidFilter === 'WIN' ? raids.filter(r => r.success)
+    : raids.filter(r => !r.success);
+
+  const TABS: Tab[] = ['OVERVIEW', 'RAIDS', 'USERS', 'CLAIMS', 'ROUNDS'];
+
+  return (
+    <div className="min-h-screen bg-[#07070f] text-white flex flex-col">
+      {/* Header */}
+      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+        <div>
+          <h1 className="text-sm font-black uppercase tracking-widest text-[#FF2929]">RUSHTIK</h1>
+          <p className="text-[9px] text-white/25 uppercase tracking-wider">SolRaid Admin Panel</p>
+        </div>
+        <button onClick={onLogout}
+          className="text-[10px] text-white/30 hover:text-white/60 font-bold uppercase tracking-wider transition-colors">
+          Logout
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="shrink-0 flex gap-1 px-4 pt-3 overflow-x-auto">
+        {TABS.map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all shrink-0 ${
+              tab === t ? 'bg-[#FF2929]/20 text-[#FF2929] border border-[#FF2929]/40' : 'text-white/30 border border-transparent'
+            }`}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <p className="text-white/30 text-xs animate-pulse">Loading...</p>
+          </div>
+        )}
+
+        {/* ── OVERVIEW ── */}
+        {!loading && tab === 'OVERVIEW' && overview && (
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <Stat label="Total Users" value={overview.totalUsers.toLocaleString()} color="text-white" />
+              <Stat label="Total Raids" value={overview.totalRaids.toLocaleString()} color="text-white" />
+              <Stat label="Win Rate" value={`${overview.totalRaids > 0 ? ((overview.totalWins / overview.totalRaids) * 100).toFixed(1) : 0}%`} color="text-[#FFB800]" />
+              <Stat label="SOL Wagered" value={`${overview.totalSolWagered.toFixed(3)} SOL`} color="text-[#FFB800]" />
+              <Stat label="Total SR" value={overview.totalSR.toLocaleString()} color="text-white/70" />
+              <Stat label="Open Bounties" value={overview.openBounties} color="text-[#FF2929]" />
+            </div>
+
+            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+              <p className="text-[9px] text-white/35 uppercase tracking-widest mb-3">Quick Actions</p>
+              <div className="flex flex-col gap-2">
+                <button onClick={handleFinalizeRound} disabled={finalizing}
+                  className="w-full py-2.5 rounded-xl bg-[#FF2929]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
+                  {finalizing ? 'Finalizing...' : 'Finalize Current Round'}
+                </button>
+                <button onClick={() => load(tab)}
+                  className="w-full py-2 rounded-xl border border-white/10 text-white/50 font-bold text-xs uppercase tracking-wider active:scale-95 transition-all">
+                  Refresh Data
+                </button>
+              </div>
+              {finalizeMsg && (
+                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#FF2929]' : 'text-[#14F195]'}`}>
+                  {finalizeMsg}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── RAIDS ── */}
+        {!loading && tab === 'RAIDS' && (
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-1.5">
+              {(['ALL', 'WIN', 'BUST'] as const).map(f => (
+                <button key={f} onClick={() => setRaidFilter(f)}
+                  className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase border transition-all ${
+                    raidFilter === f ? 'border-[#FF2929]/50 text-[#FF2929] bg-[#FF2929]/10' : 'border-white/10 text-white/30'
+                  }`}>
+                  {f} {f !== 'ALL' && `(${f === 'WIN' ? raids.filter(r => r.success).length : raids.filter(r => !r.success).length})`}
+                </button>
+              ))}
+              <span className="ml-auto text-[9px] text-white/25 self-center">{filteredRaids.length} raids</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-[10px] border-collapse">
+                <thead>
+                  <tr className="text-white/30 border-b border-white/[0.06]">
+                    <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
+                    <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Diff</th>
+                    <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Result</th>
+                    <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Pts</th>
+                    <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SOL</th>
+                    <th className="text-right py-2 font-bold uppercase tracking-wider">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRaids.map(r => (
+                    <tr key={r.raid_id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                      <td className="py-1.5 pr-3 font-mono text-white/50">{r.wallet_address.slice(0, 6)}…{r.wallet_address.slice(-4)}</td>
+                      <td className="py-1.5 pr-3">
+                        <span className={`font-bold ${r.difficulty === 'DEGEN' ? 'text-[#FF2929]' : r.difficulty === 'HARD' ? 'text-orange-400' : r.difficulty === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400'}`}>
+                          {r.difficulty}
+                        </span>
+                      </td>
+                      <td className="py-1.5 pr-3">
+                        <span className={`font-black ${r.success ? 'text-[#14F195]' : 'text-[#FF2929]/70'}`}>
+                          {r.success ? 'WIN' : 'BUST'}
+                        </span>
+                      </td>
+                      <td className="py-1.5 pr-3 text-right font-mono text-white/70">{r.points.toLocaleString()}</td>
+                      <td className="py-1.5 pr-3 text-right font-mono text-[#FFB800]">{Number(r.sol_amount).toFixed(4)}</td>
+                      <td className="py-1.5 text-right text-white/30">{new Date(r.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── USERS ── */}
+        {!loading && tab === 'USERS' && (
+          <div className="overflow-x-auto">
+            <p className="text-[9px] text-white/25 mb-2">{users.length} users — sorted by SR</p>
+            <table className="w-full text-[10px] border-collapse">
+              <thead>
+                <tr className="text-white/30 border-b border-white/[0.06]">
+                  <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
+                  <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Username</th>
+                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SR</th>
+                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Unclaimed</th>
+                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Tickets</th>
+                  <th className="text-right py-2 font-bold uppercase tracking-wider">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.wallet_address} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                    <td className="py-1.5 pr-3 font-mono text-white/50">{u.wallet_address.slice(0, 6)}…{u.wallet_address.slice(-4)}</td>
+                    <td className="py-1.5 pr-3 text-white/70">{u.username || <span className="text-white/20">—</span>}</td>
+                    <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(u.sr_points).toLocaleString()}</td>
+                    <td className="py-1.5 pr-3 text-right font-mono text-white/60">{Number(u.unclaimed_sol).toFixed(4)}</td>
+                    <td className="py-1.5 pr-3 text-right text-white/50">{u.raid_tickets}</td>
+                    <td className="py-1.5 text-right text-white/30">{new Date(u.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ── CLAIMS ── */}
+        {!loading && tab === 'CLAIMS' && (
+          <div className="overflow-x-auto">
+            <p className="text-[9px] text-white/25 mb-2">{claims.length} claims</p>
+            <table className="w-full text-[10px] border-collapse">
+              <thead>
+                <tr className="text-white/30 border-b border-white/[0.06]">
+                  <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
+                  <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Action</th>
+                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SR</th>
+                  <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Handle / URL</th>
+                  <th className="text-right py-2 font-bold uppercase tracking-wider">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {claims.map(c => (
+                  <tr key={c.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                    <td className="py-1.5 pr-3 font-mono text-white/50">{c.wallet_address.slice(0, 6)}…{c.wallet_address.slice(-4)}</td>
+                    <td className="py-1.5 pr-3">
+                      <span className={`font-bold ${c.action_type.startsWith('PASS_DISC') ? 'text-[#FFB800]' : c.action_type.startsWith('CHALLENGE') ? 'text-cyan-400' : 'text-white/60'}`}>
+                        {c.action_type}
+                      </span>
+                    </td>
+                    <td className="py-1.5 pr-3 text-right text-[#14F195] font-bold">+{c.reward_sr}</td>
+                    <td className="py-1.5 pr-3 text-white/40 max-w-[140px] truncate">{c.twitter_handle ?? '—'}</td>
+                    <td className="py-1.5 text-right text-white/30">{new Date(c.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ── ROUNDS ── */}
+        {!loading && tab === 'ROUNDS' && (
+          <div className="flex flex-col gap-4">
+            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+              <p className="text-[9px] text-white/35 uppercase tracking-widest mb-3">Finalize Round</p>
+              <p className="text-[10px] text-white/40 mb-3">
+                Manually finalize the current active round. Only run after a round ends (every 6h UTC).
+                The edge function is idempotent — safe to re-run.
+              </p>
+              <button onClick={handleFinalizeRound} disabled={finalizing}
+                className="w-full py-2.5 rounded-xl bg-[#FF2929]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
+                {finalizing ? 'Finalizing...' : 'Finalize Current Round'}
+              </button>
+              {finalizeMsg && (
+                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#FF2929]' : 'text-[#14F195]'}`}>
+                  {finalizeMsg}
+                </p>
+              )}
+            </div>
+
+            <div className="overflow-x-auto">
+              <p className="text-[9px] text-white/25 mb-2">{winners.length} winner records</p>
+              <table className="w-full text-[10px] border-collapse">
+                <thead>
+                  <tr className="text-white/30 border-b border-white/[0.06]">
+                    <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Round</th>
+                    <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Date</th>
+                    <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">Rank</th>
+                    <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
+                    <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Prize</th>
+                    <th className="text-center py-2 font-bold uppercase tracking-wider">Claimed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {winners.map(w => (
+                    <tr key={w.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                      <td className="py-1.5 pr-3 font-bold text-[#FF2929]">R{w.round_number}</td>
+                      <td className="py-1.5 pr-3 text-white/40">{w.round_date}</td>
+                      <td className="py-1.5 pr-3 text-center">
+                        <span className={`font-black ${w.rank === 1 ? 'text-[#FFB800]' : w.rank === 2 ? 'text-white/70' : 'text-white/40'}`}>
+                          #{w.rank}
+                        </span>
+                      </td>
+                      <td className="py-1.5 pr-3 font-mono text-white/50">{w.wallet_address.slice(0, 6)}…{w.wallet_address.slice(-4)}</td>
+                      <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(w.prize_sol).toFixed(4)} SOL</td>
+                      <td className="py-1.5 text-center">
+                        <span className={w.claimed ? 'text-[#14F195] font-bold' : 'text-white/20'}>
+                          {w.claimed ? '✓' : '—'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── Root export ───────────────────────────────────────────────────────────────
+const AdminScreen: React.FC = () => {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem(SESSION_KEY) === '1');
+
+  const logout = () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    setAuthed(false);
+  };
+
+  if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
+  return <Dashboard onLogout={logout} />;
+};
+
+export default AdminScreen;

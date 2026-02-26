@@ -24,6 +24,7 @@ export enum Screen {
   BOUNTY = 'BOUNTY',     // Bounty Board
   ROAST = 'ROAST',       // Wallet Roast
   BRIEFING = 'BRIEFING', // Daily Briefing cipher puzzle
+  ADMIN = 'ADMIN',       // Admin panel — /rushtik
 }
 
 export enum Mode {

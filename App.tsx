@@ -15,6 +15,7 @@ const MultiplayerRaidScreen = lazy(() => import('./screens/MultiplayerRaidScreen
 const BountyScreen = lazy(() => import('./screens/BountyScreen'));
 const WalletRoastScreen = lazy(() => import('./screens/WalletRoastScreen'));
 const BriefingScreen = lazy(() => import('./screens/BriefingScreen'));
+const AdminScreen = lazy(() => import('./screens/AdminScreen'));
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 const HowItWorksModal = lazy(() => import('./components/HowItWorksModal'));
@@ -79,6 +80,19 @@ const AppInner: React.FC = () => {
   ]);
 
   const [gameState, setGameState] = useState<GameState>(() => {
+    // Admin panel: /rushtik path → always open admin screen
+    if (window.location.pathname === '/rushtik') {
+      return {
+        currentScreen: Screen.ADMIN,
+        walletBalance: 0, usdcBalance: 0, skrBalance: 0, unclaimedBalance: 0,
+        srPoints: 0, isConnected: false, username: '', ownedItemIds: [],
+        equippedAvatarId: '', equippedGearIds: [], activeRaidFee: ENTRY_FEES[Mode.SOLO],
+        activeRaidDifficulty: Difficulty.MEDIUM, activeRaidBoosts: [], activeRaidIsRound: false,
+        raidTickets: 0, lastFreeTicketDate: null, ticketBoostActive: false, raidStreak: 0,
+        bustTimestamps: [], lastFreeRaidDate: null, activeStreakBonus: 0, drillCount: 0,
+        drillWindowStart: 0, dailyStreak: 0, lastPlayedDate: null, personalBestPoints: 0,
+      };
+    }
     const savedScreen = sessionStorage.getItem('solraid-screen') as Screen | null;
     const restoredScreen = savedScreen && RESTORABLE_SCREENS.has(savedScreen) ? savedScreen : Screen.LOBBY;
     return {
@@ -1925,6 +1939,8 @@ const AppInner: React.FC = () => {
         );
       case Screen.TREASURY:
         return <TreasuryScreen onBack={() => navigateTo(Screen.LOBBY)} />;
+      case Screen.ADMIN:
+        return <AdminScreen />;
       case Screen.MULTIPLAYER_SETUP:
         return (
           <MultiplayerSetupScreen
