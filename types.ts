@@ -326,6 +326,8 @@ export interface GameState {
     peakMult?: number;
     nearWinCount?: number;
     dailyStreak?: number;
+    bankedYield?: number;
+    lootDrops?: LootDrop[];
   };
   isRaidLoading?: boolean;          // true while 2.5s pre-raid loading screen shows
   pvpWinnerResult?: {               // set when all PvP players have finished
@@ -380,4 +382,48 @@ export interface Bounty {
   claimed_at?: string;
   expires_at: string;
   created_at: string;
+}
+
+// ── Extended Raid Experience Types ────────────────────────────────────────────
+
+export type RaidPhase = 'BREACH' | 'DEEP_RUN' | 'CORE';
+
+export const RAID_PHASE_CONFIG: Record<RaidPhase, {
+  label: string; driftMod: number; riskResetOnEntry: number; color: string;
+}> = {
+  BREACH:   { label: 'BREACH',   driftMod: 1.00, riskResetOnEntry:  0, color: '#FF2929' },
+  DEEP_RUN: { label: 'DEEP RUN', driftMod: 1.08, riskResetOnEntry: 12, color: '#FFB800' },
+  CORE:     { label: 'CORE',     driftMod: 1.18, riskResetOnEntry: 12, color: '#FF2929' },
+};
+
+export type EventCardType = 'DATA_CACHE' | 'FIREWALL_SURGE' | 'GHOST_SIGNAL' | 'CORP_SWEEP';
+
+export interface EventCard {
+  id: number; type: EventCardType; startTime: number; duration: number; resolved: boolean;
+}
+
+export const EVENT_CARD_META: Record<EventCardType, {
+  label: string; sub: string; actionLabel?: string; duration: number; color: string;
+}> = {
+  DATA_CACHE:     { label: 'DATA CACHE',     sub: 'Auto-collecting node data...',            duration: 3000, color: '#FFB800' },
+  FIREWALL_SURGE: { label: 'FIREWALL SURGE', sub: 'Absorb the surge to reduce risk',         actionLabel: 'ABSORB',  duration: 3000, color: '#FF2929' },
+  GHOST_SIGNAL:   { label: 'GHOST SIGNAL',   sub: 'Lure detected — ignore or tap EXTRACT',  actionLabel: 'EXTRACT', duration: 4000, color: '#ffffff' },
+  CORP_SWEEP:     { label: 'CORP SWEEP',     sub: 'Corp is sweeping — going dark for 4s',    duration: 4000, color: '#ffffff' },
+};
+
+export interface ScoutNode {
+  id: 'NODE_A' | 'NODE_B' | 'NODE_C';
+  label: string; threat: 'LOW' | 'MEDIUM' | 'HIGH';
+  riskMod: number; lootBias: 'SKR' | 'SR' | 'SOL';
+  checkpointBankBonus: number; description: string; color: string;
+}
+
+export const SCOUT_NODES: ScoutNode[] = [
+  { id: 'NODE_A', label: 'LOW THREAT',   threat: 'LOW',    riskMod: -5, lootBias: 'SKR', checkpointBankBonus: 1.0, description: 'Lightly guarded sector. Stable entry, SKR-dense data nodes.', color: '#4ade80' },
+  { id: 'NODE_B', label: 'STANDARD',     threat: 'MEDIUM', riskMod:  0, lootBias: 'SR',  checkpointBankBonus: 1.0, description: 'Balanced risk. Reputation-dense. No entry modifier.',         color: '#FFB800' },
+  { id: 'NODE_C', label: 'HIGH THREAT',  threat: 'HIGH',   riskMod:  8, lootBias: 'SOL', checkpointBankBonus: 1.3, description: 'Heavy corp presence. +8 starting risk. Checkpoint banks 30% more.', color: '#FF2929' },
+];
+
+export interface LootDrop {
+  type: 'SKR_SHARD' | 'SR_BURST'; amount: number;
 }

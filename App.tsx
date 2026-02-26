@@ -638,7 +638,7 @@ const AppInner: React.FC = () => {
     updateProfile({ username: name });
   };
 
-  const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10, events?: import('./types').RaidEvent[], peakMult?: number, nearWinCount?: number) => {
+  const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10, events?: import('./types').RaidEvent[], peakMult?: number, nearWinCount?: number, bankedYield = 0, lootDrops: import('./types').LootDrop[] = []) => {
     const baseSR = success ? 100 : 25;
     const performanceSR = Math.floor(points / 200);
     const localSREarned = baseSR + performanceSR;
@@ -660,7 +660,7 @@ const AppInner: React.FC = () => {
       ticketBoostActive: false,
       currentScreen: Screen.RESULT,
       walletBalance: success ? prev.walletBalance : prev.walletBalance - prev.activeRaidFee,
-      unclaimedBalance: success ? prev.unclaimedBalance + netSolAmount : prev.unclaimedBalance,
+      unclaimedBalance: (success ? prev.unclaimedBalance + netSolAmount : prev.unclaimedBalance) + bankedYield,
       srPoints: prev.srPoints + localSREarned,
       // Streak & tilt tracking
       raidStreak: success ? prev.raidStreak + 1 : 0,
@@ -680,6 +680,8 @@ const AppInner: React.FC = () => {
         peakMult,
         nearWinCount,
         dailyStreak: prev.dailyStreak,
+        bankedYield: bankedYield > 0 ? bankedYield : undefined,
+        lootDrops: lootDrops.length > 0 ? lootDrops : undefined,
       },
       personalBestPoints: points > prev.personalBestPoints ? points : prev.personalBestPoints,
       activeRaidBoosts: [],
@@ -687,6 +689,12 @@ const AppInner: React.FC = () => {
       pvpWaiting: isPvp,   // waiting for other players to finish
       pvpWinnerResult: null,
     }));
+
+    // Apply loot SR from raid events
+    const srFromLoot = lootDrops.find(d => d.type === 'SR_BURST')?.amount ?? 0;
+    if (srFromLoot > 0) {
+      setGameState(prev => ({ ...prev, srPoints: prev.srPoints + Math.floor(srFromLoot) }));
+    }
 
     // Persist personal best if beaten
     if (points > gameState.personalBestPoints) {

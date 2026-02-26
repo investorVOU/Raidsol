@@ -36,7 +36,7 @@ services:
     headers:
       # Service worker must never be cached by CDN
       - path: /sw.js
-        name: Cache-Control
+        name: /sw.js
         value: no-cache, no-store, must-revalidate
       # Workbox runtime file
       - path: /workbox-*.js

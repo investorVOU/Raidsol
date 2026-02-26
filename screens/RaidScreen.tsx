@@ -13,7 +13,7 @@ class CanvasErrorBoundary extends Component<{ children: React.ReactNode }, { err
     return this.props.children;
   }
 }
-import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent, PLATFORM_FEE_RAID, DIFFICULTY_MAX_WIN } from '../types';
+import { GEAR_ITEMS, AVATAR_ITEMS, Difficulty, DIFFICULTY_CONFIG, RAID_BOOSTS, RaidEvent, PLATFORM_FEE_RAID, DIFFICULTY_MAX_WIN, RaidPhase, RAID_PHASE_CONFIG, EventCard, EventCardType, EVENT_CARD_META, ScoutNode, SCOUT_NODES, LootDrop } from '../types';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sparkles, useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
@@ -21,7 +21,7 @@ import { SkeletonUtils } from 'three-stdlib';
 import { useGameSounds } from '../hooks/useGameSounds';
 
 interface RaidScreenProps {
-  onFinish: (success: boolean, solAmount: number, points: number, elapsedSec: number, events?: RaidEvent[], peakMult?: number, nearWinCount?: number) => void;
+  onFinish: (success: boolean, solAmount: number, points: number, elapsedSec: number, events?: RaidEvent[], peakMult?: number, nearWinCount?: number, bankedYield?: number, lootDrops?: LootDrop[]) => void;
   equippedGearIds: string[];
   entryFee: number;
   difficulty: Difficulty;
@@ -157,6 +157,11 @@ const GameStyles = `
                     animation: sc-cursor 1.8s linear infinite; pointer-events: none; }
   .sc-result-pop  { animation: sc-result-pop 0.3s ease-out forwards; }
   .sc-target-btn  { animation: sc-target-pulse 0.6s ease-in-out infinite; }
+  @keyframes phase-flash { 0%{opacity:0.9} 50%{opacity:0.3} 100%{opacity:0} }
+  @keyframes card-slide-in  { 0%{transform:translateX(110%);opacity:0} 100%{transform:translateX(0);opacity:1} }
+  @keyframes card-slide-out { 0%{transform:translateX(0);opacity:1} 100%{transform:translateX(110%);opacity:0} }
+  .event-card-in  { animation: card-slide-in  0.25s ease-out forwards; }
+  .event-card-out { animation: card-slide-out 0.22s ease-in  forwards; }
 `;
 
 
@@ -448,6 +453,40 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const skillCheckTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => { skillCheckRef.current = skillCheck; }, [skillCheck]);
 
+  // ── Feature 1: Raid Phases ────────────────────────────────────────────────
+  const [raidPhase, setRaidPhase] = useState<RaidPhase>('BREACH');
+  const [phaseFlash, setPhaseFlash] = useState<string | null>(null);
+  const raidPhaseRef = useRef<RaidPhase>('BREACH');
+
+  // ── Feature 2: Checkpoint Banking ────────────────────────────────────────
+  const [bankedYield, setBankedYield] = useState(0);
+  const bankedYieldRef = useRef(0);
+  const checkpointFiredRef = useRef<Set<number>>(new Set());
+  const currentYieldRef = useRef('0');
+
+  // ── Feature 3: Event Cards ────────────────────────────────────────────────
+  const [activeEventCard, setActiveEventCard] = useState<EventCard | null>(null);
+  const activeEventCardRef = useRef<EventCard | null>(null);
+  const lastEventCardSecRef = useRef(0);
+  const eventCardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [eventCardExiting, setEventCardExiting] = useState(false);
+  const corpSweepActiveRef = useRef(false);
+
+  // ── Feature 4 (Intel): Scout Phase ───────────────────────────────────────
+  const [scoutPhase, setScoutPhase] = useState<'SCOUTING' | 'DONE'>('SCOUTING');
+  const [scoutCountdown, setScoutCountdown] = useState(15);
+  const [selectedNode, setSelectedNode] = useState<ScoutNode | null>(null);
+  const selectedNodeRef = useRef<ScoutNode | null>(null);
+  const scoutIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scoutNodeAppliedRef = useRef(false);
+  const scoutPhaseDoneRef = useRef(false);
+
+  // ── Feature 5: Loot Layers ────────────────────────────────────────────────
+  const [skrShards, setSkrShards] = useState(0);
+  const [srBursts, setSrBursts] = useState(0);
+  const skrShardsRef = useRef(0);
+  const srBurstsRef = useRef(0);
+
   // ── Meta-loop hook refs ────────────────────────────────────────────────────
   const nearWinCountRef   = useRef(0);           // firewall saves this raid
   const newPbShownRef     = useRef(false);        // only flash PB popup once
@@ -472,6 +511,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     if (hotStreakTimerRef.current) clearTimeout(hotStreakTimerRef.current);
     if (skillCheckTimeoutRef.current) clearTimeout(skillCheckTimeoutRef.current);
     if (donTimerRef.current) clearTimeout(donTimerRef.current);
+    if (scoutIntervalRef.current)    clearInterval(scoutIntervalRef.current);
+    if (eventCardTimeoutRef.current) clearTimeout(eventCardTimeoutRef.current);
   }, []);
 
   const addComboPopup = useCallback((text: string, color: string) => {
@@ -495,16 +536,20 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const [enemyAction, setEnemyAction] = useState('Idle');
 
   // Refs
-  const stateRef = useRef({ multiplier, risk, points, isEnding, enemyAction, timeLeft });
+  const stateRef = useRef({ multiplier, risk, points, isEnding, enemyAction, timeLeft, raidPhase });
   useEffect(() => {
-    stateRef.current = { multiplier, risk, points, isEnding, enemyAction, timeLeft };
-  }, [multiplier, risk, points, isEnding, enemyAction, timeLeft]);
+    stateRef.current = { multiplier, risk, points, isEnding, enemyAction, timeLeft, raidPhase };
+  }, [multiplier, risk, points, isEnding, enemyAction, timeLeft, raidPhase]);
+  useEffect(() => { raidPhaseRef.current = raidPhase; }, [raidPhase]);
+  useEffect(() => { activeEventCardRef.current = activeEventCard; }, [activeEventCard]);
+  useEffect(() => { selectedNodeRef.current = selectedNode; }, [selectedNode]);
 
   const userColor  = useMemo(() => getAvatarColor(equippedAvatarId), [equippedAvatarId]);
   const weaponType = useMemo(() => getWeaponType(equippedGearIds),    [equippedGearIds]);
 
   // Grace period countdown
   useEffect(() => {
+    if (scoutPhase !== 'DONE') return;
     if (!graceActive) return;
     if (graceCount <= 0) {
       sounds.playCountdownTick(true);
@@ -514,7 +559,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     sounds.playCountdownTick(false);
     const t = setTimeout(() => setGraceCount(prev => prev - 1), 1000);
     return () => clearTimeout(t);
-  }, [graceCount, graceActive]); // eslint-disable-line
+  }, [graceCount, graceActive, scoutPhase]); // eslint-disable-line
 
   // ── Spawn sparks ──────────────────────────────────────────────────────────
   const spawnSparks = useCallback((c1: string, c2: string, count = 12) => {
@@ -547,6 +592,121 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
   const addLog = (msg: string) => setLogs(prev => [msg, ...prev].slice(0, 2));
 
+  // ── Extended raid helpers ─────────────────────────────────────────────────
+
+  const buildLootDrops = useCallback((): LootDrop[] => {
+    const drops: LootDrop[] = [];
+    if (skrShardsRef.current > 0) drops.push({ type: 'SKR_SHARD', amount: parseFloat(skrShardsRef.current.toFixed(2)) });
+    if (srBurstsRef.current > 0)  drops.push({ type: 'SR_BURST',  amount: srBurstsRef.current });
+    return drops;
+  }, []);
+
+  const dismissEventCard = useCallback(() => {
+    setEventCardExiting(true);
+    setTimeout(() => {
+      setActiveEventCard(null);
+      activeEventCardRef.current = null;
+      setEventCardExiting(false);
+    }, 220);
+  }, []);
+
+  const applyScoutNode = useCallback((node: ScoutNode) => {
+    if (scoutNodeAppliedRef.current) return;
+    scoutNodeAppliedRef.current = true;
+    if (scoutIntervalRef.current) { clearInterval(scoutIntervalRef.current); scoutIntervalRef.current = null; }
+    setSelectedNode(node);
+    selectedNodeRef.current = node;
+    setScoutPhase('DONE');
+    scoutPhaseDoneRef.current = true;
+    if (node.riskMod !== 0) setRisk(prev => Math.max(0, prev + node.riskMod));
+    logEvent('INTEL', `Selected entry node: ${node.label}`, `Risk ${node.riskMod >= 0 ? '+' : ''}${node.riskMod} · Loot bias: ${node.lootBias}`, 'info');
+  }, [logEvent]); // eslint-disable-line
+
+  const bankCheckpoint = useCallback((elapsedSec: number, source: string) => {
+    const key = source === 'RANDOM' ? -1 : elapsedSec;
+    if (checkpointFiredRef.current.has(key)) return;
+    checkpointFiredRef.current.add(key);
+    const nodeBonus = selectedNodeRef.current?.checkpointBankBonus ?? 1.0;
+    const raw = parseFloat(currentYieldRef.current) * 0.10 * nodeBonus;
+    const bankAmt = Math.min(0.003, raw);
+    if (bankAmt <= 0) return;
+    bankedYieldRef.current = parseFloat((bankedYieldRef.current + bankAmt).toFixed(6));
+    setBankedYield(bankedYieldRef.current);
+    const srGain = 50 + Math.floor(Math.random() * 50);
+    srBurstsRef.current += srGain;
+    setSrBursts(srBurstsRef.current);
+    spawnSparks('#FFB800', '#ffffff', 10);
+    addDmgPopup(`CHECKPOINT +${bankAmt.toFixed(4)}`, '#FFB800', false);
+    logEvent('CHECKPOINT', `${source} checkpoint banked`, `+${bankAmt.toFixed(4)} SOL locked in · +${srGain} SR`, 'bonus');
+  }, [spawnSparks, addDmgPopup, logEvent]); // eslint-disable-line
+
+  const bankCheckpointRef = useRef(bankCheckpoint);
+  useEffect(() => { bankCheckpointRef.current = bankCheckpoint; }, [bankCheckpoint]);
+
+  const triggerEventCard = useCallback((type?: EventCardType) => {
+    if (activeEventCardRef.current || stateRef.current.isEnding) return;
+    if (skillCheckRef.current || ambushTimeoutRef.current) return;
+    const types: EventCardType[] = ['DATA_CACHE', 'FIREWALL_SURGE', 'GHOST_SIGNAL', 'CORP_SWEEP'];
+    const cardType = type ?? types[Math.floor(Math.random() * types.length)];
+    const meta = EVENT_CARD_META[cardType];
+    const card: EventCard = { id: Date.now(), type: cardType, startTime: Date.now(), duration: meta.duration, resolved: false };
+    setActiveEventCard(card);
+    activeEventCardRef.current = card;
+    lastEventCardSecRef.current = Math.floor((Date.now() - raidStartMsRef.current) / 1000);
+    logEvent('EVENT_CARD', `Event card: ${meta.label}`, meta.sub, 'info');
+
+    if (eventCardTimeoutRef.current) clearTimeout(eventCardTimeoutRef.current);
+    eventCardTimeoutRef.current = setTimeout(() => {
+      // Auto-resolve
+      if (!activeEventCardRef.current || activeEventCardRef.current.id !== card.id) return;
+      if (cardType === 'FIREWALL_SURGE') {
+        // ignored → +15 risk
+        setRisk(prev => Math.min(98, prev + 15));
+        addDmgPopup('+15 RISK!', '#FF2929');
+        logEvent('EVENT_CARD', 'FIREWALL_SURGE ignored', '+15 RISK', 'danger');
+      } else if (cardType === 'DATA_CACHE') {
+        // auto-grant SKR shard
+        const skrGain = parseFloat((0.5 + Math.random() * 2.0).toFixed(2));
+        skrShardsRef.current = parseFloat((skrShardsRef.current + skrGain).toFixed(2));
+        setSkrShards(skrShardsRef.current);
+        addDmgPopup(`+${skrGain} SKR`, '#FFB800');
+        logEvent('EVENT_CARD', 'DATA_CACHE collected', `+${skrGain} SKR shards`, 'bonus');
+      } else if (cardType === 'CORP_SWEEP') {
+        corpSweepActiveRef.current = true;
+        setTimeout(() => { corpSweepActiveRef.current = false; }, 4000);
+        logEvent('EVENT_CARD', 'CORP_SWEEP — going dark', 'Controls frozen 4s', 'warning');
+      }
+      // GHOST_SIGNAL ignored → correct choice, no penalty
+      setEventCardExiting(true);
+      setTimeout(() => {
+        setActiveEventCard(null);
+        activeEventCardRef.current = null;
+        setEventCardExiting(false);
+        eventCardTimeoutRef.current = null;
+      }, 220);
+    }, meta.duration);
+  }, [addDmgPopup, logEvent]); // eslint-disable-line
+
+  const triggerEventCardRef = useRef(triggerEventCard);
+  useEffect(() => { triggerEventCardRef.current = triggerEventCard; }, [triggerEventCard]);
+
+  const transitionToPhase = useCallback((newPhase: RaidPhase, elapsedSec: number) => {
+    const config = RAID_PHASE_CONFIG[newPhase];
+    setRaidPhase(newPhase);
+    raidPhaseRef.current = newPhase;
+    if (config.riskResetOnEntry > 0) setRisk(prev => Math.max(0, prev - config.riskResetOnEntry));
+    setPhaseFlash(config.color);
+    setTimeout(() => setPhaseFlash(null), 700);
+    spawnSparks(config.color, '#ffffff', 16);
+    addDmgPopup(`${config.label}`, config.color, true);
+    logEvent('PHASE_TRANSITION', `Entering phase: ${config.label}`, config.riskResetOnEntry > 0 ? `-${config.riskResetOnEntry} RISK · Drift ×${config.driftMod}` : `Drift ×${config.driftMod}`, 'bonus');
+    bankCheckpointRef.current(elapsedSec, 'PHASE');
+    setTimeout(() => triggerEventCardRef.current('DATA_CACHE'), 800);
+  }, [spawnSparks, addDmgPopup, logEvent]); // eslint-disable-line
+
+  const transitionToPhaseRef = useRef(transitionToPhase);
+  useEffect(() => { transitionToPhaseRef.current = transitionToPhase; }, [transitionToPhase]);
+
   // ── Skill check callbacks (after spawnSparks / logEvent are defined) ───────
   const applySkillCheckResult = useCallback((success: boolean) => {
     const sc = skillCheckRef.current;
@@ -558,6 +718,10 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       if (meta.successRisk !== 0) setRisk(prev => Math.max(0, prev + meta.successRisk));
       if (meta.successPts > 0)    setPoints(prev => prev + meta.successPts);
       if (meta.successMult > 0)   setMultiplier(prev => { const n = prev + meta.successMult; if (n > peakMultRef.current) peakMultRef.current = n; return n; });
+      // Loot: SR burst on skill check success
+      const srGain = 50 + Math.floor(Math.random() * 100);
+      srBurstsRef.current += srGain;
+      setSrBursts(srBurstsRef.current);
       addComboPopup(meta.successMsg, '#14F195');
       spawnSparks('#14F195', '#FFD700', 14);
       sounds.playCashOut();
@@ -618,6 +782,23 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const triggerSkillCheckRef = useRef(triggerSkillCheck);
   useEffect(() => { triggerSkillCheckRef.current = triggerSkillCheck; }, [triggerSkillCheck]);
 
+  // ── Intel Scout Phase countdown ───────────────────────────────────────────
+  useEffect(() => {
+    let remaining = 15;
+    scoutIntervalRef.current = setInterval(() => {
+      remaining -= 1;
+      setScoutCountdown(remaining);
+      if (remaining <= 0) {
+        clearInterval(scoutIntervalRef.current!);
+        scoutIntervalRef.current = null;
+        applyScoutNode(SCOUT_NODES[0]); // auto-pick LOW THREAT
+      }
+    }, 1000);
+    return () => {
+      if (scoutIntervalRef.current) { clearInterval(scoutIntervalRef.current); scoutIntervalRef.current = null; }
+    };
+  }, []); // eslint-disable-line
+
   // ── Personal Best mid-raid highlight ─────────────────────────────────────
   useEffect(() => {
     if (!newPbShownRef.current && personalBestPoints > 0 && points > personalBestPoints && !isEnding) {
@@ -667,8 +848,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     sounds.hapticBust();
     spawnSparks('#EF4444', '#ff6600', 22);
     addDmgPopup('BUSTED!', '#EF4444', true);
-    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current), 2500);
-  }, [onFinish, initialTime, difficulty, ticketBoost, sounds, spawnSparks, addDmgPopup]);
+    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current, bankedYieldRef.current, buildLootDrops()), 2500);
+  }, [onFinish, initialTime, difficulty, ticketBoost, sounds, spawnSparks, addDmgPopup, buildLootDrops]); // eslint-disable-line
 
   const handleBustRef = useRef(handleBust);
   useEffect(() => { handleBustRef.current = handleBust; }, [handleBust]);
@@ -698,9 +879,34 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       if (newTimeLeft !== state.timeLeft) setTimeLeft(newTimeLeft);
       if (newTimeLeft <= 0) { handleBustRef.current('TIMEOUT_EXPIRED'); return; }
 
+      // Guard: pause all game logic during scout phase
+      if (!scoutPhaseDoneRef.current) return;
+
       if (elapsedSeconds < 3) {
         setPoints(prev => prev + Math.floor(15 * state.multiplier * diffConfig.multMod));
         return;
+      }
+
+      // ── Phase transitions ──────────────────────────────────────────────────
+      if (elapsedSeconds === 30 && raidPhaseRef.current === 'BREACH'   && !state.isEnding) transitionToPhaseRef.current('DEEP_RUN', elapsedSeconds);
+      if (elapsedSeconds === 60 && raidPhaseRef.current === 'DEEP_RUN' && !state.isEnding) transitionToPhaseRef.current('CORE',     elapsedSeconds);
+
+      // ── Random mid-phase checkpoint (around 45-55s, ~20% chance per tick) ─
+      if (elapsedSeconds >= 45 && elapsedSeconds <= 55 && !state.isEnding) {
+        if (!checkpointFiredRef.current.has(-1) && Math.random() < 0.20) {
+          checkpointFiredRef.current.add(-1);
+          bankCheckpointRef.current(elapsedSeconds, 'RANDOM');
+        }
+      }
+
+      // ── Random event card (after 20s, 15s+ since last, ~6% per tick) ──────
+      const secsSinceLastCard = elapsedSeconds - lastEventCardSecRef.current;
+      if (
+        elapsedSeconds > 20 && !activeEventCardRef.current && secsSinceLastCard >= 15 &&
+        !state.isEnding && !skillCheckRef.current && !ambushTimeoutRef.current &&
+        Math.random() < 0.06
+      ) {
+        triggerEventCardRef.current();
       }
 
       // ── Idle risk decay: patience is a skill ─────────────────────────────
@@ -784,11 +990,12 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         triggerSkillCheckRef.current();
       }
 
-      const timePenalty = Math.max(0, (elapsedSeconds - 20) * 0.18);  // flat first 20s, then escalates hard
-      const greedFactor  = state.multiplier > 1.7 ? 3.0 : state.multiplier > 1.2 ? 2.2 : 1.0;
-      const houseEdge    = 1.85;
-      const baseDrift    = (1.0 + (Math.random() * 2.0)) + timePenalty;  // higher floor from the start
-      const totalDrift   = baseDrift * diffConfig.driftMod * boostStats.driftMultiplier * greedFactor * houseEdge * gearRiskFactor;
+      const timePenalty   = Math.max(0, (elapsedSeconds - 20) * 0.18);  // flat first 20s, then escalates hard
+      const greedFactor   = state.multiplier > 1.7 ? 3.0 : state.multiplier > 1.2 ? 2.2 : 1.0;
+      const houseEdge     = 1.85;
+      const baseDrift     = (1.0 + (Math.random() * 2.0)) + timePenalty;  // higher floor from the start
+      const phaseDriftMod = RAID_PHASE_CONFIG[raidPhaseRef.current].driftMod;
+      const totalDrift    = baseDrift * diffConfig.driftMod * boostStats.driftMultiplier * greedFactor * houseEdge * gearRiskFactor * phaseDriftMod;
       const spikeRoll    = Math.random();
       const randomSpike  = spikeRoll > 0.88 ? (spikeRoll > 0.94 ? 22 : 17) : 0;  // 12% spike chance
       if (randomSpike > 0 && !state.isEnding) {
@@ -798,44 +1005,46 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         spawnSparks('#f97316', '#EF4444', 6);
       }
 
-      const nextRisk = state.risk + totalDrift + randomSpike;
+      if (!corpSweepActiveRef.current) {
+        const nextRisk = state.risk + totalDrift + randomSpike;
 
-      // ── Double or Nothing: trigger once at ~60% risk after 20s ──────────
-      if (state.risk >= 58 && state.risk < 65 && !donShownRef.current && elapsedSeconds > 20 && !state.isEnding) {
-        donShownRef.current = true;
-        setDonActive(true);
-        if (donTimerRef.current) clearTimeout(donTimerRef.current);
-        donTimerRef.current = setTimeout(() => setDonActive(false), 9000);
-      }
-
-      // ── LAST-SECOND SAVE: base 4% + 2% per daily streak day (max 14%) ──
-      const firewallChance = Math.min(0.14, 0.04 + dailyStreak * 0.02);
-      if (nextRisk >= 100 && Math.random() < firewallChance && !state.isEnding) {
-        nearWinCountRef.current += 1;
-        logEvent('FIREWALL', `Emergency firewall — streak day ${dailyStreak} boosted save chance`, 'Risk reset to 75, raid continues', 'bonus');
-        addLog('Firewall activated');
-        spawnSparks('#14F195', '#00FBFF', 32);
-        setFirewallSave(true);
-        setTimeout(() => setFirewallSave(false), 1400);
-        setRisk(75);
-        sounds.hapticCritical();
-        addDmgPopup('FIREWALL SAVED!', '#14F195', true);
-      } else if (nextRisk >= 100) {
-        handleBustRef.current('RISK_OVERLOAD');
-        setRisk(100);
-        return;
-      } else {
-        setRisk(nextRisk);
-      }
-
-      const yieldGain = Math.floor(15 * state.multiplier * diffConfig.multMod);
-      setPoints(prev => {
-        const next = prev + yieldGain;
-        if (Math.floor(next / 500) > Math.floor(prev / 500)) {
-          addDmgPopup('+5 SR', '#FFD700');
+        // ── Double or Nothing: trigger once at ~60% risk after 20s ──────────
+        if (state.risk >= 58 && state.risk < 65 && !donShownRef.current && elapsedSeconds > 20 && !state.isEnding) {
+          donShownRef.current = true;
+          setDonActive(true);
+          if (donTimerRef.current) clearTimeout(donTimerRef.current);
+          donTimerRef.current = setTimeout(() => setDonActive(false), 9000);
         }
-        return next;
-      });
+
+        // ── LAST-SECOND SAVE: base 4% + 2% per daily streak day (max 14%) ──
+        const firewallChance = Math.min(0.14, 0.04 + dailyStreak * 0.02);
+        if (nextRisk >= 100 && Math.random() < firewallChance && !state.isEnding) {
+          nearWinCountRef.current += 1;
+          logEvent('FIREWALL', `Emergency firewall — streak day ${dailyStreak} boosted save chance`, 'Risk reset to 75, raid continues', 'bonus');
+          addLog('Firewall activated');
+          spawnSparks('#14F195', '#00FBFF', 32);
+          setFirewallSave(true);
+          setTimeout(() => setFirewallSave(false), 1400);
+          setRisk(75);
+          sounds.hapticCritical();
+          addDmgPopup('FIREWALL SAVED!', '#14F195', true);
+        } else if (nextRisk >= 100) {
+          handleBustRef.current('RISK_OVERLOAD');
+          setRisk(100);
+          return;
+        } else {
+          setRisk(nextRisk);
+        }
+
+        const yieldGain = Math.floor(15 * state.multiplier * diffConfig.multMod);
+        setPoints(prev => {
+          const next = prev + yieldGain;
+          if (Math.floor(next / 500) > Math.floor(prev / 500)) {
+            addDmgPopup('+5 SR', '#FFD700');
+          }
+          return next;
+        });
+      }
 
       // Fighter animations driven by risk level
       const r = state.risk;
@@ -914,7 +1123,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       spawnSparks('#14F195', '#00FBFF', 22);
       addDmgPopup('EXTRACTED!', '#14F195', true);
     }
-    setTimeout(() => onFinish(true, solReward, points, elapsedSec, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current), 2500);
+    setTimeout(() => onFinish(true, solReward, points, elapsedSec, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current, bankedYieldRef.current, buildLootDrops()), 2500);
   };
 
   const handleAttack = () => {
@@ -1075,6 +1284,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     * (earlyExitWarn ? 0.3 : 1.0)
     * (1 - PLATFORM_FEE_RAID)
   ).toFixed(4);
+  currentYieldRef.current = currentYield;
   const isUrgent       = timeLeft < 10;
   const isCritical     = timeLeft < 5;
 
@@ -1146,6 +1356,119 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           </div>
         ))}
       </div>
+
+      {/* ── SCOUT PHASE OVERLAY ── */}
+      {scoutPhase === 'SCOUTING' && (
+        <div className="absolute inset-0 z-[200] flex flex-col bg-black/95 backdrop-blur-sm p-4">
+          <div className="shrink-0 flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-0.5">Intel Report</p>
+              <p className="text-sm font-black text-white uppercase">SELECT ENTRY NODE</p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 border border-white/20 bg-white/5">
+              <span className="text-[9px] font-bold text-white/50 uppercase">Auto in</span>
+              <span className="mono text-lg font-black text-[#FF2929]">{scoutCountdown}s</span>
+            </div>
+          </div>
+          <div className="flex-1 flex flex-col gap-3 min-h-0">
+            {SCOUT_NODES.map(node => (
+              <button
+                key={node.id}
+                onClick={() => applyScoutNode(node)}
+                className="flex-1 min-h-0 text-left p-4 border-2 transition-all active:scale-[0.98]"
+                style={{ borderColor: node.color + '60', background: node.color + '10' }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-black uppercase tracking-wider" style={{ color: node.color }}>{node.label}</span>
+                  <div className="flex items-center gap-2 text-[9px] font-bold text-white/50">
+                    <span style={{ color: node.riskMod > 0 ? '#FF2929' : node.riskMod < 0 ? '#4ade80' : '#FFB800' }}>
+                      {node.riskMod > 0 ? '+' : ''}{node.riskMod} RISK
+                    </span>
+                    <span className="text-white/25">·</span>
+                    <span>LOOT: {node.lootBias}</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-white/55 leading-snug">{node.description}</p>
+                {node.checkpointBankBonus > 1 && (
+                  <p className="text-[8px] font-bold mt-1" style={{ color: '#FFB800' }}>⬆ +{Math.round((node.checkpointBankBonus - 1) * 100)}% checkpoint bonus</p>
+                )}
+              </button>
+            ))}
+          </div>
+          <p className="shrink-0 text-center text-[8px] text-white/25 mt-3 font-bold uppercase tracking-widest">
+            Auto-selects LOW THREAT if no choice made
+          </p>
+        </div>
+      )}
+
+      {/* ── PHASE FLASH ── */}
+      {phaseFlash && (
+        <div
+          className="absolute inset-0 z-[96] pointer-events-none"
+          style={{ backgroundColor: phaseFlash, opacity: 0.35, animation: 'phase-flash 0.7s ease-out forwards' }}
+        />
+      )}
+
+      {/* ── EVENT CARD ── */}
+      {activeEventCard && !isEnding && (() => {
+        const meta = EVENT_CARD_META[activeEventCard.type];
+        const elapsed = Date.now() - activeEventCard.startTime;
+        const progress = Math.max(0, 1 - elapsed / meta.duration);
+        return (
+          <div
+            className={`absolute bottom-24 right-3 z-[85] w-52 ${eventCardExiting ? 'event-card-out' : 'event-card-in'}`}
+            style={{ borderLeft: `3px solid ${meta.color}`, background: 'rgba(0,0,0,0.92)', padding: '10px 12px' }}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: meta.color }}>{meta.label}</span>
+              <button onClick={dismissEventCard} className="text-white/30 hover:text-white/60 text-xs leading-none">✕</button>
+            </div>
+            <p className="text-[9px] text-white/55 mb-2">{meta.sub}</p>
+            {/* Drain bar */}
+            <div className="h-0.5 bg-white/10 overflow-hidden mb-2">
+              <div className="h-full transition-none" style={{ width: `${progress * 100}%`, backgroundColor: meta.color }} />
+            </div>
+            {/* Action buttons */}
+            {activeEventCard.type === 'FIREWALL_SURGE' && (
+              <button
+                disabled={ambushed}
+                onClick={() => {
+                  if (eventCardTimeoutRef.current) { clearTimeout(eventCardTimeoutRef.current); eventCardTimeoutRef.current = null; }
+                  setRisk(prev => Math.max(0, prev - 10));
+                  const sr = 75 + Math.floor(Math.random() * 50);
+                  srBurstsRef.current += sr; setSrBursts(srBurstsRef.current);
+                  addDmgPopup('-10 RISK', '#4ade80');
+                  logEvent('EVENT_CARD', 'FIREWALL_SURGE absorbed', '-10 RISK · +SR', 'bonus');
+                  dismissEventCard();
+                }}
+                className="w-full py-1.5 text-[10px] font-black uppercase transition-all disabled:opacity-30"
+                style={{ background: '#FF2929', color: '#fff' }}
+              >
+                ABSORB
+              </button>
+            )}
+            {activeEventCard.type === 'GHOST_SIGNAL' && (
+              <button
+                disabled={ambushed}
+                onClick={() => {
+                  if (eventCardTimeoutRef.current) { clearTimeout(eventCardTimeoutRef.current); eventCardTimeoutRef.current = null; }
+                  // Extract = wrong choice: -8% yield for 15s
+                  const prev = solMultiplierRef.current;
+                  solMultiplierRef.current *= 0.92;
+                  addDmgPopup('-8% YIELD 15s', '#f97316');
+                  logEvent('EVENT_CARD', 'GHOST_SIGNAL — lure triggered', '-8% yield for 15s', 'warning');
+                  setTimeout(() => { solMultiplierRef.current = prev; }, 15000);
+                  dismissEventCard();
+                }}
+                className="w-full py-1.5 text-[10px] font-black uppercase transition-all disabled:opacity-30"
+                style={{ background: '#FF2929', color: '#fff' }}
+              >
+                EXTRACT (LURE)
+              </button>
+            )}
+          </div>
+        );
+      })()}
 
       {/* WIN OVERLAY */}
       {isEnding === 'WIN' && (
@@ -1264,8 +1587,50 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           )}
         </div>
 
-        {/* ── Round competition badge ── */}
-        {isRoundEntry && !isEnding && (
+        {/* ── Phase badge + loot counters + round badge ── */}
+        {!isEnding && scoutPhase === 'DONE' && (
+          <div className="shrink-0 flex items-center justify-center gap-2 mb-1.5 flex-wrap">
+            {/* Phase badge */}
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full"
+              style={{ background: RAID_PHASE_CONFIG[raidPhase].color + '18', border: `1px solid ${RAID_PHASE_CONFIG[raidPhase].color}50` }}>
+              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: RAID_PHASE_CONFIG[raidPhase].color }} />
+              <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: RAID_PHASE_CONFIG[raidPhase].color }}>
+                {RAID_PHASE_CONFIG[raidPhase].label}
+              </span>
+            </div>
+            {/* SKR shards */}
+            {skrShards > 0 && (
+              <span className="text-[8px] font-black text-[#FFB800] px-1.5 py-0.5 rounded-full"
+                style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.30)' }}>
+                ◆ {skrShards.toFixed(2)} SKR
+              </span>
+            )}
+            {/* SR bursts */}
+            {srBursts > 0 && (
+              <span className="text-[8px] font-bold text-white/50 px-1.5 py-0.5 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                +{srBursts} SR
+              </span>
+            )}
+            {/* Banked yield */}
+            {bankedYield > 0 && (
+              <span className="text-[8px] font-black text-[#FFB800] px-1.5 py-0.5 rounded-full"
+                style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.30)' }}>
+                BANKED {bankedYield.toFixed(4)}
+              </span>
+            )}
+            {/* Round badge */}
+            {isRoundEntry && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(255,41,41,0.15)', border: '1px solid rgba(255,41,41,0.45)' }}>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929] animate-pulse" />
+                <span className="text-[8px] font-black text-[#FF2929] uppercase tracking-widest">Round</span>
+              </div>
+            )}
+          </div>
+        )}
+        {/* Old round badge — hidden when scoutPhase DONE (above replaces it) */}
+        {isRoundEntry && !isEnding && scoutPhase !== 'DONE' && (
           <div className="shrink-0 flex justify-center mb-1.5">
             <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full"
               style={{ background: 'rgba(255,41,41,0.15)', border: '1px solid rgba(255,41,41,0.45)' }}>

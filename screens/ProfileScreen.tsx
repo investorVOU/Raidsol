@@ -13,7 +13,7 @@ interface ProfileScreenProps {
   balance: number;
   unclaimedBalance: number;
   srPoints: number;
-  onClaim: () => Promise<string | null>;
+  onClaim: (amount?: number) => Promise<string | null>;
   ownedItemIds: string[];
   equippedAvatarId?: string;
   equippedGearIds: string[];
@@ -61,7 +61,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [rightTab, setRightTab] = useState<'RAIDS' | 'WITHDRAWALS' | 'ROUNDS'>('RAIDS');
   const [lastWithdrawTx, setLastWithdrawTx] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [showLockTip, setShowLockTip] = useState(false);
+
+  // Default withdraw amount to full balance whenever balance updates
+  useEffect(() => {
+    if (unclaimedBalance > 0) setWithdrawAmount(unclaimedBalance.toFixed(4));
+  }, [unclaimedBalance]);
   const [isMinting, setIsMinting] = useState(false);
 
   // Minted NFT records for this wallet
@@ -91,9 +97,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   const handleWithdraw = async () => {
     if (isClaiming) return;
+    const parsed = parseFloat(withdrawAmount);
+    if (isNaN(parsed) || parsed <= 0 || parsed > unclaimedBalance) return;
     setIsClaiming(true);
     try {
-      const txSig = await onClaim();
+      const txSig = await onClaim(parsed);
       if (txSig) {
         setLastWithdrawTx(txSig);
         setRightTab('WITHDRAWALS');
@@ -468,21 +476,58 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               </div>
               <div className="relative z-10">
                 <p className="text-[10px] text-[#FFB800]/60 font-bold uppercase tracking-wide mb-4">Unclaimed</p>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                  <div className="flex items-baseline gap-2">
-                    <p className="mono text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tighter leading-none">
-                      {unclaimedBalance.toFixed(4)}
-                    </p>
-                    <span className="text-sm sm:text-xl text-[#FFB800] font-black italic">SOL</span>
+                {/* Balance display */}
+                <div className="flex items-baseline gap-2 mb-6">
+                  <p className="mono text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tighter leading-none">
+                    {unclaimedBalance.toFixed(4)}
+                  </p>
+                  <span className="text-sm sm:text-xl text-[#FFB800] font-black italic">SOL</span>
+                </div>
+                {/* Amount selector */}
+                <div className="space-y-3">
+                  {/* Preset chips */}
+                  <div className="flex gap-2">
+                    {([0.25, 0.5, 0.75, 1] as const).map((pct) => {
+                      const label = pct === 1 ? 'MAX' : `${pct * 100}%`;
+                      const val = (unclaimedBalance * pct).toFixed(4);
+                      const active = withdrawAmount === val || (pct === 1 && withdrawAmount === unclaimedBalance.toFixed(4));
+                      return (
+                        <button
+                          key={label}
+                          onClick={() => setWithdrawAmount((unclaimedBalance * pct).toFixed(4))}
+                          disabled={unclaimedBalance <= 0}
+                          className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest tech-border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${active ? 'border-[#FFB800]/60 text-[#FFB800] bg-[#FFB800]/10' : 'border-white/10 text-white/40 hover:border-white/30 hover:text-white/70'}`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <button
-                    onClick={handleWithdraw}
-                    disabled={unclaimedBalance <= 0 || isClaiming}
-                    className={`w-full sm:w-auto px-10 py-5 font-black uppercase tracking-tighter text-sm tech-border transition-all ${unclaimedBalance > 0 && !isClaiming ? 'active:translate-y-1' : 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed opacity-50'}`}
-                    style={unclaimedBalance > 0 && !isClaiming ? { background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
-                  >
-                    {isClaiming ? 'Processing...' : 'Withdraw'}
-                  </button>
+                  {/* Amount input + withdraw button */}
+                  <div className="flex gap-3">
+                    <div className="flex-1 relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max={unclaimedBalance}
+                        step="0.0001"
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                        disabled={unclaimedBalance <= 0 || isClaiming}
+                        className="w-full bg-black border-2 border-white/10 focus:border-[#FFB800]/40 outline-none px-4 py-3 mono text-sm font-black text-white placeholder-white/20 disabled:opacity-30 transition-colors"
+                        placeholder="0.0000"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#FFB800]/60">SOL</span>
+                    </div>
+                    <button
+                      onClick={handleWithdraw}
+                      disabled={unclaimedBalance <= 0 || isClaiming || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > unclaimedBalance}
+                      className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance ? 'active:translate-y-1' : 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed opacity-50'}`}
+                      style={unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance ? { background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
+                    >
+                      {isClaiming ? 'Processing...' : 'Withdraw'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

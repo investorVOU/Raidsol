@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RaidEvent } from '../types';
+import { RaidEvent, LootDrop } from '../types';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
 import { formatCountdown } from '../hooks/useRoundData';
 
@@ -18,6 +18,8 @@ interface ResultScreenProps {
     peakMult?: number;
     nearWinCount?: number;
     dailyStreak?: number;
+    bankedYield?: number;
+    lootDrops?: LootDrop[];
   };
   entryFee: number;
   raidEvents?: RaidEvent[];
@@ -38,19 +40,24 @@ const SEVERITY_STYLES: Record<RaidEvent['severity'], { border: string; dot: stri
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  NETWORK_SURGE:  'SURGE',
-  AMBUSH:         'AMBUSH',
-  JACKPOT:        'JACKPOT',
-  FIREWALL:       'FIREWALL',
-  GOLDEN_WINDOW:  'GOLDEN',
-  GOLDEN_EXPIRED: 'MISSED',
-  SHIELD_OVERLOAD:'SHIELD',
-  COMBO:          'COMBO',
-  COUNTER:        'COUNTER',
-  AGGRESSION:     'RAGE',
-  CRITICAL:       'CRITICAL',
-  BUST:           'BUST',
-  CASHOUT:        'EXTRACT',
+  NETWORK_SURGE:     'SURGE',
+  AMBUSH:            'AMBUSH',
+  JACKPOT:           'JACKPOT',
+  FIREWALL:          'FIREWALL',
+  GOLDEN_WINDOW:     'GOLDEN',
+  GOLDEN_EXPIRED:    'MISSED',
+  SHIELD_OVERLOAD:   'SHIELD',
+  COMBO:             'COMBO',
+  COUNTER:           'COUNTER',
+  AGGRESSION:        'RAGE',
+  CRITICAL:          'CRITICAL',
+  BUST:              'BUST',
+  CASHOUT:           'EXTRACT',
+  PHASE_TRANSITION:  'PHASE',
+  CHECKPOINT:        'BANKED',
+  EVENT_CARD:        'EVENT',
+  INTEL:             'INTEL',
+  SKILL_CHECK:       'BREACH',
 };
 
 const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06];
@@ -264,6 +271,45 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
               ))}
             </div>
           </div>
+
+          {/* ── BANKED YIELD (checkpoint SOL kept even on bust) ── */}
+          {(result.bankedYield ?? 0) > 0 && (
+            <div className="bg-black border-2 p-5 tech-border relative overflow-hidden" style={{ borderColor: 'rgba(255,184,0,0.50)' }}>
+              <div className="absolute top-0 right-0 p-3 opacity-6 mono text-xl font-black text-[#FFB800]">BANK</div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#FFB800]" />
+                <p className="text-xs font-bold uppercase tracking-wide text-[#FFB800]/70">Checkpoint Banked</p>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <p className="mono text-3xl font-black text-[#FFB800]">+{(result.bankedYield ?? 0).toFixed(4)}</p>
+                <span className="text-sm font-bold text-[#FFB800]/50">SOL</span>
+              </div>
+              <p className="text-[9px] text-white/35 font-bold mt-1">Kept on bust · credited to unclaimed balance</p>
+            </div>
+          )}
+
+          {/* ── LOOT DROPS ── */}
+          {(result.lootDrops?.length ?? 0) > 0 && (
+            <div className="bg-black border-2 border-white/10 p-5 tech-border">
+              <p className="text-xs font-bold uppercase tracking-wide text-white/50 mb-3">Loot Collected</p>
+              <div className="grid grid-cols-2 gap-3">
+                {result.lootDrops!.filter(d => d.type === 'SKR_SHARD').map((d, i) => (
+                  <div key={i} className="text-center p-3 rounded" style={{ background: 'rgba(255,184,0,0.08)', border: '1px solid rgba(255,184,0,0.25)' }}>
+                    <p className="text-[8px] font-bold text-[#FFB800]/60 uppercase tracking-wider mb-1">SKR Shards</p>
+                    <p className="mono text-2xl font-black text-[#FFB800]">{d.amount.toFixed(2)}</p>
+                    <p className="text-[8px] text-white/30 mt-0.5">display-only</p>
+                  </div>
+                ))}
+                {result.lootDrops!.filter(d => d.type === 'SR_BURST').map((d, i) => (
+                  <div key={i} className="text-center p-3 rounded" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                    <p className="text-[8px] font-bold text-white/40 uppercase tracking-wider mb-1">SR Bonus</p>
+                    <p className="mono text-2xl font-black text-white">+{Math.floor(d.amount)}</p>
+                    <p className="text-[8px] text-white/30 mt-0.5">reputation pts</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ── META-LOOP STATS (near-win + streak) ── */}
           {((result.nearWinCount ?? 0) > 0 || (result.dailyStreak ?? 0) >= 2) && (
