@@ -54,31 +54,28 @@ interface DamagePopup {
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const GameStyles = `
   @keyframes shake-mild {
-    0%,100% { transform: translate(0,0) rotate(0deg); }
-    25%     { transform: translate(-2px,1px) rotate(-0.3deg); }
-    50%     { transform: translate(2px,-1px) rotate(0.3deg); }
-    75%     { transform: translate(-1px,2px) rotate(-0.2deg); }
+    0%,100% { transform: translate(0,0); }
+    33%     { transform: translate(-1px,0.5px); }
+    66%     { transform: translate(1px,-0.5px); }
   }
   @keyframes shake-heavy {
-    0%,100% { transform: translate(0,0) rotate(0deg); }
-    15%     { transform: translate(-6px,4px) rotate(-0.9deg); }
-    30%     { transform: translate(6px,-4px) rotate(0.9deg); }
-    45%     { transform: translate(-5px,-4px) rotate(-0.6deg); }
-    60%     { transform: translate(5px,4px) rotate(0.6deg); }
-    75%     { transform: translate(-3px,2px) rotate(-0.3deg); }
-    90%     { transform: translate(3px,-2px) rotate(0.3deg); }
+    0%,100% { transform: translate(0,0); }
+    20%     { transform: translate(-3px,2px); }
+    40%     { transform: translate(3px,-2px); }
+    60%     { transform: translate(-2px,-2px); }
+    80%     { transform: translate(2px,2px); }
   }
   @keyframes shake-critical {
-    0%,100% { transform: translate(0,0) rotate(0deg) scale(1); }
-    10%     { transform: translate(-10px,6px) rotate(-1.4deg) scale(1.012); }
-    20%     { transform: translate(10px,-6px) rotate(1.4deg) scale(0.988); }
-    30%     { transform: translate(-9px,-7px) rotate(-1.1deg) scale(1.01); }
-    40%     { transform: translate(9px,7px) rotate(1.1deg) scale(0.99); }
-    50%     { transform: translate(-7px,5px) rotate(-0.9deg) scale(1.006); }
-    60%     { transform: translate(7px,-5px) rotate(0.9deg) scale(0.994); }
-    70%     { transform: translate(-6px,-5px) rotate(-0.6deg); }
-    80%     { transform: translate(6px,5px) rotate(0.6deg); }
-    90%     { transform: translate(-4px,3px) rotate(-0.3deg); }
+    0%,100% { transform: translate(0,0); }
+    10%     { transform: translate(-5px,3px); }
+    20%     { transform: translate(5px,-3px); }
+    30%     { transform: translate(-4px,-3px); }
+    40%     { transform: translate(4px,3px); }
+    50%     { transform: translate(-3px,2px); }
+    60%     { transform: translate(3px,-2px); }
+    70%     { transform: translate(-3px,-2px); }
+    80%     { transform: translate(3px,2px); }
+    90%     { transform: translate(-2px,1px); }
   }
   @keyframes spark-fly {
     0%   { transform: translate(0,0) scale(1.2); opacity: 1; }
@@ -627,12 +624,12 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     if (checkpointFiredRef.current.has(key)) return;
     checkpointFiredRef.current.add(key);
     const nodeBonus = selectedNodeRef.current?.checkpointBankBonus ?? 1.0;
-    const raw = parseFloat(currentYieldRef.current) * 0.10 * nodeBonus;
-    const bankAmt = Math.min(0.003, raw);
+    const raw = parseFloat(currentYieldRef.current) * 0.05 * nodeBonus;
+    const bankAmt = Math.min(0.002, raw);
     if (bankAmt <= 0) return;
     bankedYieldRef.current = parseFloat((bankedYieldRef.current + bankAmt).toFixed(6));
     setBankedYield(bankedYieldRef.current);
-    const srGain = 50 + Math.floor(Math.random() * 50);
+    const srGain = 15 + Math.floor(Math.random() * 20);
     srBurstsRef.current += srGain;
     setSrBursts(srBurstsRef.current);
     spawnSparks('#FFB800', '#ffffff', 10);
@@ -666,7 +663,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         logEvent('EVENT_CARD', 'FIREWALL_SURGE ignored', '+15 RISK', 'danger');
       } else if (cardType === 'DATA_CACHE') {
         // auto-grant SKR shard
-        const skrGain = parseFloat((0.5 + Math.random() * 2.0).toFixed(2));
+        const skrGain = parseFloat((0.1 + Math.random() * 0.5).toFixed(2));
         skrShardsRef.current = parseFloat((skrShardsRef.current + skrGain).toFixed(2));
         setSkrShards(skrShardsRef.current);
         addDmgPopup(`+${skrGain} SKR`, '#FFB800');
@@ -719,7 +716,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       if (meta.successPts > 0)    setPoints(prev => prev + meta.successPts);
       if (meta.successMult > 0)   setMultiplier(prev => { const n = prev + meta.successMult; if (n > peakMultRef.current) peakMultRef.current = n; return n; });
       // Loot: SR burst on skill check success
-      const srGain = 50 + Math.floor(Math.random() * 100);
+      const srGain = 20 + Math.floor(Math.random() * 40);
       srBurstsRef.current += srGain;
       setSrBursts(srBurstsRef.current);
       addComboPopup(meta.successMsg, '#14F195');
@@ -1289,7 +1286,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const isCritical     = timeLeft < 5;
 
   // Shake level
-  const shakeClass = isEnding ? '' : risk > 90 ? 'shake-critical' : risk > 75 ? 'shake-heavy' : risk > 60 ? 'shake-mild' : '';
+  const shakeClass = isEnding ? '' : risk > 93 ? 'shake-critical' : risk > 82 ? 'shake-heavy' : risk > 72 ? 'shake-mild' : '';
 
   const timerGlowClass = isCritical
     ? 'shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-500 animate-pulse bg-red-950/40'
@@ -1435,7 +1432,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                 onClick={() => {
                   if (eventCardTimeoutRef.current) { clearTimeout(eventCardTimeoutRef.current); eventCardTimeoutRef.current = null; }
                   setRisk(prev => Math.max(0, prev - 10));
-                  const sr = 75 + Math.floor(Math.random() * 50);
+                  const sr = 20 + Math.floor(Math.random() * 30);
                   srBurstsRef.current += sr; setSrBursts(srBurstsRef.current);
                   addDmgPopup('-10 RISK', '#4ade80');
                   logEvent('EVENT_CARD', 'FIREWALL_SURGE absorbed', '-10 RISK · +SR', 'bonus');
