@@ -5,29 +5,43 @@ import { getCorsHeaders } from '../_shared/cors.ts';
  * claim-social-bounty
  *
  * Honour-system SR rewards for:
- *  A) Daily score challenges — verified against raid_history
- *  B) Social tasks (Follow / Retweet / Like / Post Tweet @solraid_app) — honour system,
+ *  A) Daily score challenges (CHALLENGE_*) — verified against raid_history
+ *  B) Social tasks (Follow / Retweet / Like / POST_TWEET) — honour system,
  *     one-time per wallet per action, user-provided X handle stored for reference.
+ *  C) Pass discount tasks (PASS_DISC_*) — SR bonus for unlocking a store coupon:
+ *     - PASS_DISC_20_TWEET  (tweet, honour system, URL required)
+ *     - PASS_DISC_20_SCORE  (MEDIUM raid ≥ 2000 pts, raid_history verified)
+ *     - PASS_DISC_50_HARD   (HARD raid ≥ 3500 pts, raid_history verified)
+ *     - PASS_DISC_50_DEGEN  (any successful DEGEN raid, raid_history verified)
  *
  * social_claims UNIQUE(wallet_address, action_type) prevents double-claims.
  */
 
 const REWARDS: Record<string, number> = {
-  CHALLENGE_EASY:   120,
-  CHALLENGE_MEDIUM: 250,
-  CHALLENGE_HARD:   500,
-  CHALLENGE_DEGEN:  1200,
-  FOLLOW:           300,
-  RETWEET:          150,
-  LIKE:             100,
-  POST_TWEET:       250,
+  CHALLENGE_EASY:      120,
+  CHALLENGE_MEDIUM:    250,
+  CHALLENGE_HARD:      500,
+  CHALLENGE_DEGEN:     1200,
+  FOLLOW:              300,
+  RETWEET:             150,
+  LIKE:                100,
+  POST_TWEET:          250,
+  // Pass discount tasks (SR bonus for unlocking a store coupon)
+  PASS_DISC_20_TWEET:  100,
+  PASS_DISC_20_SCORE:  150,
+  PASS_DISC_50_HARD:   400,
+  PASS_DISC_50_DEGEN:  800,
 };
 
 const CHALLENGE_REQ: Record<string, { difficulty: string; min_points: number }> = {
-  CHALLENGE_EASY:   { difficulty: 'EASY',   min_points: 800  },
-  CHALLENGE_MEDIUM: { difficulty: 'MEDIUM', min_points: 1800 },
-  CHALLENGE_HARD:   { difficulty: 'HARD',   min_points: 3000 },
-  CHALLENGE_DEGEN:  { difficulty: 'DEGEN',  min_points: 4200 },
+  CHALLENGE_EASY:      { difficulty: 'EASY',   min_points: 800  },
+  CHALLENGE_MEDIUM:    { difficulty: 'MEDIUM', min_points: 1800 },
+  CHALLENGE_HARD:      { difficulty: 'HARD',   min_points: 3000 },
+  CHALLENGE_DEGEN:     { difficulty: 'DEGEN',  min_points: 4200 },
+  // Pass discount score tasks — same raid_history verification path
+  PASS_DISC_20_SCORE:  { difficulty: 'MEDIUM', min_points: 2000 },
+  PASS_DISC_50_HARD:   { difficulty: 'HARD',   min_points: 3500 },
+  PASS_DISC_50_DEGEN:  { difficulty: 'DEGEN',  min_points: 1    },
 };
 
 const json = (body: object, status = 200, corsH: Record<string, string>) =>
@@ -70,7 +84,8 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── Score challenge: verify against raid_history ──────────────────────────
-    if (action_type.startsWith('CHALLENGE_')) {
+    // Covers CHALLENGE_* and score-based PASS_DISC_* tasks
+    if (action_type.startsWith('CHALLENGE_') || action_type in CHALLENGE_REQ) {
       const req_cfg = CHALLENGE_REQ[action_type];
       if (!req_cfg) return json({ error: 'Unknown challenge' }, 400, corsH);
 
@@ -96,14 +111,14 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── Social tasks: require X handle ───────────────────────────────────────
-    if (['FOLLOW', 'RETWEET', 'LIKE', 'POST_TWEET'].includes(action_type)) {
+    if (['FOLLOW', 'RETWEET', 'LIKE', 'POST_TWEET', 'PASS_DISC_20_TWEET'].includes(action_type)) {
       const handle = (twitter_handle ?? '').replace(/^@/, '').trim();
       if (!handle) {
         return json({ error: 'twitter_handle required' }, 400, corsH);
       }
 
-      // POST_TWEET: also require a tweet URL (x.com or twitter.com)
-      if (action_type === 'POST_TWEET') {
+      // POST_TWEET + PASS_DISC_20_TWEET: also require a tweet URL (x.com or twitter.com)
+      if (action_type === 'POST_TWEET' || action_type === 'PASS_DISC_20_TWEET') {
         const url = (tweet_url ?? '').trim();
         if (!url || !/(twitter\.com|x\.com)\//.test(url)) {
           return json({ error: 'Valid tweet URL required (twitter.com or x.com link)' }, 400, corsH);
@@ -128,8 +143,8 @@ Deno.serve(async (req: Request) => {
 
     // ── Record claim (UNIQUE constraint is the real guard) ────────────────────
     const claimHandle = twitter_handle ? String(twitter_handle).replace(/^@/, '').trim() : null;
-    // For POST_TWEET store tweet URL alongside handle in twitter_handle field
-    const storedHandle = action_type === 'POST_TWEET' && tweet_url
+    // For POST_TWEET / PASS_DISC_20_TWEET store tweet URL alongside handle
+    const storedHandle = (action_type === 'POST_TWEET' || action_type === 'PASS_DISC_20_TWEET') && tweet_url
       ? `${claimHandle ?? ''}|${tweet_url.trim()}`
       : claimHandle;
 

@@ -35,6 +35,50 @@ function timeLeft(expiresAt: string): string {
   return `${m}m`;
 }
 
+// ── Pass discount tasks ────────────────────────────────────────────────────────
+const PASS_DISCOUNT_TASKS = [
+  {
+    actionType: 'PASS_DISC_20_TWEET',
+    icon: 'fa-solid fa-pen-nib',
+    label: 'Post your extraction on X',
+    sub: 'Tweet your result from any successful raid, paste the link below',
+    discountPct: 20,
+    rewardSR: 100,
+    needsHandle: true,
+    needsUrl: true,
+  },
+  {
+    actionType: 'PASS_DISC_20_SCORE',
+    icon: 'fa-solid fa-crosshairs',
+    label: 'Score 2,000+ pts on MEDIUM',
+    sub: 'Successfully extract from a MEDIUM raid with ≥ 2,000 points',
+    discountPct: 20,
+    rewardSR: 150,
+    needsHandle: false,
+    needsUrl: false,
+  },
+  {
+    actionType: 'PASS_DISC_50_HARD',
+    icon: 'fa-solid fa-skull',
+    label: 'Score 3,500+ pts on HARD',
+    sub: 'Successfully extract from a HARD raid with ≥ 3,500 points',
+    discountPct: 50,
+    rewardSR: 400,
+    needsHandle: false,
+    needsUrl: false,
+  },
+  {
+    actionType: 'PASS_DISC_50_DEGEN',
+    icon: 'fa-solid fa-fire',
+    label: 'Survive DEGEN mode',
+    sub: 'Successfully extract from any DEGEN difficulty raid',
+    discountPct: 50,
+    rewardSR: 800,
+    needsHandle: false,
+    needsUrl: false,
+  },
+] as const;
+
 // ── Hardcoded daily challenges ─────────────────────────────────────────────────
 const DAILY_CHALLENGES = [
   { actionType: 'CHALLENGE_EASY',   difficulty: 'EASY',   minPoints: 800,  rewardSR: 120  },
@@ -484,6 +528,92 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
         {/* ── SOCIAL TASKS TAB ── */}
         {tab === 'SOCIAL' && (
           <>
+            {/* ── Pass discount tasks ── */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-[9px] text-[#FF2929]/80 uppercase tracking-widest font-bold">Pass Discounts</p>
+                <span className="text-[8px] text-white/25 font-bold">— complete tasks, save on entry passes</span>
+              </div>
+
+              {/* Earned coupons row */}
+              {(() => {
+                const earned = PASS_DISCOUNT_TASKS.filter(t => claimedActions.includes(t.actionType));
+                if (earned.length === 0) return null;
+                return (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {earned.map(t => (
+                      <div key={t.actionType}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
+                        style={{ background: 'rgba(255,184,0,0.12)', border: '1px dashed rgba(255,184,0,0.50)' }}>
+                        <i className="fa-solid fa-ticket text-[#FFB800] text-[10px]" />
+                        <span className="text-[10px] font-black text-[#FFB800]">{t.discountPct}% OFF PASS</span>
+                        <span className="text-[8px] text-white/35 ml-1">· use in Market</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              <div className="flex flex-col gap-2">
+                {PASS_DISCOUNT_TASKS.map(task => {
+                  const done = claimedActions.includes(task.actionType);
+                  return (
+                    <div key={task.actionType}
+                      className={`rounded-xl border p-3 ${done ? 'border-white/5 opacity-50' : 'border-[#FF2929]/20 bg-[#FF2929]/[0.04]'}`}>
+                      <div className="flex items-start gap-3">
+                        {/* Discount badge */}
+                        <div className="shrink-0 flex flex-col items-center justify-center w-10 h-10 rounded-xl"
+                          style={{
+                            background: done ? 'rgba(255,255,255,0.05)' : task.discountPct === 50 ? 'rgba(255,41,41,0.20)' : 'rgba(255,184,0,0.15)',
+                            border: done ? '1px solid rgba(255,255,255,0.08)' : task.discountPct === 50 ? '1px solid rgba(255,41,41,0.40)' : '1px solid rgba(255,184,0,0.35)',
+                          }}>
+                          <span className="text-[10px] font-black leading-none"
+                            style={{ color: done ? 'rgba(255,255,255,0.3)' : task.discountPct === 50 ? '#FF2929' : '#FFB800' }}>
+                            {task.discountPct}%
+                          </span>
+                          <span className="text-[7px] text-white/30 leading-none">OFF</span>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <i className={`${task.icon} text-white/50 text-[10px]`} />
+                            <p className="text-[11px] font-black text-white leading-tight">{task.label}</p>
+                          </div>
+                          <p className="text-[9px] text-white/40 leading-snug">{task.sub}</p>
+                          <p className="text-[9px] text-white/30 mt-0.5">+{task.rewardSR} SR bonus</p>
+                        </div>
+
+                        {done ? (
+                          <span className="text-[10px] text-[#14F195] font-bold shrink-0">
+                            <i className="fa-solid fa-check mr-1" />Done
+                          </span>
+                        ) : task.needsHandle ? (
+                          <button
+                            onClick={() => setSocialModal(task as unknown as typeof SOCIAL_TASKS[0])}
+                            disabled={!walletAddress}
+                            className="shrink-0 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all"
+                            style={{ background: task.discountPct === 50 ? '#FF2929' : '#CC8800' }}>
+                            Claim
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleClaimChallenge(task.actionType)}
+                            disabled={!walletAddress || claiming === task.actionType}
+                            className="shrink-0 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all"
+                            style={{ background: task.discountPct === 50 ? '#FF2929' : '#CC8800' }}>
+                            {claiming === task.actionType ? '...' : 'Claim'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[8px] text-white/20 mt-1.5 text-center">
+                Score tasks verified on-chain · Tweet task honour system · One-time per wallet
+              </p>
+            </div>
+
             {/* Daily score challenges */}
             <div>
               <p className="text-[9px] text-[#FFB800]/70 uppercase tracking-widest font-bold mb-2">

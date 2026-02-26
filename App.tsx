@@ -572,6 +572,23 @@ const AppInner: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletAddr]);
 
+  // ── Pass discount: fetch best earned coupon from bounty tasks ─────────────────
+  const [passDiscountPct, setPassDiscountPct] = useState(0);
+  useEffect(() => {
+    if (!walletAddr) { setPassDiscountPct(0); return; }
+    supabase
+      .from('social_claims')
+      .select('action_type')
+      .eq('wallet_address', walletAddr)
+      .like('action_type', 'PASS_DISC_%')
+      .then(({ data }) => {
+        const types = (data ?? []).map((c: { action_type: string }) => c.action_type);
+        const pct = types.some(a => a.includes('_50_')) ? 50
+                  : types.some(a => a.includes('_20_')) ? 20 : 0;
+        setPassDiscountPct(pct);
+      });
+  }, [walletAddr]);
+
   const currentRank = useMemo(() => {
     let best = RANKS[0];
     for (const r of RANKS) {
@@ -1868,6 +1885,7 @@ const AppInner: React.FC = () => {
             onForgeGear={handleForgeGear}
             initialTab={gameState.storeInitialTab}
             currencyRates={liveCurrencyRates}
+            passDiscountPct={passDiscountPct}
           />
         );
       case Screen.BOUNTY:

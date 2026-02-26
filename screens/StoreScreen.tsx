@@ -16,6 +16,7 @@ interface StoreScreenProps {
   onForgeGear?: (item1Id: string, item2Id: string) => Promise<string | null>;
   initialTab?: 'GEAR' | 'AVATAR' | 'PASS' | 'FORGE';
   currencyRates?: LivePrices['currencyRates'];
+  passDiscountPct?: number;
 }
 
 interface PurchasePopup {
@@ -25,7 +26,7 @@ interface PurchasePopup {
   y: number;
 }
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, onForgeGear, initialTab, currencyRates }) => {
+const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, onForgeGear, initialTab, currencyRates, passDiscountPct = 0 }) => {
   const { t } = useTranslation();
   const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
   const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS' | 'FORGE'>(initialTab ?? 'GEAR');
@@ -74,15 +75,16 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
     if (loadingItemId) return;
     const solUsd = rates[Currency.USDC];
     if (solUsd === 0) return; // prices not loaded yet
+    const bountyMult = 1 - passDiscountPct / 100;
     let price: number;
     if (selectedCurrency === Currency.USDC) {
-      price = passUsdPrice;
+      price = passUsdPrice * bountyMult;
     } else if (selectedCurrency === Currency.SOL) {
-      price = passUsdPrice / solUsd;
+      price = (passUsdPrice / solUsd) * bountyMult;
     } else {
-      // SKR: 50% off for Seeker holders
+      // SKR: 50% off for Seeker holders, then bounty discount on top
       const skrPerUsd = rates[Currency.SKR] / solUsd;
-      price = Math.ceil(passUsdPrice * skrPerUsd * 0.5);
+      price = Math.ceil(passUsdPrice * skrPerUsd * 0.5 * bountyMult);
     }
     setLoadingItemId(passId);
     try {
@@ -252,6 +254,17 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         {/* ── PASS TAB ─────────────────────────────────────────────────── */}
         {activeTab === 'PASS' && (
           <div className="mb-10">
+            {/* Bounty discount banner */}
+            {passDiscountPct > 0 && (
+              <div className="mb-4 px-3 py-2.5 flex items-center gap-2.5 rounded-xl"
+                style={{ background: 'rgba(255,184,0,0.10)', border: '1px dashed rgba(255,184,0,0.50)' }}>
+                <i className="fa-solid fa-ticket text-[#FFB800] text-sm shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-black text-[#FFB800] leading-none">{passDiscountPct}% PASS DISCOUNT ACTIVE</p>
+                  <p className="text-[9px] text-white/40 mt-0.5">Earned via Bounty Board · applied to all passes below</p>
+                </div>
+              </div>
+            )}
             {/* Ticket balance banner */}
             <div className="mb-6 p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/30 tech-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div>
@@ -292,6 +305,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   const skrPerUsd = rates[Currency.SKR] / solUsd; // SKR per $1
                   fullPrice = pass.usdPrice * skrPerUsd;
                   finalPrice = fullPrice * 0.5;
+                }
+                // Apply earned bounty discount on top
+                if (!passesLoading && passDiscountPct > 0) {
+                  if (fullPrice === null) fullPrice = finalPrice;
+                  finalPrice = finalPrice * (1 - passDiscountPct / 100);
                 }
 
                 const displayPrice = passesLoading ? '---'
@@ -346,6 +364,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                           <span className="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/20 whitespace-nowrap">+10% win</span>
                           {skrDiscount && (
                             <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-1.5 py-0.5 border border-orange-400/30 whitespace-nowrap animate-pulse">SKR −50%</span>
+                          )}
+                          {passDiscountPct > 0 && (
+                            <span className="text-[10px] font-bold text-[#FFB800] bg-[#FFB800]/10 px-1.5 py-0.5 border border-[#FFB800]/30 whitespace-nowrap animate-pulse">COUPON −{passDiscountPct}%</span>
                           )}
                         </div>
                         <div className="flex flex-col gap-1.5 pt-2 border-t border-white/5">
