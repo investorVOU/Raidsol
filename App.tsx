@@ -1697,10 +1697,10 @@ const AppInner: React.FC = () => {
     }
   };
 
-  const enterRoundRaid = async (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier = RaidTier.GRUNT) => {
+  const enterRoundRaid = async (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier = RaidTier.GRUNT, useTicket = false) => {
     // effectiveIsRoundEntry in enterRaid auto-enrolls when currentRound is set;
     // pass isRoundEntry=true explicitly as a fallback for safety
-    await enterRaid(Mode.SOLO, difficulty, boosts, currency, false, undefined, true, tier);
+    await enterRaid(Mode.SOLO, difficulty, boosts, currency, useTicket, undefined, true, tier);
   };
 
   // ── Bounty Board ──────────────────────────────────────────────────────────

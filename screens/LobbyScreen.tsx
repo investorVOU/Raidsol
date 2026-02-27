@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Mode, ENTRY_FEES, Difficulty, DIFFICULTY_CONFIG, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, RaidTier, RAID_TIER_CONFIG, RAID_TIER_ALLOCATION, ROUND_MIN_PARTICIPANTS } from '../types';
+import { Mode, Difficulty, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, RaidTier, RAID_TIER_CONFIG, RAID_TIER_ALLOCATION, ROUND_MIN_PARTICIPANTS } from '../types';
 import type { LivePrices } from '../hooks/usePrices';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
 import { formatCountdown, formatRoundWindow } from '../hooks/useRoundData';
@@ -32,7 +32,7 @@ interface LobbyScreenProps {
   onNavigateBounty?: () => void;
   onNavigateRoast?: () => void;
   onNavigateBriefing?: () => void;
-  onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier) => Promise<void>;
+  onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier, useTicket?: boolean) => Promise<void>;
   onRequestFullscreen?: () => void;
   raidTickets?: number;
   lastFreeRaidDate?: string | null;
@@ -61,15 +61,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 }) => {
   const { t } = useTranslation();
   const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
-  // Normal raid modal
-  const [showModal, setShowModal]           = useState(false);
-  const [selectedDifficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
-  const [selectedBoosts, setBoosts]         = useState<string[]>([]);
-  const [selectedMode, setMode]             = useState<Mode>(Mode.SOLO);
-  const [entryCurrency, setCurrency]        = useState<Currency>(Currency.SOL);
-  const [isDeploying, setIsDeploying]       = useState(false);
-  const [useTicket, setUseTicket]           = useState(false);
-  const [customFee, setCustomFee]           = useState<number | null>(null);
 
   // Round raid modal
   const [showRoundModal, setShowRoundModal]     = useState(false);
@@ -77,6 +68,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const [roundCurrency, setRoundCurrency]       = useState<Currency>(Currency.SOL);
   const [roundBoosts, setRoundBoosts]           = useState<string[]>([]);
   const [roundTier, setRoundTier]               = useState<RaidTier>(RaidTier.GRUNT);
+  const [roundUseTicket, setRoundUseTicket]     = useState(false);
+  const [isDeploying, setIsDeploying]           = useState(false);
   const [toolsDisclaimerDismissed, setToolsDisclaimerDismissed] = useState(false);
 
   // FAQ
@@ -85,16 +78,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
 
-  // Nav Raid button fires this event — opens the raid modal even when already on LOBBY
-  useEffect(() => {
-    const handler = () => handleOpenModal();
-    window.addEventListener('solraid:openRaidModal', handler);
-    return () => window.removeEventListener('solraid:openRaidModal', handler);
-  }, []);
-
-  // customFee is in the display currency — reset when currency changes so stale values don't carry over
-  useEffect(() => { setCustomFee(null); }, [entryCurrency]);
-
 
   // Drill cap
   const drillWindowExpired = (Date.now() - drillWindowStart) >= 6 * 60 * 60 * 1000;
@@ -102,58 +85,28 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const drillCapHit        = isConnected && drillsRemaining === 0;
 
 
-  const handleOpenModal = () => { setBoosts([]); setUseTicket(false); setCustomFee(null); setShowModal(true); };
-
-  const handleDeploy = async () => {
-    onRequestFullscreen?.(); // must be called synchronously before any await
-    setShowModal(false);
-    setIsDeploying(true);
-    try {
-      await onEnterRaid(selectedMode, selectedDifficulty, selectedBoosts, entryCurrency, useTicket && raidTickets > 0, effectiveBase > minEntryFee ? effectiveBase : undefined);
-    } finally {
-      if (mountedRef.current) setIsDeploying(false);
-    }
-  };
-
   const handleEnterRound = async () => {
     onRequestFullscreen?.(); // must be called synchronously before any await
     setShowRoundModal(false);
     setIsDeploying(true);
+    const applyRoundTicket = roundUseTicket && raidTickets > 0;
     try {
       if (onEnterRound) {
-        await onEnterRound(roundDifficulty, roundBoosts, roundCurrency, roundTier);
+        await onEnterRound(roundDifficulty, roundBoosts, roundCurrency, roundTier, applyRoundTicket);
       } else {
-        await onEnterRaid(Mode.SOLO, roundDifficulty, roundBoosts, roundCurrency, false, RAID_TIER_CONFIG[roundTier].entryFee);
+        await onEnterRaid(Mode.SOLO, roundDifficulty, roundBoosts, roundCurrency, applyRoundTicket, RAID_TIER_CONFIG[roundTier].entryFee);
       }
     } finally {
       if (mountedRef.current) setIsDeploying(false);
     }
   };
 
-  // Cost calc — customFee is typed in the selected currency; converted to SOL for internal math
-  const minEntryFee    = ENTRY_FEES[selectedMode];
-  const currencyRate   = rates[entryCurrency];
-  const curSymbol      = entryCurrency === Currency.SOL ? 'SOL' : entryCurrency === Currency.USDC ? 'USDC' : 'SKR';
-  const curDecimals    = entryCurrency === Currency.SOL ? 3 : entryCurrency === Currency.USDC ? 2 : 0;
-  const currentBalance = entryCurrency === Currency.SOL ? walletBalance : entryCurrency === Currency.USDC ? usdcBalance : skrBalance;
-  const rateReady      = entryCurrency === Currency.SOL || currencyRate > 0;
-  const displayRate    = currencyRate > 0 ? currencyRate : 1;
-  const minEntryDisplay = minEntryFee * displayRate;
-  // customFee stored in display currency → convert back to SOL for game math
-  const customFeeSol   = customFee !== null && rateReady ? customFee / displayRate : null;
-  const effectiveBase  = customFeeSol !== null && customFeeSol >= minEntryFee ? customFeeSol : minEntryFee;
-  const applyTicket    = useTicket && raidTickets > 0;
-  const entryFee       = applyTicket ? effectiveBase * 0.5 : effectiveBase;
-  const boostCost      = selectedBoosts.reduce((s, id) => s + (RAID_BOOSTS.find(b => b.id === id)?.cost ?? 0), 0);
-  const totalCostSol   = entryFee + boostCost;
-  const totalDisplay   = totalCostSol * displayRate;
-  const insufficientBal = rateReady && totalCostSol > 0 && currentBalance < totalDisplay;
-
-  // Round cost calc — fee driven by selected tier
+  // Round cost calc — fee driven by selected tier; 50% discount if ticket applied
+  const applyRoundTicket   = roundUseTicket && raidTickets > 0;
   const roundFeeBase       = RAID_TIER_CONFIG[roundTier].entryFee;
   const roundRate          = rates[roundCurrency];
   const roundPricesLoading = roundCurrency !== Currency.SOL && roundRate === 0;
-  const roundTotalDisplay  = roundFeeBase * roundRate;
+  const roundTotalDisplay  = (applyRoundTicket ? roundFeeBase * 0.5 : roundFeeBase) * roundRate;
   const roundCurSymbol     = roundCurrency === Currency.SOL ? 'SOL' : roundCurrency === Currency.USDC ? 'USDC' : 'SKR';
   const roundCurDecimals   = roundCurrency === Currency.SOL ? 3 : roundCurrency === Currency.USDC ? 2 : 0;
   const roundBalance       = roundCurrency === Currency.SOL ? walletBalance : roundCurrency === Currency.USDC ? usdcBalance : skrBalance;
@@ -169,8 +122,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     return a;
   }, { mult: 0, riskReduc: 0, timeBoost: 0 });
 
-  const boostDrift  = selectedBoosts.includes('risk_shield') ? 15 : 0;
-  const boostMult   = selectedBoosts.includes('score_mult')  ? 0.5 : 0;
+  const boostDrift  = roundBoosts.includes('risk_shield') ? 15 : 0;
+  const boostMult   = roundBoosts.includes('score_mult')  ? 0.5 : 0;
   const totalMult   = (1.0 + gearStats.mult + boostMult).toFixed(2);
   const totalRisk   = gearStats.riskReduc + boostDrift;
   const totalTime   = 30 + gearStats.timeBoost;
@@ -208,9 +161,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       {/* ── SCROLLABLE CONTENT ── */}
       <div className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-44 md:pb-6 space-y-2">
 
-        {/* ── ENTER RAID ── */}
+        {/* ── RAID ROUND — Primary Hero CTA ── */}
         <button
-          onClick={() => isConnected ? handleOpenModal() : onConnect()}
+          onClick={() => isConnected ? (setToolsDisclaimerDismissed(false), setRoundUseTicket(false), setShowRoundModal(true)) : onConnect()}
           className="w-full relative overflow-hidden rounded-2xl group active:scale-[0.97] transition-all duration-200"
           style={{
             background: 'linear-gradient(135deg, #160404 0%, #0d0d1a 60%, #100404 100%)',
@@ -226,24 +179,29 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
           <div className="relative z-10 px-5 pt-4 pb-3">
             {/* Top row */}
-            <div className="flex items-center justify-between mb-3">
-              <div>
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929]" style={{ boxShadow: '0 0 6px #FF2929', animation: 'pulse 1.5s ease-in-out infinite' }} />
                   <p className="text-[10px] uppercase tracking-[3px] text-[#FF2929]/70" style={INTER}>
-                    {isConnected ? t('lobby.readyToDeploy') : t('lobby.connectToStart')}
+                    {isConnected
+                      ? (currentRound ? `Round ${currentRound.roundNum} of 4 · ${dayLabel}` : 'Loading round...')
+                      : 'Connect to compete'}
                   </p>
                 </div>
-                <p className="text-white leading-none" style={{ ...BC, fontSize: '36px', letterSpacing: '-0.5px', color: '#fff', textShadow: '0 0 20px rgba(255,41,41,0.4)' }}>
-                  {t('lobby.enterRaid')}
+                <p className="leading-none" style={{ ...BN, fontSize: '36px', letterSpacing: '-0.5px', color: '#fff', textShadow: '0 0 20px rgba(255,41,41,0.4)' }}>
+                  RAID ROUND
+                </p>
+                <p className="text-[10px] text-white/40 mt-1" style={{ ...INTER, fontWeight: 400 }}>
+                  Top 5 earn prizes · fight for your rank
                 </p>
               </div>
-              <div className="shrink-0 flex flex-col items-center gap-1.5">
+              <div className="shrink-0 ml-4 flex flex-col items-end gap-2">
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform"
                   style={{ background: 'rgba(255,41,41,0.12)', border: '1px solid rgba(255,41,41,0.30)' }}
                 >
-                  <i className="fa-solid fa-person-running" style={{ fontSize: '26px', color: '#FF2929' }} />
+                  <i className="fa-solid fa-trophy" style={{ fontSize: '24px', color: '#FF2929' }} />
                 </div>
                 {raidTickets > 0 && (
                   <span className="text-[9px] font-bold bg-[#FFB800]/15 text-[#FFB800]/90 rounded-full px-2 py-0.5 border border-[#FFB800]/20" style={INTER}>
@@ -255,90 +213,55 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
             {/* Stats strip */}
             <div className="flex items-center gap-0 border-t border-white/[0.06] pt-2.5">
-              {[
-                { label: 'Base time', value: '90s',  color: 'rgba(255,255,255,0.65)' },
-                { label: 'Win rate',  value: '~25%', color: 'rgba(255,255,255,0.65)' },
-              ].map(({ label, value, color }, i) => (
-                <div key={i} className="flex-1 text-center">
-                  <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>{label}</p>
-                  <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color }}>{value}</p>
-                </div>
-              ))}
+              {currentRound ? (
+                <>
+                  <div className="flex-1 text-center">
+                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Pool</p>
+                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: '#FFB800' }}>
+                      {currentRound.poolSol.toFixed(3)} SOL
+                    </p>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Raiders</p>
+                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>
+                      {currentRound.entrantCount}
+                    </p>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Closes</p>
+                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>
+                      {formatCountdown(currentRound.timeRemainingMs)}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 text-center">
+                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Rounds/day</p>
+                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>4</p>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Tiers</p>
+                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>3</p>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Pool share</p>
+                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>90%</p>
+                  </div>
+                </>
+              )}
               <div className="shrink-0 ml-2">
                 <div className="rounded-lg px-3 py-1.5 flex items-center gap-1.5 group-hover:opacity-90 transition-opacity"
                   style={{ background: 'rgba(255,41,41,0.18)', border: '1px solid rgba(255,41,41,0.35)' }}>
+                  <i className="fa-solid fa-trophy text-[#FF4444] text-[10px]" />
                   <span style={{ ...BN, fontSize: '13px', color: '#FF4444', letterSpacing: '1.5px' }}>
-                    {isConnected ? 'CONFIGURE' : 'CONNECT'}
+                    {isConnected ? 'COMPETE' : 'CONNECT'}
                   </span>
-                  <i className="fa-solid fa-arrow-right text-[#FF4444] text-[10px]" />
                 </div>
               </div>
             </div>
           </div>
         </button>
-
-        {/* ── RAID ROUND CARD ── */}
-        {currentRound && (
-          <button
-            onClick={() => isConnected ? (setToolsDisclaimerDismissed(false), setShowRoundModal(true)) : onConnect()}
-            className="w-full relative overflow-hidden rounded-2xl text-left active:scale-[0.98] transition-all duration-150 group"
-            style={{ background: 'rgba(255,41,41,0.04)', border: '1px solid rgba(255,41,41,0.20)' }}
-          >
-            {/* Faint red glow strip at top */}
-            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,41,41,0.5), transparent)' }} />
-
-            <div className="px-4 py-3">
-              {/* Top row: title + live standings */}
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] px-2 py-0.5 rounded-full text-[#FF2929]/80 uppercase tracking-wider"
-                      style={{ background: 'rgba(255,41,41,0.12)', border: '1px solid rgba(255,41,41,0.20)', ...INTER, fontWeight: 500 }}>
-                      Round {currentRound.roundNum} / 4
-                    </span>
-                    <span className="text-[9px] text-white/35" style={INTER}>{dayLabel}</span>
-                  </div>
-                  <p className="leading-none" style={{ ...BN, fontSize: '22px', color: '#fff', letterSpacing: '1.5px' }}>RAID ROUND</p>
-                  <p className="text-[10px] text-white/40 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
-                    Top 5 earn prizes — fight for your rank
-                  </p>
-                </div>
-                {/* Live mini-leaderboard */}
-                <div className="shrink-0 ml-4 min-w-[96px]">
-                  <div className="flex items-center justify-end gap-1 mb-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929] animate-pulse" />
-                    <span className="text-[8px] font-bold text-[#FF2929]/80 uppercase tracking-wider" style={INTER}>Live</span>
-                  </div>
-                  {currentRound.currentLeaders.slice(0, 3).map((leader, i) => (
-                    <div key={i} className="flex items-center gap-1.5 justify-end mb-0.5">
-                      <span className="text-[8px] text-white/25 shrink-0" style={INTER}>{['1st','2nd','3rd'][i]}</span>
-                      <span className="text-[9px] font-semibold text-white/50 truncate max-w-[52px]" style={INTER}>{leader.username}</span>
-                      <span className="text-[9px] font-black tabular-nums shrink-0" style={{ ...SG_NUM, color: i === 0 ? '#FFB800' : i === 1 ? '#C0C0C0' : '#CD7F32' }}>
-                        {leader.pointsScored.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Bottom row: countdown + CTA */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929] animate-pulse shrink-0" />
-                  <span className="text-[10px] text-white/45" style={INTER}>Closes in</span>
-                  <span className="text-[10px] font-semibold text-white/70" style={SG_NUM}>
-                    {formatCountdown(currentRound.timeRemainingMs)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all group-hover:opacity-90"
-                  style={{ background: 'rgba(255,41,41,0.12)', border: '1px solid rgba(255,41,41,0.30)', ...BN, fontSize: '13px', color: '#FF4444', letterSpacing: '1.5px' }}>
-                  <i className="fa-solid fa-trophy text-[10px]" />
-                  COMPETE
-                </div>
-              </div>
-            </div>
-          </button>
-        )}
         {/* ── SECONDARY MODES ── */}
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -840,6 +763,23 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 })}
               </div>
 
+              {/* Ticket toggle */}
+              {raidTickets > 0 && (
+                <button onClick={() => setRoundUseTicket(p => !p)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border transition-all ${applyRoundTicket ? 'border-amber-500/40 bg-amber-500/8' : 'border-white/[0.10] bg-white/3'}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🎟️</span>
+                    <div>
+                      <p className={`text-[10px] font-semibold ${applyRoundTicket ? 'text-amber-400' : 'text-white/45'}`}>{t('lobby.useTicket')}</p>
+                      <p className="text-[8px] text-white/25">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
+                    </div>
+                  </div>
+                  <div className={`w-8 h-4 rounded-full transition-all relative ${applyRoundTicket ? 'bg-amber-500' : 'bg-white/15'}`}>
+                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow ${applyRoundTicket ? 'left-[18px]' : 'left-0.5'}`} />
+                  </div>
+                </button>
+              )}
+
               {/* Cost + enter */}
               <div className="flex items-center gap-3">
                 <div className="shrink-0">
@@ -850,6 +790,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                       : <>{roundTotalDisplay.toFixed(roundCurDecimals)}<span className={`text-sm ml-1 font-semibold ${roundCurrency === Currency.SOL ? 'text-white/60' : roundCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{roundCurSymbol}</span></>
                     }
                   </p>
+                  {applyRoundTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">{t('lobby.ticketApplied')}</p>}
                   {!roundPricesLoading && roundBalance < roundTotalDisplay && (
                     <p className="text-[9px] text-red-400 font-semibold mt-0.5">{t('common.insufficient')}</p>
                   )}
@@ -868,298 +809,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         </div>
       )}
 
-      {/* ── DEPLOY MODAL ── */}
-      {showModal && (
-        <div className="fixed inset-x-0 top-0 bottom-[76px] sm:bottom-0 sm:inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4">
-          <div className="absolute inset-0 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200" onClick={() => setShowModal(false)} />
-
-          <div
-            className="relative w-full sm:max-w-lg bg-[#08060f] border-t sm:border rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[90svh] sm:max-h-[88vh]"
-            style={{ borderColor: 'rgba(255,41,41,0.25)', ...SG }}
-          >
-            {/* Drag handle */}
-            <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
-              <div className="w-10 h-1 rounded-full bg-white/15" />
-            </div>
-
-            {/* Header */}
-            <div className="shrink-0 px-5 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,41,41,0.15)', border: '1px solid rgba(255,41,41,0.28)' }}>
-                  <i className="fa-solid fa-crosshairs" style={{ color: '#FF2929', fontSize: '15px' }} />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-white tracking-wide">{t('lobby.configureRaid')}</h2>
-                  <p className="text-[10px] text-white/30 font-medium">
-                    {selectedMode === Mode.SOLO ? 'Solo extraction' : selectedMode === Mode.TEAM ? 'Squad run' : 'Tournament play'}
-                    {' · '}
-                    <span className={DIFF_CONFIG[selectedDifficulty].color}>
-                      {DIFF_CONFIG[selectedDifficulty].label}
-                    </span>
-                  </p>
-                </div>
-              </div>
-              <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
-                <i className="fa-solid fa-xmark text-sm" />
-              </button>
-            </div>
-
-            {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-2 space-y-4">
-
-              {/* ── Mode ── */}
-              <section>
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>{t('lobby.mode')}</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {([
-                    { mode: Mode.SOLO,       label: 'Solo',       icon: 'fa-user',   locked: false,             fee: ENTRY_FEES[Mode.SOLO]       },
-                    { mode: Mode.TEAM,       label: 'Squad',      icon: 'fa-users',  locked: currentLevel < 5,  fee: ENTRY_FEES[Mode.TEAM]       },
-                    { mode: Mode.TOURNAMENT, label: 'Tournament', icon: 'fa-trophy', locked: currentLevel < 15, fee: ENTRY_FEES[Mode.TOURNAMENT] },
-                  ] as const).map(({ mode, label, icon, locked, fee }) => {
-                    const active = selectedMode === mode;
-                    return (
-                      <button key={mode} onClick={() => { if (!locked) { setMode(mode); setCustomFee(null); } }} disabled={locked}
-                        className={`p-3 rounded-xl border transition-all text-center active:scale-[0.97] ${
-                          locked  ? 'opacity-30 cursor-not-allowed border-white/5 bg-white/2'
-                          : active ? 'border-2'
-                          : 'border border-white/10 bg-white/3 hover:border-white/20'
-                        }`}
-                        style={active ? { borderColor: '#FF2929', background: 'rgba(255,41,41,0.10)' } : {}}>
-                        <i className={`fa-solid ${icon} text-base block mb-1.5`} style={{ color: active ? '#FF2929' : locked ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.42)' }} />
-                        <p className="text-[10px] font-black" style={{ color: active ? '#FF2929' : locked ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.55)' }}>{label}</p>
-                        <p className="text-[9px] font-semibold mt-0.5 tabular-nums" style={{ ...SG_NUM, color: active ? 'rgba(255,255,255,0.70)' : 'rgba(255,255,255,0.28)' }}>
-                          {locked ? `Lv ${mode === Mode.TEAM ? 5 : 15}+` : `${fee} SOL`}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-
-              {/* ── Difficulty ── */}
-              <section>
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>{t('lobby.difficulty')}</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {Object.values(Difficulty).map(diff => {
-                    const cfg    = DIFF_CONFIG[diff];
-                    const active = selectedDifficulty === diff;
-                    return (
-                      <button key={diff} onClick={() => setDifficulty(diff)}
-                        className={`p-2.5 rounded-xl border transition-all text-center active:scale-[0.97] ${active ? `${cfg.ring} ${cfg.bg}` : 'border-white/[0.10] bg-white/3 hover:border-white/18'}`}>
-                        <span className="text-lg block mb-1">{cfg.emoji}</span>
-                        <p className={`text-[9px] font-semibold ${active ? cfg.color : 'text-white/40'}`}>{cfg.label}</p>
-                        <p className="text-[8px] text-white/55 mt-0.5">{cfg.mult}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-
-              {/* ── Battle Tools (Gear + Boosts) ── */}
-              <section>
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>{t('lobby.loadout')}</p>
-
-                {/* Gear slots visual */}
-                <div className="rounded-xl p-3 mb-2" style={{ background: 'rgba(255,41,41,0.04)', border: '1px solid rgba(255,41,41,0.12)' }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[9px] text-white/28 uppercase tracking-wider" style={{ ...INTER, fontWeight: 500 }}>Equipped</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] text-white/22">{equippedGear.length}/4 gear</span>
-                      {powerScore > 0 && (
-                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded"
-                          style={{ background: powerScore >= 50 ? 'rgba(255,184,0,0.15)' : 'rgba(255,255,255,0.06)', color: powerScore >= 50 ? '#FFB800' : 'rgba(255,255,255,0.35)' }}>
-                          PWR {powerScore}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {/* Slots row */}
-                  <div className="grid grid-cols-5 gap-1.5 mb-2">
-                    <div className="aspect-square rounded-lg bg-black border-2 border-[#FF2929]/35 relative overflow-hidden">
-                      {equippedAvatar?.image && <img src={equippedAvatar.image} className="w-full h-full object-cover" alt="Core" />}
-                      <div className="absolute bottom-0 left-0 right-0 text-[6px] text-[#FF2929] font-black text-center py-0.5"
-                        style={{ background: 'rgba(255,41,41,0.70)' }}>CORE</div>
-                    </div>
-                    {[...Array(4)].map((_, i) => {
-                      const gear = equippedGear[i];
-                      return (
-                        <div key={i} className={`aspect-square rounded-lg bg-black/60 border relative overflow-hidden ${gear ? 'border-[#FFB800]/40' : 'border-white/[0.10]'}`}
-                          title={gear ? `${gear.name}: ${gear.description}` : 'Empty slot'}>
-                          {gear ? (
-                            gear.image && !gear.image.startsWith('http')
-                              ? <div className="w-full h-full flex items-center justify-center text-xl">{gear.image}</div>
-                              : <img src={gear.image} className="w-full h-full object-contain" alt={gear.name} />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white/15 text-lg">+</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* Stats row */}
-                  <div className="grid grid-cols-3 gap-0 border-t border-white/[0.06] pt-2">
-                    <div className="text-center">
-                      <p className="text-[8px] text-white/25 uppercase tracking-wider">Mult</p>
-                      <p className="text-[11px] font-black text-[#FFB800]">{totalMult}×</p>
-                    </div>
-                    <div className="text-center border-x border-white/[0.06]">
-                      <p className="text-[8px] text-white/25 uppercase tracking-wider">Risk</p>
-                      <p className="text-[11px] font-black text-[#FF2929]">-{totalRisk}%</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[8px] text-white/25 uppercase tracking-wider">Time</p>
-                      <p className="text-[11px] font-black text-white/70">{totalTime}s</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick-swap */}
-                {ownedGear.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {ownedGear.map(gear => {
-                      const isEquipped = equippedGearIds.includes(gear.id);
-                      return (
-                        <button key={gear.id} onClick={() => onToggleGear(gear.id)} title={`${gear.name} — ${gear.description}`}
-                          className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center active:scale-95 ${isEquipped ? 'border-[#FFB800]/50 bg-[#FFB800]/10' : 'border-white/[0.12] hover:border-white/22 bg-white/3'}`}>
-                          {gear.image && !gear.image.startsWith('http')
-                            ? <span className="text-lg leading-none">{gear.image}</span>
-                            : <img src={gear.image} className="w-full h-full object-contain rounded-xl" alt="gear" />
-                          }
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-[9px] text-white/20 text-center py-1 mb-2" style={INTER}>{t('lobby.noGearStore')}</p>
-                )}
-
-                {/* Boosts */}
-                {RAID_BOOSTS.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {RAID_BOOSTS.map(boost => {
-                      const active = selectedBoosts.includes(boost.id);
-                      return (
-                        <button key={boost.id}
-                          onClick={() => setBoosts(p => p.includes(boost.id) ? p.filter(i => i !== boost.id) : [...p, boost.id])}
-                          className={`p-3 rounded-xl border transition-all text-left active:scale-[0.97] ${active ? 'bg-amber-500/10 border-amber-500/35' : 'bg-white/3 border-white/[0.10] hover:border-white/18'}`}>
-                          <div className="flex justify-between items-start mb-1">
-                            <span className="text-lg">{boost.icon}</span>
-                            <span className={`text-[9px] font-semibold ${active ? 'text-amber-400' : 'text-white/28'}`} style={SG_NUM}>{boost.cost} SOL</span>
-                          </div>
-                          <p className={`text-[10px] leading-tight ${active ? 'text-white' : 'text-white/40'}`} style={{ ...INTER, fontWeight: 500 }}>{boost.name}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            </div>
-
-            {/* Footer */}
-            <div className="shrink-0 border-t border-white/5 p-4 bg-[#060612] rounded-b-3xl sm:rounded-b-2xl space-y-3">
-
-              {/* Currency */}
-              <div className="grid grid-cols-3 gap-2">
-                {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
-                  const cBal    = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
-                  const cSym    = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
-                  const cRate   = rates[c];
-                  const cDec    = c === Currency.SOL ? 3 : c === Currency.USDC ? 2 : 0;
-                  const cCost   = cRate > 0 ? totalCostSol * cRate : null;
-                  const isLoading  = c !== Currency.SOL && cRate === 0 && !pricesFailed;
-                  const isFailed   = c !== Currency.SOL && cRate === 0 && pricesFailed;
-                  const isActive   = entryCurrency === c;
-                  const colActive  = c === Currency.SOL ? 'border-white/40 bg-white/8 text-white'
-                    : c === Currency.USDC ? 'border-blue-400/45 bg-blue-400/8 text-blue-400'
-                    : 'border-orange-400/45 bg-orange-400/8 text-orange-400';
-                  return (
-                    <button key={c} onClick={() => !isFailed && setCurrency(c)} disabled={isFailed}
-                      className={`py-2.5 rounded-xl border-2 transition-all text-center ${
-                        isFailed  ? 'opacity-20 cursor-not-allowed border-white/5'
-                        : isActive ? colActive
-                        : 'border-white/7 text-white/35 bg-white/3 hover:border-white/18'
-                      }`}>
-                      <p className="text-[10px] font-semibold">{cSym}</p>
-                      <p className="text-[9px] text-white/40 mt-0.5 tabular-nums">
-                        {isLoading ? '···' : isFailed ? 'N/A' : cCost !== null ? cCost.toFixed(cDec) : cBal.toFixed(cDec)}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Stake override (SOLO only) */}
-              {selectedMode === Mode.SOLO && rateReady && (
-                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,41,41,0.18)', background: 'rgba(255,41,41,0.04)' }}>
-                  <div className="flex items-center gap-2 px-3 pt-2 pb-1">
-                    <i className="fa-solid fa-fire-flame-curved text-[#FF2929]/55 text-[10px]" />
-                    <span className="text-[9px] font-bold text-white/45 uppercase tracking-wider">Stake</span>
-                    <span className="text-[8px] text-white/22 ml-auto">higher = bigger win</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 pb-2">
-                    <input
-                      type="number"
-                      min={minEntryDisplay}
-                      step={curDecimals === 0 ? 1 : curDecimals === 2 ? 0.01 : 0.001}
-                      value={customFee !== null ? customFee : ''}
-                      placeholder={minEntryDisplay.toFixed(curDecimals)}
-                      onChange={e => { const v = parseFloat(e.target.value); setCustomFee(isNaN(v) ? null : v); }}
-                      className="flex-1 bg-transparent text-white text-xl font-bold outline-none placeholder-white/18 tabular-nums min-w-0"
-                      style={SG_NUM}
-                    />
-                    <span className={`text-sm font-bold shrink-0 ${entryCurrency === Currency.SOL ? 'text-white/45' : entryCurrency === Currency.USDC ? 'text-blue-400/70' : 'text-orange-400/70'}`}>
-                      {curSymbol}
-                    </span>
-                    <i className="fa-solid fa-pen text-white/18 text-[9px] shrink-0" />
-                  </div>
-                  {customFee !== null && customFee < minEntryDisplay && (
-                    <p className="text-[8px] text-red-400 font-semibold px-3 pb-2">min {minEntryDisplay.toFixed(curDecimals)} {curSymbol}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Ticket toggle */}
-              {raidTickets > 0 && (
-                <button onClick={() => setUseTicket(p => !p)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border transition-all ${applyTicket ? 'border-amber-500/40 bg-amber-500/8' : 'border-white/[0.10] bg-white/3'}`}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">🎟️</span>
-                    <div>
-                      <p className={`text-[10px] font-semibold ${applyTicket ? 'text-amber-400' : 'text-white/45'}`}>{t('lobby.useTicket')}</p>
-                      <p className="text-[8px] text-white/25">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
-                    </div>
-                  </div>
-                  <div className={`w-8 h-4 rounded-full transition-all relative ${applyTicket ? 'bg-amber-500' : 'bg-white/15'}`}>
-                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow ${applyTicket ? 'left-[18px]' : 'left-0.5'}`} />
-                  </div>
-                </button>
-              )}
-
-              {/* Cost + deploy */}
-              <div className="flex items-center gap-3">
-                <div className="shrink-0">
-                  <p className="text-[9px] text-white/28 font-semibold uppercase mb-0.5">{t('lobby.entryTotal')}</p>
-                  <p className="text-xl font-bold text-white leading-none">
-                    {rateReady
-                      ? <>{totalDisplay.toFixed(curDecimals)}<span className={`text-sm ml-1 font-semibold ${entryCurrency === Currency.SOL ? 'text-white/55' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{curSymbol}</span></>
-                      : <span className="text-white/25 text-sm animate-pulse">···</span>
-                    }
-                  </p>
-                  {applyTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">{t('lobby.ticketApplied')}</p>}
-                  {insufficientBal && <p className="text-[9px] text-red-400 font-semibold mt-0.5">{t('common.insufficient')}</p>}
-                </div>
-                <button onClick={handleDeploy}
-                  disabled={!rateReady || insufficientBal || (customFee !== null && customFee < minEntryFee)}
-                  className="flex-1 py-3.5 rounded-xl active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed"
-                  style={{ background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', boxShadow: '0 0 20px rgba(255,41,41,0.25)', ...BN, fontSize: '15px', letterSpacing: '1.5px' }}
-                >
-                  {t('lobby.deploy')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
