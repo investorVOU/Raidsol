@@ -308,10 +308,11 @@ const AppInner: React.FC = () => {
     Screen.TREASURY,
   ];
   useEffect(() => {
-    if (!connected && PROTECTED_SCREENS.includes(gameState.currentScreen)) {
+    const isDrillMode = gameState.lastRaidConfig?.mode === Mode.DRILL;
+    if (!connected && PROTECTED_SCREENS.includes(gameState.currentScreen) && !isDrillMode) {
       setGameState(prev => ({ ...prev, currentScreen: Screen.LOBBY }));
     }
-  }, [connected, gameState.currentScreen]);
+  }, [connected, gameState.currentScreen, gameState.lastRaidConfig?.mode]);
 
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [newRank, setNewRank] = useState<Rank | null>(null);
@@ -1546,7 +1547,7 @@ const AppInner: React.FC = () => {
       ? RAID_TIER_CONFIG[tier].entryFee
       : customFeeOverride;
 
-    if (!requireWallet()) return;
+    if (mode !== Mode.DRILL && !requireWallet()) return;
     if (mode === Mode.PVP) {
       setGameState(prev => ({ ...prev, currentScreen: Screen.MULTIPLAYER_SETUP }));
       return;
@@ -1595,10 +1596,10 @@ const AppInner: React.FC = () => {
     // Streak bonus: 3+ consecutive wins → +0.15x starting multiplier (applied via boosts passthrough)
     const streakBonus = gameState.raidStreak >= 3 ? 0.15 : 0;
 
-    // Daily play streak — update if first raid today
+    // Daily play streak — update if first raid today (skip for non-connected demo players)
     const todayDateStr = new Date().toISOString().slice(0, 10);
     const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    if (gameState.lastPlayedDate !== todayDateStr) {
+    if (walletAddr && gameState.lastPlayedDate !== todayDateStr) {
       const newDailyStreak = gameState.lastPlayedDate === yesterdayStr
         ? gameState.dailyStreak + 1
         : 1;
@@ -1703,7 +1704,7 @@ const AppInner: React.FC = () => {
     }));
 
     // Persist drill cap and free raid state to Supabase so reloads don't reset limits
-    if (mode === Mode.DRILL) {
+    if (mode === Mode.DRILL && walletAddr) {
       const SIX_HOURS = 6 * 60 * 60 * 1000;
       const windowExpired = (now - gameState.drillWindowStart) >= SIX_HOURS;
       updateProfile({

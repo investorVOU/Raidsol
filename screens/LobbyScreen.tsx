@@ -82,10 +82,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   useEffect(() => () => { mountedRef.current = false; }, []);
 
 
-  // Drill cap
-  const drillWindowExpired = (Date.now() - drillWindowStart) >= 6 * 60 * 60 * 1000;
-  const drillsRemaining    = Math.max(0, 3 - (drillWindowExpired ? 0 : drillCount));
-  const drillCapHit        = isConnected && drillsRemaining === 0;
+
 
 
   const handleEnterRound = async () => {
@@ -209,7 +206,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <div className="w-1.5 h-1.5 rounded-full bg-white" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.8)', animation: 'pulse 1.5s ease-in-out infinite' }} />
                   <p className="text-[10px] uppercase tracking-[3px] text-white/70" style={INTER}>
                     {isConnected
-                      ? (currentRound ? `Round ${currentRound.roundNum} of 4 · ${dayLabel}` : 'Loading round...')
+                      ? (currentRound ? `Round ${currentRound.roundNum} of 4 · ${dayLabel}` : `Active round · ${dayLabel}`)
                       : 'Connect to compete'}
                   </p>
                 </div>
@@ -237,43 +234,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
             {/* Stats strip */}
             <div className="flex items-center gap-0 border-t border-white/20 pt-2.5">
-              {currentRound ? (
-                <>
-                  <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Pool</p>
-                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
-                      {currentRound.poolSol.toFixed(3)} SOL
-                    </p>
-                  </div>
-                  <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Round Raiders</p>
-                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
-                      {currentRound.entrantCount}
-                    </p>
-                  </div>
-                  <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Closes</p>
-                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
-                      {formatCountdown(currentRound.timeRemainingMs)}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Rounds/day</p>
-                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>4</p>
-                  </div>
-                  <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Tiers</p>
-                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>3</p>
-                  </div>
-                  <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Pool share</p>
-                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>90%</p>
-                  </div>
-                </>
-              )}
+              <>
+                <div className="flex-1 text-center">
+                  <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Rounds/day</p>
+                  <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>4</p>
+                </div>
+                <div className="flex-1 text-center">
+                  <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Top 5 split</p>
+                  <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>90%</p>
+                </div>
+                <div className="flex-1 text-center">
+                  <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>
+                    {currentRound ? 'Closes' : 'Window'}
+                  </p>
+                  <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
+                    {currentRound ? formatCountdown(currentRound.timeRemainingMs) : '6h'}
+                  </p>
+                </div>
+              </>
               <div className="shrink-0 ml-2">
                 <div className="rounded-lg px-3 py-1.5 flex items-center gap-1.5 group-hover:opacity-90 transition-opacity"
                   style={{ background: 'rgba(0,0,0,0.22)', border: '1px solid var(--border-col-str)' }}>
@@ -338,35 +316,22 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </div>
         </button>
 
-        {/* ── FREE DRILL — simulation, open to all ── */}
+        {/* ── FREE DEMO RAID — open to all, no wallet required ── */}
         <button
-          onClick={() => isConnected && !drillCapHit ? onEnterRaid(Mode.DRILL, Difficulty.EASY, [], Currency.SOL, false, 0) : !isConnected ? onConnect() : undefined}
-          disabled={drillCapHit}
-          className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,184,0,0.22)' }}
+          onClick={() => onEnterRaid(Mode.DRILL, Difficulty.EASY, [], Currency.SOL, false, 0)}
+          className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group"
+          style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.09)' }}
         >
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              {drillCapHit ? (
-                <>
-                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'var(--text-35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
-                  <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Cap reached · resets every 6h</p>
-                </>
-              ) : (
-                <>
-                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>
-                    FREE DRILL
-                    {isConnected && drillsRemaining < 3 && (
-                      <span className="ml-2 text-[11px] font-semibold text-white/45" style={INTER}>{drillsRemaining} left</span>
-                    )}
-                  </p>
-                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
-                    Free simulation · no SOL · no score · 3 per 6h
-                  </p>
-                </>
-              )}
+              <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'var(--text-secondary, rgba(255,255,255,0.6))', letterSpacing: '1.5px' }}>
+                FREE DEMO RAID
+              </p>
+              <p className="text-[10px] text-white/40 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
+                No wallet · no entry fee · see how it works
+              </p>
             </div>
-            <i className="fa-solid fa-chevron-right text-white/25 text-xs shrink-0" />
+            <i className="fa-solid fa-chevron-right text-white/20 text-xs shrink-0" />
           </div>
         </button>
 
@@ -453,7 +418,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 },
                 {
                   q: 'How do Raid Rounds work?',
-                  a: '4 rounds per day (UTC), 6 hours each. GRUNT = 0.026 SOL · ELITE = 0.05 SOL · WHALE = 0.25 SOL. Your top score this round competes. After close, 90% of all fees split across top 5. Under 3 entrants — full refund.',
+                  a: '4 rounds per day (UTC), 6 hours each. GRUNT = 0.026 SOL · ELITE = 0.05 SOL · WHALE = 0.25 SOL. Your top score this round competes. After close, 100% of all fees split across top 5. Under 3 entrants — full refund.',
                 },
                 {
                   q: 'How do I claim round winnings?',
