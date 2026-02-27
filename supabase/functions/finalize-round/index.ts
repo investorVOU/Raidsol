@@ -35,6 +35,16 @@ const TIER_ALLOCATION: Record<typeof ALL_TIERS[number], number[]> = {
   WHALE: [0.55, 0.23, 0.13, 0.06, 0.03],
 };
 
+/**
+ * Expected entry fee per tier (SOL). Must stay in sync with RAID_TIER_CONFIG in types.ts.
+ * Used to validate recorded fees and guard against manipulated raid_history rows.
+ */
+const TIER_ENTRY_FEE: Record<typeof ALL_TIERS[number], number> = {
+  GRUNT: 0.026,
+  ELITE: 0.05,
+  WHALE: 0.25,
+};
+
 /** Minimum unique competing wallets for a round to be finalised.
  *  Rounds below this threshold → all entry fees refunded to participants. */
 const MIN_PARTICIPANTS = 3;
@@ -136,9 +146,16 @@ Deno.serve(async (req: Request) => {
       ]);
 
       // Sum fees per wallet (for potential refund) and total pool
+      // Reject any row whose entry_fee is below 50% of the expected tier fee (ticket discount floor)
+      const minFee = TIER_ENTRY_FEE[tier] * 0.5;
       const feesByWallet = new Map<string, number>();
       for (const r of allRes.data ?? []) {
-        feesByWallet.set(r.wallet_address, (feesByWallet.get(r.wallet_address) ?? 0) + Number(r.entry_fee));
+        const fee = Number(r.entry_fee);
+        if (fee < minFee) {
+          console.warn(`[finalize-round] skipping suspicious low fee ${fee} SOL for wallet ${r.wallet_address} (tier=${tier} min=${minFee})`);
+          continue;
+        }
+        feesByWallet.set(r.wallet_address, (feesByWallet.get(r.wallet_address) ?? 0) + fee);
       }
       const totalFees = [...feesByWallet.values()].reduce((s, v) => s + v, 0);
       const poolSol   = totalFees * POOL_PCT;
