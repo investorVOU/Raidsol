@@ -134,6 +134,7 @@ Deno.serve(async (req: Request) => {
           .eq('success', true)
           .eq('raid_tier', tier)
           .gt('entry_fee', 0)
+          .gt('points', 0)
           .gte('created_at', start.toISOString())
           .lt('created_at', end.toISOString())
           .order('points', { ascending: false })
