@@ -259,12 +259,16 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('unclaimed_sol, username, last_claim_at')
+      .select('unclaimed_sol, username, last_claim_at, equipped_avatar_id')
       .eq('wallet_address', wallet_address)
       .single();
 
     if (profileErr || !profile) {
       return json({ error: 'Profile not found' }, 404, corsH);
+    }
+
+    if (!profile.equipped_avatar_id) {
+      return json({ error: 'Avatar required — equip an avatar before withdrawing.' }, 403, corsH);
     }
 
     const available = Number(profile.unclaimed_sol);

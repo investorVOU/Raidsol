@@ -104,6 +104,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const cooldownH = Math.floor(cooldownRemainingMs / 3600000);
   const cooldownM = Math.floor((cooldownRemainingMs % 3600000) / 60000);
 
+  // Avatar gate
+  const hasAvatar = !!equippedAvatarId;
+
   // Round win history
   const { wins: roundWins, loading: roundWinsLoading, refetch: refetchRoundWins } = usePlayerRoundWins(walletAddress ?? null);
   const [claimingRound, setClaimingRound] = useState<string | null>(null); // "roundNum:roundDate" key
@@ -549,13 +552,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     </div>
                     <button
                       onClick={handleWithdraw}
-                      disabled={unclaimedBalance <= 0 || isClaiming || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > unclaimedBalance || cooldownActive}
-                      className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? 'active:translate-y-1' : 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed opacity-50'}`}
-                      style={unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? { background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
+                      disabled={!hasAvatar || unclaimedBalance <= 0 || isClaiming || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > unclaimedBalance || cooldownActive}
+                      className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${hasAvatar && unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? 'active:translate-y-1' : 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed opacity-50'}`}
+                      style={hasAvatar && unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? { background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
                     >
                       {isClaiming ? 'Processing...' : 'Withdraw'}
                     </button>
                   </div>
+
+                  {/* Avatar gate */}
+                  {!hasAvatar && (
+                    <div className="bg-[#FF2929]/10 border border-[#FF2929]/40 p-3 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2929]">Avatar required to withdraw</p>
+                        <p className="text-[9px] text-white/40 mt-0.5 uppercase tracking-wide">Equip an avatar to unlock payouts</p>
+                      </div>
+                      <button
+                        onClick={() => onNavigateStore?.('AVATAR')}
+                        className="shrink-0 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest border border-[#FF2929]/60 text-[#FF2929] hover:bg-[#FF2929]/20 transition-colors"
+                      >
+                        Get Avatar
+                      </button>
+                    </div>
+                  )}
 
                   {/* Fee info */}
                   {feeRate > 0 && unclaimedBalance > 0 && (

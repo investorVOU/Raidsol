@@ -987,10 +987,10 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         triggerSkillCheckRef.current();
       }
 
-      const timePenalty   = Math.max(0, (elapsedSeconds - 20) * 0.18);  // flat first 20s, then escalates hard
-      const greedFactor   = state.multiplier > 1.7 ? 3.0 : state.multiplier > 1.2 ? 2.2 : 1.0;
-      const houseEdge     = 1.85;
-      const baseDrift     = (1.0 + (Math.random() * 2.0)) + timePenalty;  // higher floor from the start
+      const timePenalty   = Math.max(0, (elapsedSeconds - 30) * 0.13);  // flat first 30s, then escalates
+      const greedFactor   = state.multiplier > 1.7 ? 2.6 : state.multiplier > 1.2 ? 1.9 : 1.0;
+      const houseEdge     = 1.65;
+      const baseDrift     = (0.5 + (Math.random() * 1.2)) + timePenalty;
       const phaseDriftMod = RAID_PHASE_CONFIG[raidPhaseRef.current].driftMod;
       const totalDrift    = baseDrift * diffConfig.driftMod * boostStats.driftMultiplier * greedFactor * houseEdge * gearRiskFactor * phaseDriftMod;
       const spikeRoll    = Math.random();

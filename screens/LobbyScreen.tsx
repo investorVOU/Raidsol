@@ -352,20 +352,44 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </div>
         </button>
 
-        {/* ── FREE DRILL — temporarily disabled ── */}
-        <button
-          disabled
-          className="w-full rounded-xl p-3 text-left opacity-40 cursor-not-allowed"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
-              <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Temporarily unavailable</p>
-            </div>
-            <i className="fa-solid fa-chevron-right text-white/25 text-xs shrink-0" />
-          </div>
-        </button>
+        {/* ── FREE DRILL — localhost debug only ── */}
+        {(() => {
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          return (
+            <button
+              onClick={() => isLocalhost && isConnected && !drillCapHit ? onEnterRaid(Mode.SOLO, Difficulty.EASY, [], Currency.SOL, false, 0) : !isConnected ? onConnect() : undefined}
+              disabled={!isLocalhost || drillCapHit}
+              className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${isLocalhost ? 'rgba(255,184,0,0.3)' : 'rgba(255,255,255,0.12)'}` }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  {!isLocalhost ? (
+                    <>
+                      <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
+                      <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Temporarily unavailable</p>
+                    </>
+                  ) : drillCapHit ? (
+                    <>
+                      <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
+                      <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Cap reached · resets every 6h</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>
+                        FREE DRILL
+                        <span className="ml-2 text-[10px] font-semibold text-[#FFB800]/60" style={INTER}>[localhost]</span>
+                        {isConnected && <span className="ml-2 text-[11px] font-semibold text-white/50" style={INTER}>{drillsRemaining} left</span>}
+                      </p>
+                      <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Practice on EASY · no entry fee</p>
+                    </>
+                  )}
+                </div>
+                <i className="fa-solid fa-chevron-right text-white/25 text-xs shrink-0" />
+              </div>
+            </button>
+          );
+        })()}
 
         {/* ── WALLET ROAST + DAILY BRIEFING ── */}
         <div className="grid grid-cols-2 gap-2">
