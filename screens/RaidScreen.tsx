@@ -439,7 +439,6 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const [hotStreak,       setHotStreak]       = useState(false);
   const [jackpotFlash,    setJackpotFlash]    = useState(false);
   const [firewallSave,    setFirewallSave]    = useState(false);
-  const [nearMissSOL,     setNearMissSOL]     = useState<number | null>(null);
   const [comboPopups,     setComboPopups]     = useState<Array<{ id: number; text: string; color: string }>>([]);
 
   // ── Skill check state ─────────────────────────────────────────────────────
@@ -822,9 +821,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setSkillCheck(null);
     setSkillCheckResult(null);
     skillCheckRef.current = null;
-    // Near-miss: show what they could have extracted
-    const wouldHave = (stateRef.current.points / 5000) * DIFFICULTY_MAX_WIN[difficulty] * (ticketBoost ? 1.1 : 1.0) * (1 - PLATFORM_FEE_RAID);
-    if (wouldHave >= DIFFICULTY_MAX_WIN[difficulty] * 0.12) setNearMissSOL(parseFloat(wouldHave.toFixed(4)));
+    // (near-miss display removed — round-based raids show points only)
     bustTimeRef.current = stateRef.current.timeLeft >= 0
       ? Math.max(3, (initialTime - stateRef.current.timeLeft))
       : initialTime;
@@ -845,7 +842,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     sounds.hapticBust();
     spawnSparks('#EF4444', '#ff6600', 22);
     addDmgPopup('BUSTED!', '#EF4444', true);
-    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current, bankedYieldRef.current, buildLootDrops()), 2500);
+    setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current, 0, buildLootDrops()), 2500);
   }, [onFinish, initialTime, difficulty, ticketBoost, sounds, spawnSparks, addDmgPopup, buildLootDrops]); // eslint-disable-line
 
   const handleBustRef = useRef(handleBust);
@@ -1096,31 +1093,22 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setIsEnding('WIN');
     setUserAction('Dance');
     setEnemyAction('Death');
-    const elapsedSec  = Math.max(3, initialTime - timeLeft);
-    const earlyMult   = elapsedSec < 20 ? 0.3 : 1.0;   // early exit: 70% penalty before 20s
-    const goldenMult  = goldenWindow ? 1.05 : 1.0;
-    const donMult     = solMultiplierRef.current;
-    const solReward   = (points / 5000) * DIFFICULTY_MAX_WIN[difficulty] * (ticketBoost ? 1.1 : 1.0) * earlyMult * goldenMult * donMult * (1 - PLATFORM_FEE_RAID);
+    const elapsedSec = Math.max(3, initialTime - timeLeft);
+    // Golden window gives +5% point bonus on lock-in; no SOL reward (round-based)
+    const goldenBonus  = goldenWindow ? 1.05 : 1.0;
+    const finalPoints  = Math.floor(points * goldenBonus);
     sounds.playCashOut();
     sounds.hapticExtract();
-    if (donMult >= 2.0) {
-      logEvent('CASHOUT', 'Double or Nothing — you pushed and WON', `2× payout → ${solReward.toFixed(4)} SOL`, 'bonus');
-      spawnSparks('#FFD700', '#14F195', 40);
-      addDmgPopup('2× PAYOUT! 🔥', '#FFD700', true);
-    } else if (goldenWindow) {
-      logEvent('CASHOUT', 'Extracted during Golden Window', `+5% bonus → ${solReward.toFixed(4)} SOL`, 'bonus');
+    if (goldenWindow) {
+      logEvent('CASHOUT', 'Score locked during Golden Window', `+5% pts bonus → ${finalPoints.toLocaleString()} pts`, 'bonus');
       spawnSparks('#FFD700', '#14F195', 32);
-      addDmgPopup('GOLDEN EXIT! +5%', '#FFD700', true);
-    } else if (elapsedSec < 20) {
-      logEvent('CASHOUT', 'Early exit before 20s — penalty applied', `-70% payout → ${solReward.toFixed(4)} SOL`, 'warning');
-      spawnSparks('#f97316', '#EF4444', 14);
-      addDmgPopup('EARLY EXIT! -70%', '#f97316', true);
+      addDmgPopup('GOLDEN LOCK! +5%', '#FFD700', true);
     } else {
-      logEvent('CASHOUT', 'Clean extraction at full value', `${solReward.toFixed(4)} SOL secured`, 'bonus');
+      logEvent('CASHOUT', 'Score locked in — awaiting round end', `${points.toLocaleString()} pts submitted`, 'bonus');
       spawnSparks('#14F195', '#00FBFF', 22);
-      addDmgPopup('EXTRACTED!', '#14F195', true);
+      addDmgPopup('SCORE LOCKED!', '#14F195', true);
     }
-    setTimeout(() => onFinish(true, solReward, points, elapsedSec, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current, bankedYieldRef.current, buildLootDrops()), 2500);
+    setTimeout(() => onFinish(true, 0, finalPoints, elapsedSec, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current, 0, buildLootDrops()), 2500);
   };
 
   const handleAttack = () => {
@@ -1470,8 +1458,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       {/* WIN OVERLAY */}
       {isEnding === 'WIN' && (
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#14F195]/20 backdrop-blur-sm animate-in fade-in duration-300">
-          <span className="text-5xl font-black text-[#14F195] glitch-text uppercase">Extracted!</span>
-          <span className="text-xs text-white font-bold mt-4 animate-pulse">Uploading credits...</span>
+          <span className="text-5xl font-black text-[#14F195] glitch-text uppercase">Score Locked!</span>
+          <span className="text-xs text-white font-bold mt-4 animate-pulse">Uploading score...</span>
         </div>
       )}
 
@@ -1482,11 +1470,11 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           <span className="text-xs text-red-500/60 font-bold animate-pulse">
             {timeLeft <= 0 ? 'Timeout' : 'Protocol failure'}
           </span>
-          {nearMissSOL !== null && (
+          {points > 0 && (
             <div className="mt-2 text-center px-6 py-3 border border-white/10 bg-black/60">
-              <p className="text-[9px] font-bold text-white/50 mb-1">You were this close</p>
-              <p className="mono text-3xl font-black text-white/70">{nearMissSOL.toFixed(4)} <span className="text-sm text-[#14F195]/60">SOL</span></p>
-              <p className="text-[8px] font-bold text-red-500/40 mt-1">Could have extracted</p>
+              <p className="text-[9px] font-bold text-white/50 mb-1">Points scored</p>
+              <p className="mono text-3xl font-black text-white/70">{points.toLocaleString()} <span className="text-sm text-[#FFB800]/60">pts</span></p>
+              <p className="text-[8px] font-bold text-red-500/40 mt-1">No round allocation for failed raids</p>
             </div>
           )}
           {(() => {
@@ -1559,13 +1547,13 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
         {/* ── TOP HUD ── */}
         <div className="shrink-0 flex justify-between items-center gap-2 mb-2">
-          <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : earlyExitWarn ? 'border-orange-500/50' : 'border-white/10'}`}>
-            <p className={`text-[9px] font-bold leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : earlyExitWarn ? 'text-orange-400' : 'text-white/60'}`}>
-              {goldenWindow ? 'Golden extract' : earlyExitWarn ? 'Early exit' : 'Yield'}
+          <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : 'border-white/10'}`}>
+            <p className={`text-[9px] font-bold leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : 'text-white/60'}`}>
+              {goldenWindow ? 'Golden lock' : 'Score'}
             </p>
             <div className="flex items-baseline gap-2">
-              <span className={`mono text-xl font-black ${earlyExitWarn ? 'text-orange-400' : goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-red-500' : 'text-white'}`}>{currentYield}</span>
-              <span className={`text-[10px] font-bold ${earlyExitWarn ? 'text-orange-400' : goldenWindow ? 'text-yellow-500' : 'text-[#14F195]'}`}>SOL</span>
+              <span className={`mono text-xl font-black ${goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-red-500' : 'text-white'}`}>{points.toLocaleString()}</span>
+              <span className={`text-[10px] font-bold ${goldenWindow ? 'text-yellow-500' : 'text-[#FFB800]'}`}>pts</span>
             </div>
           </div>
           <div className={`relative w-28 px-2 py-2 bg-black/80 border tech-border flex flex-col items-center ${timerGlowClass}`}>
@@ -1607,13 +1595,6 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               <span className="text-[8px] font-bold text-white/50 px-1.5 py-0.5 rounded-full"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
                 +{srBursts} SR
-              </span>
-            )}
-            {/* Banked yield */}
-            {bankedYield > 0 && (
-              <span className="text-[8px] font-black text-[#FFB800] px-1.5 py-0.5 rounded-full"
-                style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.30)' }}>
-                BANKED {bankedYield.toFixed(4)}
               </span>
             )}
             {/* Round badge */}
@@ -1702,39 +1683,6 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             </div>
           )}
 
-          {/* ── DOUBLE OR NOTHING overlay ── */}
-          {donActive && !isEnding && (
-            <div className="absolute inset-0 z-[60] flex items-center justify-center" style={{ animation: 'ambush-in 0.25s ease-out' }}>
-              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-              <div className="relative flex flex-col items-center gap-3 px-6 py-5 rounded-2xl text-center max-w-[260px]"
-                style={{ background: 'rgba(10,4,0,0.95)', border: '2px solid #FFB800', boxShadow: '0 0 40px rgba(255,184,0,0.4)' }}>
-                <p className="text-[10px] font-bold text-[#FFB800]/70 uppercase tracking-widest">Danger Zone</p>
-                <p className="text-2xl font-black text-white leading-none" style={{ textShadow: '0 0 20px #FFB800' }}>DOUBLE OR NOTHING</p>
-                <p className="text-[11px] text-white/55 leading-snug">
-                  Risk is climbing. Push for <span className="text-[#FFB800] font-bold">2× payout</span> or extract now?
-                </p>
-                <div className="flex flex-col gap-2 w-full mt-1">
-                  <div className="text-center mb-1">
-                    <p className="text-[9px] text-white/35 uppercase tracking-wider">Current payout</p>
-                    <p className="text-lg font-black text-white">{currentYield} SOL</p>
-                    <p className="text-[9px] text-[#FFB800] font-bold">→ {(parseFloat(currentYield) * 2).toFixed(4)} SOL if you push</p>
-                  </div>
-                  <button
-                    onClick={() => { setDonActive(false); if (donTimerRef.current) clearTimeout(donTimerRef.current); solMultiplierRef.current = 2.0; addComboPopup('2× ACTIVATED!', '#FFB800'); spawnSparks('#FFB800', '#FF2929', 20); }}
-                    className="w-full py-2.5 rounded-xl font-black text-sm uppercase tracking-wider active:scale-95 transition-all"
-                    style={{ background: 'linear-gradient(135deg, #FF2929, #CC0000)', color: '#fff', boxShadow: '0 0 16px rgba(255,41,41,0.5)' }}>
-                    🔥 PUSH — 2× PAYOUT
-                  </button>
-                  <button
-                    onClick={() => { setDonActive(false); if (donTimerRef.current) clearTimeout(donTimerRef.current); handleCashOut(); }}
-                    className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider active:scale-95 transition-all"
-                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.6)' }}>
-                    Extract Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Grace period countdown */}
           {graceActive && !isEnding && (
@@ -1968,15 +1916,13 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                 </button>
               </div>
 
-              {/* CASHOUT button */}
+              {/* LOCK IN SCORE button */}
               <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed}
                 className={`col-span-2 p-4 tech-border transition-all duration-300 relative overflow-hidden disabled:opacity-80 ${
                   ambushed
                     ? 'bg-red-950/40 text-red-500/40 border-red-900/20 cursor-not-allowed'
                     : !hasInteracted || graceActive
                     ? 'bg-[#1a1a1a] text-white/40 border-white/5 cursor-not-allowed grayscale'
-                    : earlyExitWarn
-                    ? 'bg-orange-950/60 text-orange-300 border-orange-600/60 active:translate-y-1'
                     : goldenWindow
                     ? 'bg-yellow-500 text-black active:translate-y-1 golden-glow'
                     : `bg-[#FF2929] text-white active:translate-y-1 ${multiplier > 3 ? 'shadow-[0_0_35px_rgba(255,41,41,0.6)]' : multiplier > 2 ? 'shadow-[0_0_22px_rgba(255,41,41,0.4)]' : 'shadow-[0_0_12px_rgba(255,41,41,0.2)]'}`
@@ -1987,22 +1933,20 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                       ? 'Ambush! Locked'
                       : graceActive ? 'Get ready...'
                       : !hasInteracted ? 'Act to unlock'
-                      : earlyExitWarn ? 'EARLY EXIT'
-                      : goldenWindow ? `GOLDEN EXIT +5%`
-                      : 'EXIT & CASH OUT'}
+                      : goldenWindow ? 'GOLDEN LOCK! +5%'
+                      : 'LOCK IN SCORE'}
                   </span>
                   {hasInteracted && !graceActive && !ambushed && (
-                    <span className={`mono text-sm font-black mt-1 ${earlyExitWarn ? 'text-orange-400/80' : 'text-white/70'}`}>
-                      {currentYield} SOL
+                    <span className="mono text-sm font-black mt-1 text-white/70">
+                      {points.toLocaleString()} pts
                     </span>
                   )}
                   <span className="text-[9px] font-bold mt-0.5 opacity-60">
                     {ambushed ? 'Wait for clear'
                       : graceActive ? 'Arming...'
                       : !hasInteracted ? 'Idle'
-                      : earlyExitWarn ? `Penalty expires at 20s`
                       : goldenWindow ? `${goldenCountdown}s remaining`
-                      : 'Secure profits'}
+                      : 'Submit your score'}
                   </span>
                 </div>
               </button>

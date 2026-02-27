@@ -76,6 +76,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const [roundDifficulty, setRoundDifficulty]   = useState<Difficulty>(Difficulty.MEDIUM);
   const [roundCurrency, setRoundCurrency]       = useState<Currency>(Currency.SOL);
   const [roundBoosts, setRoundBoosts]           = useState<string[]>([]);
+  const [toolsDisclaimerDismissed, setToolsDisclaimerDismissed] = useState(false);
 
   // FAQ
   const [showFaq, setShowFaq]                   = useState(false);
@@ -239,7 +240,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         {/* ── RAID ROUND CARD ── */}
         {currentRound && (
           <button
-            onClick={() => isConnected ? setShowRoundModal(true) : onConnect()}
+            onClick={() => isConnected ? (setToolsDisclaimerDismissed(false), setShowRoundModal(true)) : onConnect()}
             className="w-full relative overflow-hidden rounded-2xl text-left active:scale-[0.98] transition-all duration-150 group"
             style={{ background: 'rgba(255,41,41,0.04)', border: '1px solid rgba(255,41,41,0.20)' }}
           >
@@ -621,7 +622,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-1">
                 <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">How it works</p>
                 {[
-                  'Pay an entry fee to compete — 70% goes straight into the prize pool',
+                  'Pay an entry fee to compete — 90% goes straight into the prize pool',
                   'Score as many points as possible during your raid',
                   'Your highest score this round is tracked on the live leaderboard',
                   'Round closes every 6 hours — top 5 scores split the pool',
@@ -633,6 +634,51 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   </div>
                 ))}
               </div>
+
+              {/* ── Battle Tools Disclaimer (dismissable) ── */}
+              {!toolsDisclaimerDismissed && equippedGear.length === 0 && (
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,184,0,0.35)', background: 'rgba(255,184,0,0.06)' }}>
+                  <div className="px-4 pt-3 pb-3 flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                      <span className="text-xl shrink-0 mt-0.5">⚔️</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-black uppercase tracking-widest text-[#FFB800]">
+                          {ownedGear.length > 0 ? 'Equip your battle tools' : 'Battle Tools give you an edge'}
+                        </p>
+                        <p className="text-[10px] text-white/50 mt-1 leading-relaxed">
+                          {ownedGear.length > 0
+                            ? `You own ${ownedGear.length} gear piece${ownedGear.length > 1 ? 's' : ''} but none are equipped. Gear directly boosts your score — equip below before entering.`
+                            : <>Gear like <span className="text-white/75 font-bold">Time Boost</span>, <span className="text-white/75 font-bold">Multiplier Boost</span> and <span className="text-white/75 font-bold">Risk Reduction</span> directly increase your score — giving you a real competitive advantage over unequipped raiders.</>
+                          }
+                        </p>
+                        <div className="flex items-center gap-2 mt-2.5">
+                          {ownedGear.length === 0 && (
+                            <button
+                              onClick={() => { setShowRoundModal(false); onNavigateStore?.('GEAR'); }}
+                              className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95"
+                              style={{ background: 'rgba(255,184,0,0.18)', border: '1px solid rgba(255,184,0,0.40)', color: '#FFB800' }}
+                            >
+                              Get Battle Tools
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setToolsDisclaimerDismissed(true)}
+                            className="px-3 py-1.5 text-[9px] font-semibold uppercase tracking-widest text-white/30 hover:text-white/60 transition-colors"
+                          >
+                            {ownedGear.length > 0 ? 'Dismiss' : 'Enter anyway'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setToolsDisclaimerDismissed(true)}
+                      className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/8 transition-all"
+                    >
+                      <i className="fa-solid fa-xmark text-xs" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* ── Battle Tools (gear + boosts) ── */}
               <section>

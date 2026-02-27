@@ -210,7 +210,7 @@ Deno.serve(async (req: Request) => {
       const rm = raidNow.getUTCMonth() + 1;
       const rd = raidNow.getUTCDate();
       const raidRoundDate = `${ry}-${String(rm).padStart(2, '0')}-${String(rd).padStart(2, '0')}`;
-      const poolContribution = Number(entry_fee) * 0.70;
+      const poolContribution = Number(entry_fee) * 0.90;
       await supabase.rpc('increment_round_pool', {
         p_round_number: raidRoundNum,
         p_round_date:   raidRoundDate,

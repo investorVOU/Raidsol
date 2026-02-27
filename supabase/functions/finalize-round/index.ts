@@ -13,14 +13,14 @@ import { getCorsHeaders } from '../_shared/cors.ts';
  * Logic:
  *  1. Validate round has ended.
  *  2. Check round_finalizations — if exists, return existing data (idempotent).
- *  3. Compute pool (70% of all entry fees in round window).
+ *  3. Compute pool (90% of all entry fees in round window).
  *  4. Find top-5 wallets by best sol_amount (deduplicated per wallet).
  *  5. INSERT all winners into round_winners with claimed=false.
  *  6. INSERT into round_finalizations.
  *  7. Return the finalized winners.
  */
 
-const POOL_PCT  = 0.70;
+const POOL_PCT  = 0.90;
 const ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06]; // fractions of pool, sum = 1.00
 
 function getRoundWindow(roundNumber: number, roundDate: string): { start: Date; end: Date } {

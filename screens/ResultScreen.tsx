@@ -68,9 +68,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
   const [debriefOpen, setDebriefOpen] = useState(true);
 
   const handleShareToX = () => {
-    const text = isRoundEntry
-      ? `scored ${result.points.toLocaleString()} pts in round ${roundInfo?.roundNum ?? '?'} on @solraid_app\n\npeak mult: ${result.peakMult != null ? result.peakMult.toFixed(2) + 'x' : '--'}\n\n#Solana #SolRaid`
-      : `just extracted ${result.solAmount.toFixed(4)} SOL on @solraid_app\n\npeak mult: ${result.peakMult != null ? result.peakMult.toFixed(2) + 'x' : '--'} · score: ${result.points.toLocaleString()}\n\n#Solana #SolRaid`;
+    const text = `scored ${result.points.toLocaleString()} pts in the raid on @solraid_app\n\npeak mult: ${result.peakMult != null ? result.peakMult.toFixed(2) + 'x' : '--'}\n\n#Solana #SolRaid`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://solraid.app')}`;
     window.open(url, '_blank');
   };
@@ -120,7 +118,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
     ctx.textAlign = 'left';
 
     // ── Status badge ────────────────────────────────────────────────────
-    const badge = result.success ? '✓  EXTRACTED' : '✗  BUSTED';
+    const badge = result.success ? '✓  SCORED' : '✗  BUSTED';
     ctx.fillStyle = `${accent}22`;
     ctx.fillRect(barW + 40, 70, result.success ? 300 : 220, 52);
     ctx.strokeStyle = accent;
@@ -139,10 +137,10 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
     if (result.success) {
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 92px monospace';
-      ctx.fillText(`+${result.solAmount.toFixed(4)}`, barW + 40, 310);
+      ctx.fillText(`+${result.points.toLocaleString()}`, barW + 40, 310);
       ctx.fillStyle = 'rgba(255,255,255,0.28)';
       ctx.font = 'bold 22px monospace';
-      ctx.fillText('SOL HARVESTED', barW + 40, 348);
+      ctx.fillText('POINTS SCORED', barW + 40, 348);
     } else {
       ctx.fillStyle = '#EF4444';
       ctx.font = 'bold 92px monospace';
@@ -219,41 +217,25 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
         </p>
 
         <div className="w-full max-w-sm space-y-4">
-          {/* Primary metric — SOL for normal raids, POINTS for round raids */}
-          {isRoundEntry ? (
-            <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-[#FF2929]/50' : 'border-red-500/40'}`}>
-              <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black uppercase text-[#FF2929]">PTS</div>
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wide mb-3">Round score</p>
-              <p className={`mono text-5xl sm:text-6xl font-black tracking-tight leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
-                {result.success ? `+${result.points.toLocaleString()}` : '0'}
-                <span className="text-sm sm:text-base font-normal opacity-30 ml-2">pts</span>
+          {/* Primary metric — round points */}
+          <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-[#FF2929]/50' : 'border-red-500/40'}`}>
+            <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black uppercase text-[#FF2929]">PTS</div>
+            <p className="text-xs text-white/40 font-bold uppercase tracking-wide mb-3">Round score</p>
+            <p className={`mono text-5xl sm:text-6xl font-black tracking-tight leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
+              {result.success ? `+${result.points.toLocaleString()}` : '0'}
+              <span className="text-sm sm:text-base font-normal opacity-30 ml-2">pts</span>
+            </p>
+            {result.success && result.peakMult != null && (
+              <p className="text-xs text-[#FFB800]/60 font-bold mt-2">
+                Peak mult: {result.peakMult.toFixed(2)}x
               </p>
-              {result.success && result.peakMult != null && (
-                <p className="text-xs text-[#FFB800]/60 font-bold mt-2">
-                  Peak mult: {result.peakMult.toFixed(2)}x
-                </p>
-              )}
-              {result.success && (
-                <p className="text-[10px] text-white/30 font-bold mt-1">
-                  SOL rewarded after round ends · claim from Profile
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-[#FFB800]/60' : 'border-red-500/40'}`}>
-              <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black uppercase">SOL</div>
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wide mb-3">Harvest yield</p>
-              <p className={`mono text-5xl sm:text-6xl font-black tracking-tight leading-none ${result.success ? 'text-white' : 'text-red-500/40'}`}>
-                {result.success ? `+${result.solAmount.toFixed(4)}` : `-${entryFee.toFixed(3)}`}
-                <span className="text-sm sm:text-base font-normal opacity-30 ml-2">SOL</span>
+            )}
+            {result.success && (
+              <p className="text-[10px] text-white/30 font-bold mt-1">
+                SOL rewarded after round ends · claim from Profile
               </p>
-              {result.success && result.peakMult != null && (
-                <p className="text-xs text-[#FFB800]/60 font-bold mt-2">
-                  Peak mult: {result.peakMult.toFixed(2)}x
-                </p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           {/* SR Points */}
           <div className="bg-black border-2 border-yellow-500/20 p-6 sm:p-8 tech-border relative overflow-hidden group">
@@ -272,21 +254,6 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
             </div>
           </div>
 
-          {/* ── BANKED YIELD (checkpoint SOL kept even on bust) ── */}
-          {(result.bankedYield ?? 0) > 0 && (
-            <div className="bg-black border-2 p-5 tech-border relative overflow-hidden" style={{ borderColor: 'rgba(255,184,0,0.50)' }}>
-              <div className="absolute top-0 right-0 p-3 opacity-6 mono text-xl font-black text-[#FFB800]">BANK</div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#FFB800]" />
-                <p className="text-xs font-bold uppercase tracking-wide text-[#FFB800]/70">Checkpoint Banked</p>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <p className="mono text-3xl font-black text-[#FFB800]">+{(result.bankedYield ?? 0).toFixed(4)}</p>
-                <span className="text-sm font-bold text-[#FFB800]/50">SOL</span>
-              </div>
-              <p className="text-[9px] text-white/35 font-bold mt-1">Kept on bust · credited to unclaimed balance</p>
-            </div>
-          )}
 
           {/* ── LOOT DROPS ── */}
           {(result.lootDrops?.length ?? 0) > 0 && (
@@ -577,26 +544,14 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
       </div>
 
       <div className="py-6 sm:py-8 space-y-3 shrink-0">
-        {/* Round raid success: no instant harvest — scores tallied after round ends */}
-        {isRoundEntry && result.success && (
+        {/* Round raid success: scores tallied after round ends */}
+        {result.success && (
           <div className="p-4 border border-[#FF2929]/20 bg-[#FF2929]/5 tech-border text-center">
             <p className="text-[11px] font-bold text-white/60">
               Winnings paid out after round ends · go to{' '}
               <span className="text-[#FF2929]">Profile → Round Wins</span> to claim
             </p>
           </div>
-        )}
-
-        {/* Normal raid success: instant collect harvest */}
-        {!isRoundEntry && result.success && (
-          <>
-            <button
-              onClick={onClaim}
-              className="w-full bg-[#FF2929] text-white py-4 sm:py-5 tech-border font-bold uppercase tracking-tight text-lg sm:text-xl shadow-[0_0_30px_rgba(255,41,41,0.35)] active:scale-95 transition-all hover:bg-[#CC0000]"
-            >
-              {t('result.collect')}
-            </button>
-          </>
         )}
 
         {/* Bust: retry */}

@@ -1497,6 +1497,9 @@ const AppInner: React.FC = () => {
     customFeeOverride?: number,
     isRoundEntry: boolean = false,
   ) => {
+    // All SOLO raids are round-based — points ranked 1-5, 70% of pot distributed after round ends
+    const effectiveIsRoundEntry = mode === Mode.SOLO ? true : (isRoundEntry || !!currentRound);
+
     if (!requireWallet()) return;
     if (mode === Mode.PVP) {
       setGameState(prev => ({ ...prev, currentScreen: Screen.MULTIPLAYER_SETUP }));
@@ -1535,7 +1538,7 @@ const AppInner: React.FC = () => {
     const applyTicket = useTicket && gameState.raidTickets > 0;
     const entryFeeBase = customFeeOverride ?? ENTRY_FEES[mode]; // always in SOL units
     // Daily free raid: EASY mode, first raid of the day is free (never for round entries — pool requires fees)
-    const isFreeRaid = !isRoundEntry && !freeRaidToday && difficulty === Difficulty.EASY && mode === Mode.SOLO;
+    const isFreeRaid = !effectiveIsRoundEntry && !freeRaidToday && difficulty === Difficulty.EASY && mode === Mode.SOLO;
     const entryFee = isFreeRaid ? 0 : applyTicket ? entryFeeBase * 0.5 : entryFeeBase;
     let boostCost = 0;
     boosts.forEach(bId => {
@@ -1629,11 +1632,11 @@ const AppInner: React.FC = () => {
       skrBalance:    currency === Currency.SKR  ? prev.skrBalance    - totalCostCurrency : prev.skrBalance,
       activeRaidDifficulty: difficulty,
       activeRaidBoosts: boosts,
-      activeRaidIsRound: isRoundEntry,
+      activeRaidIsRound: effectiveIsRoundEntry,
       activeSeedId: undefined,
       activeServerSeedHash: undefined,
       // Remember config so "Redeploy" button reuses same settings
-      lastRaidConfig: { mode, difficulty, boosts, currency },
+      lastRaidConfig: { mode, difficulty, boosts, currency, isRoundEntry: effectiveIsRoundEntry },
       // Ticket
       raidTickets: applyTicket ? prev.raidTickets - 1 : prev.raidTickets,
       ticketBoostActive: applyTicket,
@@ -1687,12 +1690,9 @@ const AppInner: React.FC = () => {
   };
 
   const enterRoundRaid = async (difficulty: Difficulty, boosts: string[], currency: Currency) => {
-    // isRoundEntry=true prevents the daily free-raid discount so entry_fee is always recorded
+    // effectiveIsRoundEntry in enterRaid auto-enrolls when currentRound is set;
+    // pass isRoundEntry=true explicitly as a fallback for safety
     await enterRaid(Mode.SOLO, difficulty, boosts, currency, false, undefined, true);
-    setGameState(prev => prev.lastRaidConfig
-      ? { ...prev, lastRaidConfig: { ...prev.lastRaidConfig, isRoundEntry: true } }
-      : prev
-    );
   };
 
   // ── Bounty Board ──────────────────────────────────────────────────────────
@@ -1855,8 +1855,8 @@ const AppInner: React.FC = () => {
                 )
               : undefined}
             onClaim={() => navigateTo(Screen.PROFILE)}
-            isRoundEntry={!!gameState.lastRaidConfig?.isRoundEntry}
-            roundInfo={gameState.lastRaidConfig?.isRoundEntry ? currentRound : null}
+            isRoundEntry={true}
+            roundInfo={currentRound}
           />
         );
       case Screen.PRIVACY:

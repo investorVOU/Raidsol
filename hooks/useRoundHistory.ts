@@ -19,7 +19,7 @@ export interface HistoricalRound {
   entries: HistoricalRoundEntry[]; // top 5
 }
 
-const POOL_PCT = 0.70;
+const POOL_PCT = 0.90;
 
 /** Build a list of the last N completed round descriptors (roundNum + roundDate). */
 function getLastCompletedRounds(count: number): Array<{ roundNum: number; roundDate: string }> {

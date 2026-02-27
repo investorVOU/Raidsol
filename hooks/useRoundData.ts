@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-// POOL_PCT (0.70) is applied server-side in submit-raid-result via increment_round_pool RPC
+// POOL_PCT (0.90) is applied server-side in submit-raid-result via increment_round_pool RPC
 export const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06]; // top 1-5 share of pool
 
 export interface RoundTopEntry {
@@ -21,7 +21,7 @@ export interface CurrentRoundInfo {
   timeRemainingMs: number;
   isActive: boolean;           // true while round is still running
   isFinalized: boolean;        // true once finalize-round has locked in winners
-  poolSol: number;             // 70% of all entry fees this window
+  poolSol: number;             // 90% of all entry fees this window
   currentLeaders: RoundTopEntry[];   // live top-5 during active round (from raid_history)
   finalWinners: RoundTopEntry[];     // locked top-5 after finalization (from round_winners)
 }
@@ -109,7 +109,7 @@ export function useRoundData() {
     ]);
 
     const poolFromTable   = Number(poolRes.data?.pool_sol ?? 0);
-    const poolFromHistory = ((feesRes.data ?? []).reduce((s, r) => s + Number(r.entry_fee), 0)) * 0.70;
+    const poolFromHistory = ((feesRes.data ?? []).reduce((s, r) => s + Number(r.entry_fee), 0)) * 0.90;
     // Prefer the dedicated table; fall back to raid_history sum if the table is empty
     const poolSol = poolFromTable > 0 ? poolFromTable : poolFromHistory;
 
