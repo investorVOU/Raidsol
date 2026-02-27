@@ -557,7 +557,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-1">
                 <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">Rules</p>
                 {[
-                  'Entry fee goes 90% into the prize pool',
+                  'Entry fee goes 100% into the prize pool',
                   'Score points — your best raid counts',
                   'Top 5 wallets split the pool when the round closes',
                   `${roundTier} split: ${RAID_TIER_ALLOCATION[roundTier].map((a, i) => `${['1st','2nd','3rd','4th','5th'][i]} ${Math.round(a*100)}%`).join(' · ')}`,
