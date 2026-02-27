@@ -166,14 +166,14 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           onClick={() => isConnected ? (setToolsDisclaimerDismissed(false), setRoundUseTicket(false), setShowRoundModal(true)) : onConnect()}
           className="w-full relative overflow-hidden rounded-2xl group active:scale-[0.97] transition-all duration-200"
           style={{
-            background: 'linear-gradient(135deg, #160404 0%, #0d0d1a 60%, #100404 100%)',
-            border: '1px solid rgba(255,41,41,0.38)',
-            boxShadow: '0 0 28px rgba(255,41,41,0.12), inset 0 0 60px rgba(255,41,41,0.05)',
+            background: 'linear-gradient(135deg, #CC0000 0%, #FF2929 50%, #CC0000 100%)',
+            border: '1px solid rgba(255,41,41,0.60)',
+            boxShadow: '0 0 32px rgba(255,41,41,0.35)',
           }}
         >
-          {/* Animated top scan-line */}
+          {/* Animated top scan-line — white on red */}
           <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-            style={{ background: 'linear-gradient(90deg,transparent 0%,#FF2929 40%,#FF2929 60%,transparent 100%)', animation: 'scanline 3s linear infinite', opacity: 0.7 }}
+            style={{ background: 'linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.8) 40%,rgba(255,255,255,0.8) 60%,transparent 100%)', animation: 'scanline 3s linear infinite', opacity: 0.5 }}
           />
           <style>{`@keyframes scanline{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
 
@@ -182,29 +182,29 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929]" style={{ boxShadow: '0 0 6px #FF2929', animation: 'pulse 1.5s ease-in-out infinite' }} />
-                  <p className="text-[10px] uppercase tracking-[3px] text-[#FF2929]/70" style={INTER}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.8)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                  <p className="text-[10px] uppercase tracking-[3px] text-white/70" style={INTER}>
                     {isConnected
                       ? (currentRound ? `Round ${currentRound.roundNum} of 4 · ${dayLabel}` : 'Loading round...')
                       : 'Connect to compete'}
                   </p>
                 </div>
-                <p className="leading-none" style={{ ...BN, fontSize: '36px', letterSpacing: '-0.5px', color: '#fff', textShadow: '0 0 20px rgba(255,41,41,0.4)' }}>
+                <p className="leading-none" style={{ ...BN, fontSize: '36px', letterSpacing: '-0.5px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
                   RAID ROUND
                 </p>
-                <p className="text-[10px] text-white/40 mt-1" style={{ ...INTER, fontWeight: 400 }}>
+                <p className="text-[10px] text-white/75 mt-1" style={{ ...INTER, fontWeight: 400 }}>
                   Top 5 earn prizes · fight for your rank
                 </p>
               </div>
               <div className="shrink-0 ml-4 flex flex-col items-end gap-2">
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform"
-                  style={{ background: 'rgba(255,41,41,0.12)', border: '1px solid rgba(255,41,41,0.30)' }}
+                  style={{ background: 'rgba(0,0,0,0.20)', border: '1px solid rgba(255,255,255,0.25)' }}
                 >
-                  <i className="fa-solid fa-trophy" style={{ fontSize: '24px', color: '#FF2929' }} />
+                  <i className="fa-solid fa-trophy" style={{ fontSize: '24px', color: '#fff' }} />
                 </div>
                 {raidTickets > 0 && (
-                  <span className="text-[9px] font-bold bg-[#FFB800]/15 text-[#FFB800]/90 rounded-full px-2 py-0.5 border border-[#FFB800]/20" style={INTER}>
+                  <span className="text-[9px] font-bold bg-black/20 text-white rounded-full px-2 py-0.5 border border-white/25" style={INTER}>
                     🎟️ {raidTickets}×
                   </span>
                 )}
@@ -212,24 +212,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
 
             {/* Stats strip */}
-            <div className="flex items-center gap-0 border-t border-white/[0.06] pt-2.5">
+            <div className="flex items-center gap-0 border-t border-white/20 pt-2.5">
               {currentRound ? (
                 <>
                   <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Pool</p>
-                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: '#FFB800' }}>
+                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Pool</p>
+                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
                       {currentRound.poolSol.toFixed(3)} SOL
                     </p>
                   </div>
                   <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Raiders</p>
-                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>
+                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Raiders</p>
+                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
                       {currentRound.entrantCount}
                     </p>
                   </div>
                   <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Closes</p>
-                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>
+                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Closes</p>
+                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
                       {formatCountdown(currentRound.timeRemainingMs)}
                     </p>
                   </div>
@@ -237,24 +237,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               ) : (
                 <>
                   <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Rounds/day</p>
-                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>4</p>
+                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Rounds/day</p>
+                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>4</p>
                   </div>
                   <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Tiers</p>
-                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>3</p>
+                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Tiers</p>
+                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>3</p>
                   </div>
                   <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>Pool share</p>
-                    <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color: 'rgba(255,255,255,0.65)' }}>90%</p>
+                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Pool share</p>
+                    <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>90%</p>
                   </div>
                 </>
               )}
               <div className="shrink-0 ml-2">
                 <div className="rounded-lg px-3 py-1.5 flex items-center gap-1.5 group-hover:opacity-90 transition-opacity"
-                  style={{ background: 'rgba(255,41,41,0.18)', border: '1px solid rgba(255,41,41,0.35)' }}>
-                  <i className="fa-solid fa-trophy text-[#FF4444] text-[10px]" />
-                  <span style={{ ...BN, fontSize: '13px', color: '#FF4444', letterSpacing: '1.5px' }}>
+                  style={{ background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.28)' }}>
+                  <i className="fa-solid fa-trophy text-white text-[10px]" />
+                  <span style={{ ...BN, fontSize: '13px', color: '#fff', letterSpacing: '1.5px' }}>
                     {isConnected ? 'COMPETE' : 'CONNECT'}
                   </span>
                 </div>

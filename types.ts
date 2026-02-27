@@ -149,7 +149,7 @@ export const RAID_TIER_CONFIG: Record<RaidTier, {
   description: string;
   emoji: string;
 }> = {
-  [RaidTier.GRUNT]: { label: 'GRUNT', entryFee: 0.01,  color: '#94a3b8', description: 'Casual — small pool, anyone can enter.',       emoji: '🔧' },
+  [RaidTier.GRUNT]: { label: 'GRUNT', entryFee: 0.026, color: '#94a3b8', description: 'Casual — small pool, anyone can enter.',       emoji: '🔧' },
   [RaidTier.ELITE]: { label: 'ELITE', entryFee: 0.05,  color: '#FFB800', description: 'Competitive — 5× bigger pool vs Grunt.',       emoji: '⚔️' },
   [RaidTier.WHALE]: { label: 'WHALE', entryFee: 0.25,  color: '#FF2929', description: 'Degens only — 25× pool vs Grunt. High risk.',   emoji: '🐋' },
 };
