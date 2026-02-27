@@ -1,7 +1,8 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { AVATAR_ITEMS, GEAR_ITEMS, RANKS, Equipment } from '../types';
+import { AVATAR_ITEMS, GEAR_ITEMS, RANKS, Equipment, ACHIEVEMENTS } from '../types';
 import { Edit, Check, X, Lock, Wallet, ExternalLink } from 'lucide-react';
+import { useAchievements } from '../hooks/useAchievements';
 import { useRaidHistory } from '../hooks/useRaidHistory';
 import { useWithdrawalHistory } from '../hooks/useWithdrawalHistory';
 import { usePlayerRoundWins } from '../hooks/usePlayerRoundWins';
@@ -31,6 +32,7 @@ interface ProfileScreenProps {
   onClaimRoundWin?: (roundNum: number, roundDate: string) => Promise<boolean>;
   onMintAvatar?: (avatarId: string) => Promise<boolean>;
   lastClaimAt?: string | null;
+  dailyStreak?: number;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -55,12 +57,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onClaimRoundWin,
   onMintAvatar,
   lastClaimAt,
+  dailyStreak = 0,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(username);
   const [showNotification, setShowNotification] = useState(false);
-  const [rightTab, setRightTab] = useState<'RAIDS' | 'WITHDRAWALS' | 'ROUNDS'>('RAIDS');
+  const [rightTab, setRightTab] = useState<'RAIDS' | 'WITHDRAWALS' | 'ROUNDS' | 'ACHIEVEMENTS'>('RAIDS');
   const [lastWithdrawTx, setLastWithdrawTx] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -119,6 +122,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       setClaimingRound(null);
     }
   };
+
+  // Achievements
+  const { earned: earnedAchievements, earnedDates: achievementDates } = useAchievements(walletAddress ?? null);
 
   // Withdrawal history from Supabase
   const { history: withdrawals, loading: withdrawLoading, refetch: refetchWithdrawals } = useWithdrawalHistory(walletAddress ?? null);
@@ -476,7 +482,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </div>
 
         {/* Combined Gear Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
           <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border">
             <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Mult boost</p>
             <p className="text-2xl font-black mono text-purple-400">+{gearStats.mult.toFixed(2)}x</p>
@@ -488,6 +494,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border">
             <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Time bonus</p>
             <p className="text-2xl font-black mono text-cyan-400">+{gearStats.timeBoost}s</p>
+          </div>
+          <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border" style={{ borderColor: dailyStreak >= 2 ? 'rgba(255,184,0,0.25)' : undefined }}>
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Daily streak</p>
+            <p className="text-2xl font-black mono" style={{ color: dailyStreak >= 2 ? '#FFB800' : 'rgba(255,255,255,0.3)' }}>
+              {dailyStreak >= 2 ? `🔥 ${dailyStreak}` : dailyStreak > 0 ? '1' : '—'}
+            </p>
+            {dailyStreak >= 2 && (
+              <p className="text-[9px] font-bold mt-0.5" style={{ color: '#FFB800' }}>
+                +{Math.min((dailyStreak - 1) * 10, 40)}% SR
+              </p>
+            )}
           </div>
         </div>
 
@@ -725,20 +742,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
             {/* Tab bar */}
             <div className="flex gap-1 flex-wrap">
-              {(['RAIDS', 'ROUNDS', 'WITHDRAWALS'] as const).map(tab => {
+              {(['RAIDS', 'ROUNDS', 'WITHDRAWALS', 'ACHIEVEMENTS'] as const).map(tab => {
                 const unclaimedCount = tab === 'ROUNDS' ? roundWins.filter(w => !w.claimed).length : 0;
+                const earnedCount = tab === 'ACHIEVEMENTS' ? earnedAchievements.size : 0;
                 return (
                   <button
                     key={tab}
                     onClick={() => setRightTab(tab)}
                     className={`px-4 py-2 text-[9px] font-bold uppercase tracking-wide transition-all tech-border flex items-center gap-1.5 ${rightTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-white/40 border-white/5 hover:text-white/60'}`}
                   >
-                    {tab === 'RAIDS' ? 'Raids' : tab === 'ROUNDS' ? 'Round Wins' : 'Withdrawals'}
+                    {tab === 'RAIDS' ? 'Raids' : tab === 'ROUNDS' ? 'Round Wins' : tab === 'WITHDRAWALS' ? 'Withdrawals' : 'Badges'}
                     {tab === 'WITHDRAWALS' && withdrawals.length > 0 && (
                       <span className="px-1 bg-[#FFB800] text-black text-[8px] rounded-sm">{withdrawals.length}</span>
                     )}
                     {tab === 'ROUNDS' && unclaimedCount > 0 && (
                       <span className="px-1 bg-[#FF2929] text-white text-[8px] rounded-sm animate-pulse">{unclaimedCount}</span>
+                    )}
+                    {tab === 'ACHIEVEMENTS' && earnedCount > 0 && (
+                      <span className="px-1 bg-[#FFB800] text-black text-[8px] rounded-sm">{earnedCount}</span>
                     )}
                   </button>
                 );
@@ -958,6 +979,41 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     );
                   })
                 )}
+              </div>
+            )}
+
+            {/* ── ACHIEVEMENTS ─────────────────────────────────── */}
+            {rightTab === 'ACHIEVEMENTS' && (
+              <div className="grid grid-cols-3 gap-2">
+                {ACHIEVEMENTS.map(a => {
+                  const isEarned = earnedAchievements.has(a.id);
+                  const dateStr = achievementDates[a.id]
+                    ? new Date(achievementDates[a.id]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
+                    : null;
+                  return (
+                    <div
+                      key={a.id}
+                      className="flex flex-col items-center gap-1.5 p-3 tech-border text-center transition-all"
+                      style={{
+                        background: isEarned ? 'rgba(255,184,0,0.06)' : 'var(--modal-bg)',
+                        border: isEarned ? '1px solid rgba(255,184,0,0.25)' : '1px solid rgba(255,255,255,0.05)',
+                        opacity: isEarned ? 1 : 0.45,
+                      }}
+                    >
+                      <span style={{ fontSize: '22px', filter: isEarned ? 'none' : 'grayscale(1)' }}>
+                        {a.icon}
+                      </span>
+                      <p className="text-[9px] font-black uppercase tracking-wide leading-tight" style={{ color: isEarned ? '#FFB800' : 'rgba(255,255,255,0.4)' }}>
+                        {isEarned ? a.name : '???'}
+                      </p>
+                      {isEarned && dateStr ? (
+                        <p className="text-[8px] text-white/30">{dateStr}</p>
+                      ) : !isEarned ? (
+                        <p className="text-[8px] text-white/20">{a.description}</p>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

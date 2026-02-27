@@ -34,6 +34,7 @@ interface MultiplayerSetupScreenProps {
   currentSkrBalance: number;
   walletAddress?: string | null;
   joinNotification?: string | null;
+  initialRoomCode?: string;
 }
 
 const CURRENCY_LABELS: Record<Currency, string> = {
@@ -61,8 +62,9 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   currentSkrBalance,
   walletAddress,
   joinNotification,
+  initialRoomCode,
 }) => {
-  const [view, setView] = useState<'MENU' | 'CREATE' | 'JOIN'>('MENU');
+  const [view, setView] = useState<'MENU' | 'CREATE' | 'JOIN'>(initialRoomCode ? 'JOIN' : 'MENU');
 
   // CREATE state
   const [stakeCurrency, setStakeCurrency] = useState<Currency>(Currency.SOL);
@@ -70,7 +72,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   const [maxPlayers, setMaxPlayers]     = useState<number>(4);
 
   // JOIN state
-  const [inviteCode, setInviteCode]           = useState('');
+  const [inviteCode, setInviteCode]           = useState(initialRoomCode ?? '');
   const [joinPreview, setJoinPreview]         = useState<JoinPreview | null>(null);
   const [previewLoading, setPreviewLoading]   = useState(false);
   const [previewError, setPreviewError]       = useState('');
@@ -91,6 +93,14 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setStakeAmount(STAKE_OPTIONS[stakeCurrency][1]); }, [stakeCurrency]);
+
+  // Auto-lookup when arriving via invite link
+  useEffect(() => {
+    if (initialRoomCode && initialRoomCode.startsWith('RAID-')) {
+      handleLookupRoom();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (activeRoom && qrCanvasRef.current) {
@@ -253,7 +263,21 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                       {codeCopied ? <Check size={18} /> : <Copy size={18} />}
                     </span>
                   </button>
-                  <p className="text-[9px] font-bold text-white/40 mb-4">{codeCopied ? 'Copied!' : 'Tap to copy'}</p>
+                  <p className="text-[9px] font-bold text-white/40 mb-3">{codeCopied ? 'Copied!' : 'Tap to copy room code'}</p>
+                  <button
+                    onClick={() => {
+                      if (!activeRoom) return;
+                      const url = `https://solraid.app/?join=${activeRoom.code}`;
+                      navigator.clipboard.writeText(url);
+                      setCodeCopied(true);
+                      setTimeout(() => setCodeCopied(false), 2000);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-[9px] font-bold transition-all mb-4"
+                    style={{ background: 'rgba(255,41,41,0.08)', border: '1px solid rgba(255,41,41,0.25)', color: '#FF2929' }}
+                  >
+                    <Copy size={11} />
+                    Copy invite link
+                  </button>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-[var(--modal-bg)] border border-white/8 p-3 text-center">

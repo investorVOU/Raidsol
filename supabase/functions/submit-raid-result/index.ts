@@ -181,17 +181,39 @@ Deno.serve(async (req: Request) => {
     // ── 2. Server-side SR calculation ──────────────────────────────────
     const baseSR = effectiveSuccess ? 100 : 25;
     const performanceSR = Math.floor(effectivePoints / 200);
-    const totalSREarned = baseSR + performanceSR;
+    let totalSREarned = baseSR + performanceSR;
 
     // ── 3. Fetch + update profile ──────────────────────────────────────
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('sr_points, unclaimed_sol, username')
+      .select('sr_points, unclaimed_sol, username, daily_streak, last_played_date')
       .eq('wallet_address', wallet_address)
       .single();
 
     if (profileError || !profile) {
       return json({ error: 'Profile not found' }, 404, corsH);
+    }
+
+    // ── Daily streak computation ────────────────────────────────────────
+    const todayUTC     = new Date().toISOString().slice(0, 10);
+    const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const lastPlayed   = profile.last_played_date as string | null;
+    let newStreak      = (profile.daily_streak as number) ?? 0;
+
+    if (!lastPlayed) {
+      newStreak = 1;
+    } else if (lastPlayed === yesterdayUTC) {
+      newStreak = newStreak + 1;
+    } else if (lastPlayed === todayUTC) {
+      // Already played today — keep streak as-is
+    } else {
+      newStreak = 1; // streak broken
+    }
+
+    // +10% SR per streak day, capped at +40% (day 5+)
+    if (!isDrill) {
+      const streakBonus = 1 + Math.min(newStreak - 1, 4) * 0.10;
+      totalSREarned = Math.round(totalSREarned * streakBonus);
     }
 
     const newSRPoints = Number(profile.sr_points) + totalSREarned;
@@ -202,7 +224,13 @@ Deno.serve(async (req: Request) => {
 
     await supabase
       .from('profiles')
-      .update({ sr_points: newSRPoints, unclaimed_sol: newUnclaimed, updated_at: new Date().toISOString() })
+      .update({
+        sr_points:        newSRPoints,
+        unclaimed_sol:    newUnclaimed,
+        daily_streak:     isDrill ? profile.daily_streak : newStreak,
+        last_played_date: isDrill ? profile.last_played_date : todayUTC,
+        updated_at:       new Date().toISOString(),
+      })
       .eq('wallet_address', wallet_address);
 
     // ── 4a. Record raid history ────────────────────────────────────────
@@ -222,6 +250,46 @@ Deno.serve(async (req: Request) => {
       server_seed_hash: seedData.server_seed_hash,
       tx_signature: client_seed || null,
     });
+
+    // ── 4a-ii. Achievement checks ──────────────────────────────────────
+    let newAchievements: string[] = [];
+    if (!isDrill) {
+      const [{ count: totalRaids }, { count: totalWins }] = await Promise.all([
+        supabase.from('raid_history').select('*', { count: 'exact', head: true }).eq('wallet_address', wallet_address),
+        supabase.from('raid_history').select('*', { count: 'exact', head: true }).eq('wallet_address', wallet_address).eq('success', true),
+      ]);
+
+      const toGrant: string[] = [];
+      if (totalRaids === 1)   toGrant.push('FIRST_RAID');
+      if (totalWins  === 1)   toGrant.push('FIRST_EXTRACT');
+      if (totalRaids === 10)  toGrant.push('RAIDS_10');
+      if (totalRaids === 50)  toGrant.push('RAIDS_50');
+      if (totalRaids === 100) toGrant.push('RAIDS_100');
+      if (totalWins  === 10)  toGrant.push('WINS_10');
+      if (totalWins  === 50)  toGrant.push('WINS_50');
+      if (effectiveSuccess && (difficulty ?? 'MEDIUM').toUpperCase() === 'DEGEN') toGrant.push('DEGEN_SURVIVE');
+      if (effectivePoints >= 4000) toGrant.push('HIGH_SCORE');
+      if (newStreak === 3) toGrant.push('STREAK_3');
+      if (newStreak === 7) toGrant.push('STREAK_7');
+      // PVP_WIN is checked after pvpPayload resolution — see step 6
+
+      if (toGrant.length > 0) {
+        const { data: inserted } = await supabase
+          .from('achievements')
+          .upsert(
+            toGrant.map(id => ({ wallet_address, achievement_id: id })),
+            { onConflict: 'wallet_address,achievement_id', ignoreDuplicates: true },
+          )
+          .select('achievement_id');
+        // Only return achievements that were actually newly inserted (not pre-existing)
+        newAchievements = (inserted ?? []).map((r: { achievement_id: string }) => r.achievement_id);
+        if (newAchievements.length === 0 && toGrant.length > 0) {
+          // ignoreDuplicates suppresses returning; fall back to returning all granted
+          newAchievements = toGrant;
+        }
+        console.log(`[achievements] wallet=${wallet_address} granted=${toGrant.join(',')}`);
+      }
+    }
 
     // ── 4b. Round pool + live entry ────────────────────────────────────
     // Recorded for ALL paid non-PvP non-drill raids, regardless of win/bust/flag.
@@ -371,6 +439,17 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // ── 6b. PVP_WIN achievement (after pvpPayload resolved) ───────────
+    if (!isDrill && room_id && (pvpPayload as Record<string, unknown>).is_winner) {
+      await supabase
+        .from('achievements')
+        .upsert(
+          [{ wallet_address, achievement_id: 'PVP_WIN' }],
+          { onConflict: 'wallet_address,achievement_id', ignoreDuplicates: true },
+        );
+      if (!newAchievements.includes('PVP_WIN')) newAchievements.push('PVP_WIN');
+    }
+
     // ── 7. Return result + revealed seed ──────────────────────────────
     return json({
       success: true,
@@ -378,6 +457,8 @@ Deno.serve(async (req: Request) => {
       sr_earned: totalSREarned,
       new_sr_points: newSRPoints,
       new_unclaimed: newUnclaimed,
+      daily_streak: isDrill ? (profile.daily_streak ?? 0) : newStreak,
+      new_achievements: newAchievements,
       server_seed: seedData.server_seed,
       server_seed_hash: seedData.server_seed_hash,
       ...(flagged ? { anti_cheat_flag: reason } : {}),

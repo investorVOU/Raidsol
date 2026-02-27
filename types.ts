@@ -127,6 +127,29 @@ export const RAID_PASSES: RaidPass[] = [
 export const PLATFORM_FEE_RAID = 0.05;
 export const PLATFORM_FEE_PVP  = 0.10;
 
+// ── Achievements ──────────────────────────────────────────────────────────────
+export interface AchievementDef {
+  id: string;
+  name: string;
+  description: string;
+  icon: string; // emoji
+}
+
+export const ACHIEVEMENTS: AchievementDef[] = [
+  { id: 'FIRST_RAID',    name: 'First Boot',     description: 'Complete your first raid',           icon: '🎯' },
+  { id: 'FIRST_EXTRACT', name: 'First Extract',  description: 'Win your first raid',                icon: '💰' },
+  { id: 'RAIDS_10',      name: 'Operator',       description: 'Complete 10 raids',                  icon: '⚔️' },
+  { id: 'RAIDS_50',      name: 'Veteran',        description: 'Complete 50 raids',                  icon: '🏆' },
+  { id: 'RAIDS_100',     name: 'Legend',         description: 'Complete 100 raids',                 icon: '👑' },
+  { id: 'WINS_10',       name: 'Extractor',      description: 'Win 10 raids',                       icon: '💎' },
+  { id: 'WINS_50',       name: 'Vault Breaker',  description: 'Win 50 raids',                       icon: '🔓' },
+  { id: 'DEGEN_SURVIVE', name: 'Degen Survivor', description: 'Survive a DEGEN difficulty raid',    icon: '🔥' },
+  { id: 'STREAK_3',      name: 'On A Roll',      description: '3-day login streak',                 icon: '⚡' },
+  { id: 'STREAK_7',      name: 'Relentless',     description: '7-day login streak',                 icon: '🌟' },
+  { id: 'HIGH_SCORE',    name: 'High Roller',    description: 'Score 4000+ points in one raid',     icon: '📈' },
+  { id: 'PVP_WIN',       name: 'Duelist',        description: 'Win a PvP duel',                     icon: '⚡' },
+];
+
 export const ENTRY_FEES: Record<Mode, number> = {
   [Mode.SOLO]: 0.026,
   [Mode.TEAM]: 0.1,

@@ -42,6 +42,7 @@ interface LobbyScreenProps {
   currencyRates?: LivePrices['currencyRates'];
   pricesFailed?: boolean;
   currentRound?: CurrentRoundInfo | null;
+  dailyStreak?: number;
 }
 
 const DIFF_CONFIG = {
@@ -58,7 +59,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onToggleGear, onNavigateTreasury, onNavigateStore, onNavigateBounty, onNavigateRoast, onNavigateBriefing, onEnterRound, onRequestFullscreen,
   raidTickets = 0, lastFreeRaidDate = null,
   drillCount = 0, drillWindowStart = 0,
-  currencyRates, pricesFailed = false, currentRound,
+  currencyRates, pricesFailed = false, currentRound, dailyStreak = 0,
 }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -161,6 +162,25 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </button>
         </div>
       </div>
+
+      {/* ── DAILY STREAK PILL ── */}
+      {dailyStreak >= 2 && (
+        <div className="relative z-10 shrink-0 px-4 pb-1">
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
+            style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.30)' }}
+          >
+            <span style={{ fontSize: '13px' }}>🔥</span>
+            <span className="text-[11px] font-bold" style={{ color: '#FFB800' }}>
+              {dailyStreak} DAY STREAK
+            </span>
+            <span className="text-[10px] font-bold text-white/40">·</span>
+            <span className="text-[11px] font-bold" style={{ color: '#FFB800' }}>
+              +{Math.min((dailyStreak - 1) * 10, 40)}% SR
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── SCROLLABLE CONTENT ── */}
       <div className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-44 md:pb-6 space-y-2">

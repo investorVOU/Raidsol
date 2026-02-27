@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
-import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, GEAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent, PLATFORM_FEE_RAID, RaidTier, RAID_TIER_CONFIG } from './types';
+import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, GEAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent, PLATFORM_FEE_RAID, RaidTier, RAID_TIER_CONFIG, ACHIEVEMENTS } from './types';
 const LobbyScreen = lazy(() => import('./screens/LobbyScreen'));
 const RaidScreen = lazy(() => import('./screens/RaidScreen'));
 const TeamScreen = lazy(() => import('./screens/TeamScreen'));
@@ -24,7 +24,8 @@ import RaidLoadingScreen from './components/RaidLoadingScreen';
 const LevelUpModal = lazy(() => import('./components/LevelUpModal'));
 const PvpWinnerModal = lazy(() => import('./components/PvpWinnerModal'));
 const PWAInstallBanner = lazy(() => import('./components/PWAInstallBanner'));
-const IntroOverlay = lazy(() => import('./components/IntroOverlay'));
+const DisclaimerModal = lazy(() => import('./components/DisclaimerModal'));
+const OnboardingFlow  = lazy(() => import('./components/OnboardingFlow'));
 import { SolanaWalletContext } from './components/SolanaWalletContext';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -57,11 +58,18 @@ const AppInner: React.FC = () => {
   const [introComplete, setIntroComplete] = useState(
     () => localStorage.getItem('solraid-intro-dismissed') === 'true'
   );
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Read referral code from URL once on mount (?ref=CODE)
   const incomingRefCode = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('ref');
+  }, []);
+
+  // Read ?join= param once on mount — auto-fills MultiplayerSetupScreen JOIN view
+  const incomingJoinCode = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('join')?.toUpperCase() ?? null;
   }, []);
 
   const walletAddr = publicKey ? publicKey.toBase58() : null;
@@ -308,6 +316,7 @@ const AppInner: React.FC = () => {
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [newRank, setNewRank] = useState<Rank | null>(null);
   const [joinNotification, setJoinNotification] = useState<string | null>(null);
+  const [achievementToast, setAchievementToast] = useState<string | null>(null);
 
   // Stable ref for walletAddr so async callbacks don't close over a stale value
   const walletAddrRef = useRef<string | null>(null);
@@ -637,7 +646,22 @@ const AppInner: React.FC = () => {
   const handleIntroFinish = () => {
     sessionStorage.setItem('raid_intro_seen', 'true');
     setIntroComplete(true);
+    if (!localStorage.getItem('solraid-onboarding-seen')) {
+      setShowOnboarding(true);
+    }
   };
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('solraid-onboarding-seen', 'true');
+    setShowOnboarding(false);
+  };
+
+  // Auto-navigate to multiplayer setup when ?join= param is present
+  useEffect(() => {
+    if (incomingJoinCode && introComplete) {
+      setGameState(prev => ({ ...prev, currentScreen: Screen.MULTIPLAYER_SETUP }));
+    }
+  }, [incomingJoinCode, introComplete]);
 
   const OPERATIVE_LEVEL = 10; // OPERATIVE rank minimum level
   const navigateTo = (screen: Screen) => {
@@ -764,6 +788,7 @@ const AppInner: React.FC = () => {
           ...prev,
           srPoints:        data.new_sr_points,
           unclaimedBalance: data.new_unclaimed,
+          dailyStreak:     data.daily_streak ?? prev.dailyStreak,
           pvpWaiting: isPvp && !data.pvp_resolved,
           lastResult: prev.lastResult
             ? {
@@ -775,6 +800,16 @@ const AppInner: React.FC = () => {
               }
             : prev.lastResult,
         }));
+
+        // Show achievement toast for newly earned badges
+        if (Array.isArray(data.new_achievements) && data.new_achievements.length > 0) {
+          const first = data.new_achievements[0] as string;
+          const def = ACHIEVEMENTS.find(a => a.id === first);
+          if (def) {
+            setAchievementToast(`${def.icon} ${def.name} unlocked!`);
+            setTimeout(() => setAchievementToast(null), 4000);
+          }
+        }
 
         // If this player's submission resolved the PvP match, show winner modal immediately
         if (isPvp && data.pvp_resolved) {
@@ -1805,6 +1840,7 @@ const AppInner: React.FC = () => {
             currentRound={currentRound}
             onEnterRound={enterRoundRaid}
             onRequestFullscreen={enterFullscreen}
+            dailyStreak={gameState.dailyStreak}
           />
         );
       case Screen.RAID:
@@ -1899,6 +1935,7 @@ const AppInner: React.FC = () => {
             onClaimRoundWin={handleClaimRoundWin}
             onMintAvatar={handleMintAvatar}
             lastClaimAt={profile?.last_claim_at ?? null}
+            dailyStreak={gameState.dailyStreak}
           />
         );
       case Screen.STORE:
@@ -1971,6 +2008,7 @@ const AppInner: React.FC = () => {
             currentSkrBalance={gameState.skrBalance}
             walletAddress={walletAddr}
             joinNotification={joinNotification}
+            initialRoomCode={incomingJoinCode ?? undefined}
           />
         );
       case Screen.MULTIPLAYER_GAME:
@@ -2011,6 +2049,7 @@ const AppInner: React.FC = () => {
             currentRound={currentRound}
             onEnterRound={enterRoundRaid}
             onRequestFullscreen={enterFullscreen}
+            dailyStreak={gameState.dailyStreak}
           />
         );
     }
@@ -2028,7 +2067,10 @@ const AppInner: React.FC = () => {
   return (
     <div className="relative h-screen w-full flex flex-col md:flex-row overflow-hidden" style={{ background: 'var(--app-bg)', color: 'var(--text-primary)' }}>
       {!introComplete && (
-        <IntroOverlay onComplete={handleIntroFinish} />
+        <Suspense fallback={null}><DisclaimerModal onComplete={handleIntroFinish} /></Suspense>
+      )}
+      {showOnboarding && (
+        <Suspense fallback={null}><OnboardingFlow onComplete={handleOnboardingComplete} /></Suspense>
       )}
       <div className="absolute inset-0 pixel-grid z-0" />
       {showNavigation && (
@@ -2065,6 +2107,15 @@ const AppInner: React.FC = () => {
           result={gameState.pvpWinnerResult}
           onClose={() => setGameState(prev => ({ ...prev, pvpWinnerResult: null }))}
         />
+      )}
+      {achievementToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] pointer-events-none animate-in slide-in-from-top-2 duration-300">
+          <div className="px-5 py-3 text-sm font-black text-white flex items-center gap-2" style={{ background: '#0d0d18', border: '1px solid rgba(255,184,0,0.45)', borderRadius: '10px', boxShadow: '0 0 24px rgba(255,184,0,0.2)' }}>
+            <span style={{ color: '#FFB800' }}>BADGE EARNED</span>
+            <span className="text-white/60">·</span>
+            <span>{achievementToast}</span>
+          </div>
+        </div>
       )}
       {gameState.pvpWaiting && !gameState.pvpWinnerResult && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-black/90 border border-[#14F195]/40 text-[#14F195] text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 animate-pulse">
