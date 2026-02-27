@@ -93,7 +93,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
   const [decryptionStarted, setDecryptionStarted] = useState(false);
 
   const targetMessage =
-    '>> SYSTEM_NOTE: ALL_LOST_SOL_&_MARKET_FEES_ARE_ROUTED_TO_THE_[VAULT]. FUNDS_ARE_USED_FOR_CONTESTS_//_TOURNAMENTS_//_PLATFORM_REDISTRIBUTION. >> TRANSPARENCY_MODE: USERS_CAN_CHECK_THE_VAULT_THEMSELVES.';
+    '>> PLATFORM_STATUS: TRUSTED — PRIZE_POOL_IS_ON-CHAIN & PUBLICLY_VERIFIABLE. WINNERS_CLAIM_DIRECT_TO_WALLET // NO_MIDDLEMEN. >> VAULT_TRANSPARENCY: ANYONE_CAN_AUDIT_FUNDS_AT_ANY_TIME. YOUR_SOL_IS_SAFE.';
 
   // Sequence timing
   useEffect(() => {
@@ -157,44 +157,44 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
       <div className="relative z-[10] w-full max-w-4xl px-4 sm:px-6 md:px-8 py-6 flex flex-col items-center gap-2 sm:gap-3 text-center">
 
         {step >= 1 && (
-          <div className="flex items-center gap-2 text-red-500/70 font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <span className="animate-pulse">[ █▓▒▒░░ ]</span>
-            <span>INITIALIZING RAID PROTOCOL</span>
+          <div className="flex items-center gap-2 text-red-500/80 font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <span className="animate-pulse">[ ██████░░ ]</span>
+            <span>BREACH DETECTED</span>
           </div>
         )}
 
         {step >= 2 && (
-          <div className="flex items-center gap-2 text-[#14F195] font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center gap-2 font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ color: '#FFB800' }}>
             <span className="animate-pulse">[ $$$ ]</span>
-            <span>YOU CAN WIN REAL SOL</span>
+            <span>HIGH-VALUE TARGET ACQUIRED</span>
           </div>
         )}
 
         {step >= 3 && (
           <div className="flex items-center gap-2 text-cyan-400 font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <span>( IT IS JUST A GAME )</span>
+            <span>( EXTRACTION PROTOCOLS ARMED )</span>
           </div>
         )}
 
         {step >= 4 && (
-          <div className="flex items-center gap-2 text-red-500 font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <span className="animate-pulse">[ ░░ ]</span>
-            <span>SOL IS REFUNDABLE</span>
+          <div className="flex items-center gap-2 font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ color: '#FFB800' }}>
+            <span className="animate-pulse">[ ✓ ]</span>
+            <span>VAULT PAYS OUT DIRECT TO YOUR WALLET</span>
           </div>
         )}
 
         {step >= 5 && (
           <div className="flex items-center gap-2 font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <span className="animate-pulse text-white">[ ✓ ]</span>
-            <span className="text-white border-b border-red-500">YOU MAY LOSE EVERYTHING</span>
+            <span className="animate-pulse text-red-500">[ ▶ ]</span>
+            <span className="text-white border-b border-red-500/50">ONLY THE BOLD EXTRACT</span>
           </div>
         )}
 
         {step >= 6 && (
           <div className="my-2 animate-in zoom-in-50 duration-300">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white glitch-text leading-tight">
-              ONLY ENTER <br />
-              <span className="text-red-600">WHAT YOU CAN LOSE</span>
+              RAID THE VAULT.<br />
+              <span className="text-red-600">CLAIM YOUR SOL.</span>
             </h1>
           </div>
         )}
@@ -249,13 +249,13 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
               }`}
             >
               <span className={`absolute inset-0 bg-red-600/20 blur-xl opacity-0 transition-opacity ${ageConfirmed ? 'group-hover:opacity-100' : ''}`} />
-              <span className="relative">I ACCEPT THE RISK</span>
+              <span className="relative">INITIATE BREACH</span>
             </button>
           </div>
         )}
 
         <div className="absolute bottom-6 text-[10px] text-red-900/50 font-black uppercase tracking-[0.5em] z-20 pointer-events-none">
-          PROTOCOL_V5.0.2 // SECURE_CONNECTION
+          SEEKER_PROTOCOL_V5 // VAULT_ONLINE
         </div>
       </div>
     </div>

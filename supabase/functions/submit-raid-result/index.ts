@@ -4,11 +4,11 @@ import { getCorsHeaders } from '../_shared/cors.ts';
 /**
  * submit-raid-result — Atomic Raid Outcome Processing
  *
- * Security additions:
- *  D. Anti-cheat: server validates that claimed points/sol are achievable
- *     in the claimed elapsed time for the given difficulty + entry fee.
- *  F. Wallet signature: verifies the caller owns the wallet (ed25519 signature
- *     of the seed_id checked against the provided public key).
+ * Anti-cheat strategy:
+ *   - Impossible SOL payouts → zeroed (force-bust), round entry still recorded
+ *   - Impossible points     → clamped to max achievable, round entry recorded
+ *   - Only hard early-return: elapsed_sec < 3 (instant exploit) or missing required fields
+ *   - Drill mode is never recorded (pure simulation)
  */
 
 // Platform fees
@@ -31,61 +31,74 @@ const DIFFICULTY_MAX_WIN: Record<string, number> = {
   DEGEN:  0.60,
 };
 
-// Minimum elapsed time (seconds) for any valid raid — prevents instant exploit
+// Minimum elapsed time (seconds) — below this is clearly an instant-submit exploit
 const MIN_RAID_DURATION_SEC = 3;
 
-// Max elapsed time = raid timer (90s base + up to 30s TIME_BOOST gear) + grace window
-const MAX_RAID_DURATION_SEC = 200;
-
-function validateRaidResult(
+/**
+ * Clamp raid result values to physically achievable maximums.
+ * Returns { effectiveSuccess, effectiveSolAmount, effectivePoints, flagged, reason }
+ * so the caller can always proceed — never hard-rejects (except elapsed < MIN).
+ */
+function clampRaidResult(
   success: boolean,
   sol_amount: number,
   points: number,
-  entry_fee: number,
   difficulty: string,
   elapsed_sec: number,
-): string | null {
-  // Must provide elapsed time
-  if (!elapsed_sec || elapsed_sec < MIN_RAID_DURATION_SEC) {
-    return `Raid too short: ${elapsed_sec}s < minimum ${MIN_RAID_DURATION_SEC}s`;
-  }
+): { effectiveSuccess: boolean; effectiveSolAmount: number; effectivePoints: number; flagged: boolean; reason: string | null } {
+  let effectiveSuccess = success;
+  let effectiveSolAmount = sol_amount;
+  let effectivePoints = points;
+  let flagged = false;
+  let reason: string | null = null;
 
-  if (elapsed_sec > MAX_RAID_DURATION_SEC) {
-    return `Raid too long: ${elapsed_sec}s exceeds maximum ${MAX_RAID_DURATION_SEC}s`;
+  // Max achievable points given elapsed time (no upper cap on duration)
+  const maxMultiplier = 5.0;
+  const maxRate = (MAX_YIELD_RATE[difficulty] ?? MAX_YIELD_RATE.MEDIUM) * maxMultiplier;
+  // Attacks give +200 points (cap 30); skill checks up to +200 pts each (cap 6 triggers)
+  const maxAttackBonus = 30 * 200 + 6 * 200;
+  const maxPoints = Math.ceil(maxRate * Math.max(elapsed_sec, 0)) + maxAttackBonus;
+
+  if (points > maxPoints) {
+    flagged = true;
+    reason = `Points clamped: ${points} > max ${maxPoints} in ${elapsed_sec}s on ${difficulty}`;
+    effectivePoints = maxPoints;
+    // Impossible points → treat as bust, no payout
+    effectiveSuccess = false;
+    effectiveSolAmount = 0;
   }
 
   if (success && sol_amount <= 0) {
-    return 'Successful raid must have positive sol_amount';
+    flagged = true;
+    reason = reason ?? 'Successful raid had zero sol_amount — zeroing payout';
+    effectiveSuccess = false;
+    effectiveSolAmount = 0;
   }
 
-  // Max achievable points in elapsed_sec at highest possible multiplier (mult can reach ~5x with gear+attacks)
-  const maxMultiplier = 5.0;
-  const maxRate = (MAX_YIELD_RATE[difficulty] ?? MAX_YIELD_RATE.MEDIUM) * maxMultiplier;
-  // Attacks give +200 points (cap 30); skill checks give up to +200 pts each (cap 6 triggers)
-  const maxAttackBonus = 30 * 200 + 6 * 200;
-  const maxPoints = Math.ceil(maxRate * elapsed_sec) + maxAttackBonus;
-
-  if (points > maxPoints) {
-    return `Impossible points: ${points} > max achievable ${maxPoints} in ${elapsed_sec}s on ${difficulty}`;
-  }
-
-  if (success) {
+  if (success && !flagged) {
     // Max payout = difficulty cap × 2× DON × 1.1 ticket × 1.05 golden × 1.15 tolerance
     const maxForDiff = DIFFICULTY_MAX_WIN[difficulty] ?? DIFFICULTY_MAX_WIN.MEDIUM;
     const maxPayout = maxForDiff * 2.0 * 1.1 * 1.05 * 1.15;
-    if (sol_amount > maxPayout) {
-      return `Inflated payout: ${sol_amount} SOL > max allowed ${maxPayout.toFixed(6)} SOL for ${difficulty}`;
-    }
 
-    // Cross-check: expected base payout + generous tolerance for bonuses
-    const expectedBase = (points / 5000) * maxForDiff * (1 - PLATFORM_FEE_RAID);
-    const maxExpected = expectedBase * 2.5 + 0.0001; // allows DON 2× + all bonuses + tolerance
-    if (sol_amount > maxExpected) {
-      return `Inflated payout: ${sol_amount} SOL > max expected ${maxExpected.toFixed(6)} SOL for ${points} pts on ${difficulty}`;
+    if (sol_amount > maxPayout) {
+      flagged = true;
+      reason = `Payout clamped: ${sol_amount} SOL > absolute max ${maxPayout.toFixed(6)} SOL for ${difficulty}`;
+      effectiveSolAmount = 0;
+      effectiveSuccess = false;
+    } else {
+      // Cross-check: expected base + generous tolerance for all bonuses
+      const expectedBase = (effectivePoints / 5000) * maxForDiff * (1 - PLATFORM_FEE_RAID);
+      const maxExpected = expectedBase * 2.5 + 0.0001;
+      if (sol_amount > maxExpected) {
+        flagged = true;
+        reason = `Payout clamped: ${sol_amount} SOL > max expected ${maxExpected.toFixed(6)} SOL for ${effectivePoints} pts`;
+        effectiveSolAmount = 0;
+        effectiveSuccess = false;
+      }
     }
   }
 
-  return null; // valid
+  return { effectiveSuccess, effectiveSolAmount, effectivePoints, flagged, reason };
 }
 
 const json = (body: object, status = 200, corsH: Record<string, string>) =>
@@ -122,19 +135,27 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'wallet_address and seed_id required' }, 400, corsH);
     }
 
-    // ── D. Anti-cheat validation ────────────────────────────────────────
-    const cheatError = validateRaidResult(
+    // Drill = pure simulation, never recorded anywhere
+    const isDrill = (mode ?? '').toUpperCase() === 'DRILL';
+
+    // ── Hard early-return: instant-submit exploit (< 3s) ────────────────
+    const rawElapsed = Number(elapsed_sec ?? 0);
+    if (!isDrill && rawElapsed < MIN_RAID_DURATION_SEC) {
+      console.warn(`[anti-cheat] wallet=${wallet_address} elapsed=${rawElapsed}s — instant exploit rejected`);
+      return json({ error: `Raid too short (${rawElapsed}s)` }, 422, corsH);
+    }
+
+    // ── D. Anti-cheat: clamp values, never drop the round entry ─────────
+    const { effectiveSuccess, effectiveSolAmount, effectivePoints, flagged, reason } = clampRaidResult(
       !!success,
       Number(sol_amount ?? 0),
       Number(points ?? 0),
-      Number(entry_fee ?? 0),
       difficulty ?? 'MEDIUM',
-      Number(elapsed_sec ?? 0),
+      rawElapsed,
     );
 
-    if (cheatError) {
-      console.warn(`[anti-cheat] wallet=${wallet_address} reason="${cheatError}"`);
-      return json({ error: `Validation failed: ${cheatError}` }, 422, corsH);
+    if (flagged) {
+      console.warn(`[anti-cheat] wallet=${wallet_address} ${reason} — recording as bust, zeroing payout`);
     }
 
     const supabase = createClient(
@@ -158,8 +179,8 @@ Deno.serve(async (req: Request) => {
     await supabase.from('raid_seeds').update({ used: true }).eq('id', seed_id);
 
     // ── 2. Server-side SR calculation ──────────────────────────────────
-    const baseSR = success ? 100 : 25;
-    const performanceSR = Math.floor((points || 0) / 200);
+    const baseSR = effectiveSuccess ? 100 : 25;
+    const performanceSR = Math.floor(effectivePoints / 200);
     const totalSREarned = baseSR + performanceSR;
 
     // ── 3. Fetch + update profile ──────────────────────────────────────
@@ -173,11 +194,10 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'Profile not found' }, 404, corsH);
     }
 
-    const isDrill = (mode ?? '').toUpperCase() === 'DRILL';
     const newSRPoints = Number(profile.sr_points) + totalSREarned;
     // Drill mode: practice only — no SOL payout regardless of outcome
-    const newUnclaimed = success && !isDrill
-      ? Number(profile.unclaimed_sol) + Number(sol_amount)
+    const newUnclaimed = effectiveSuccess && !isDrill
+      ? Number(profile.unclaimed_sol) + effectiveSolAmount
       : Number(profile.unclaimed_sol);
 
     await supabase
@@ -194,19 +214,19 @@ Deno.serve(async (req: Request) => {
       mode: mode || 'SOLO',
       difficulty: difficulty || 'MEDIUM',
       raid_tier: raid_tier || 'GRUNT',
-      success,
-      sol_amount: sol_amount || 0,
+      success: effectiveSuccess,
+      sol_amount: effectiveSolAmount,
       entry_fee: entry_fee || 0,
       sr_earned: totalSREarned,
-      points: points || 0,
+      points: effectivePoints,
       server_seed_hash: seedData.server_seed_hash,
       tx_signature: client_seed || null,
     });
 
-    // ── 4b. Update round pool + live entry (non-PvP, paid raids) ─────────────
-    // Runs for ALL paid raids (success or bust) so every entrant appears on the
-    // live leaderboard immediately, regardless of raid outcome.
-    if (!room_id && Number(entry_fee) > 0) {
+    // ── 4b. Round pool + live entry ────────────────────────────────────
+    // Recorded for ALL paid non-PvP non-drill raids, regardless of win/bust/flag.
+    // Players always appear in round standings the moment they submit.
+    if (!isDrill && !room_id && Number(entry_fee) > 0) {
       const raidNow = new Date();
       const utcHour = raidNow.getUTCHours();
       const raidRoundNum  = Math.floor(utcHour / 6) + 1;
@@ -215,8 +235,8 @@ Deno.serve(async (req: Request) => {
       const rd = raidNow.getUTCDate();
       const raidRoundDate = `${ry}-${String(rm).padStart(2, '0')}-${String(rd).padStart(2, '0')}`;
       const poolContribution = Number(entry_fee) * 0.90;
-      // Run both RPCs in parallel
-      await Promise.all([
+
+      const [poolResult, entryResult] = await Promise.all([
         supabase.rpc('increment_round_pool', {
           p_round_number: raidRoundNum,
           p_round_date:   raidRoundDate,
@@ -229,52 +249,59 @@ Deno.serve(async (req: Request) => {
           p_raid_tier:    raid_tier || 'GRUNT',
           p_wallet:       wallet_address,
           p_username:     profile.username,
-          p_points:       points || 0,
+          p_points:       effectivePoints,
         }),
       ]);
+
+      if (poolResult.error)  console.error('[round] increment_round_pool error:', poolResult.error.message);
+      if (entryResult.error) console.error('[round] upsert_round_entry error:', entryResult.error.message);
+
+      console.log(`[round] wallet=${wallet_address} round=${raidRoundDate}#${raidRoundNum} pts=${effectivePoints} pool+=${poolContribution}`);
     }
 
     // ── 4c. Activity feed ──────────────────────────────────────────────
-    await supabase.from('activity_feed').insert({
-      event_type: success ? 'EXTRACTED' : 'BUSTED',
-      username: profile.username,
-      amount_sol: success ? sol_amount : entry_fee,
-    });
+    if (!isDrill) {
+      await supabase.from('activity_feed').insert({
+        event_type: effectiveSuccess ? 'EXTRACTED' : 'BUSTED',
+        username: profile.username,
+        amount_sol: effectiveSuccess ? effectiveSolAmount : (entry_fee || 0),
+      });
+    }
 
     // ── 5. Treasury stats ──────────────────────────────────────────────
-    const { data: treasury } = await supabase
-      .from('treasury_stats')
-      .select('total_transactions, payouts_24h_sol')
-      .eq('id', 1)
-      .single();
+    if (!isDrill) {
+      const { data: treasury } = await supabase
+        .from('treasury_stats')
+        .select('total_transactions, payouts_24h_sol')
+        .eq('id', 1)
+        .single();
 
-    if (treasury) {
-      const platformFeeRaid = success ? Number(sol_amount) * PLATFORM_FEE_RAID / (1 - PLATFORM_FEE_RAID) : 0;
-      await supabase.from('treasury_stats').update({
-        total_transactions: treasury.total_transactions + 1,
-        payouts_24h_sol: success
-          ? Number(treasury.payouts_24h_sol) + Number(sol_amount)
-          : treasury.payouts_24h_sol,
-        updated_at: new Date().toISOString(),
-      }).eq('id', 1);
-      if (success) console.log(`[fee] raid net=${sol_amount} platform_fee≈${platformFeeRaid.toFixed(6)} SOL`);
+      if (treasury) {
+        const platformFeeRaid = effectiveSuccess ? effectiveSolAmount * PLATFORM_FEE_RAID / (1 - PLATFORM_FEE_RAID) : 0;
+        await supabase.from('treasury_stats').update({
+          total_transactions: treasury.total_transactions + 1,
+          payouts_24h_sol: effectiveSuccess
+            ? Number(treasury.payouts_24h_sol) + effectiveSolAmount
+            : treasury.payouts_24h_sol,
+          updated_at: new Date().toISOString(),
+        }).eq('id', 1);
+        if (effectiveSuccess) console.log(`[fee] raid net=${effectiveSolAmount} platform_fee≈${platformFeeRaid.toFixed(6)} SOL`);
+      }
     }
 
     // ── 6. PvP room: record result + determine winner if all done ──────
     let pvpPayload: Record<string, unknown> = {};
     if (room_id) {
-      // Record this player's raid result in room_players
       await supabase
         .from('room_players')
         .update({
-          points: points || 0,
-          sol_result: success ? Number(sol_amount) : 0,
+          points: effectivePoints,
+          sol_result: effectiveSuccess ? effectiveSolAmount : 0,
           finished_at: new Date().toISOString(),
         })
         .eq('room_id', room_id)
         .eq('wallet_address', wallet_address);
 
-      // Check if every player in the room has now finished
       const { data: allPlayers } = await supabase
         .from('room_players')
         .select('wallet_address, username, points, finished_at')
@@ -285,27 +312,20 @@ Deno.serve(async (req: Request) => {
         allPlayers!.every((p) => p.finished_at !== null);
 
       if (allDone && allPlayers) {
-        // Determine winner by highest points (first place wins ties)
         const winner = allPlayers.reduce((best, p) =>
           (p.points ?? 0) > (best.points ?? 0) ? p : best
         );
 
-        // Fetch room stake info
         const { data: room } = await supabase
           .from('rooms')
           .select('stake_per_player, stake_currency')
           .eq('id', room_id)
           .single();
 
-        const grossPot = room
-          ? Number(room.stake_per_player) * allPlayers.length
-          : 0;
-
-        // Apply 10% platform fee — winner receives 90% of pot
+        const grossPot = room ? Number(room.stake_per_player) * allPlayers.length : 0;
         const netPot = grossPot * (1 - PLATFORM_FEE_PVP);
         const platformFeePvp = grossPot - netPot;
 
-        // Credit net pot to winner's unclaimed_sol
         if (netPot > 0) {
           const { data: wProfile } = await supabase
             .from('profiles')
@@ -324,13 +344,11 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // Mark room as finished with winner
         await supabase
           .from('rooms')
           .update({ status: 'FINISHED', winner_wallet: winner.wallet_address })
           .eq('id', room_id);
 
-        // Post activity feed event
         await supabase.from('activity_feed').insert({
           event_type: 'PVP_WIN',
           username: winner.username || winner.wallet_address.slice(0, 8),
@@ -362,6 +380,7 @@ Deno.serve(async (req: Request) => {
       new_unclaimed: newUnclaimed,
       server_seed: seedData.server_seed,
       server_seed_hash: seedData.server_seed_hash,
+      ...(flagged ? { anti_cheat_flag: reason } : {}),
       ...pvpPayload,
     }, 200, corsH);
 
