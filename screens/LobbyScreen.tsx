@@ -101,12 +101,14 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     }
   };
 
-  // Round cost calc — fee driven by selected tier; 50% discount if ticket applied
+  // Round cost calc — fee driven by selected tier; boost costs always in SOL; 50% ticket discount on entry only
   const applyRoundTicket   = roundUseTicket && raidTickets > 0;
   const roundFeeBase       = RAID_TIER_CONFIG[roundTier].entryFee;
+  const roundBoostCostSol  = roundBoosts.reduce((s, id) => s + (RAID_BOOSTS.find(b => b.id === id)?.cost ?? 0), 0);
+  const roundTotalSol      = (applyRoundTicket ? roundFeeBase * 0.5 : roundFeeBase) + roundBoostCostSol;
   const roundRate          = rates[roundCurrency];
   const roundPricesLoading = roundCurrency !== Currency.SOL && roundRate === 0;
-  const roundTotalDisplay  = (applyRoundTicket ? roundFeeBase * 0.5 : roundFeeBase) * roundRate;
+  const roundTotalDisplay  = roundTotalSol * roundRate;
   const roundCurSymbol     = roundCurrency === Currency.SOL ? 'SOL' : roundCurrency === Currency.USDC ? 'USDC' : 'SKR';
   const roundCurDecimals   = roundCurrency === Currency.SOL ? 3 : roundCurrency === Currency.USDC ? 2 : 0;
   const roundBalance       = roundCurrency === Currency.SOL ? walletBalance : roundCurrency === Currency.USDC ? usdcBalance : skrBalance;
@@ -222,7 +224,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     </p>
                   </div>
                   <div className="flex-1 text-center">
-                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Raiders</p>
+                    <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Round Raiders</p>
                     <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
                       {currentRound.entrantCount}
                     </p>
@@ -316,44 +318,38 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </div>
         </button>
 
-        {/* ── FREE DRILL — localhost debug only ── */}
-        {(() => {
-          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-          return (
-            <button
-              onClick={() => isLocalhost && isConnected && !drillCapHit ? onEnterRaid(Mode.SOLO, Difficulty.EASY, [], Currency.SOL, false, 0) : !isConnected ? onConnect() : undefined}
-              disabled={!isLocalhost || drillCapHit}
-              className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${isLocalhost ? 'rgba(255,184,0,0.3)' : 'rgba(255,255,255,0.12)'}` }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  {!isLocalhost ? (
-                    <>
-                      <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
-                      <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Temporarily unavailable</p>
-                    </>
-                  ) : drillCapHit ? (
-                    <>
-                      <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
-                      <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Cap reached · resets every 6h</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>
-                        FREE DRILL
-                        <span className="ml-2 text-[10px] font-semibold text-[#FFB800]/60" style={INTER}>[localhost]</span>
-                        {isConnected && <span className="ml-2 text-[11px] font-semibold text-white/50" style={INTER}>{drillsRemaining} left</span>}
-                      </p>
-                      <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Practice on EASY · no entry fee</p>
-                    </>
-                  )}
-                </div>
-                <i className="fa-solid fa-chevron-right text-white/25 text-xs shrink-0" />
-              </div>
-            </button>
-          );
-        })()}
+        {/* ── FREE DRILL — simulation, open to all ── */}
+        <button
+          onClick={() => isConnected && !drillCapHit ? onEnterRaid(Mode.DRILL, Difficulty.EASY, [], Currency.SOL, false, 0) : !isConnected ? onConnect() : undefined}
+          disabled={drillCapHit}
+          className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,184,0,0.22)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="text-xl shrink-0">🎮</div>
+            <div className="flex-1 min-w-0">
+              {drillCapHit ? (
+                <>
+                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
+                  <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Cap reached · resets every 6h</p>
+                </>
+              ) : (
+                <>
+                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>
+                    FREE DRILL
+                    {isConnected && drillsRemaining < 3 && (
+                      <span className="ml-2 text-[11px] font-semibold text-white/45" style={INTER}>{drillsRemaining} left</span>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
+                    Simulation only · no SOL earned · no points tracked · 3 per 6h
+                  </p>
+                </>
+              )}
+            </div>
+            <i className="fa-solid fa-chevron-right text-white/25 text-xs shrink-0" />
+          </div>
+        </button>
 
         {/* ── WALLET ROAST + DAILY BRIEFING ── */}
         <div className="grid grid-cols-2 gap-2">
@@ -712,7 +708,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                           className={`p-3 rounded-xl border transition-all text-left active:scale-[0.97] ${active ? 'bg-amber-500/10 border-amber-500/35' : 'bg-white/3 border-white/[0.12] hover:border-white/18'}`}>
                           <div className="flex justify-between items-start mb-1">
                             <span className="text-lg">{boost.icon}</span>
-                            <span className={`text-[9px] font-semibold ${active ? 'text-amber-400' : 'text-white/30'}`} style={SG_NUM}>{boost.cost} S</span>
+                            <span className={`text-[9px] font-semibold ${active ? 'text-amber-400' : 'text-white/30'}`} style={SG_NUM}>+{boost.cost} SOL</span>
                           </div>
                           <p className={`text-[10px] leading-tight ${active ? 'text-white' : 'text-white/40'}`} style={{ ...INTER, fontWeight: 500 }}>{boost.name}</p>
                         </button>

@@ -670,9 +670,11 @@ const AppInner: React.FC = () => {
   };
 
   const handleRaidEnd = async (success: boolean, solAmount: number, points: number, elapsedSec = 10, events?: import('./types').RaidEvent[], peakMult?: number, nearWinCount?: number, bankedYield = 0, lootDrops: import('./types').LootDrop[] = []) => {
+    // DRILL = pure simulation — no SR, no SOL, no DB writes
+    const isDrill = gameState.lastRaidConfig?.mode === Mode.DRILL;
     const baseSR = success ? 100 : 25;
     const performanceSR = Math.floor(points / 200);
-    const localSREarned = baseSR + performanceSR;
+    const localSREarned = isDrill ? 0 : baseSR + performanceSR;
     const localRaidId = 'RAID-' + Math.random().toString(36).substr(2, 9).toUpperCase();
     const userWallet = walletAddr ? `${walletAddr.slice(0, 4)}...${walletAddr.slice(-3)}` : '';
 
@@ -682,8 +684,7 @@ const AppInner: React.FC = () => {
     const roomCurrency = gameState.activeRoom?.stakeCurrency ?? 'SOL';
 
     // solAmount arrives already net of the 5% platform fee (applied in RaidScreen)
-    // DRILL mode is practice-only — no SOL reward regardless of outcome
-    const isDrill = gameState.lastRaidConfig?.mode === Mode.DRILL;
+    // DRILL = pure simulation — no SOL reward regardless of outcome
     const netSolAmount = success && !isDrill ? solAmount : 0;
 
     // Optimistic UI update — show result immediately
@@ -723,19 +724,20 @@ const AppInner: React.FC = () => {
       pvpWinnerResult: null,
     }));
 
-    // Apply loot SR from raid events
+    // Apply loot SR from raid events (skipped for drills — simulation only)
     const srFromLoot = lootDrops.find(d => d.type === 'SR_BURST')?.amount ?? 0;
-    if (srFromLoot > 0) {
+    if (!isDrill && srFromLoot > 0) {
       setGameState(prev => ({ ...prev, srPoints: prev.srPoints + Math.floor(srFromLoot) }));
     }
 
-    // Persist personal best if beaten
-    if (points > gameState.personalBestPoints) {
+    // Persist personal best if beaten (skipped for drills)
+    if (!isDrill && points > gameState.personalBestPoints) {
       updateProfile({ personal_best_points: points } as any);
     }
 
     // Background: call edge function for authoritative result + recording
-    if (walletAddr && gameState.activeSeedId) {
+    // Drills are pure simulations — nothing is recorded server-side
+    if (!isDrill && walletAddr && gameState.activeSeedId) {
       const clientSeed = Math.random().toString(36).substr(2, 9);
       const { data, error } = await supabase.functions.invoke('submit-raid-result', {
         body: {
