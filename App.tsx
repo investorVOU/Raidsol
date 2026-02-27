@@ -828,7 +828,7 @@ const AppInner: React.FC = () => {
       setGameState(prev => ({
         ...prev,
         walletBalance: prev.walletBalance + data.amount_paid,
-        unclaimedBalance: Math.max(0, prev.unclaimedBalance - data.amount_paid),
+        unclaimedBalance: Math.max(0, prev.unclaimedBalance - (data.amount_claimed ?? data.amount_paid)),
       }));
       return (data.tx_signature as string) ?? null;
     }
@@ -1884,6 +1884,7 @@ const AppInner: React.FC = () => {
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             onClaimRoundWin={handleClaimRoundWin}
             onMintAvatar={handleMintAvatar}
+            lastClaimAt={profile?.last_claim_at ?? null}
           />
         );
       case Screen.STORE:

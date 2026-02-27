@@ -259,7 +259,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('unclaimed_sol, username')
+      .select('unclaimed_sol, username, last_claim_at')
       .eq('wallet_address', wallet_address)
       .single();
 
@@ -273,8 +273,43 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'No unclaimed balance available' }, 400, corsH);
     }
 
-    const lamports = Math.round(actualAmount * LAMPORTS_PER_SOL);
-    console.log(`[payout] available=${available} actualAmount=${actualAmount} lamports=${lamports}`);
+    const now = new Date();
+
+    // ── Claim cooldown check ───────────────────────────────────────────
+    const COOLDOWN_MS = 6 * 60 * 60 * 1000;
+    const lastClaimAt = profile.last_claim_at ? new Date(profile.last_claim_at) : null;
+
+    if (lastClaimAt && (now.getTime() - lastClaimAt.getTime() < COOLDOWN_MS)) {
+      const { count: raidsSinceClaim } = await supabase
+        .from('raid_history')
+        .select('*', { count: 'exact', head: true })
+        .eq('wallet_address', wallet_address)
+        .gte('created_at', lastClaimAt.toISOString());
+
+      if ((raidsSinceClaim ?? 0) === 0) {
+        const remainingMs = COOLDOWN_MS - (now.getTime() - lastClaimAt.getTime());
+        const remainingH = Math.floor(remainingMs / 3600000);
+        const remainingM = Math.floor((remainingMs % 3600000) / 60000);
+        return json({
+          error: `Claim locked for ${remainingH}h ${remainingM}m. Play a raid to unlock early.`,
+          cooldown_remaining_ms: remainingMs,
+        }, 429, corsH);
+      }
+    }
+
+    // ── Fee decay: count raids in last 24h ────────────────────────────
+    const { count: raids24h } = await supabase
+      .from('raid_history')
+      .select('*', { count: 'exact', head: true })
+      .eq('wallet_address', wallet_address)
+      .gte('created_at', new Date(Date.now() - 86400000).toISOString());
+
+    const raidCount = raids24h ?? 0;
+    const feePct = raidCount >= 3 ? 0 : raidCount === 2 ? 0.02 : raidCount === 1 ? 0.05 : 0.08;
+    const feeAmount = actualAmount * feePct;
+    const netAmount = actualAmount - feeAmount;
+    const lamports = Math.round(netAmount * LAMPORTS_PER_SOL);
+    console.log(`[payout] available=${available} actualAmount=${actualAmount} feePct=${feePct} netAmount=${netAmount} lamports=${lamports}`);
 
     // ── Atomically deduct first (double-spend guard) ──────────────────
     const { error: deductErr } = await supabase
@@ -373,11 +408,22 @@ Deno.serve(async (req: Request) => {
     await supabase.from('activity_feed').insert({
       event_type: 'PAYOUT',
       username: profile.username || wallet_address.slice(0, 6) + '...',
-      amount_sol: actualAmount,
+      amount_sol: netAmount,
     });
 
-    console.log(`[payout] SUCCESS amount=${actualAmount} tx=${txSignature}`);
-    return json({ success: true, tx_signature: txSignature, amount_paid: actualAmount }, 200, corsH);
+    await supabase.from('profiles')
+      .update({ last_claim_at: now.toISOString(), updated_at: now.toISOString() })
+      .eq('wallet_address', wallet_address);
+
+    console.log(`[payout] SUCCESS actualAmount=${actualAmount} netAmount=${netAmount} feePct=${feePct} tx=${txSignature}`);
+    return json({
+      success: true,
+      tx_signature: txSignature,
+      amount_paid: netAmount,
+      amount_claimed: actualAmount,
+      fee_pct: feePct,
+      fee_amount: feeAmount,
+    }, 200, corsH);
 
   } catch (err) {
     console.error('[payout] Unhandled error:', err);

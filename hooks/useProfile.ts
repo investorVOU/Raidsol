@@ -20,6 +20,7 @@ export interface Profile {
   daily_streak: number;                  // consecutive calendar days played
   last_played_date: string | null;       // "YYYY-MM-DD"
   personal_best_points: number;          // highest single-raid points
+  last_claim_at: string | null;          // ISO timestamp of last successful withdrawal
 }
 
 type ProfileUpdate = Partial<Omit<Profile, 'wallet_address'>>;

@@ -30,6 +30,7 @@ interface ProfileScreenProps {
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
   onClaimRoundWin?: (roundNum: number, roundDate: string) => Promise<boolean>;
   onMintAvatar?: (avatarId: string) => Promise<boolean>;
+  lastClaimAt?: string | null;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -53,6 +54,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onNavigateStore,
   onClaimRoundWin,
   onMintAvatar,
+  lastClaimAt,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -75,6 +77,32 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   // Real raid history from Supabase
   const { history: raidHistory, loading: historyLoading } = useRaidHistory(walletAddress ?? null);
+
+  // Fee decay preview
+  const todayRaidCount = useMemo(() => {
+    const cutoff = Date.now() - 86400000;
+    return raidHistory.filter(r => new Date(r.created_at).getTime() > cutoff).length;
+  }, [raidHistory]);
+  const feeRate = todayRaidCount >= 3 ? 0 : todayRaidCount === 2 ? 2 : todayRaidCount === 1 ? 5 : 8;
+  const feePreview = parseFloat(withdrawAmount) > 0 ? parseFloat(withdrawAmount) * feeRate / 100 : 0;
+
+  // Cooldown state
+  const [, forceTickCooldown] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => forceTickCooldown(n => n + 1), 30000);
+    return () => clearInterval(t);
+  }, []);
+  const COOLDOWN_MS = 6 * 60 * 60 * 1000;
+  const claimLockedUntil = lastClaimAt ? new Date(lastClaimAt).getTime() + COOLDOWN_MS : null;
+  const playedSinceClaim = lastClaimAt
+    ? raidHistory.some(r => new Date(r.created_at).getTime() > new Date(lastClaimAt).getTime())
+    : false;
+  const cooldownActive = claimLockedUntil !== null
+    && Date.now() < claimLockedUntil
+    && !playedSinceClaim;
+  const cooldownRemainingMs = cooldownActive ? (claimLockedUntil! - Date.now()) : 0;
+  const cooldownH = Math.floor(cooldownRemainingMs / 3600000);
+  const cooldownM = Math.floor((cooldownRemainingMs % 3600000) / 60000);
 
   // Round win history
   const { wins: roundWins, loading: roundWinsLoading, refetch: refetchRoundWins } = usePlayerRoundWins(walletAddress ?? null);
@@ -521,13 +549,44 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     </div>
                     <button
                       onClick={handleWithdraw}
-                      disabled={unclaimedBalance <= 0 || isClaiming || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > unclaimedBalance}
-                      className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance ? 'active:translate-y-1' : 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed opacity-50'}`}
-                      style={unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance ? { background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
+                      disabled={unclaimedBalance <= 0 || isClaiming || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > unclaimedBalance || cooldownActive}
+                      className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? 'active:translate-y-1' : 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed opacity-50'}`}
+                      style={unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? { background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
                     >
                       {isClaiming ? 'Processing...' : 'Withdraw'}
                     </button>
                   </div>
+
+                  {/* Fee info */}
+                  {feeRate > 0 && unclaimedBalance > 0 && (
+                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
+                      <span className="text-white/40">Withdrawal fee</span>
+                      <span className="text-[#FF2929]">
+                        {feeRate}%{feePreview > 0 ? ` (−${feePreview.toFixed(4)} SOL)` : ''}
+                        {' · '}
+                        <span className="text-white/30">
+                          {todayRaidCount < 3 ? `Play ${3 - todayRaidCount} more to remove` : 'No fee'}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                  {feeRate === 0 && unclaimedBalance > 0 && (
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#FFB800]/60">
+                      ✓ No fee — 3+ raids today
+                    </p>
+                  )}
+
+                  {/* Cooldown info */}
+                  {cooldownActive && (
+                    <div className="bg-[#FF2929]/10 border border-[#FF2929]/30 p-3 text-center">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2929]">
+                        Claim locked — {cooldownH}h {cooldownM}m remaining
+                      </p>
+                      <p className="text-[9px] text-white/40 mt-1 uppercase tracking-wide">
+                        Play any raid to unlock immediately
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
