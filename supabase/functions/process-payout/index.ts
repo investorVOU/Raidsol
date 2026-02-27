@@ -284,6 +284,7 @@ Deno.serve(async (req: Request) => {
         .from('raid_history')
         .select('*', { count: 'exact', head: true })
         .eq('wallet_address', wallet_address)
+        .neq('mode', 'DRILL')
         .gte('created_at', lastClaimAt.toISOString());
 
       if ((raidsSinceClaim ?? 0) === 0) {
@@ -297,11 +298,12 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── Fee decay: count raids in last 24h ────────────────────────────
+    // ── Fee decay: count paid raids in last 24h (DRILL excluded) ─────
     const { count: raids24h } = await supabase
       .from('raid_history')
       .select('*', { count: 'exact', head: true })
       .eq('wallet_address', wallet_address)
+      .neq('mode', 'DRILL')
       .gte('created_at', new Date(Date.now() - 86400000).toISOString());
 
     const raidCount = raids24h ?? 0;

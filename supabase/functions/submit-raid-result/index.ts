@@ -172,8 +172,10 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'Profile not found' }, 404, corsH);
     }
 
+    const isDrill = (mode ?? '').toUpperCase() === 'DRILL';
     const newSRPoints = Number(profile.sr_points) + totalSREarned;
-    const newUnclaimed = success
+    // Drill mode: practice only — no SOL payout regardless of outcome
+    const newUnclaimed = success && !isDrill
       ? Number(profile.unclaimed_sol) + Number(sol_amount)
       : Number(profile.unclaimed_sol);
 

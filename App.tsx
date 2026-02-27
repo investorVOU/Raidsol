@@ -681,7 +681,9 @@ const AppInner: React.FC = () => {
     const roomCurrency = gameState.activeRoom?.stakeCurrency ?? 'SOL';
 
     // solAmount arrives already net of the 5% platform fee (applied in RaidScreen)
-    const netSolAmount = success ? solAmount : 0;
+    // DRILL mode is practice-only — no SOL reward regardless of outcome
+    const isDrill = gameState.lastRaidConfig?.mode === Mode.DRILL;
+    const netSolAmount = success && !isDrill ? solAmount : 0;
 
     // Optimistic UI update — show result immediately
     releaseWakeLock();

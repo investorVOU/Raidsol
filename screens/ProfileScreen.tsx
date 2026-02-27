@@ -78,10 +78,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   // Real raid history from Supabase
   const { history: raidHistory, loading: historyLoading } = useRaidHistory(walletAddress ?? null);
 
-  // Fee decay preview
+  // Fee decay preview — only paid raids count (DRILL excluded)
   const todayRaidCount = useMemo(() => {
     const cutoff = Date.now() - 86400000;
-    return raidHistory.filter(r => new Date(r.created_at).getTime() > cutoff).length;
+    return raidHistory.filter(r => new Date(r.created_at).getTime() > cutoff && r.mode !== 'DRILL').length;
   }, [raidHistory]);
   const feeRate = todayRaidCount >= 3 ? 0 : todayRaidCount === 2 ? 2 : todayRaidCount === 1 ? 5 : 8;
   const feePreview = parseFloat(withdrawAmount) > 0 ? parseFloat(withdrawAmount) * feeRate / 100 : 0;
@@ -95,7 +95,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const COOLDOWN_MS = 6 * 60 * 60 * 1000;
   const claimLockedUntil = lastClaimAt ? new Date(lastClaimAt).getTime() + COOLDOWN_MS : null;
   const playedSinceClaim = lastClaimAt
-    ? raidHistory.some(r => new Date(r.created_at).getTime() > new Date(lastClaimAt).getTime())
+    ? raidHistory.some(r => r.mode !== 'DRILL' && new Date(r.created_at).getTime() > new Date(lastClaimAt).getTime())
     : false;
   const cooldownActive = claimLockedUntil !== null
     && Date.now() < claimLockedUntil
