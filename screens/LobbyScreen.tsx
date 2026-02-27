@@ -352,29 +352,16 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </div>
         </button>
 
-        {/* ── FREE DRILL ── */}
+        {/* ── FREE DRILL — temporarily disabled ── */}
         <button
-          onClick={() => isConnected && !drillCapHit ? onEnterRaid(Mode.SOLO, Difficulty.EASY, [], Currency.SOL, false, 0) : !isConnected ? onConnect() : undefined}
-          disabled={drillCapHit}
-          className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled
+          className="w-full rounded-xl p-3 text-left opacity-40 cursor-not-allowed"
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}
         >
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              {drillCapHit ? (
-                <>
-                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
-                  <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Cap reached · resets every 6h</p>
-                </>
-              ) : (
-                <>
-                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#ffffff', letterSpacing: '1.5px' }}>
-                    FREE DRILL
-                    {isConnected && <span className="ml-2 text-[11px] font-semibold text-white/50" style={INTER}>{drillsRemaining} left</span>}
-                  </p>
-                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Practice on EASY · no entry fee</p>
-                </>
-              )}
+              <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
+              <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Temporarily unavailable</p>
             </div>
             <i className="fa-solid fa-chevron-right text-white/25 text-xs shrink-0" />
           </div>
