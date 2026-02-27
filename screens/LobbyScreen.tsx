@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Mode, ENTRY_FEES, Difficulty, DIFFICULTY_CONFIG, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, RaidTier, RAID_TIER_CONFIG, RAID_TIER_ALLOCATION, ROUND_MIN_PARTICIPANTS, DIFFICULTY_MAX_WIN } from '../types';
+import { Mode, ENTRY_FEES, Difficulty, DIFFICULTY_CONFIG, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, RaidTier, RAID_TIER_CONFIG, RAID_TIER_ALLOCATION, ROUND_MIN_PARTICIPANTS } from '../types';
 import type { LivePrices } from '../hooks/usePrices';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
 import { formatCountdown, formatRoundWindow } from '../hooks/useRoundData';
@@ -256,9 +256,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             {/* Stats strip */}
             <div className="flex items-center gap-0 border-t border-white/[0.06] pt-2.5">
               {[
-                { label: 'Base time', value: '90s',      color: 'rgba(255,255,255,0.65)' },
-                { label: 'Max win',   value: '0.60 SOL', color: '#FFB800' },
-                { label: 'Win rate',  value: '~25%',     color: 'rgba(255,255,255,0.65)' },
+                { label: 'Base time', value: '90s',  color: 'rgba(255,255,255,0.65)' },
+                { label: 'Win rate',  value: '~25%', color: 'rgba(255,255,255,0.65)' },
               ].map(({ label, value, color }, i) => (
                 <div key={i} className="flex-1 text-center">
                   <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>{label}</p>
@@ -874,302 +873,260 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         <div className="fixed inset-x-0 top-0 bottom-[76px] sm:bottom-0 sm:inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200" onClick={() => setShowModal(false)} />
 
-          <div className="relative w-full sm:max-w-4xl bg-[#080814] border-t sm:border border-white/[0.14] rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col h-[90svh] sm:h-auto sm:max-h-[95vh]" style={SG}>
-
+          <div
+            className="relative w-full sm:max-w-lg bg-[#08060f] border-t sm:border rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[90svh] sm:max-h-[88vh]"
+            style={{ borderColor: 'rgba(255,41,41,0.25)', ...SG }}
+          >
             {/* Drag handle */}
             <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
               <div className="w-10 h-1 rounded-full bg-white/15" />
             </div>
 
-            {/* Modal header */}
-            <div className="shrink-0 px-5 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-2.5">
-                <div className="w-1 h-6 rounded-full bg-[#FF2929]" />
-                <h2 className="text-base font-semibold text-white">{t('lobby.configureRaid')}</h2>
+            {/* Header */}
+            <div className="shrink-0 px-5 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,41,41,0.15)', border: '1px solid rgba(255,41,41,0.28)' }}>
+                  <i className="fa-solid fa-crosshairs" style={{ color: '#FF2929', fontSize: '15px' }} />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-white tracking-wide">{t('lobby.configureRaid')}</h2>
+                  <p className="text-[10px] text-white/30 font-medium">
+                    {selectedMode === Mode.SOLO ? 'Solo extraction' : selectedMode === Mode.TEAM ? 'Squad run' : 'Tournament play'}
+                    {' · '}
+                    <span className={DIFF_CONFIG[selectedDifficulty].color}>
+                      {DIFF_CONFIG[selectedDifficulty].label}
+                    </span>
+                  </p>
+                </div>
               </div>
-              <button onClick={() => setShowModal(false)}
-                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
+              <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
                 <i className="fa-solid fa-xmark text-sm" />
               </button>
             </div>
 
             {/* Scrollable body */}
-            <div className="relative flex-1 min-h-0">
-            {/* Gradient fade — mobile scroll hint */}
-            <div className="sm:hidden pointer-events-none absolute bottom-0 left-0 right-0 h-10 z-10"
-              style={{ background: 'linear-gradient(to top, #080814 0%, transparent 100%)' }} />
-            <div className="h-full overflow-y-auto p-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-2 space-y-4">
 
-                {/* ── Left col: settings ── */}
-                <div className="space-y-5">
-
-                  {/* Mode */}
-                  <section>
-                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">{t('lobby.mode')}</p>
-                    <div className="space-y-2">
-                      {[
-                        { mode: Mode.SOLO,       label: 'Solo',       desc: 'Play alone',        icon: 'fa-user',   locked: false             },
-                        { mode: Mode.TEAM,       label: 'Squad',      desc: '4-player team',     icon: 'fa-users',  locked: currentLevel < 5  },
-                        { mode: Mode.TOURNAMENT, label: 'Tournament', desc: 'Compete for glory', icon: 'fa-trophy', locked: currentLevel < 15 },
-                      ].map(({ mode, label, desc, icon, locked }) => (
-                        <button key={mode} onClick={() => { if (!locked) { setMode(mode); setCustomFee(null); } }} disabled={locked}
-                          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                            locked            ? 'opacity-35 cursor-not-allowed border-white/5 bg-transparent'
-                            : selectedMode === mode ? 'bg-[#FF2929]/8 border-[#FF2929]/35'
-                            : 'bg-white/3 border-white/[0.12] hover:border-white/18 active:scale-[0.98]'
-                          }`}>
-                          <i className={`fa-solid ${icon} text-sm shrink-0 ${selectedMode === mode && !locked ? 'text-[#FF2929]' : 'text-white/40'}`} />
-                          <div className="flex-1 text-left">
-                            <p className={`text-sm font-semibold ${selectedMode === mode ? 'text-white' : 'text-white/70'}`}>{label}</p>
-                            <p className="text-[10px] text-white/28 font-medium">{desc}</p>
-                          </div>
-                          <div className="shrink-0 flex items-center gap-2">
-                            {locked && <span className="text-[9px] bg-red-500/18 text-red-400 rounded-full px-2 py-0.5 font-semibold">Locked</span>}
-                            <span className="text-xs text-white/35 font-medium">{ENTRY_FEES[mode]} SOL</span>
-                            {selectedMode === mode && !locked && <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929]" />}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
-                  {/* Difficulty */}
-                  <section>
-                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">{t('lobby.difficulty')}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.values(Difficulty).map(diff => {
-                        const cfg = DIFF_CONFIG[diff];
-                        const active = selectedDifficulty === diff;
-                        return (
-                          <button key={diff} onClick={() => setDifficulty(diff)}
-                            className={`p-3 rounded-xl border transition-all text-left active:scale-[0.97] ${active ? `${cfg.ring} ${cfg.bg}` : 'border-white/[0.12] bg-white/3 hover:border-white/18'}`}>
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-base">{cfg.emoji}</span>
-                              {active && <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />}
-                            </div>
-                            <p className={`text-xs font-semibold ${active ? cfg.color : 'text-white/55'}`}>{cfg.label}</p>
-                            <p className="text-[9px] text-white/70 mt-0.5 font-medium">{cfg.mult}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-
-                  {/* Boosts */}
-                  <section>
-                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider mb-2">{t('lobby.boosts')}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {RAID_BOOSTS.map(boost => {
-                        const active = selectedBoosts.includes(boost.id);
-                        return (
-                          <button key={boost.id} onClick={() => setBoosts(p => p.includes(boost.id) ? p.filter(i => i !== boost.id) : [...p, boost.id])}
-                            className={`p-3 rounded-xl border transition-all text-left active:scale-[0.97] ${active ? 'bg-amber-500/10 border-amber-500/35' : 'bg-white/3 border-white/[0.12] hover:border-white/18'}`}>
-                            <div className="flex justify-between items-start mb-1.5">
-                              <span className="text-lg">{boost.icon}</span>
-                              <span className={`text-xs font-semibold ${active ? 'text-amber-400' : 'text-white/35'}`}>{boost.cost} S</span>
-                            </div>
-                            <p className={`text-[10px] font-semibold leading-tight ${active ? 'text-white' : 'text-white/45'}`}>{boost.name}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
+              {/* ── Mode ── */}
+              <section>
+                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>{t('lobby.mode')}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { mode: Mode.SOLO,       label: 'Solo',       icon: 'fa-user',   locked: false,             fee: ENTRY_FEES[Mode.SOLO]       },
+                    { mode: Mode.TEAM,       label: 'Squad',      icon: 'fa-users',  locked: currentLevel < 5,  fee: ENTRY_FEES[Mode.TEAM]       },
+                    { mode: Mode.TOURNAMENT, label: 'Tournament', icon: 'fa-trophy', locked: currentLevel < 15, fee: ENTRY_FEES[Mode.TOURNAMENT] },
+                  ] as const).map(({ mode, label, icon, locked, fee }) => {
+                    const active = selectedMode === mode;
+                    return (
+                      <button key={mode} onClick={() => { if (!locked) { setMode(mode); setCustomFee(null); } }} disabled={locked}
+                        className={`p-3 rounded-xl border transition-all text-center active:scale-[0.97] ${
+                          locked  ? 'opacity-30 cursor-not-allowed border-white/5 bg-white/2'
+                          : active ? 'border-2'
+                          : 'border border-white/10 bg-white/3 hover:border-white/20'
+                        }`}
+                        style={active ? { borderColor: '#FF2929', background: 'rgba(255,41,41,0.10)' } : {}}>
+                        <i className={`fa-solid ${icon} text-base block mb-1.5`} style={{ color: active ? '#FF2929' : locked ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.42)' }} />
+                        <p className="text-[10px] font-black" style={{ color: active ? '#FF2929' : locked ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.55)' }}>{label}</p>
+                        <p className="text-[9px] font-semibold mt-0.5 tabular-nums" style={{ ...SG_NUM, color: active ? 'rgba(255,255,255,0.70)' : 'rgba(255,255,255,0.28)' }}>
+                          {locked ? `Lv ${mode === Mode.TEAM ? 5 : 15}+` : `${fee} SOL`}
+                        </p>
+                      </button>
+                    );
+                  })}
                 </div>
+              </section>
 
-                {/* ── Right col: loadout ── */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wider">{t('lobby.loadout')}</p>
-                    <span className="text-[10px] text-white/25 font-medium">{t('lobby.gearSlots', { count: equippedGear.length })}</span>
+              {/* ── Difficulty ── */}
+              <section>
+                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>{t('lobby.difficulty')}</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.values(Difficulty).map(diff => {
+                    const cfg    = DIFF_CONFIG[diff];
+                    const active = selectedDifficulty === diff;
+                    return (
+                      <button key={diff} onClick={() => setDifficulty(diff)}
+                        className={`p-2.5 rounded-xl border transition-all text-center active:scale-[0.97] ${active ? `${cfg.ring} ${cfg.bg}` : 'border-white/[0.10] bg-white/3 hover:border-white/18'}`}>
+                        <span className="text-lg block mb-1">{cfg.emoji}</span>
+                        <p className={`text-[9px] font-semibold ${active ? cfg.color : 'text-white/40'}`}>{cfg.label}</p>
+                        <p className="text-[8px] text-white/55 mt-0.5">{cfg.mult}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* ── Battle Tools (Gear + Boosts) ── */}
+              <section>
+                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>{t('lobby.loadout')}</p>
+
+                {/* Gear slots visual */}
+                <div className="rounded-xl p-3 mb-2" style={{ background: 'rgba(255,41,41,0.04)', border: '1px solid rgba(255,41,41,0.12)' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[9px] text-white/28 uppercase tracking-wider" style={{ ...INTER, fontWeight: 500 }}>Equipped</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-white/22">{equippedGear.length}/4 gear</span>
+                      {powerScore > 0 && (
+                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded"
+                          style={{ background: powerScore >= 50 ? 'rgba(255,184,0,0.15)' : 'rgba(255,255,255,0.06)', color: powerScore >= 50 ? '#FFB800' : 'rgba(255,255,255,0.35)' }}>
+                          PWR {powerScore}
+                        </span>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Gear slots */}
-                  <div className="grid grid-cols-5 gap-2">
-                    <div className="aspect-square rounded-xl bg-black border-2 border-cyan-500/45 relative overflow-hidden">
+                  {/* Slots row */}
+                  <div className="grid grid-cols-5 gap-1.5 mb-2">
+                    <div className="aspect-square rounded-lg bg-black border-2 border-[#FF2929]/35 relative overflow-hidden">
                       {equippedAvatar?.image && <img src={equippedAvatar.image} className="w-full h-full object-cover" alt="Core" />}
-                      <div className="absolute bottom-0 left-0 right-0 bg-cyan-500/80 text-[7px] text-black font-bold text-center py-0.5">CORE</div>
+                      <div className="absolute bottom-0 left-0 right-0 text-[6px] text-[#FF2929] font-black text-center py-0.5"
+                        style={{ background: 'rgba(255,41,41,0.70)' }}>CORE</div>
                     </div>
                     {[...Array(4)].map((_, i) => {
                       const gear = equippedGear[i];
                       return (
-                        <div key={i} className={`aspect-square rounded-xl bg-black/60 border-2 relative overflow-hidden ${gear ? 'border-purple-500/50' : 'border-white/[0.12]'}`}
+                        <div key={i} className={`aspect-square rounded-lg bg-black/60 border relative overflow-hidden ${gear ? 'border-[#FFB800]/40' : 'border-white/[0.10]'}`}
                           title={gear ? `${gear.name}: ${gear.description}` : 'Empty slot'}>
                           {gear ? (
                             gear.image && !gear.image.startsWith('http')
                               ? <div className="w-full h-full flex items-center justify-center text-xl">{gear.image}</div>
                               : <img src={gear.image} className="w-full h-full object-contain" alt={gear.name} />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white/12 text-lg font-light">+</div>
+                            <div className="w-full h-full flex items-center justify-center text-white/15 text-lg">+</div>
                           )}
                         </div>
                       );
                     })}
                   </div>
-
-                  {/* Quick-swap */}
-                  {ownedGear.length > 0 ? (
-                    <div className="rounded-xl bg-white/3 border border-white/[0.12] p-3">
-                      <p className="text-[10px] font-semibold text-white/25 uppercase mb-2">{t('lobby.quickSwap')}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {ownedGear.map(gear => {
-                          const isEquipped = equippedGearIds.includes(gear.id);
-                          return (
-                            <button key={gear.id} onClick={() => onToggleGear(gear.id)} title={`${gear.name} — ${gear.description}`}
-                              className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center ${isEquipped ? 'border-purple-500/50 bg-purple-500/12' : 'border-white/[0.12] hover:border-white/22 bg-white/3'}`}>
-                              {gear.image && !gear.image.startsWith('http')
-                                ? <span className="text-lg leading-none">{gear.image}</span>
-                                : <img src={gear.image} className="w-full h-full object-contain rounded-xl" alt="gear" />
-                              }
-                            </button>
-                          );
-                        })}
-                      </div>
+                  {/* Stats row */}
+                  <div className="grid grid-cols-3 gap-0 border-t border-white/[0.06] pt-2">
+                    <div className="text-center">
+                      <p className="text-[8px] text-white/25 uppercase tracking-wider">Mult</p>
+                      <p className="text-[11px] font-black text-[#FFB800]">{totalMult}×</p>
                     </div>
-                  ) : (
-                    <div className="rounded-xl bg-white/3 border border-white/[0.12] p-3 text-center">
-                      <p className="text-[10px] text-white/22 font-medium">{t('lobby.noGearShop')}</p>
+                    <div className="text-center border-x border-white/[0.06]">
+                      <p className="text-[8px] text-white/25 uppercase tracking-wider">Risk</p>
+                      <p className="text-[11px] font-black text-[#FF2929]">-{totalRisk}%</p>
                     </div>
-                  )}
-
-                  {/* Stats card */}
-                  <div className="rounded-xl bg-black/50 border border-white/[0.12] p-4">
-                    <p className="text-[10px] font-semibold text-white/25 uppercase mb-3">{t('lobby.raidStats')}</p>
-                    <div className="grid grid-cols-3 gap-3 mb-3">
-                      <div className="text-center">
-                        <p className="text-[9px] text-white/28 mb-1 font-medium">{t('lobby.mult')}</p>
-                        <p className="font-bold text-[#FFB800] text-lg leading-none">{totalMult}×</p>
-                      </div>
-                      <div className="text-center border-x border-white/5">
-                        <p className="text-[9px] text-white/28 mb-1 font-medium">{t('lobby.risk')}</p>
-                        <p className="font-bold text-cyan-400 text-lg leading-none">-{totalRisk}%</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[9px] text-white/28 mb-1 font-medium">{t('lobby.time')}</p>
-                        <p className="font-bold text-purple-400 text-lg leading-none">{totalTime}s</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-[9px] font-semibold mb-1.5">
-                        <span className="text-white/28">{t('lobby.power')}</span>
-                        <span className={powerScore >= 50 ? 'text-[#FFB800]' : powerScore >= 25 ? 'text-amber-400' : 'text-red-400'}>
-                          {powerScore >= 50 ? t('lobby.strong') : powerScore >= 25 ? t('lobby.moderate') : t('lobby.weak')} · {powerScore}
-                        </span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-500 ${powerScore >= 50 ? 'bg-[#FFB800]' : powerScore >= 25 ? 'bg-amber-400' : 'bg-red-400'}`}
-                          style={{ width: `${powerScore}%` }} />
-                      </div>
+                    <div className="text-center">
+                      <p className="text-[8px] text-white/25 uppercase tracking-wider">Time</p>
+                      <p className="text-[11px] font-black text-white/70">{totalTime}s</p>
                     </div>
                   </div>
                 </div>
-              </div>
+
+                {/* Quick-swap */}
+                {ownedGear.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {ownedGear.map(gear => {
+                      const isEquipped = equippedGearIds.includes(gear.id);
+                      return (
+                        <button key={gear.id} onClick={() => onToggleGear(gear.id)} title={`${gear.name} — ${gear.description}`}
+                          className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center active:scale-95 ${isEquipped ? 'border-[#FFB800]/50 bg-[#FFB800]/10' : 'border-white/[0.12] hover:border-white/22 bg-white/3'}`}>
+                          {gear.image && !gear.image.startsWith('http')
+                            ? <span className="text-lg leading-none">{gear.image}</span>
+                            : <img src={gear.image} className="w-full h-full object-contain rounded-xl" alt="gear" />
+                          }
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[9px] text-white/20 text-center py-1 mb-2" style={INTER}>{t('lobby.noGearStore')}</p>
+                )}
+
+                {/* Boosts */}
+                {RAID_BOOSTS.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {RAID_BOOSTS.map(boost => {
+                      const active = selectedBoosts.includes(boost.id);
+                      return (
+                        <button key={boost.id}
+                          onClick={() => setBoosts(p => p.includes(boost.id) ? p.filter(i => i !== boost.id) : [...p, boost.id])}
+                          className={`p-3 rounded-xl border transition-all text-left active:scale-[0.97] ${active ? 'bg-amber-500/10 border-amber-500/35' : 'bg-white/3 border-white/[0.10] hover:border-white/18'}`}>
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-lg">{boost.icon}</span>
+                            <span className={`text-[9px] font-semibold ${active ? 'text-amber-400' : 'text-white/28'}`} style={SG_NUM}>{boost.cost} SOL</span>
+                          </div>
+                          <p className={`text-[10px] leading-tight ${active ? 'text-white' : 'text-white/40'}`} style={{ ...INTER, fontWeight: 500 }}>{boost.name}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
             </div>
-            </div>{/* end scroll wrapper */}
 
-            {/* ── Modal footer ── */}
-            <div className="shrink-0 border-t border-white/5 p-3 sm:p-4 bg-[#060612] rounded-b-3xl sm:rounded-b-2xl space-y-2">
+            {/* Footer */}
+            <div className="shrink-0 border-t border-white/5 p-4 bg-[#060612] rounded-b-3xl sm:rounded-b-2xl space-y-3">
 
-              {/* ── Pay With — each pill shows currency, your cost, and balance ── */}
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] font-semibold text-white/28 uppercase tracking-wider shrink-0">{t('lobby.payWith')}</span>
-                <div className="flex gap-1.5 flex-1">
-                  {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
-                    const cBal    = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
-                    const cSym    = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
-                    const cRate   = rates[c];
-                    const cDec    = c === Currency.SOL ? 3 : c === Currency.USDC ? 2 : 0;
-                    const cCost   = cRate > 0 ? totalCostSol * cRate : null;
-                    const isLoading  = c !== Currency.SOL && cRate === 0 && !pricesFailed;
-                    const isFailed   = c !== Currency.SOL && cRate === 0 && pricesFailed;
-                    const isActive   = entryCurrency === c;
-                    const colActive  = c === Currency.SOL
-                      ? 'border-[#FFB800]/50 bg-[#FFB800]/10 text-[#FFB800]'
-                      : c === Currency.USDC ? 'border-blue-400/50 bg-blue-400/10 text-blue-400'
-                      : 'border-orange-400/50 bg-orange-400/10 text-orange-400';
-                    return (
-                      <button key={c}
-                        onClick={() => !isFailed && setCurrency(c)}
-                        disabled={isFailed}
-                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border transition-all ${
-                          isFailed   ? 'opacity-25 cursor-not-allowed border-white/5 bg-white/[0.02]'
-                          : isActive ? colActive
-                          : 'border-white/7 text-white/30 bg-white/3 hover:border-white/18'
-                        }`}>
-                        <span className="text-[10px] font-bold leading-none">{cSym}</span>
-                        <span className={`text-[9px] font-semibold leading-none tabular-nums ${isLoading ? 'animate-pulse text-white/25' : ''}`}>
-                          {isLoading ? '···' : isFailed ? 'N/A' : cCost !== null ? cCost.toFixed(cDec) : '—'}
-                        </span>
-                        <span className="text-[8px] text-white/22 leading-none tabular-nums">{cBal.toFixed(cDec)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              {/* Currency */}
+              <div className="grid grid-cols-3 gap-2">
+                {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
+                  const cBal    = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
+                  const cSym    = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
+                  const cRate   = rates[c];
+                  const cDec    = c === Currency.SOL ? 3 : c === Currency.USDC ? 2 : 0;
+                  const cCost   = cRate > 0 ? totalCostSol * cRate : null;
+                  const isLoading  = c !== Currency.SOL && cRate === 0 && !pricesFailed;
+                  const isFailed   = c !== Currency.SOL && cRate === 0 && pricesFailed;
+                  const isActive   = entryCurrency === c;
+                  const colActive  = c === Currency.SOL ? 'border-white/40 bg-white/8 text-white'
+                    : c === Currency.USDC ? 'border-blue-400/45 bg-blue-400/8 text-blue-400'
+                    : 'border-orange-400/45 bg-orange-400/8 text-orange-400';
+                  return (
+                    <button key={c} onClick={() => !isFailed && setCurrency(c)} disabled={isFailed}
+                      className={`py-2.5 rounded-xl border-2 transition-all text-center ${
+                        isFailed  ? 'opacity-20 cursor-not-allowed border-white/5'
+                        : isActive ? colActive
+                        : 'border-white/7 text-white/35 bg-white/3 hover:border-white/18'
+                      }`}>
+                      <p className="text-[10px] font-semibold">{cSym}</p>
+                      <p className="text-[9px] text-white/40 mt-0.5 tabular-nums">
+                        {isLoading ? '···' : isFailed ? 'N/A' : cCost !== null ? cCost.toFixed(cDec) : cBal.toFixed(cDec)}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* ── Stake Amount card — prominent, clearly editable ── */}
-              {selectedMode === Mode.SOLO && (
-                <div className="rounded-lg border border-white/[0.12] bg-white/[0.03] overflow-hidden">
-                  {/* Header row */}
-                  <div className="flex items-center justify-between px-3 pt-2 pb-1">
-                    <div className="flex items-center gap-1.5">
-                      <i className="fa-solid fa-fire-flame-curved text-[#FF2929]/70 text-[10px]" />
-                      <span className="text-[9px] font-bold text-white/50 uppercase tracking-wider">Stake Amount</span>
-                    </div>
-                    <span className="text-[8px] text-white/25 font-medium">higher stake = bigger win</span>
+              {/* Stake override (SOLO only) */}
+              {selectedMode === Mode.SOLO && rateReady && (
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,41,41,0.18)', background: 'rgba(255,41,41,0.04)' }}>
+                  <div className="flex items-center gap-2 px-3 pt-2 pb-1">
+                    <i className="fa-solid fa-fire-flame-curved text-[#FF2929]/55 text-[10px]" />
+                    <span className="text-[9px] font-bold text-white/45 uppercase tracking-wider">Stake</span>
+                    <span className="text-[8px] text-white/22 ml-auto">higher = bigger win</span>
                   </div>
-                  {/* Input row */}
-                  {rateReady ? (
-                    <div className="flex items-center gap-2 px-3 pb-2">
-                      <input
-                        type="number"
-                        min={minEntryDisplay}
-                        step={curDecimals === 0 ? 1 : curDecimals === 2 ? 0.01 : 0.001}
-                        value={customFee !== null ? customFee : ''}
-                        placeholder={minEntryDisplay.toFixed(curDecimals)}
-                        onChange={e => {
-                          const v = parseFloat(e.target.value);
-                          setCustomFee(isNaN(v) ? null : v);
-                        }}
-                        className="flex-1 bg-transparent text-white text-xl font-bold outline-none placeholder-white/20 tabular-nums min-w-0"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                      />
-                      <span className={`text-sm font-bold shrink-0 ${entryCurrency === Currency.SOL ? 'text-white/50' : entryCurrency === Currency.USDC ? 'text-blue-400/70' : 'text-orange-400/70'}`}>
-                        {curSymbol}
-                      </span>
-                      <i className="fa-solid fa-pen text-white/20 text-[9px] shrink-0" />
-                    </div>
-                  ) : (
-                    <div className="px-3 pb-2">
-                      <span className="text-[10px] text-white/20 animate-pulse">fetching {curSymbol} rate…</span>
-                    </div>
-                  )}
-                  {/* Hints */}
-                  {rateReady && (
-                    <div className="flex items-center justify-between px-3 pb-2">
-                      {customFee !== null && customFee < minEntryDisplay
-                        ? <span className="text-[8px] text-red-400 font-semibold">min {minEntryDisplay.toFixed(curDecimals)} {curSymbol}</span>
-                        : <span className="text-[8px] text-white/20">min {minEntryDisplay.toFixed(curDecimals)} {curSymbol}</span>
-                      }
-                      {customFee !== null && customFee >= minEntryDisplay && (
-                        <span className="text-[8px] text-[#FFB800]/50 font-semibold">
-                          max win ~{(effectiveBase * 5.7 * displayRate).toFixed(curDecimals)} {curSymbol}
-                        </span>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-2 px-3 pb-2">
+                    <input
+                      type="number"
+                      min={minEntryDisplay}
+                      step={curDecimals === 0 ? 1 : curDecimals === 2 ? 0.01 : 0.001}
+                      value={customFee !== null ? customFee : ''}
+                      placeholder={minEntryDisplay.toFixed(curDecimals)}
+                      onChange={e => { const v = parseFloat(e.target.value); setCustomFee(isNaN(v) ? null : v); }}
+                      className="flex-1 bg-transparent text-white text-xl font-bold outline-none placeholder-white/18 tabular-nums min-w-0"
+                      style={SG_NUM}
+                    />
+                    <span className={`text-sm font-bold shrink-0 ${entryCurrency === Currency.SOL ? 'text-white/45' : entryCurrency === Currency.USDC ? 'text-blue-400/70' : 'text-orange-400/70'}`}>
+                      {curSymbol}
+                    </span>
+                    <i className="fa-solid fa-pen text-white/18 text-[9px] shrink-0" />
+                  </div>
+                  {customFee !== null && customFee < minEntryDisplay && (
+                    <p className="text-[8px] text-red-400 font-semibold px-3 pb-2">min {minEntryDisplay.toFixed(curDecimals)} {curSymbol}</p>
                   )}
                 </div>
               )}
 
-              {/* Ticket toggle — compact */}
+              {/* Ticket toggle */}
               {raidTickets > 0 && (
                 <button onClick={() => setUseTicket(p => !p)}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg border transition-all ${applyTicket ? 'border-amber-500/40 bg-amber-500/8' : 'border-white/[0.10] bg-white/3'}`}>
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border transition-all ${applyTicket ? 'border-amber-500/40 bg-amber-500/8' : 'border-white/[0.10] bg-white/3'}`}>
                   <div className="flex items-center gap-2">
                     <span className="text-sm">🎟️</span>
                     <div>
                       <p className={`text-[10px] font-semibold ${applyTicket ? 'text-amber-400' : 'text-white/45'}`}>{t('lobby.useTicket')}</p>
-                      <p className="text-[8px] text-white/25 font-medium">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
+                      <p className="text-[8px] text-white/25">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
                     </div>
                   </div>
                   <div className={`w-8 h-4 rounded-full transition-all relative ${applyTicket ? 'bg-amber-500' : 'bg-white/15'}`}>
@@ -1184,25 +1141,17 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <p className="text-[9px] text-white/28 font-semibold uppercase mb-0.5">{t('lobby.entryTotal')}</p>
                   <p className="text-xl font-bold text-white leading-none">
                     {rateReady
-                      ? <>{totalDisplay.toFixed(curDecimals)}<span className={`text-sm ml-1 font-semibold ${entryCurrency === Currency.SOL ? 'text-white/60' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{curSymbol}</span></>
+                      ? <>{totalDisplay.toFixed(curDecimals)}<span className={`text-sm ml-1 font-semibold ${entryCurrency === Currency.SOL ? 'text-white/55' : entryCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{curSymbol}</span></>
                       : <span className="text-white/25 text-sm animate-pulse">···</span>
                     }
                   </p>
                   {applyTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">{t('lobby.ticketApplied')}</p>}
-                  {insufficientBal && (
-                    <p className="text-[9px] text-red-400 font-semibold mt-0.5">{t('common.insufficient')}</p>
-                  )}
+                  {insufficientBal && <p className="text-[9px] text-red-400 font-semibold mt-0.5">{t('common.insufficient')}</p>}
                 </div>
                 <button onClick={handleDeploy}
                   disabled={!rateReady || insufficientBal || (customFee !== null && customFee < minEntryFee)}
-                  className="flex-1 py-3 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100"
-                  style={{
-                    background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)',
-                    color: '#fff',
-                    boxShadow: '0 0 20px rgba(255,41,41,0.30)',
-                    ...BN,
-                    fontSize: '15px',
-                  }}
+                  className="flex-1 py-3.5 rounded-xl active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', boxShadow: '0 0 20px rgba(255,41,41,0.25)', ...BN, fontSize: '15px', letterSpacing: '1.5px' }}
                 >
                   {t('lobby.deploy')}
                 </button>
