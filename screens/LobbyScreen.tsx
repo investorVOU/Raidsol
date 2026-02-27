@@ -195,7 +195,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   RAID ROUND
                 </p>
                 <p className="text-[10px] text-white/75 mt-1" style={{ ...INTER, fontWeight: 400 }}>
-                  Top 5 earn prizes · fight for your rank
+                  6h window · top 5 split the pot
                 </p>
               </div>
               <div className="shrink-0 ml-4 flex flex-col items-end gap-2">
@@ -274,9 +274,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="absolute top-2.5 right-2.5">
               <i className="fa-solid fa-swords text-[#FF2929]/60 text-lg" />
             </div>
-            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>Multiplayer</p>
             <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#FF2929', letterSpacing: '1.5px' }}>PVP DUEL</p>
-            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Stake vs players</p>
+            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Stake · winner takes pot</p>
           </button>
 
           <button
@@ -287,9 +286,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="absolute top-2.5 right-2.5">
               <i className="fa-solid fa-crosshairs text-[#FF2929]/50 text-base" />
             </div>
-            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>Earn SR</p>
             <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#FF2929', letterSpacing: '1.5px' }}>BOUNTIES</p>
-            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Tasks · Challenges</p>
+            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Kill tasks · earn SR</p>
           </button>
         </div>
 
@@ -305,12 +303,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {raidTickets > 0 ? (
                 <>
                   <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>{raidTickets}× RAID PASS ACTIVE</p>
-                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>50% off entry · 10% win boost</p>
+                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Half price entry · +10% winnings</p>
                 </>
               ) : (
                 <>
                   <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>RAID PASS</p>
-                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>50% off entry · SKR holders get extra 50% off</p>
+                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Half price entry · buy with SKR</p>
                 </>
               )}
             </div>
@@ -342,7 +340,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     )}
                   </p>
                   <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
-                    Simulation only · no SOL earned · no points tracked · 3 per 6h
+                    Free simulation · no SOL · no score · 3 per 6h
                   </p>
                 </>
               )}
@@ -358,9 +356,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             className="relative overflow-hidden rounded-xl p-3 text-left active:scale-[0.97] transition-all"
             style={{ background: 'rgba(255,41,41,0.05)', border: '1px solid rgba(255,41,41,0.22)' }}
           >
-            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>On-chain</p>
             <p className="leading-none mb-1" style={{ ...BN, fontSize: '20px', color: '#FF2929', letterSpacing: '1.5px' }}>WALLET ROAST</p>
-            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Share the burn</p>
+            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Get roasted · share it</p>
           </button>
 
           <button
@@ -368,9 +365,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             className="relative overflow-hidden rounded-xl p-3 text-left active:scale-[0.97] transition-all"
             style={{ background: 'rgba(255,184,0,0.05)', border: '1px solid rgba(255,184,0,0.20)' }}
           >
-            <p className="text-[9px] text-white/40 mb-1 uppercase tracking-wider" style={INTER}>Daily</p>
             <p className="leading-none mb-1" style={{ ...BN, fontSize: '20px', color: '#FFB800', letterSpacing: '1.5px' }}>THE BRIEFING</p>
-            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Cipher · +SR reward</p>
+            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Daily cipher · +SR</p>
           </button>
         </div>
 
@@ -383,7 +379,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.15)' }}
         >
           <i className="fa-brands fa-x-twitter text-[15px] text-white" />
-          <span className="text-[12px] font-semibold text-white" style={INTER}>Follow us on X</span>
+          <span className="text-[12px] font-semibold text-white" style={INTER}>@solraid_app</span>
         </a>
 
         {!isConnected && (
@@ -428,39 +424,39 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {[
                 {
                   q: 'What is Sol Raid?',
-                  a: 'Sol Raid is an on-chain extraction game on Solana. You enter with a stake, choose your difficulty, and try to score as many points as possible before getting busted. Cash out at the right moment to convert your score into SOL. The longer you hold, the higher the reward — but risk rises every second.',
+                  a: 'On-chain extraction game on Solana. Stake SOL, pick a difficulty, score points before you get busted. Cash out at the right moment — risk climbs every second you stay in.',
                 },
                 {
-                  q: 'What is the difference between a normal raid and a round-based raid?',
-                  a: 'Normal raids pay out SOL immediately when you succeed — your reward is based on your score and entry fee. Round-based raids score points instead of paying instant SOL. Your best score in a 6-hour window competes on the round leaderboard, and prizes are claimed after the round ends.',
+                  q: 'Raid Rounds vs normal raids?',
+                  a: 'Normal raids pay SOL on the spot based on your score. Round raids score points — your best single raid in a 6h window goes on the leaderboard. Pool split happens after the round closes.',
                 },
                 {
                   q: 'How do Raid Rounds work?',
-                  a: 'There are 4 rounds per day (UTC), each lasting 6 hours. Choose a tier: GRUNT (0.01 SOL), ELITE (0.05 SOL), or WHALE (0.25 SOL). Your highest score competes on that tier\'s leaderboard. After the round closes, 90% of all entry fees are split among the top 5 wallets. Prize splits vary by tier — GRUNT is more democratic, WHALE favours the winner. If fewer than 3 wallets enter a tier, all fees are fully refunded.',
+                  a: '4 rounds per day UTC, 6 hours each. Pick a tier (GRUNT / ELITE / WHALE), pay the entry fee, raid. Your top score this round competes. After close, 90% of all fees split across top 5. Under 3 entrants — full refund.',
                 },
                 {
-                  q: 'How do I claim my round winnings?',
-                  a: 'After a round closes, go to Profile → Round Wins tab. Eligible rounds show a Claim button. Claiming credits SOL to your unclaimed balance — then use the Withdraw button to send it on-chain to your wallet.',
+                  q: 'How do I claim round winnings?',
+                  a: 'Profile → Round Wins. Hit Claim on any eligible round. SOL lands in your unclaimed balance — withdraw to your wallet from there.',
                 },
                 {
-                  q: 'Is the game provably fair?',
-                  a: 'Yes. Before each raid a SHA-256 server seed hash is committed. After the raid the full seed is revealed so you can verify the RNG was never manipulated. Seed history is visible in your profile.',
+                  q: 'Is it provably fair?',
+                  a: 'Yes. SHA-256 server seed committed before each raid, revealed after. Verify the RNG yourself. Seed history in your profile.',
                 },
                 {
                   q: 'What is the house edge?',
-                  a: 'Base win rate is roughly 25–30% with no gear. Gear and boosts can push this toward 45%. The house margin comes from risk drift mechanics — the longer you stay, the harder it gets.',
+                  a: 'Base win rate ~25–30% with no gear. Gear and boosts push it toward 45%. Risk drift is the mechanic — the longer you hold, the harder it gets.',
                 },
                 {
                   q: 'What are Raid Passes?',
-                  a: 'Raid Passes give 50% off the entry fee plus a 10% boost to your SOL winnings. You earn 1 free ticket per day (max 3 stockpiled). Additional passes are purchased with SKR in the Store. Toggle the ticket at deployment if you own one.',
+                  a: '50% off entry fee + 10% win boost. 1 free ticket per day, max 3 stockpiled. Buy more with SKR in the Store.',
                 },
                 {
-                  q: 'What is the SKR token?',
-                  a: 'SKR (Seeker) is the in-game utility token on Solana. It is used to buy Raid Passes, gear, and avatars in the Store. SKR is also accepted as payment for raid entry fees alongside SOL and USDC.',
+                  q: 'What is SKR?',
+                  a: 'Seeker token on Solana. Buy gear, passes, and avatars in the Store. Also accepted as raid entry payment alongside SOL and USDC.',
                 },
                 {
                   q: 'What is PvP Arena?',
-                  a: 'PvP lets you stake against other players in a shared room. All players raid the same RNG seed simultaneously — pure skill decides the outcome. The player with the highest score when they extract wins the full pot. Stake any amount in SOL, USDC, or SKR.',
+                  a: 'Stake against real players in a shared room. Same RNG seed, same clock. Highest score on extract wins the pot. SOL, USDC, or SKR.',
                 },
               ].map(({ q, a }, i) => (
                 <div key={i} className="rounded-xl bg-white/[0.025] border border-white/[0.12] p-4">
@@ -573,35 +569,34 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 {/* Footer note */}
                 <div className="px-4 py-2 border-t space-y-1" style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
                   <p className="text-[8px] text-white/25 text-center" style={INTER}>
-                    Top 5 scores share the prize pool · Winners announced after round closes
+                    Top 5 split the pool · results locked after round closes
                   </p>
                   <p className="text-[8px] text-amber-400/50 text-center" style={INTER}>
-                    ⚠ Rounds with fewer than {ROUND_MIN_PARTICIPANTS} unique entrants are cancelled — entry fees fully refunded
+                    ⚠ Under {ROUND_MIN_PARTICIPANTS} entrants — round cancelled, full refund
                   </p>
                 </div>
               </div>
 
               {/* How it works */}
               <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-1">
-                <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">How it works</p>
+                <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">Rules</p>
                 {[
-                  'Pay the tier entry fee to compete — 90% goes straight into the prize pool',
-                  'Score as many points as possible during your raid',
-                  'Your highest score this round is tracked on the live leaderboard',
-                  `Round closes every 6 hours — top 5 scores split the pool`,
+                  'Entry fee goes 90% into the prize pool',
+                  'Score points — your best raid counts',
+                  'Top 5 wallets split the pool when the round closes',
                   `${roundTier} split: ${RAID_TIER_ALLOCATION[roundTier].map((a, i) => `${['1st','2nd','3rd','4th','5th'][i]} ${Math.round(a*100)}%`).join(' · ')}`,
-                  `Rounds with fewer than ${ROUND_MIN_PARTICIPANTS} entrants are cancelled — full refund to all participants`,
+                  `Under ${ROUND_MIN_PARTICIPANTS} entrants — round cancelled, full refund`,
                 ].map((line, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: i === 5 ? '#FFB800' : '#FF2929' }}>{i === 5 ? '!' : `${i + 1}.`}</span>
-                    <p className="text-[10px] font-medium leading-snug" style={{ color: i === 5 ? 'rgba(255,184,0,0.65)' : 'rgba(255,255,255,0.45)' }}>{line}</p>
+                    <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: i === 4 ? '#FFB800' : '#FF2929' }}>{i === 4 ? '!' : `${i + 1}.`}</span>
+                    <p className="text-[10px] font-medium leading-snug" style={{ color: i === 4 ? 'rgba(255,184,0,0.65)' : 'rgba(255,255,255,0.45)' }}>{line}</p>
                   </div>
                 ))}
               </div>
 
               {/* ── Tier Selector ── */}
               <section>
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Competition Tier</p>
+                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Tier</p>
                 <div className="grid grid-cols-3 gap-2">
                   {(Object.values(RaidTier) as RaidTier[]).map(t => {
                     const cfg = RAID_TIER_CONFIG[t];
@@ -630,12 +625,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                       <span className="text-xl shrink-0 mt-0.5">⚔️</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-black uppercase tracking-widest text-[#FFB800]">
-                          {ownedGear.length > 0 ? 'Equip your battle tools' : 'Battle Tools give you an edge'}
+                          {ownedGear.length > 0 ? 'Gear not equipped' : 'No gear equipped'}
                         </p>
                         <p className="text-[10px] text-white/50 mt-1 leading-relaxed">
                           {ownedGear.length > 0
-                            ? `You own ${ownedGear.length} gear piece${ownedGear.length > 1 ? 's' : ''} but none are equipped. Gear directly boosts your score — equip below before entering.`
-                            : <>Gear like <span className="text-white/75 font-bold">Time Boost</span>, <span className="text-white/75 font-bold">Multiplier Boost</span> and <span className="text-white/75 font-bold">Risk Reduction</span> directly increase your score — giving you a real competitive advantage over unequipped raiders.</>
+                            ? `You own ${ownedGear.length} gear piece${ownedGear.length > 1 ? 's' : ''} — none equipped. Equip below for an edge.`
+                            : 'Time Boost, Multiplier Boost, Risk Reduction — gear raises your score ceiling.'
                           }
                         </p>
                         <div className="flex items-center gap-2 mt-2.5">
@@ -645,7 +640,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                               className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95"
                               style={{ background: 'rgba(255,184,0,0.18)', border: '1px solid rgba(255,184,0,0.40)', color: '#FFB800' }}
                             >
-                              Get Battle Tools
+                              Get Gear
                             </button>
                           )}
                           <button
@@ -669,7 +664,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
               {/* ── Battle Tools (gear + boosts) ── */}
               <section>
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Battle Tools</p>
+                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Loadout</p>
                 {/* Gear quick-swap */}
                 <div className="rounded-xl p-3 mb-2" style={{ background: 'rgba(255,41,41,0.04)', border: '1px solid rgba(255,41,41,0.14)' }}>
                   <div className="flex items-center justify-between mb-2">
