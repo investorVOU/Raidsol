@@ -200,36 +200,26 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
           <div className="relative z-10 px-5 pt-4 pb-3">
             {/* Top row */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.8)', animation: 'pulse 1.5s ease-in-out infinite' }} />
-                  <p className="text-[10px] uppercase tracking-[3px] text-white/70" style={INTER}>
-                    {isConnected
-                      ? (currentRound ? `Round ${currentRound.roundNum} of 4 · ${dayLabel}` : `Active round · ${dayLabel}`)
-                      : 'Connect to compete'}
-                  </p>
-                </div>
-                <p className="leading-none" style={{ ...BN, fontSize: '36px', letterSpacing: '-0.5px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
-                  RAID ROUND
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-white" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.8)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                <p className="text-[10px] uppercase tracking-[3px] text-white/70" style={INTER}>
+                  {isConnected
+                    ? (currentRound ? `Round ${currentRound.roundNum} of 4 · ${dayLabel}` : `Active round · ${dayLabel}`)
+                    : 'Connect to compete'}
                 </p>
-                <p className="text-[10px] text-white/75 mt-1" style={{ ...INTER, fontWeight: 400 }}>
-                  6h window · top 5 split the pot
-                </p>
-              </div>
-              <div className="shrink-0 ml-4 flex flex-col items-end gap-2">
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform"
-                  style={{ background: 'rgba(0,0,0,0.20)', border: '1px solid var(--border-col-str)' }}
-                >
-                  <i className="fa-solid fa-trophy" style={{ fontSize: '24px', color: '#fff' }} />
-                </div>
                 {raidTickets > 0 && (
-                  <span className="text-[9px] font-bold bg-black/20 text-white rounded-full px-2 py-0.5 border border-white/25" style={INTER}>
+                  <span className="ml-auto text-[9px] font-bold bg-black/20 text-white rounded-full px-2 py-0.5 border border-white/25" style={INTER}>
                     🎟️ {raidTickets}×
                   </span>
                 )}
               </div>
+              <p className="leading-none" style={{ ...BN, fontSize: '36px', letterSpacing: '-0.5px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                RAID ROUND
+              </p>
+              <p className="text-[10px] text-white/75 mt-1" style={{ ...INTER, fontWeight: 400 }}>
+                6h window · top 5 split the pot
+              </p>
             </div>
 
             {/* Stats strip */}
