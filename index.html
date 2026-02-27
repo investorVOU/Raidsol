@@ -32,14 +32,143 @@
         --sar: env(safe-area-inset-right, 0px);
         --sab: env(safe-area-inset-bottom, 0px);
         --sal: env(safe-area-inset-left, 0px);
+
+        /* ── Theme tokens (dark default) ── */
+        --app-bg:          #020202;
+        --nav-bg:          #07070f;
+        --modal-bg:        #080814;
+        --modal-bg-alt:    #08060f;
+        --card-bg:         rgba(255,255,255,0.04);
+        --card-bg-mid:     rgba(255,255,255,0.06);
+        --card-bg-strong:  rgba(255,255,255,0.09);
+        --border-col:      rgba(255,255,255,0.10);
+        --border-col-mid:  rgba(255,255,255,0.14);
+        --border-col-str:  rgba(255,255,255,0.22);
+        --text-primary:    #ffffff;
+        --text-75:         rgba(255,255,255,0.75);
+        --text-50:         rgba(255,255,255,0.50);
+        --text-45:         rgba(255,255,255,0.45);
+        --text-35:         rgba(255,255,255,0.35);
+        --text-30:         rgba(255,255,255,0.30);
+        --text-25:         rgba(255,255,255,0.25);
+        --text-20:         rgba(255,255,255,0.20);
+        --text-dim:        rgba(255,255,255,0.18);
       }
+
+      /* ── Light mode overrides ── */
+      html.light {
+        --app-bg:          #f0f0f4;
+        --nav-bg:          #e2e2ea;
+        --modal-bg:        #f7f7fb;
+        --modal-bg-alt:    #f5f3fe;
+        --card-bg:         rgba(0,0,0,0.04);
+        --card-bg-mid:     rgba(0,0,0,0.06);
+        --card-bg-strong:  rgba(0,0,0,0.09);
+        --border-col:      rgba(0,0,0,0.10);
+        --border-col-mid:  rgba(0,0,0,0.14);
+        --border-col-str:  rgba(0,0,0,0.22);
+        --text-primary:    #111111;
+        --text-75:         rgba(0,0,0,0.78);
+        --text-50:         rgba(0,0,0,0.58);
+        --text-45:         rgba(0,0,0,0.52);
+        --text-35:         rgba(0,0,0,0.44);
+        --text-30:         rgba(0,0,0,0.38);
+        --text-25:         rgba(0,0,0,0.32);
+        --text-20:         rgba(0,0,0,0.26);
+        --text-dim:        rgba(0,0,0,0.22);
+      }
+
+      /* ── Light mode: remap Tailwind white-text utilities ── */
+      html.light .text-white           { color: #111111 !important; }
+      html.light .text-white\/80       { color: rgba(0,0,0,0.84) !important; }
+      html.light .text-white\/75       { color: rgba(0,0,0,0.78) !important; }
+      html.light .text-white\/70       { color: rgba(0,0,0,0.73) !important; }
+      html.light .text-white\/65       { color: rgba(0,0,0,0.68) !important; }
+      html.light .text-white\/60       { color: rgba(0,0,0,0.63) !important; }
+      html.light .text-white\/55       { color: rgba(0,0,0,0.58) !important; }
+      html.light .text-white\/50       { color: rgba(0,0,0,0.55) !important; }
+      html.light .text-white\/45       { color: rgba(0,0,0,0.50) !important; }
+      html.light .text-white\/40       { color: rgba(0,0,0,0.46) !important; }
+      html.light .text-white\/35       { color: rgba(0,0,0,0.42) !important; }
+      html.light .text-white\/32       { color: rgba(0,0,0,0.39) !important; }
+      html.light .text-white\/30       { color: rgba(0,0,0,0.36) !important; }
+      html.light .text-white\/28       { color: rgba(0,0,0,0.34) !important; }
+      html.light .text-white\/25       { color: rgba(0,0,0,0.31) !important; }
+      html.light .text-white\/22       { color: rgba(0,0,0,0.28) !important; }
+      html.light .text-white\/20       { color: rgba(0,0,0,0.26) !important; }
+      html.light .text-white\/15       { color: rgba(0,0,0,0.20) !important; }
+      html.light .text-white\/10       { color: rgba(0,0,0,0.14) !important; }
+
+      /* ── Light mode: remap Tailwind white-bg utilities ── */
+      html.light .bg-white\/3          { background: rgba(0,0,0,0.03) !important; }
+      html.light .bg-white\/5          { background: rgba(0,0,0,0.04) !important; }
+      html.light .bg-white\/8          { background: rgba(0,0,0,0.06) !important; }
+      html.light .bg-white\/10         { background: rgba(0,0,0,0.08) !important; }
+      html.light .bg-white\/15         { background: rgba(0,0,0,0.11) !important; }
+      html.light .bg-white\/20         { background: rgba(0,0,0,0.14) !important; }
+      html.light .bg-white\/25         { background: rgba(0,0,0,0.18) !important; }
+      html.light .bg-white\/30         { background: rgba(0,0,0,0.22) !important; }
+      html.light .bg-white\/40         { background: rgba(0,0,0,0.28) !important; }
+      html.light .bg-white\/50         { background: rgba(0,0,0,0.35) !important; }
+
+      /* ── Light mode: remap Tailwind white-border utilities ── */
+      html.light .border-white\/5      { border-color: rgba(0,0,0,0.06) !important; }
+      html.light .border-white\/6      { border-color: rgba(0,0,0,0.07) !important; }
+      html.light .border-white\/7      { border-color: rgba(0,0,0,0.08) !important; }
+      html.light .border-white\/8      { border-color: rgba(0,0,0,0.09) !important; }
+      html.light .border-white\/10     { border-color: rgba(0,0,0,0.11) !important; }
+      html.light .border-white\/12     { border-color: rgba(0,0,0,0.13) !important; }
+      html.light .border-white\/15     { border-color: rgba(0,0,0,0.15) !important; }
+      html.light .border-white\/18     { border-color: rgba(0,0,0,0.18) !important; }
+      html.light .border-white\/20     { border-color: rgba(0,0,0,0.20) !important; }
+      html.light .border-white\/25     { border-color: rgba(0,0,0,0.24) !important; }
+      html.light .border-white\/30     { border-color: rgba(0,0,0,0.28) !important; }
+      /* ── Light mode: remap placeholder-white utilities ── */
+      html.light .placeholder-white\/10::placeholder  { color: rgba(0,0,0,0.14) !important; }
+      html.light .placeholder-white\/15::placeholder  { color: rgba(0,0,0,0.20) !important; }
+      html.light .placeholder-white\/20::placeholder  { color: rgba(0,0,0,0.26) !important; }
+      html.light .placeholder-white\/25::placeholder  { color: rgba(0,0,0,0.32) !important; }
+
+      /* ── Light mode: remap divide-white utilities ── */
+      html.light .divide-white\/5  > * + * { border-color: rgba(0,0,0,0.06) !important; }
+      html.light .divide-white\/8  > * + * { border-color: rgba(0,0,0,0.09) !important; }
+      html.light .divide-white\/10 > * + * { border-color: rgba(0,0,0,0.11) !important; }
+
+      /* ── Light mode: remap common arbitrary bg/border Tailwind classes ── */
+      html.light .bg-black             { background-color: var(--modal-bg) !important; }
+      html.light .bg-black\/40         { background: rgba(0,0,0,0.08) !important; }
+      html.light .bg-black\/50         { background: rgba(0,0,0,0.10) !important; }
+      html.light .bg-black\/60         { background: rgba(0,0,0,0.12) !important; }
+      html.light .bg-black\/70         { background: rgba(0,0,0,0.38) !important; }
+      html.light .bg-black\/80         { background: rgba(240,240,244,0.88) !important; }
+      html.light .bg-black\/85         { background: rgba(240,240,244,0.92) !important; }
+      html.light .bg-black\/90         { background: rgba(240,240,244,0.94) !important; }
+
+      /* ── Light mode: hide dark scanline overlay ── */
+      html.light .pixel-grid { opacity: 0; }
+
+      /* ── Light mode: remap hardcoded dark screen backgrounds ── */
+      html.light .bg-\[#000\],
+      html.light .bg-\[#000000\]       { background-color: var(--app-bg) !important; }
+      html.light .bg-\[#020202\]       { background-color: var(--app-bg) !important; }
+      html.light .bg-\[#050505\]       { background-color: var(--modal-bg) !important; }
+      html.light .bg-\[#050508\]       { background-color: var(--app-bg) !important; }
+      html.light .bg-\[#05050f\]       { background-color: var(--app-bg) !important; }
+      html.light .bg-\[#060612\]       { background-color: var(--modal-bg) !important; }
+      html.light .bg-\[#07070f\]       { background-color: var(--nav-bg) !important; }
+      html.light .bg-\[#09090b\]       { background-color: rgba(0,0,0,0.05) !important; }
+      html.light .bg-\[#0d0d18\]       { background-color: rgba(0,0,0,0.05) !important; }
+      html.light .bg-\[#0f0f1a\]       { background-color: var(--app-bg) !important; }
+      html.light .bg-\[#1a1a1a\]       { background-color: rgba(0,0,0,0.08) !important; }
+
       body {
         font-family: 'JetBrains Mono', monospace;
-        background-color: #020202;
-        color: #ffffff;
+        background-color: var(--app-bg);
+        color: var(--text-primary);
         margin: 0;
         overflow: hidden;
         -webkit-tap-highlight-color: transparent;
+        transition: background-color 0.25s ease, color 0.25s ease;
       }
       .mono {
         font-family: 'JetBrains Mono', monospace;

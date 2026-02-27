@@ -111,7 +111,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
   const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   return (
-    <div className="h-full flex flex-col bg-black text-white relative overflow-hidden">
+    <div className="h-full flex flex-col text-white relative overflow-hidden" style={{ backgroundColor: 'var(--app-bg)' }}>
 
       {/* ── BUST / EXTRACT OVERLAY ── */}
       {isEnding && (
@@ -126,7 +126,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
       )}
 
       {/* ── TOP HUD ── */}
-      <div className="shrink-0 grid grid-cols-4 border-b border-white/8 bg-[#050505] divide-x divide-white/8">
+      <div className="shrink-0 grid grid-cols-4 border-b border-white/8 bg-[var(--modal-bg)] divide-x divide-white/8">
         <div className="px-3 py-2 sm:px-5 sm:py-3 text-center">
           <p className="text-[8px] sm:text-[9px] font-bold text-white/50">Risk</p>
           <p className="text-xl sm:text-2xl font-black mono leading-none" style={{ color: riskColor }}>
@@ -238,7 +238,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
         </div>
 
         {/* ── RIGHT: LEADERBOARD + LOG ── */}
-        <div className="w-full lg:w-72 xl:w-80 flex flex-col bg-[#050505] border-t lg:border-t-0 border-white/8 min-h-0">
+        <div className="w-full lg:w-72 xl:w-80 flex flex-col bg-[var(--modal-bg)] border-t lg:border-t-0 border-white/8 min-h-0">
 
           {/* Leaderboard header */}
           <div className="shrink-0 px-4 py-2.5 border-b border-white/8 flex items-center justify-between">
@@ -295,7 +295,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
           </div>
 
           {/* Event log */}
-          <div className="shrink-0 border-t border-white/8 bg-black/60 p-3 h-28 overflow-hidden">
+          <div className="shrink-0 border-t border-white/8 bg-[var(--modal-bg)]/60 p-3 h-28 overflow-hidden">
             <p className="text-[8px] font-bold text-white/40 mb-2">Event log</p>
             <div className="space-y-1 overflow-hidden">
               {logs.map((log, i) => (

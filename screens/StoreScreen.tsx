@@ -165,7 +165,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
   const currencyColor = selectedCurrency === Currency.SOL ? 'text-white/70' : selectedCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400';
 
   return (
-    <div className="h-full flex flex-col p-3 sm:p-6 lg:p-12 animate-in slide-in-from-bottom-4 duration-300 overflow-y-auto scrollbar-hide pb-24 relative">
+    <div className="h-full flex flex-col p-3 sm:p-6 lg:p-12 animate-in slide-in-from-bottom-4 duration-300 overflow-y-auto scrollbar-hide pb-24 relative" style={{ backgroundColor: 'var(--app-bg)' }}>
       
       {/* Popups Overlay */}
       <div className="fixed inset-0 pointer-events-none z-[100] flex items-center justify-center">
@@ -196,7 +196,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
           </div>
 
           <div className="flex flex-col gap-2 w-full sm:w-72">
-            <div className="bg-black/60 px-3 py-2 sm:p-6 border border-white/10 tech-border w-full">
+            <div className="bg-[var(--modal-bg)]/60 px-3 py-2 sm:p-6 border border-white/10 tech-border w-full">
               <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-0.5">Balance</p>
               <div className="flex items-baseline justify-between gap-2">
                 <p className="mono text-lg sm:text-3xl font-black text-white">{selectedCurrency === Currency.SOL ? currentBalance.toFixed(3) : Math.floor(currentBalance).toLocaleString()}</p>
@@ -210,7 +210,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                 <button
                   key={curr}
                   onClick={() => setSelectedCurrency(curr)}
-                  className={`py-2 text-[10px] font-bold uppercase tracking-wide border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-black border-white/20 text-white/50 hover:text-white hover:border-white/40'}`}
+                  className={`py-2 text-[10px] font-bold uppercase tracking-wide border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-[var(--modal-bg)] border-white/20 text-white/50 hover:text-white hover:border-white/40'}`}
                 >
                   {curr}
                 </button>
@@ -470,7 +470,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                       const g = GEAR_ITEMS.find(x => x.id === id);
                       return (
                         <React.Fragment key={id}>
-                          <div className="w-14 h-14 border border-orange-500/40 bg-black flex items-center justify-center">
+                          <div className="w-14 h-14 border border-orange-500/40 bg-[var(--modal-bg)] flex items-center justify-center">
                             <span className="text-3xl">{g?.image ?? '?'}</span>
                           </div>
                           {i === 0 && <span className="text-orange-500 font-black text-xl">+</span>}
@@ -481,7 +481,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                       [...Array(2 - forgeSelected.length)].map((_, i) => (
                         <React.Fragment key={i}>
                           {forgeSelected.length + i > 0 && <span className="text-white/40 font-black text-xl">+</span>}
-                          <div className="w-14 h-14 border-2 border-dashed border-white/15 bg-black/50 flex items-center justify-center">
+                          <div className="w-14 h-14 border-2 border-dashed border-white/15 bg-[var(--modal-bg)]/50 flex items-center justify-center">
                             <span className="text-white/40 text-xs font-black">?</span>
                           </div>
                         </React.Fragment>
@@ -557,11 +557,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             return (
               <div 
                 key={item.id} 
-                className={`bg-[#050505] border-2 p-6 tech-border group transition-all flex flex-col 
+                className={`bg-[var(--modal-bg)] border-2 p-6 tech-border group transition-all flex flex-col 
                   ${isOwned ? 'border-amber-500/20 bg-amber-950/5' : levelLocked ? 'border-red-950/20 opacity-60 grayscale' : `border-white/5 ${rarityStyle.shadow}`}`}
               >
                 <div className="flex gap-5 mb-5">
-                  <div className={`relative w-24 h-24 md:w-28 md:h-28 bg-black border ${isOwned ? 'border-amber-500/50' : rarityStyle.border} flex items-center justify-center shrink-0 overflow-hidden`}>
+                  <div className={`relative w-24 h-24 md:w-28 md:h-28 bg-[var(--modal-bg)] border ${isOwned ? 'border-amber-500/50' : rarityStyle.border} flex items-center justify-center shrink-0 overflow-hidden`}>
                     {/* Image with Fallback and Ownership Overlay */}
                     <div className="w-full h-full relative">
                         {item.image && !item.image.startsWith('http') ? (
@@ -588,7 +588,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         
                         {/* OWNED STAMP */}
                         {isOwned && (
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
+                            <div className="absolute inset-0 bg-[var(--modal-bg)]/60 flex items-center justify-center backdrop-blur-[1px]">
                                 <span className="text-amber-400 font-black uppercase -rotate-12 border-4 border-amber-400 px-1 py-0.5 text-xs sm:text-sm tracking-widest opacity-90 shadow-[0_0_15px_rgba(255,184,0,0.4)]">
                                     OWNED
                                 </span>

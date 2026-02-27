@@ -29,8 +29,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
     <>
       {/* ── MOBILE: fixed bottom bar ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 w-full bg-[#07070f] z-50"
-        style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom, 0px))' }}
+        className="md:hidden fixed bottom-0 left-0 w-full z-50"
+        style={{ background: 'var(--nav-bg)', paddingBottom: 'max(10px, env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border-col)' }}
       >
         <div className="flex items-end justify-around px-2 pt-2">
           {leftTabs.map(tab => (
@@ -73,9 +73,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
       </nav>
 
       {/* ── DESKTOP: left sidebar ── */}
-      <aside className="hidden md:flex flex-col w-[76px] shrink-0 h-full bg-[#07070f] border-r border-white/[0.07] z-50">
+      <aside className="hidden md:flex flex-col w-[76px] shrink-0 h-full z-50" style={{ background: 'var(--nav-bg)', borderRight: '1px solid var(--border-col)' }}>
         {/* Logo */}
-        <div className="flex items-center justify-center h-[60px] shrink-0 border-b border-white/[0.06]">
+        <div className="flex items-center justify-center h-[60px] shrink-0" style={{ borderBottom: '1px solid var(--border-col)' }}>
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center"
             style={{ background: 'rgba(255,41,41,0.10)', border: '1px solid rgba(255,41,41,0.28)' }}
@@ -138,7 +138,7 @@ const MobileNavItem: React.FC<{
     className="flex flex-col items-center flex-1 py-1.5 gap-1 transition-all active:scale-95"
   >
     <div className="relative">
-      <i className={icon} style={{ fontSize: '17px', color: active ? '#ffffff' : 'rgba(255,255,255,0.35)', transition: 'color 0.15s' }} />
+      <i className={icon} style={{ fontSize: '17px', color: active ? 'var(--text-primary)' : 'var(--text-35)', transition: 'color 0.15s' }} />
       {badge > 0 && (
         <span
           className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-black font-black animate-pulse"
@@ -148,7 +148,7 @@ const MobileNavItem: React.FC<{
         </span>
       )}
     </div>
-    <span style={{ fontSize: '9px', fontWeight: 500, color: active ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)', transition: 'color 0.15s' }}>
+    <span style={{ fontSize: '9px', fontWeight: 500, color: active ? 'var(--text-75)' : 'var(--text-30)', transition: 'color 0.15s' }}>
       {label}
     </span>
   </button>
@@ -162,7 +162,7 @@ const SidebarNavItem: React.FC<{
     onClick={onClick}
     className="relative w-full flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl mx-2 transition-all active:scale-95 group"
     style={{
-      background: active ? 'rgba(255,255,255,0.07)' : 'transparent',
+      background: active ? 'var(--card-bg-strong)' : 'transparent',
       width: 'calc(100% - 16px)',
     }}
   >
@@ -174,7 +174,7 @@ const SidebarNavItem: React.FC<{
         className={icon}
         style={{
           fontSize: '17px',
-          color: active ? '#ffffff' : 'rgba(255,255,255,0.3)',
+          color: active ? 'var(--text-primary)' : 'var(--text-30)',
           transition: 'color 0.15s',
         }}
       />
@@ -190,7 +190,7 @@ const SidebarNavItem: React.FC<{
     <span style={{
       fontSize: '9px',
       fontWeight: 500,
-      color: active ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.28)',
+      color: active ? 'var(--text-75)' : 'var(--text-30)',
       transition: 'color 0.15s',
       letterSpacing: '0.2px',
     }}>

@@ -7,7 +7,7 @@ interface PrivacyScreenProps {
 
 const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack }) => {
   return (
-    <div className="h-full flex flex-col bg-[#000000] animate-in slide-in-from-right duration-300">
+    <div className="h-full flex flex-col animate-in slide-in-from-right duration-300" style={{ backgroundColor: 'var(--app-bg)' }}>
       <div className="p-8 shrink-0 border-b border-white/5 flex items-center gap-6">
         <button 
           onClick={onBack}

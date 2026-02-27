@@ -208,7 +208,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   // ── ACTIVE LOBBY ─────────────────────────────────────────────────────
   if (activeRoom) {
     return (
-      <div className="h-full flex flex-col animate-in fade-in duration-300 relative bg-black">
+      <div className="h-full flex flex-col animate-in fade-in duration-300 relative bg-[var(--modal-bg)]">
 
         {/* Join notification */}
         {joinNotification && (
@@ -218,7 +218,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
         )}
 
         {/* Top bar */}
-        <div className="shrink-0 flex justify-between items-center px-4 sm:px-6 py-3 border-b border-white/5 bg-[#050505] z-10">
+        <div className="shrink-0 flex justify-between items-center px-4 sm:px-6 py-3 border-b border-white/5 bg-[var(--modal-bg)] z-10">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-[#FF2929] rounded-full animate-pulse" style={{ boxShadow: '0 0 8px rgba(255,41,41,0.7)' }} />
             <span className="text-xs font-bold text-[#FF2929]">Lobby active</span>
@@ -237,7 +237,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[#FF2929] to-transparent" />
               <div className="flex flex-col sm:flex-row items-center gap-6 p-4 sm:p-6">
                 {/* QR */}
-                <div className="shrink-0 p-2 bg-black border border-white/10">
+                <div className="shrink-0 p-2 bg-[var(--modal-bg)] border border-white/10">
                   <canvas ref={qrCanvasRef} width="180" height="180" className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] block" />
                   <p className="text-[8px] text-center text-white/40 font-bold mt-1">Scan to join</p>
                 </div>
@@ -256,11 +256,11 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                   <p className="text-[9px] font-bold text-white/40 mb-4">{codeCopied ? 'Copied!' : 'Tap to copy'}</p>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-black border border-white/8 p-3 text-center">
+                    <div className="bg-[var(--modal-bg)] border border-white/8 p-3 text-center">
                       <p className="text-[9px] text-white/50 font-bold mb-0.5">Stake</p>
                       <p className="text-lg font-black text-[#FFB800] mono">{activeRoom.stakePerPlayer} <span className="text-sm">{CURRENCY_LABELS[roomCcy]}</span></p>
                     </div>
-                    <div className="bg-black border border-white/8 p-3 text-center">
+                    <div className="bg-[var(--modal-bg)] border border-white/8 p-3 text-center">
                       <p className="text-[9px] text-white/50 font-bold mb-0.5">Pot</p>
                       <p className="text-lg font-black text-yellow-500 mono">{totalPot.toFixed(roomCcy === Currency.SKR ? 0 : 2)} <span className="text-sm">{CURRENCY_LABELS[roomCcy]}</span></p>
                     </div>
@@ -306,7 +306,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               <div className="px-4 py-2 border-b border-white/5">
                 <span className="text-[9px] font-bold text-white/50">Comms</span>
               </div>
-              <div className="h-36 overflow-y-auto scrollbar-hide bg-black/60 p-3 space-y-1.5">
+              <div className="h-36 overflow-y-auto scrollbar-hide bg-[var(--modal-bg)]/60 p-3 space-y-1.5">
                 {chatMessages.length === 0 && (
                   <p className="text-[10px] text-white/30 font-bold text-center mt-10">No messages yet...</p>
                 )}
@@ -331,7 +331,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                   onKeyDown={(e) => { if (e.key === 'Enter') sendChatMessage(); }}
                   placeholder="Transmit..."
                   maxLength={200}
-                  className="flex-1 bg-black border border-white/10 px-3 py-2 text-xs font-black text-white placeholder-white/15 outline-none focus:border-[#FF2929]/50 transition-colors"
+                  className="flex-1 bg-[var(--modal-bg)] border border-white/10 px-3 py-2 text-xs font-black text-white placeholder-white/15 outline-none focus:border-[#FF2929]/50 transition-colors"
                 />
                 <button
                   onClick={sendChatMessage}
@@ -347,7 +347,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
         </div>
 
         {/* Footer CTA */}
-        <div className="shrink-0 p-4 sm:p-5 border-t border-white/5 bg-[#050505] z-10">
+        <div className="shrink-0 p-4 sm:p-5 border-t border-white/5 bg-[var(--modal-bg)] z-10">
           {isHost ? (
             <button
               onClick={onStartGame}
@@ -360,7 +360,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               {canStart ? 'Start PvP →' : `Waiting for players (${players.length}/${activeRoom.maxPlayers})...`}
             </button>
           ) : (
-            <div className="w-full py-5 sm:py-6 border border-white/8 tech-border text-center bg-black">
+            <div className="w-full py-5 sm:py-6 border border-white/8 tech-border text-center bg-[var(--modal-bg)]">
               <span className="text-sm font-bold text-white/50 animate-pulse">Waiting for host to start...</span>
             </div>
           )}
@@ -371,13 +371,13 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
 
   // ── MENU / CREATE / JOIN ──────────────────────────────────────────────
   return (
-    <div className="h-full flex flex-col animate-in slide-in-from-right duration-300 bg-black">
+    <div className="h-full flex flex-col animate-in slide-in-from-right duration-300" style={{ backgroundColor: 'var(--app-bg)' }}>
 
       {/* QR Scanner overlay — full-screen, safe on all viewports */}
       {isScanning && (
-        <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+        <div className="fixed inset-0 z-[200] bg-[var(--modal-bg)] flex flex-col">
           {/* Top bar */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#FF2929]/30 bg-[#050505]">
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#FF2929]/30 bg-[var(--modal-bg)]">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#FF2929] animate-pulse" />
               <span className="text-xs font-bold text-[#FF2929]">Scanning QR code</span>
@@ -394,7 +394,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
           <div className="flex-1 flex items-center justify-center p-6 min-h-0">
             <div className="relative w-full max-w-xs">
               {/* Scanner mount — aspect-square so it fits any phone */}
-              <div id="reader" className="w-full aspect-square bg-black border-2 border-[#FF2929]/40 overflow-hidden" />
+              <div id="reader" className="w-full aspect-square bg-[var(--modal-bg)] border-2 border-[#FF2929]/40 overflow-hidden" />
               {/* Corner decorators */}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-2 left-2 w-6 h-6 border-t-4 border-l-4 border-[#FF2929]" />
@@ -406,7 +406,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
           </div>
 
           {/* Bottom hint — always visible */}
-          <div className="shrink-0 px-4 py-5 text-center border-t border-white/5 bg-[#050505]">
+          <div className="shrink-0 px-4 py-5 text-center border-t border-white/5 bg-[var(--modal-bg)]">
             <p className="text-[11px] font-bold text-white/50 animate-pulse">
               Point camera at room QR code
             </p>
@@ -415,7 +415,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
       )}
 
       {/* Header */}
-      <div className="shrink-0 flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/5 bg-[#050505]">
+      <div className="shrink-0 flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/5 bg-[var(--modal-bg)]">
         <button
           onClick={() => view === 'MENU' ? onBack() : (setView('MENU'), setJoinPreview(null), setPreviewError(''))}
           className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white border border-white/10 hover:border-white/30 transition-all font-bold"
@@ -453,7 +453,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                 onClick={() => setView('CREATE')}
                 className="group w-full p-4 sm:p-5 bg-white text-black tech-border hover:bg-[#FF2929] hover:text-white transition-all active:scale-[0.99] text-left flex items-center gap-4"
               >
-                <div className="w-10 h-10 bg-black/10 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-[var(--modal-bg)]/10 flex items-center justify-center shrink-0">
                   <Swords size={20} />
                 </div>
                 <div className="flex-1">
@@ -466,7 +466,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               {/* Join card */}
               <button
                 onClick={() => setView('JOIN')}
-                className="group w-full p-4 sm:p-5 bg-black border-2 border-white/20 text-white tech-border hover:border-[#FF2929]/60 hover:bg-[#FF2929]/5 transition-all active:scale-[0.99] text-left flex items-center gap-4"
+                className="group w-full p-4 sm:p-5 bg-[var(--modal-bg)] border-2 border-white/20 text-white tech-border hover:border-[#FF2929]/60 hover:bg-[#FF2929]/5 transition-all active:scale-[0.99] text-left flex items-center gap-4"
               >
                 <div className="w-10 h-10 border border-white/20 flex items-center justify-center shrink-0 group-hover:border-[#FF2929]/50">
                   <Users size={20} className="text-white/75 group-hover:text-[#FF2929]" />
@@ -498,7 +498,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                       <button
                         key={c}
                         onClick={() => setStakeCurrency(c)}
-                        className={`py-3 sm:py-4 border-2 tech-border font-bold text-sm transition-all ${active ? col : 'bg-black border-white/10 text-white/50 hover:border-white/30'}`}
+                        className={`py-3 sm:py-4 border-2 tech-border font-bold text-sm transition-all ${active ? col : 'bg-[var(--modal-bg)] border-white/10 text-white/50 hover:border-white/30'}`}
                       >
                         <p className="text-sm font-bold">{CURRENCY_LABELS[c]}</p>
                         <p className="text-[9px] font-bold opacity-60 mt-0.5">{balanceFmt(c)}</p>
@@ -516,7 +516,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                     <button
                       key={val}
                       onClick={() => setStakeAmount(val)}
-                      className={`py-4 tech-border font-black text-lg transition-all ${stakeAmount === val ? 'bg-[#FF2929] text-white border-[#FF2929]' : 'bg-black border-white/10 text-white/60 hover:border-white/30 hover:text-white/70'}`}
+                      className={`py-4 tech-border font-black text-lg transition-all ${stakeAmount === val ? 'bg-[#FF2929] text-white border-[#FF2929]' : 'bg-[var(--modal-bg)] border-white/10 text-white/60 hover:border-white/30 hover:text-white/70'}`}
                     >
                       {val}
                     </button>
@@ -528,7 +528,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                     min="0.001"
                     step={stakeCurrency === Currency.SKR ? '1' : '0.01'}
                     placeholder={`Custom amount`}
-                    className="flex-1 bg-black border border-white/15 px-3 py-2.5 text-sm font-black text-white placeholder-white/20 outline-none focus:border-[#FF2929]/50 mono transition-colors"
+                    className="flex-1 bg-[var(--modal-bg)] border border-white/15 px-3 py-2.5 text-sm font-black text-white placeholder-white/20 outline-none focus:border-[#FF2929]/50 mono transition-colors"
                     onChange={(e) => {
                       const v = parseFloat(e.target.value);
                       if (!isNaN(v) && v > 0) setStakeAmount(v);
@@ -592,7 +592,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                     value={inviteCode}
                     onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setJoinPreview(null); setPreviewError(''); }}
                     placeholder="RAID-XXXX"
-                    className="flex-1 bg-black border-2 border-white/20 px-3 py-3 sm:py-4 text-xl sm:text-2xl font-black text-center text-white placeholder-white/10 outline-none focus:border-[#FF2929] tech-border mono transition-colors min-w-0"
+                    className="flex-1 bg-[var(--modal-bg)] border-2 border-white/20 px-3 py-3 sm:py-4 text-xl sm:text-2xl font-black text-center text-white placeholder-white/10 outline-none focus:border-[#FF2929] tech-border mono transition-colors min-w-0"
                   />
                   <button
                     onClick={startScanning}
@@ -617,17 +617,17 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                     <p className="text-[9px] font-bold text-[#FF2929]">Room details</p>
                   </div>
                   <div className="p-4 grid grid-cols-2 gap-3 mb-3">
-                    <div className="bg-black/60 p-3 text-center border border-white/8">
+                    <div className="bg-[var(--modal-bg)]/60 p-3 text-center border border-white/8">
                       <p className="text-[9px] font-bold text-white/50 mb-1">Stake</p>
                       <p className="text-xl font-black text-[#FFB800] mono">{joinPreview.stake} <span className="text-sm">{CURRENCY_LABELS[joinPreview.currency]}</span></p>
                     </div>
-                    <div className="bg-black/60 p-3 text-center border border-white/8">
+                    <div className="bg-[var(--modal-bg)]/60 p-3 text-center border border-white/8">
                       <p className="text-[9px] font-bold text-white/50 mb-1">Max players</p>
                       <p className="text-xl font-black text-white mono">{joinPreview.maxPlayers}</p>
                     </div>
                   </div>
                   <div className="px-4 pb-4">
-                    <div className="flex items-center justify-between p-2.5 bg-black/40 border border-white/5">
+                    <div className="flex items-center justify-between p-2.5 bg-[var(--modal-bg)]/40 border border-white/5">
                       <span className="text-[9px] font-bold text-white/50">Your balance</span>
                       <span className={`text-[11px] font-black mono ${
                         balanceFor(joinPreview.currency) >= joinPreview.stake ? 'text-white/70' : 'text-red-400'

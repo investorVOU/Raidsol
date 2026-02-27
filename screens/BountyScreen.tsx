@@ -489,7 +489,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
   const filtered = openBounties.filter(b => diffFilter === 'ALL' || b.difficulty === diffFilter);
 
   return (
-    <div className="flex flex-col h-full bg-[#07070f] text-white overflow-hidden">
+    <div className="flex flex-col h-full text-white overflow-hidden" style={{ backgroundColor: 'var(--app-bg)' }}>
 
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/[0.06]">

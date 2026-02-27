@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { getRoundBoundsFor, ROUND_ALLOCATION } from './useRoundData';
+import { getRoundBoundsFor } from './useRoundData';
+import { RAID_TIER_ALLOCATION, RaidTier } from '../types';
+
+export const ROUNDS_PAGE_SIZE = 8;
 
 export interface HistoricalRoundEntry {
   rank: number;
@@ -8,139 +11,121 @@ export interface HistoricalRoundEntry {
   username: string;
   pointsScored: number;
   allocationSol: number;
+  claimed: boolean;
 }
 
 export interface HistoricalRound {
   roundNum: number;
   roundDate: string;   // YYYY-MM-DD
+  raidTier: string;
   startTime: Date;
   endTime: Date;
   poolSol: number;
-  entries: HistoricalRoundEntry[]; // top 5
+  finalized: boolean;
+  refunded: boolean;
+  entries: HistoricalRoundEntry[]; // top 5 winners (empty if refunded or no entries)
 }
 
-const POOL_PCT = 0.90;
-
-/** Build a list of the last N completed round descriptors (roundNum + roundDate). */
-function getLastCompletedRounds(count: number): Array<{ roundNum: number; roundDate: string }> {
-  const now = new Date();
-  const utcHour = now.getUTCHours();
-  const currentRound = Math.floor(utcHour / 6) + 1;
-
-  const rounds: Array<{ roundNum: number; roundDate: string }> = [];
-  let r = currentRound - 1;
-  let d = new Date(now);
-
-  while (rounds.length < count) {
-    if (r <= 0) {
-      // Go to previous day, start at round 4
-      d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - 1));
-      r = 4;
-    }
-    const dateStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-    rounds.push({ roundNum: r, roundDate: dateStr });
-    r--;
-  }
-  return rounds;
-}
-
-export function useRoundHistory(count = 8) {
+export function useRoundHistory(tier = 'GRUNT', page = 0) {
   const [rounds, setRounds] = useState<HistoricalRound[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
-    const descriptors = getLastCompletedRounds(count);
 
-    // Find widest time window to bulk-fetch raid_history
-    const allStarts = descriptors.map(d => getRoundBoundsFor(d.roundNum, d.roundDate).start);
-    const allEnds   = descriptors.map(d => getRoundBoundsFor(d.roundNum, d.roundDate).end);
-    const minStart  = new Date(Math.min(...allStarts.map(t => t.getTime())));
-    const maxEnd    = new Date(Math.max(...allEnds.map(t => t.getTime())));
+    const offset = page * ROUNDS_PAGE_SIZE;
 
-    // Bulk fetch all raids in the combined window
-    const [successRes, allRes] = await Promise.all([
+    // 1. Fetch paginated finalizations for this tier, newest first.
+    //    Fetch one extra row to detect whether a next page exists.
+    const { data: finalizations } = await supabase
+      .from('round_finalizations')
+      .select('round_number, round_date, raid_tier, pool_sol, refunded')
+      .eq('raid_tier', tier)
+      .order('round_date', { ascending: false })
+      .order('round_number', { ascending: false })
+      .range(offset, offset + ROUNDS_PAGE_SIZE); // one extra
+
+    if (!finalizations || finalizations.length === 0) {
+      setRounds([]);
+      setHasMore(false);
+      setLoading(false);
+      return;
+    }
+
+    const hasMoreData = finalizations.length > ROUNDS_PAGE_SIZE;
+    const pageData    = finalizations.slice(0, ROUNDS_PAGE_SIZE);
+    setHasMore(hasMoreData);
+
+    // 2. Fetch winners for each finalization concurrently
+    const winnerPromises = pageData.map(f =>
       supabase
-        .from('raid_history')
-        .select('wallet_address, points, created_at')
-        .eq('success', true)
-        .gte('created_at', minStart.toISOString())
-        .lt('created_at', maxEnd.toISOString())
-        .order('points', { ascending: false })
-        .limit(2000),
-      supabase
-        .from('raid_history')
-        .select('entry_fee, created_at')
-        .gte('created_at', minStart.toISOString())
-        .lt('created_at', maxEnd.toISOString()),
-    ]);
+        .from('round_winners')
+        .select('rank, wallet_address, points_scored, sol_allocation, claimed')
+        .eq('round_number', f.round_number)
+        .eq('round_date',   f.round_date)
+        .eq('raid_tier',    tier)
+        .order('rank'),
+    );
+    const winnerResults = await Promise.all(winnerPromises);
 
-    const successRaids = successRes.data ?? [];
-    const allRaids = allRes.data ?? [];
-
-    // Collect all unique wallets for username lookup
-    const walletSet = new Set(successRaids.map(r => r.wallet_address));
+    // 3. Batch username lookup from profiles
+    const allWallets = [
+      ...new Set(
+        winnerResults.flatMap(r => (r.data ?? []).map(w => w.wallet_address)),
+      ),
+    ];
     let usernameMap: Record<string, string> = {};
-    if (walletSet.size > 0) {
+    if (allWallets.length > 0) {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('wallet_address, username')
-        .in('wallet_address', [...walletSet]);
+        .in('wallet_address', allWallets);
       for (const p of profiles ?? []) {
         usernameMap[p.wallet_address] = p.username;
       }
     }
 
-    // Build per-round data
-    const result: HistoricalRound[] = [];
-    for (const desc of descriptors) {
-      const { start, end } = getRoundBoundsFor(desc.roundNum, desc.roundDate);
+    // 4. Build HistoricalRound objects
+    const tierKey = (tier.toUpperCase() as RaidTier) in RAID_TIER_ALLOCATION
+      ? (tier.toUpperCase() as RaidTier)
+      : RaidTier.GRUNT;
 
-      // Pool = 8% of all entry fees in window
-      const poolSol = allRaids
-        .filter(r => {
-          const t = new Date(r.created_at).getTime();
-          return t >= start.getTime() && t < end.getTime();
-        })
-        .reduce((sum, r) => sum + Number(r.entry_fee), 0) * POOL_PCT;
+    const result: HistoricalRound[] = pageData.map((f, i) => {
+      const dateStr = typeof f.round_date === 'string'
+        ? f.round_date.slice(0, 10)
+        : f.round_date;
+      const { start, end } = getRoundBoundsFor(f.round_number, dateStr);
+      const poolSol = Number(f.pool_sol ?? 0);
+      const winners = winnerResults[i].data ?? [];
 
-      // Best points per wallet in this window
-      const bestByWallet = new Map<string, number>();
-      for (const r of successRaids) {
-        const t = new Date(r.created_at).getTime();
-        if (t < start.getTime() || t >= end.getTime()) continue;
-        const pts = Number(r.points);
-        const best = bestByWallet.get(r.wallet_address) ?? 0;
-        if (pts > best) bestByWallet.set(r.wallet_address, pts);
-      }
-
-      const sorted = [...bestByWallet.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-
-      const entries: HistoricalRoundEntry[] = sorted.map(([wallet, pts], i) => ({
-        rank: i + 1,
-        walletAddress: wallet,
-        username: usernameMap[wallet] ?? `${wallet.slice(0, 4)}…${wallet.slice(-4)}`,
-        pointsScored: pts,
-        allocationSol: poolSol * ROUND_ALLOCATION[i],
+      const entries: HistoricalRoundEntry[] = winners.map(w => ({
+        rank:         w.rank,
+        walletAddress: w.wallet_address,
+        username:     usernameMap[w.wallet_address] ?? `${w.wallet_address.slice(0, 4)}…${w.wallet_address.slice(-4)}`,
+        pointsScored: Number(w.points_scored ?? 0),
+        allocationSol: Number(w.sol_allocation ?? 0),
+        claimed:      !!w.claimed,
       }));
 
-      result.push({
-        roundNum: desc.roundNum,
-        roundDate: desc.roundDate,
+      return {
+        roundNum:  f.round_number,
+        roundDate: dateStr,
+        raidTier:  tier,
         startTime: start,
-        endTime: end,
+        endTime:   end,
         poolSol,
+        finalized: true,
+        refunded:  !!f.refunded,
         entries,
-      });
-    }
+      };
+    });
 
     setRounds(result);
     setLoading(false);
-  }, [count]);
+  }, [tier, page]);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  return { rounds, loading, refetch: fetchHistory };
+  return { rounds, loading, hasMore, refetch: fetchHistory };
 }

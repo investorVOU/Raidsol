@@ -294,7 +294,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     d === 'DEGEN' ? 'text-[#FF2929]' : d === 'HARD' ? 'text-orange-400' : d === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400';
 
   return (
-    <div className="h-full bg-[#07070f] text-white flex flex-col">
+    <div className="h-full text-white flex flex-col" style={{ backgroundColor: 'var(--app-bg)' }}>
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
         <div>

@@ -275,7 +275,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col p-4 sm:p-6 lg:p-12 animate-in slide-in-from-right duration-300 overflow-y-auto scrollbar-hide pb-28 md:pb-12 relative">
+    <div className="h-full flex flex-col p-4 sm:p-6 lg:p-12 animate-in slide-in-from-right duration-300 overflow-y-auto scrollbar-hide pb-28 md:pb-12 relative" style={{ backgroundColor: 'var(--app-bg)' }}>
       
       {/* Name Change Notification */}
       {showNotification && (
@@ -324,7 +324,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           {/* Avatar Container */}
           <div className="shrink-0 flex flex-col items-center gap-2">
             <div
-              className="w-36 h-36 sm:w-44 sm:h-44 lg:w-52 lg:h-52 bg-black border-4 tech-border flex items-center justify-center relative overflow-hidden transition-all duration-500"
+              className="w-36 h-36 sm:w-44 sm:h-44 lg:w-52 lg:h-52 bg-[var(--modal-bg)] border-4 tech-border flex items-center justify-center relative overflow-hidden transition-all duration-500"
               style={{ borderColor: equippedAvatar ? currentRank.color : '#333', boxShadow: equippedAvatar ? `0 0 30px ${currentRank.color}20` : 'none' }}
             >
               {equippedAvatar?.image ? (
@@ -477,15 +477,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
         {/* Combined Gear Stats Section */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <div className="bg-[#050505] border-2 border-white/5 p-5 tech-border">
+          <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border">
             <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Mult boost</p>
             <p className="text-2xl font-black mono text-purple-400">+{gearStats.mult.toFixed(2)}x</p>
           </div>
-          <div className="bg-[#050505] border-2 border-white/5 p-5 tech-border">
+          <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border">
             <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Risk shield</p>
             <p className="text-2xl font-black mono text-[#FF2929]">-{gearStats.riskReduc}%</p>
           </div>
-          <div className="bg-[#050505] border-2 border-white/5 p-5 tech-border">
+          <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border">
             <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Time bonus</p>
             <p className="text-2xl font-black mono text-cyan-400">+{gearStats.timeBoost}s</p>
           </div>
@@ -498,7 +498,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <div className="lg:col-span-7 space-y-8 lg:space-y-12">
             
             {/* Unclaimed Balance Card */}
-            <div className="bg-[#050505] border-2 border-[#FFB800]/20 p-6 sm:p-10 tech-border relative overflow-hidden group">
+            <div className="bg-[var(--modal-bg)] border-2 border-[#FFB800]/20 p-6 sm:p-10 tech-border relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-5 opacity-5 mono text-2xl sm:text-4xl font-black italic uppercase pointer-events-none group-hover:opacity-10 transition-opacity">
                 [STORAGE]
               </div>
@@ -542,7 +542,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                         value={withdrawAmount}
                         onChange={(e) => setWithdrawAmount(e.target.value)}
                         disabled={unclaimedBalance <= 0 || isClaiming}
-                        className="w-full bg-black border-2 border-white/10 focus:border-[#FFB800]/40 outline-none px-4 py-3 mono text-sm font-black text-white placeholder-white/20 disabled:opacity-30 transition-colors"
+                        className="w-full bg-[var(--modal-bg)] border-2 border-white/10 focus:border-[#FFB800]/40 outline-none px-4 py-3 mono text-sm font-black text-white placeholder-white/20 disabled:opacity-30 transition-colors"
                         placeholder="0.0000"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#FFB800]/60">SOL</span>
@@ -593,14 +593,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="bg-black border-2 border-white/5 p-6 tech-border hover:border-yellow-500/20 transition-all">
+              <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-6 tech-border hover:border-yellow-500/20 transition-all">
                 <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Reputation</p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-2xl sm:text-3xl font-black mono text-yellow-500">{srPoints.toLocaleString()}</p>
                   <span className="text-xs font-black text-yellow-500/70">$SR</span>
                 </div>
               </div>
-              <div className="bg-black border-2 border-white/5 p-6 tech-border hover:border-purple-500/20 transition-all">
+              <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-6 tech-border hover:border-purple-500/20 transition-all">
                 <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Inventory</p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-2xl sm:text-3xl font-black mono text-white">{ownedItemIds.length}</p>
@@ -610,7 +610,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </div>
 
             {/* Referral Protocol Card */}
-            <div className="bg-[#050505] border-2 border-[#FF2929]/20 p-6 sm:p-8 tech-border relative overflow-hidden group">
+            <div className="bg-[var(--modal-bg)] border-2 border-[#FF2929]/20 p-6 sm:p-8 tech-border relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-5 opacity-5 mono text-2xl sm:text-4xl font-black italic uppercase pointer-events-none group-hover:opacity-10 transition-opacity">
                 [LINK]
               </div>
@@ -619,11 +619,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
                 {/* Stats row */}
                 <div className="grid grid-cols-2 gap-3 mb-5">
-                  <div className="bg-black/60 border border-white/5 p-3 text-center">
+                  <div className="bg-[var(--modal-bg)]/60 border border-white/5 p-3 text-center">
                     <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Recruits</p>
                     <p className="text-2xl font-black mono text-white">{referralCount}</p>
                   </div>
-                  <div className="bg-black/60 border border-white/5 p-3 text-center">
+                  <div className="bg-[var(--modal-bg)]/60 border border-white/5 p-3 text-center">
                     <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">SR earned</p>
                     <p className="text-2xl font-black mono text-yellow-500">{referralSREarned.toLocaleString()}</p>
                   </div>
@@ -631,13 +631,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
                 <div className="flex flex-col space-y-4">
                   {/* Code display */}
-                  <div className="bg-black border border-[#FF2929]/20 p-3 tech-border">
+                  <div className="bg-[var(--modal-bg)] border border-[#FF2929]/20 p-3 tech-border">
                     <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Your code</p>
                     <p className="mono text-lg font-black text-[#FF2929] tracking-widest">{displayRefCode}</p>
                   </div>
 
                   {/* Link + copy */}
-                  <div className="bg-black border border-white/10 p-4 tech-border flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="bg-[var(--modal-bg)] border border-white/10 p-4 tech-border flex flex-col sm:flex-row items-center justify-between gap-3">
                     <span className="mono text-xs text-white/70 truncate w-full sm:w-auto text-center sm:text-left">
                       {referralLink}
                     </span>
@@ -660,7 +660,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </div>
 
             {/* Inventory Grid */}
-            <div className="bg-black/40 border-2 border-white/5 p-6 sm:p-10 tech-border">
+            <div className="bg-[var(--modal-bg)]/40 border-2 border-white/5 p-6 sm:p-10 tech-border">
                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-8">
                  <h3 className="text-[10px] font-bold uppercase tracking-wide text-white/50 leading-none">Inventory</h3>
                  <span className="text-[9px] font-bold text-white/30 hidden sm:block">Click to equip</span>
@@ -678,7 +678,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     <button 
                       key={id} 
                       onClick={() => handleItemClick(item)}
-                      className={`aspect-square bg-black border-2 tech-border flex items-center justify-center relative transition-all group overflow-hidden ${isEquipped ? equipColor : 'border-white/5 hover:border-white/20'}`}
+                      className={`aspect-square bg-[var(--modal-bg)] border-2 tech-border flex items-center justify-center relative transition-all group overflow-hidden ${isEquipped ? equipColor : 'border-white/5 hover:border-white/20'}`}
                     >
                       {item.image && !item.image.startsWith('http') ? (
                         // Emoji icon for gear
@@ -750,7 +750,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               <div className="space-y-3">
                 {historyLoading ? (
                   [...Array(3)].map((_, i) => (
-                    <div key={i} className="bg-black border-2 border-white/5 p-5 tech-border animate-pulse">
+                    <div key={i} className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border animate-pulse">
                       <div className="h-4 bg-white/5 rounded w-1/2" />
                     </div>
                   ))
@@ -772,7 +772,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     return (
                       <div
                         key={h.id}
-                        className="bg-black border-2 border-white/5 p-4 sm:p-5 tech-border flex items-center justify-between group hover:bg-white/2 transition-colors"
+                        className="bg-[var(--modal-bg)] border-2 border-white/5 p-4 sm:p-5 tech-border flex items-center justify-between group hover:bg-white/2 transition-colors"
                       >
                         <div className="flex flex-col gap-1">
                           <span className={`text-xs font-black uppercase tracking-widest ${!h.success ? 'text-red-500' : 'text-[#FFB800]'}`}>
@@ -804,7 +804,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               <div className="space-y-3">
                 {roundWinsLoading ? (
                   [...Array(3)].map((_, i) => (
-                    <div key={i} className="bg-black border-2 border-white/5 p-5 tech-border animate-pulse">
+                    <div key={i} className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border animate-pulse">
                       <div className="h-4 bg-white/5 rounded w-3/4" />
                     </div>
                   ))
@@ -831,7 +831,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     return (
                       <div
                         key={w.id}
-                        className={`relative bg-black border-2 ${borderColors[w.rank - 1]} ${glowColors[w.rank - 1]} tech-border overflow-hidden`}
+                        className={`relative bg-[var(--modal-bg)] border-2 ${borderColors[w.rank - 1]} ${glowColors[w.rank - 1]} tech-border overflow-hidden`}
                       >
                         {/* Top accent bar */}
                         <div className={`h-0.5 w-full ${w.rank === 1 ? 'bg-yellow-400' : w.rank === 2 ? 'bg-white/30' : w.rank === 3 ? 'bg-orange-400' : 'bg-white/15'}`} />
@@ -904,7 +904,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               <div className="space-y-3">
                 {withdrawLoading ? (
                   [...Array(3)].map((_, i) => (
-                    <div key={i} className="bg-black border-2 border-white/5 p-5 tech-border animate-pulse">
+                    <div key={i} className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border animate-pulse">
                       <div className="h-4 bg-white/5 rounded w-1/2" />
                     </div>
                   ))
@@ -922,7 +922,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     return (
                       <div
                         key={w.id}
-                        className="bg-black border-2 border-[#FFB800]/10 p-4 sm:p-5 tech-border hover:border-[#FFB800]/20 transition-colors group"
+                        className="bg-[var(--modal-bg)] border-2 border-[#FFB800]/10 p-4 sm:p-5 tech-border hover:border-[#FFB800]/20 transition-colors group"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex flex-col gap-1 min-w-0">

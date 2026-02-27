@@ -6,6 +6,8 @@ import { useLeaderboard, LeaderboardPeriod } from '../hooks/useLeaderboard';
 import { useRoundHistory } from '../hooks/useRoundHistory';
 import { formatRoundWindow } from '../hooks/useRoundData';
 
+type RoundsTier = 'GRUNT' | 'ELITE' | 'WHALE';
+
 interface TournamentScreenProps {
   onEnterRaid: (mode: Mode, difficulty: Difficulty, boosts: string[], currency: Currency) => void;
   walletBalance: number;
@@ -54,13 +56,19 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
   rankLevel, rankTitle, srPoints, walletAddress, currencyRates,
 }) => {
   const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
-  const [mainTab,   setMainTab]   = useState<'leaderboard' | 'rounds'>('leaderboard');
-  const [period,    setPeriod]    = useState<LeaderboardPeriod>('alltime');
-  const [showEntry, setShowEntry] = useState(false);
-  const [currency,  setCurrency]  = useState<Currency>(Currency.SOL);
+  const [mainTab,    setMainTab]   = useState<'leaderboard' | 'rounds'>('leaderboard');
+  const [period,     setPeriod]    = useState<LeaderboardPeriod>('alltime');
+  const [showEntry,  setShowEntry] = useState(false);
+  const [currency,   setCurrency]  = useState<Currency>(Currency.SOL);
+  const [lbPage,     setLbPage]    = useState(0);
+  const [roundsPage, setRoundsPage] = useState(0);
+  const [roundsTier, setRoundsTier] = useState<RoundsTier>('GRUNT');
 
-  const { entries, loading } = useLeaderboard(period);
-  const { rounds: historicalRounds, loading: roundsLoading } = useRoundHistory(8);
+  const handleSetPeriod = (p: LeaderboardPeriod) => { setPeriod(p); setLbPage(0); };
+  const handleSetRoundsTier = (t: RoundsTier) => { setRoundsTier(t); setRoundsPage(0); };
+
+  const { entries, loading, hasMore: lbHasMore } = useLeaderboard(period, lbPage);
+  const { rounds: historicalRounds, loading: roundsLoading, hasMore: roundsHasMore } = useRoundHistory(roundsTier, roundsPage);
 
   const top3 = entries.slice(0, 3);
   const rest  = entries.slice(3);
@@ -152,10 +160,10 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
 
   // ── MAIN VIEW ────────────────────────────────────────────────────────────
   return (
-    <div className="h-full flex flex-col animate-in slide-in-from-right duration-300 overflow-hidden bg-[#050508]">
+    <div className="h-full flex flex-col animate-in slide-in-from-right duration-300 overflow-hidden" style={{ backgroundColor: 'var(--app-bg)' }}>
 
       {/* HEADER */}
-      <div className="shrink-0 px-4 pt-5 pb-3 bg-[#050508]">
+      <div className="shrink-0 px-4 pt-5 pb-3" style={{ backgroundColor: 'var(--app-bg)' }}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-2xl font-black text-white leading-none">Rankings</h2>
@@ -184,7 +192,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
         {mainTab === 'leaderboard' && (
           <div className="flex gap-1.5 mt-3">
             {PERIOD_LABELS.map(p => (
-              <button key={p.id} onClick={() => setPeriod(p.id)}
+              <button key={p.id} onClick={() => handleSetPeriod(p.id)}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all border ${period === p.id ? 'bg-[#FF2929]/12 border-[#FF2929]/40 text-[#FF2929]' : 'border-white/8 text-white/40 hover:text-white/60 hover:border-white/15'}`}>
                 {p.label}
               </button>
@@ -227,8 +235,8 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
           </div>
         ) : (
           <>
-            {/* TOP 3 */}
-            {top3.map((entry, idx) => {
+            {/* TOP 3 podium — only on first page */}
+            {lbPage === 0 && top3.map((entry, idx) => {
               const podiumStyles = [
                 { border: 'border-yellow-500/50', bg: 'bg-gradient-to-r from-yellow-500/8 to-transparent', glow: 'shadow-[0_0_20px_rgba(234,179,8,0.08)]', ring: 'ring-2 ring-yellow-400/50', numColor: 'text-yellow-400' },
                 { border: 'border-white/15',      bg: 'bg-white/[0.02]',                                   glow: '',                                        ring: 'ring-1 ring-white/15',           numColor: 'text-white/60'  },
@@ -259,11 +267,11 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
               );
             })}
 
-            {/* ROWS 4-20 */}
-            {rest.length > 0 && (
+            {/* Remaining rows (4+ on page 0, all on subsequent pages) */}
+            {(lbPage === 0 ? rest : entries).length > 0 && (
               <div className="rounded-2xl border border-white/8 overflow-hidden divide-y divide-white/5">
-                {rest.map((entry, idx) => {
-                  const place = idx + 4;
+                {(lbPage === 0 ? rest : entries).map((entry, idx) => {
+                  const place = lbPage === 0 ? idx + 4 : lbPage * 20 + idx + 1;
                   const isMe  = walletAddress === entry.wallet_address;
                   return (
                     <div key={entry.wallet_address} className={`flex items-center gap-3 px-4 py-3 hover:bg-white/3 transition-colors ${isMe ? 'bg-[#FF2929]/5' : ''}`}>
@@ -285,107 +293,176 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                 })}
               </div>
             )}
+
+            {/* Leaderboard pagination */}
+            {(lbPage > 0 || lbHasMore) && (
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <button
+                  onClick={() => setLbPage(p => p - 1)}
+                  disabled={lbPage === 0}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border border-white/10 text-white/50 disabled:opacity-30 disabled:cursor-not-allowed hover:enabled:border-white/25 hover:enabled:text-white/70 active:enabled:scale-95"
+                >
+                  ← Prev
+                </button>
+                <span className="text-xs text-white/20 font-bold shrink-0">Page {lbPage + 1}</span>
+                <button
+                  onClick={() => setLbPage(p => p + 1)}
+                  disabled={!lbHasMore}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border border-white/10 text-white/50 disabled:opacity-30 disabled:cursor-not-allowed hover:enabled:border-white/25 hover:enabled:text-white/70 active:enabled:scale-95"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </>
         ))}
 
         {/* ── ROUNDS TAB ──────────────────────────────────────── */}
-        {mainTab === 'rounds' && (roundsLoading ? (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="rounded-2xl bg-white/3 border border-white/5 p-5 animate-pulse">
-                <div className="h-4 bg-white/5 rounded w-1/3 mb-3" />
-                {[...Array(3)].map((_, j) => <div key={j} className="h-3 bg-white/5 rounded w-full mb-2" />)}
-              </div>
-            ))}
-          </div>
-        ) : historicalRounds.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="text-5xl mb-4">⏳</div>
-            <p className="text-white/40 font-bold text-sm">No completed rounds yet</p>
-            <p className="text-white/20 text-xs mt-1">Rounds complete every 6 hours.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {historicalRounds.map((round, ri) => {
-              const dateLabel = round.startTime.toLocaleDateString('en-US', {
-                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
-              });
-              const roundGradients = [
-                'from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/35',
-                'from-white/8 via-white/4 to-transparent border-white/18',
-                'from-[#FF2929]/8 via-[#FF2929]/4 to-transparent border-[#FF2929]/25',
-                'from-orange-500/8 via-orange-500/4 to-transparent border-orange-500/25',
-              ];
-              const roundBadgeColors = ['bg-yellow-500 text-black', 'bg-white/20 text-white', 'bg-[#FF2929] text-white', 'bg-orange-500 text-white'];
+        {mainTab === 'rounds' && (
+          <>
+            {/* Tier selector */}
+            <div className="flex gap-2">
+              {(['GRUNT', 'ELITE', 'WHALE'] as const).map(t => (
+                <button key={t} onClick={() => handleSetRoundsTier(t)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${roundsTier === t ? 'bg-[#FF2929]/12 border-[#FF2929]/40 text-[#FF2929]' : 'border-white/8 text-white/40 hover:text-white/60 hover:border-white/15'}`}>
+                  {t}
+                </button>
+              ))}
+            </div>
 
-              return (
-                <div key={`${round.roundNum}-${round.roundDate}`}
-                  className={`rounded-2xl bg-gradient-to-br ${roundGradients[ri % 4]} border overflow-hidden`}>
-
-                  {/* Round header */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
-                    <div className="flex items-center gap-3">
-                      <span className={`text-xs font-black px-2.5 py-1 rounded-full ${roundBadgeColors[ri % 4]}`}>
-                        Round {round.roundNum}
-                      </span>
-                      <div>
-                        <p className="text-xs font-bold text-white/70">{dateLabel}</p>
-                        <p className="text-[9px] text-white/30">{formatRoundWindow(round.roundNum)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[9px] text-white/40 font-bold">Pool</p>
-                      <p className="text-base font-black text-[#FFB800] leading-none">
-                        {round.poolSol.toFixed(3)} <span className="text-[10px] text-[#FFB800]/60">SOL</span>
-                      </p>
-                    </div>
+            {roundsLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="rounded-2xl bg-white/3 border border-white/5 p-5 animate-pulse">
+                    <div className="h-4 bg-white/5 rounded w-1/3 mb-3" />
+                    {[...Array(3)].map((_, j) => <div key={j} className="h-3 bg-white/5 rounded w-full mb-2" />)}
                   </div>
+                ))}
+              </div>
+            ) : historicalRounds.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="text-5xl mb-4">⏳</div>
+                <p className="text-white/40 font-bold text-sm">No completed rounds yet</p>
+                <p className="text-white/20 text-xs mt-1">{roundsPage > 0 ? 'No more rounds on this page.' : `${roundsTier} rounds complete every 6 hours.`}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {historicalRounds.map((round, ri) => {
+                  const dateLabel = round.startTime.toLocaleDateString('en-US', {
+                    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+                  });
+                  const roundGradients = [
+                    'from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/35',
+                    'from-white/8 via-white/4 to-transparent border-white/18',
+                    'from-[#FF2929]/8 via-[#FF2929]/4 to-transparent border-[#FF2929]/25',
+                    'from-orange-500/8 via-orange-500/4 to-transparent border-orange-500/25',
+                  ];
+                  const roundBadgeColors = ['bg-yellow-500 text-black', 'bg-white/20 text-white', 'bg-[#FF2929] text-white', 'bg-orange-500 text-white'];
 
-                  {/* Winners */}
-                  <div className="divide-y divide-white/5">
-                    {round.entries.length === 0 ? (
-                      <div className="px-4 py-4 text-center">
-                        <p className="text-xs text-white/25 italic">No extractions this round</p>
-                      </div>
-                    ) : round.entries.map(entry => {
-                      const isMe = walletAddress === entry.walletAddress;
-                      const r0 = entry.rank - 1;
-                      return (
-                        <div key={entry.walletAddress}
-                          className={`flex items-center gap-3 px-4 py-2.5 ${isMe ? 'bg-[#FF2929]/5' : ''}`}>
-                          <span className={`shrink-0 text-base w-6 text-center ${RANK_COLORS[r0]}`}>
-                            {entry.rank <= 3 ? RANK_MEDALS[r0] : `#${entry.rank}`}
+                  return (
+                    <div key={`${round.roundNum}-${round.roundDate}`}
+                      className={`rounded-2xl bg-gradient-to-br ${roundGradients[ri % 4]} border overflow-hidden`}>
+
+                      {/* Round header */}
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs font-black px-2.5 py-1 rounded-full ${roundBadgeColors[ri % 4]}`}>
+                            Round {round.roundNum}
                           </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <p className={`font-bold text-sm truncate ${isMe ? 'text-white' : 'text-white'}`}>{entry.username}</p>
-                              {isMe && <span className="text-[8px] font-bold text-[#FF2929] bg-[#FF2929]/10 rounded-full px-1.5 shrink-0">you</span>}
-                            </div>
-                            <p className="text-[9px] text-white/30">{ALLOC_PCT[r0]}% of pool</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-xs font-bold text-white">
-                              {entry.pointsScored.toLocaleString()}
-                              <span className="text-white/40 text-[9px] ml-0.5">pts</span>
-                            </p>
-                            <p className={`text-xs font-black ${RANK_COLORS[r0]}`}>
-                              +{entry.allocationSol.toFixed(4)}
-                              <span className="text-[9px] ml-0.5 opacity-60">SOL</span>
-                            </p>
+                          <div>
+                            <p className="text-xs font-bold text-white/70">{dateLabel}</p>
+                            <p className="text-[9px] text-white/30">{formatRoundWindow(round.roundNum)}</p>
                           </div>
                         </div>
-                      );
-                    })}
+                        <div className="text-right">
+                          {round.refunded ? (
+                            <span className="text-[9px] font-bold text-white/40 bg-white/5 border border-white/10 rounded-full px-2 py-0.5">Cancelled</span>
+                          ) : (
+                            <>
+                              <p className="text-[9px] text-white/40 font-bold">Pool</p>
+                              <p className="text-base font-black text-[#FFB800] leading-none">
+                                {round.poolSol.toFixed(3)} <span className="text-[10px] text-[#FFB800]/60">SOL</span>
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Winners */}
+                      <div className="divide-y divide-white/5">
+                        {round.refunded ? (
+                          <div className="px-4 py-4 text-center">
+                            <p className="text-xs text-white/25 italic">Not enough entrants — entry fees refunded</p>
+                          </div>
+                        ) : round.entries.length === 0 ? (
+                          <div className="px-4 py-4 text-center">
+                            <p className="text-xs text-white/25 italic">No extractions this round</p>
+                          </div>
+                        ) : round.entries.map(entry => {
+                          const isMe = walletAddress === entry.walletAddress;
+                          const r0 = entry.rank - 1;
+                          return (
+                            <div key={entry.walletAddress}
+                              className={`flex items-center gap-3 px-4 py-2.5 ${isMe ? 'bg-[#FF2929]/5' : ''}`}>
+                              <span className={`shrink-0 text-base w-6 text-center ${RANK_COLORS[r0]}`}>
+                                {entry.rank <= 3 ? RANK_MEDALS[r0] : `#${entry.rank}`}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <p className="font-bold text-sm text-white truncate">{entry.username}</p>
+                                  {isMe && <span className="text-[8px] font-bold text-[#FF2929] bg-[#FF2929]/10 rounded-full px-1.5 shrink-0">you</span>}
+                                </div>
+                                <p className="text-[9px] text-white/30">{ALLOC_PCT[r0]}% of pool</p>
+                              </div>
+                              <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
+                                <p className="text-xs font-bold text-white">
+                                  {entry.pointsScored.toLocaleString()}
+                                  <span className="text-white/40 text-[9px] ml-0.5">pts</span>
+                                </p>
+                                <p className={`text-xs font-black ${RANK_COLORS[r0]}`}>
+                                  +{entry.allocationSol.toFixed(4)}
+                                  <span className="text-[9px] ml-0.5 opacity-60">SOL</span>
+                                </p>
+                                <span className={`text-[7px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${entry.claimed ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/20'}`}>
+                                  {entry.claimed ? 'claimed' : 'unclaimed'}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Rounds pagination */}
+                {(roundsPage > 0 || roundsHasMore) && (
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <button
+                      onClick={() => setRoundsPage(p => p - 1)}
+                      disabled={roundsPage === 0}
+                      className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border border-white/10 text-white/50 disabled:opacity-30 disabled:cursor-not-allowed hover:enabled:border-white/25 hover:enabled:text-white/70 active:enabled:scale-95"
+                    >
+                      ← Prev
+                    </button>
+                    <span className="text-xs text-white/20 font-bold shrink-0">Page {roundsPage + 1}</span>
+                    <button
+                      onClick={() => setRoundsPage(p => p + 1)}
+                      disabled={!roundsHasMore}
+                      className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border border-white/10 text-white/50 disabled:opacity-30 disabled:cursor-not-allowed hover:enabled:border-white/25 hover:enabled:text-white/70 active:enabled:scale-95"
+                    >
+                      Next →
+                    </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* FOOTER */}
-      <div className="shrink-0 px-4 py-4 border-t border-white/5 bg-[#050508]">
+      <div className="shrink-0 px-4 py-4 border-t border-white/5" style={{ backgroundColor: 'var(--app-bg)' }}>
         <button onClick={() => setShowEntry(true)}
           className={`w-full py-4 rounded-2xl font-black text-base transition-all flex items-center justify-center gap-2 ${
             isLocked

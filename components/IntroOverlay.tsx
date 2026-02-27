@@ -179,7 +179,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
         {step >= 4 && (
           <div className="flex items-center gap-2 text-red-500 font-black tracking-widest text-[10px] sm:text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
             <span className="animate-pulse">[ ░░ ]</span>
-            <span>SOL IS NOT REFUNDABLE</span>
+            <span>SOL IS REFUNDABLE</span>
           </div>
         )}
 

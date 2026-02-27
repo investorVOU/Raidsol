@@ -515,7 +515,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
   const claimed = alreadyClaimed || (result?.correct === true);
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto scrollbar-hide pb-28 md:pb-8 bg-[#000]">
+    <div className="h-full flex flex-col overflow-y-auto scrollbar-hide pb-28 md:pb-8" style={{ backgroundColor: 'var(--app-bg)' }}>
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-5 pb-4 border-b border-white/6">
         <button onClick={onBack} className="text-white/40 hover:text-white transition-colors p-1">

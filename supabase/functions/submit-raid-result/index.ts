@@ -34,8 +34,8 @@ const DIFFICULTY_MAX_WIN: Record<string, number> = {
 // Minimum elapsed time (seconds) for any valid raid — prevents instant exploit
 const MIN_RAID_DURATION_SEC = 3;
 
-// Max elapsed time = raid timer + grace window (extra 15s for network/client clock skew)
-const MAX_RAID_DURATION_SEC = 110;
+// Max elapsed time = raid timer (90s base + up to 30s TIME_BOOST gear) + grace window
+const MAX_RAID_DURATION_SEC = 200;
 
 function validateRaidResult(
   success: boolean,
@@ -203,7 +203,9 @@ Deno.serve(async (req: Request) => {
       tx_signature: client_seed || null,
     });
 
-    // ── 4b. Update round pool (non-PvP raids only) ────────────────────
+    // ── 4b. Update round pool + live entry (non-PvP, paid raids) ─────────────
+    // Runs for ALL paid raids (success or bust) so every entrant appears on the
+    // live leaderboard immediately, regardless of raid outcome.
     if (!room_id && Number(entry_fee) > 0) {
       const raidNow = new Date();
       const utcHour = raidNow.getUTCHours();
@@ -213,12 +215,23 @@ Deno.serve(async (req: Request) => {
       const rd = raidNow.getUTCDate();
       const raidRoundDate = `${ry}-${String(rm).padStart(2, '0')}-${String(rd).padStart(2, '0')}`;
       const poolContribution = Number(entry_fee) * 0.90;
-      await supabase.rpc('increment_round_pool', {
-        p_round_number: raidRoundNum,
-        p_round_date:   raidRoundDate,
-        p_amount:       poolContribution,
-        p_raid_tier:    raid_tier || 'GRUNT',
-      });
+      // Run both RPCs in parallel
+      await Promise.all([
+        supabase.rpc('increment_round_pool', {
+          p_round_number: raidRoundNum,
+          p_round_date:   raidRoundDate,
+          p_amount:       poolContribution,
+          p_raid_tier:    raid_tier || 'GRUNT',
+        }),
+        supabase.rpc('upsert_round_entry', {
+          p_round_number: raidRoundNum,
+          p_round_date:   raidRoundDate,
+          p_raid_tier:    raid_tier || 'GRUNT',
+          p_wallet:       wallet_address,
+          p_username:     profile.username,
+          p_points:       points || 0,
+        }),
+      ]);
     }
 
     // ── 4c. Activity feed ──────────────────────────────────────────────

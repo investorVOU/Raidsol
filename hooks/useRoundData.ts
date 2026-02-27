@@ -87,20 +87,18 @@ export function useRoundData(tier = 'GRUNT') {
     const roundEnded = end <= now;
     const isActive   = !roundEnded;
 
-    // ── Fetch leaders, round_pools, and raw entry fees in parallel ───────────
-    const [successRes, poolRes, feesRes] = await Promise.all([
+    // ── Fetch live leaders, pool, and entrant count from round_entries ────────
+    // round_entries has one row per wallet per round/tier, populated for ALL
+    // paid raids (success or bust), so every entrant appears immediately.
+    const [entriesRes, poolRes, countRes] = await Promise.all([
       supabase
-        .from('raid_history')
-        .select('wallet_address, points')
-        .eq('success', true)
+        .from('round_entries')
+        .select('wallet_address, username, best_points')
+        .eq('round_number', roundNum)
+        .eq('round_date', dateStr)
         .eq('raid_tier', tier)
-        .gt('entry_fee', 0)
-        .gt('points', 0)
-        .gte('created_at', start.toISOString())
-        .lt('created_at', end.toISOString())
-        .order('points', { ascending: false })
-        .limit(200),
-      // round_pools: populated by submit-raid-result once migrations are applied
+        .order('best_points', { ascending: false })
+        .limit(5),
       supabase
         .from('round_pools')
         .select('pool_sol')
@@ -108,60 +106,29 @@ export function useRoundData(tier = 'GRUNT') {
         .eq('round_date', dateStr)
         .eq('raid_tier', tier)
         .maybeSingle(),
-      // fallback: sum all entry fees in the round window directly from raid_history
       supabase
-        .from('raid_history')
-        .select('wallet_address, entry_fee')
-        .eq('raid_tier', tier)
-        .gte('created_at', start.toISOString())
-        .lt('created_at', end.toISOString()),
+        .from('round_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('round_number', roundNum)
+        .eq('round_date', dateStr)
+        .eq('raid_tier', tier),
     ]);
 
-    const poolFromTable   = Number(poolRes.data?.pool_sol ?? 0);
-    const poolFromHistory = ((feesRes.data ?? []).reduce((s, r) => s + Number(r.entry_fee), 0)) * 0.90;
-    // Prefer the dedicated table; fall back to raid_history sum if the table is empty
-    const poolSol = poolFromTable > 0 ? poolFromTable : poolFromHistory;
-    // Unique entrant count
-    const uniqueEntrantWallets = new Set((feesRes.data ?? []).map(r => r.wallet_address));
-    const entrantCount = uniqueEntrantWallets.size;
-
-    // Deduplicate: keep best points per wallet
-    const bestByWallet = new Map<string, number>();
-    for (const r of successRes.data ?? []) {
-      const pts = Number(r.points);
-      if (pts > (bestByWallet.get(r.wallet_address) ?? 0)) {
-        bestByWallet.set(r.wallet_address, pts);
-      }
-    }
-
-    const sorted = [...bestByWallet.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-
-    // Fetch usernames for live leaders
-    let usernameMap: Record<string, string> = {};
-    if (sorted.length > 0) {
-      const wallets = sorted.map(([w]) => w);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('wallet_address, username')
-        .in('wallet_address', wallets);
-      for (const p of profiles ?? []) {
-        usernameMap[p.wallet_address] = p.username;
-      }
-    }
+    const poolSol      = Number(poolRes.data?.pool_sol ?? 0);
+    const entrantCount = countRes.count ?? 0;
 
     const tierKey = (tier.toUpperCase() as RaidTier) in RAID_TIER_ALLOCATION
       ? (tier.toUpperCase() as RaidTier)
       : RaidTier.GRUNT;
     const tierAlloc = RAID_TIER_ALLOCATION[tierKey];
 
-    const currentLeaders: RoundTopEntry[] = sorted.map(([wallet, pts], i) => ({
+    // username is denormalized into round_entries — no separate profile lookup needed
+    const currentLeaders: RoundTopEntry[] = (entriesRes.data ?? []).map((row, i) => ({
       rank: i + 1,
-      walletAddress: wallet,
-      username: usernameMap[wallet] ?? `${wallet.slice(0, 4)}…${wallet.slice(-4)}`,
-      pointsScored: pts,
-      allocationSol: poolSol * tierAlloc[i],
+      walletAddress: row.wallet_address,
+      username: row.username || `${row.wallet_address.slice(0, 4)}…${row.wallet_address.slice(-4)}`,
+      pointsScored: Number(row.best_points),
+      allocationSol: poolSol * (tierAlloc[i] ?? 0),
     }));
 
     // ── If round has ended, check for finalization ───────────────────────────
@@ -239,10 +206,13 @@ export function useRoundData(tier = 'GRUNT') {
     return () => clearInterval(interval);
   }, [fetchRound]);
 
-  // Realtime: re-fetch whenever round_pools updates (pool changes on every raid)
+  // Realtime: re-fetch when round_entries or round_pools change
   useEffect(() => {
     const channel = supabase
-      .channel('round_pools_changes')
+      .channel('round_live_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'round_entries' }, () => {
+        fetchRound();
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'round_pools' }, () => {
         fetchRound();
       })

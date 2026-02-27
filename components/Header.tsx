@@ -11,6 +11,8 @@ interface HeaderProps {
   onConnect: () => void;
   onDisconnect: () => void;
   onOpenHowItWorks: () => void;
+  onToggleTheme?: () => void;
+  isDark?: boolean;
   walletAddress?: string | null;
   domainName?: string | null;
 }
@@ -27,6 +29,8 @@ const Header: React.FC<HeaderProps> = ({
   onConnect,
   onDisconnect,
   onOpenHowItWorks,
+  onToggleTheme,
+  isDark = true,
   walletAddress,
   domainName,
 }) => {
@@ -67,10 +71,25 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Action buttons */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Theme toggle */}
+          {onToggleTheme && (
+            <button
+              onClick={onToggleTheme}
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
+              style={{ background: 'var(--card-bg-mid)', border: '1px solid var(--border-col)' }}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              <i
+                className={isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}
+                style={{ fontSize: '11px', color: isDark ? '#FFB800' : '#6b7280' }}
+              />
+            </button>
+          )}
+
           <button
             onClick={onOpenHowItWorks}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-white/35 hover:text-white transition-colors"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}
+            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+            style={{ background: 'var(--card-bg-mid)', border: '1px solid var(--border-col)', color: 'var(--text-35)' }}
           >
             <span className="text-[11px] font-bold" style={INTER}>?</span>
           </button>
@@ -102,7 +121,7 @@ const Header: React.FC<HeaderProps> = ({
           {/* SOL Balance */}
           <div
             className="rounded-xl px-3 py-2 border-l-2"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: '2px solid #FF2929' }}
+            style={{ background: 'var(--card-bg-mid)', border: '1px solid var(--border-col)', borderLeft: '2px solid #FF2929' }}
           >
             <p className="text-[9px] text-white/40 mb-0.5 uppercase tracking-wider" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>{t('header.balance')}</p>
             <p className="text-[13px] leading-tight text-white" style={SG_NUM}>
@@ -114,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({
           {/* Level + Rank */}
           <div
             className="rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: `2px solid ${currentRank.color}` }}
+            style={{ background: 'var(--card-bg-mid)', border: '1px solid var(--border-col)', borderLeft: `2px solid ${currentRank.color}` }}
           >
             <p className="text-[9px] text-white/40 mb-0.5 uppercase" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>{t('header.rank')}</p>
             <p className="text-[13px] leading-tight truncate text-white" style={SG_NUM}>
@@ -126,7 +145,7 @@ const Header: React.FC<HeaderProps> = ({
           {/* SR Points */}
           <div
             className="rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderLeft: '2px solid #f59e0b' }}
+            style={{ background: 'var(--card-bg-mid)', border: '1px solid var(--border-col)', borderLeft: '2px solid #f59e0b' }}
           >
             <p className="text-[9px] text-white/40 mb-0.5 uppercase" style={{ ...BN, letterSpacing: '1px', fontSize: '8px' }}>{t('header.srPoints')}</p>
             <p className="text-[13px] leading-tight text-white" style={SG_NUM}>

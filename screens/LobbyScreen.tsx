@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../components/ThemeContext';
 import { Mode, Difficulty, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, RaidTier, RAID_TIER_CONFIG, RAID_TIER_ALLOCATION, ROUND_MIN_PARTICIPANTS } from '../types';
 import type { LivePrices } from '../hooks/usePrices';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
@@ -60,6 +61,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   currencyRates, pricesFailed = false, currentRound,
 }) => {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
   const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
 
   // Round raid modal
@@ -136,7 +138,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const dayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
   return (
-    <div className="w-full h-full flex flex-col relative bg-[#05050f] overflow-hidden" style={INTER}>
+    <div className="w-full h-full flex flex-col relative overflow-hidden" style={{ ...INTER, backgroundColor: 'var(--app-bg)' }}>
 
 
       {/* ── HEADER ── */}
@@ -201,7 +203,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <div className="shrink-0 ml-4 flex flex-col items-end gap-2">
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform"
-                  style={{ background: 'rgba(0,0,0,0.20)', border: '1px solid rgba(255,255,255,0.25)' }}
+                  style={{ background: 'rgba(0,0,0,0.20)', border: '1px solid var(--border-col-str)' }}
                 >
                   <i className="fa-solid fa-trophy" style={{ fontSize: '24px', color: '#fff' }} />
                 </div>
@@ -254,7 +256,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               )}
               <div className="shrink-0 ml-2">
                 <div className="rounded-lg px-3 py-1.5 flex items-center gap-1.5 group-hover:opacity-90 transition-opacity"
-                  style={{ background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.28)' }}>
+                  style={{ background: 'rgba(0,0,0,0.22)', border: '1px solid var(--border-col-str)' }}>
                   <i className="fa-solid fa-trophy text-white text-[10px]" />
                   <span style={{ ...BN, fontSize: '13px', color: '#fff', letterSpacing: '1.5px' }}>
                     {isConnected ? 'COMPETE' : 'CONNECT'}
@@ -321,14 +323,13 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           onClick={() => isConnected && !drillCapHit ? onEnterRaid(Mode.DRILL, Difficulty.EASY, [], Currency.SOL, false, 0) : !isConnected ? onConnect() : undefined}
           disabled={drillCapHit}
           className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,184,0,0.22)' }}
+          style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,184,0,0.22)' }}
         >
           <div className="flex items-center gap-3">
-            <div className="text-xl shrink-0">🎮</div>
             <div className="flex-1 min-w-0">
               {drillCapHit ? (
                 <>
-                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
+                  <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'var(--text-35)', letterSpacing: '1.5px' }}>FREE DRILL</p>
                   <p className="text-[10px] text-white/35 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Cap reached · resets every 6h</p>
                 </>
               ) : (
@@ -376,7 +377,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           target="_blank"
           rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl active:scale-[0.98] transition-all duration-150"
-          style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.15)' }}
+          style={{ background: 'var(--card-bg-mid)', border: '1.5px solid var(--border-col-mid)' }}
         >
           <i className="fa-brands fa-x-twitter text-[15px] text-white" />
           <span className="text-[12px] font-semibold text-white" style={INTER}>@solraid_app</span>
@@ -402,7 +403,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       {showFaq && (
         <div className="fixed inset-x-0 top-0 bottom-[76px] sm:bottom-0 sm:inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200" onClick={() => setShowFaq(false)} />
-          <div className="relative w-full sm:max-w-lg bg-[#080814] border-t sm:border border-white/[0.14] rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[90svh]" style={SG}>
+          <div className="relative w-full sm:max-w-lg border-t sm:border rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[90svh]" style={{ ...SG, background: 'var(--modal-bg)', borderColor: 'var(--border-col-mid)' }}>
 
             <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
               <div className="w-10 h-1 rounded-full bg-white/15" />
@@ -424,15 +425,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {[
                 {
                   q: 'What is Sol Raid?',
-                  a: 'On-chain extraction game on Solana. Stake SOL, pick a difficulty, score points before you get busted. Cash out at the right moment — risk climbs every second you stay in.',
+                  a: 'On-chain extraction game on Solana. Pay the entry fee, pick a difficulty, score as many points as you can before you get busted. Cash out at the right moment — risk escalates every second.',
                 },
                 {
-                  q: 'Raid Rounds vs normal raids?',
-                  a: 'Normal raids pay SOL on the spot based on your score. Round raids score points — your best single raid in a 6h window goes on the leaderboard. Pool split happens after the round closes.',
+                  q: 'How does scoring work?',
+                  a: 'Your score is based on how long you hold and your active difficulty multiplier. The higher your multiplier when you extract, the more points you bank. Only your best score this round counts.',
                 },
                 {
                   q: 'How do Raid Rounds work?',
-                  a: '4 rounds per day UTC, 6 hours each. Pick a tier (GRUNT / ELITE / WHALE), pay the entry fee, raid. Your top score this round competes. After close, 90% of all fees split across top 5. Under 3 entrants — full refund.',
+                  a: '4 rounds per day (UTC), 6 hours each. GRUNT = 0.026 SOL · ELITE = 0.05 SOL · WHALE = 0.25 SOL. Your top score this round competes. After close, 90% of all fees split across top 5. Under 3 entrants — full refund.',
                 },
                 {
                   q: 'How do I claim round winnings?',
@@ -444,7 +445,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 },
                 {
                   q: 'What is the house edge?',
-                  a: 'Base win rate ~25–30% with no gear. Gear and boosts push it toward 45%. Risk drift is the mechanic — the longer you hold, the harder it gets.',
+                  a: 'Base win rate ~18–22% with no gear. Gear and boosts can push it toward 36%. Risk drift is the mechanic — the longer you hold, the harder it gets. There is also a 20s cashout lock at the start of each raid.',
                 },
                 {
                   q: 'What are Raid Passes?',
@@ -475,8 +476,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           <div className="absolute inset-0 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200" onClick={() => setShowRoundModal(false)} />
 
           <div
-            className="relative w-full sm:max-w-lg bg-[#08060f] border-t sm:border rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[90svh] sm:max-h-[85vh]"
-            style={{ borderColor: 'rgba(255,41,41,0.25)', ...SG }}
+            className="relative w-full sm:max-w-lg border-t sm:border rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[90svh] sm:max-h-[85vh]"
+            style={{ background: 'var(--modal-bg-alt)', borderColor: 'rgba(255,41,41,0.25)', ...SG }}
           >
             {/* Drag handle */}
             <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
@@ -539,16 +540,16 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                       <div key={rank} className="flex items-center gap-2.5">
                         {/* Rank badge */}
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-black"
-                          style={{ background: entry ? `${color}18` : 'rgba(255,255,255,0.04)', border: `1px solid ${entry ? `${color}40` : 'rgba(255,255,255,0.08)'}`, color: entry ? color : 'rgba(255,255,255,0.2)' }}>
+                          style={{ background: entry ? `${color}18` : 'var(--card-bg)', border: `1px solid ${entry ? `${color}40` : 'var(--border-col)'}`, color: entry ? color : 'var(--text-20)' }}>
                           {label}
                         </div>
                         {/* Name + score bar */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[10px] font-semibold truncate" style={{ ...INTER, color: entry ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.18)' }}>
+                            <span className="text-[10px] font-semibold truncate" style={{ ...INTER, color: entry ? 'var(--text-75)' : 'var(--text-20)' }}>
                               {entry ? entry.username : '— open slot —'}
                             </span>
-                            <span className="text-[9px] font-black tabular-nums ml-2 shrink-0" style={{ color: entry ? color : 'rgba(255,255,255,0.15)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                            <span className="text-[9px] font-black tabular-nums ml-2 shrink-0" style={{ color: entry ? color : 'var(--text-20)', fontFamily: "'Space Grotesk', sans-serif" }}>
                               {entry ? entry.pointsScored.toLocaleString() + ' pts' : ''}
                             </span>
                           </div>
@@ -558,7 +559,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                           </div>
                         </div>
                         {/* Prize pct */}
-                        <span className="text-[9px] font-bold shrink-0 w-8 text-right tabular-nums" style={{ color: entry ? color : 'rgba(255,255,255,0.18)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                        <span className="text-[9px] font-bold shrink-0 w-8 text-right tabular-nums" style={{ color: entry ? color : 'var(--text-20)', fontFamily: "'Space Grotesk', sans-serif" }}>
                           {pct}%
                         </span>
                       </div>
@@ -567,7 +568,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 </div>
 
                 {/* Footer note */}
-                <div className="px-4 py-2 border-t space-y-1" style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
+                <div className="px-4 py-2 border-t space-y-1" style={{ borderColor: 'var(--border-col)', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.04)' }}>
                   <p className="text-[8px] text-white/25 text-center" style={INTER}>
                     Top 5 split the pool · results locked after round closes
                   </p>
@@ -589,7 +590,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 ].map((line, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: i === 4 ? '#FFB800' : '#FF2929' }}>{i === 4 ? '!' : `${i + 1}.`}</span>
-                    <p className="text-[10px] font-medium leading-snug" style={{ color: i === 4 ? 'rgba(255,184,0,0.65)' : 'rgba(255,255,255,0.45)' }}>{line}</p>
+                    <p className="text-[10px] font-medium leading-snug" style={{ color: i === 4 ? 'rgba(255,184,0,0.65)' : 'var(--text-45)' }}>{line}</p>
                   </div>
                 ))}
               </div>
@@ -606,8 +607,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         className={`p-3 rounded-xl border transition-all text-center active:scale-[0.97] ${active ? 'border-2' : 'border border-white/10 bg-white/3 hover:border-white/20'}`}
                         style={active ? { borderColor: cfg.color, background: `${cfg.color}14` } : {}}>
                         <span className="text-xl block mb-1">{cfg.emoji}</span>
-                        <p className="text-[10px] font-black" style={{ color: active ? cfg.color : 'rgba(255,255,255,0.55)' }}>{cfg.label}</p>
-                        <p className="text-[9px] font-semibold mt-0.5 tabular-nums" style={{ color: active ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                        <p className="text-[10px] font-black" style={{ color: active ? cfg.color : 'var(--text-50)' }}>{cfg.label}</p>
+                        <p className="text-[9px] font-semibold mt-0.5 tabular-nums" style={{ color: active ? 'var(--text-75)' : 'var(--text-30)', fontFamily: "'Space Grotesk', sans-serif" }}>
                           {cfg.entryFee} SOL
                         </p>
                       </button>
@@ -734,7 +735,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="shrink-0 border-t border-white/5 p-4 bg-[#060612] rounded-b-3xl sm:rounded-b-2xl space-y-3">
+            <div className="shrink-0 border-t border-white/5 p-4 bg-[var(--modal-bg)] rounded-b-3xl sm:rounded-b-2xl space-y-3">
               {/* Currency */}
               <div className="grid grid-cols-3 gap-2">
                 {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {

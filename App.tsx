@@ -18,6 +18,7 @@ const BriefingScreen = lazy(() => import('./screens/BriefingScreen'));
 const AdminScreen = lazy(() => import('./screens/AdminScreen'));
 import Header from './components/Header';
 import Navigation from './components/Navigation';
+import { ThemeProvider, useTheme } from './components/ThemeContext';
 const HowItWorksModal = lazy(() => import('./components/HowItWorksModal'));
 import RaidLoadingScreen from './components/RaidLoadingScreen';
 const LevelUpModal = lazy(() => import('./components/LevelUpModal'));
@@ -50,6 +51,7 @@ const SKR_DECIMALS = 6;
 
 
 const AppInner: React.FC = () => {
+  const { isDark, toggleTheme } = useTheme();
   const { connected, disconnect, publicKey, sendTransaction, signMessage, signTransaction } = useWallet();
   const { setVisible } = useWalletModal();
   const [introComplete, setIntroComplete] = useState(
@@ -2024,7 +2026,7 @@ const AppInner: React.FC = () => {
   ].includes(gameState.currentScreen);
 
   return (
-    <div className="relative h-screen w-full bg-[#000000] text-white flex flex-col md:flex-row overflow-hidden">
+    <div className="relative h-screen w-full flex flex-col md:flex-row overflow-hidden" style={{ background: 'var(--app-bg)', color: 'var(--text-primary)' }}>
       {!introComplete && (
         <IntroOverlay onComplete={handleIntroFinish} />
       )}
@@ -2041,6 +2043,8 @@ const AppInner: React.FC = () => {
           onConnect={handleConnect}
           onDisconnect={handleDisconnect}
           onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
+          onToggleTheme={toggleTheme}
+          isDark={isDark}
           walletAddress={publicKey ? publicKey.toBase58() : null}
           domainName={domainName}
         />
@@ -2173,9 +2177,11 @@ const AppInner: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <SolanaWalletContext>
-      <AppInner />
-    </SolanaWalletContext>
+    <ThemeProvider>
+      <SolanaWalletContext>
+        <AppInner />
+      </SolanaWalletContext>
+    </ThemeProvider>
   );
 };
 
