@@ -114,6 +114,7 @@ Deno.serve(async (req: Request) => {
       difficulty,
       entry_fee,
       elapsed_sec,
+      raid_tier,      // Optional: competition tier (GRUNT | ELITE | WHALE), default GRUNT
       room_id,        // Optional: PvP room this raid belongs to
     } = body;
 
@@ -192,6 +193,7 @@ Deno.serve(async (req: Request) => {
       raid_id: raidId,
       mode: mode || 'SOLO',
       difficulty: difficulty || 'MEDIUM',
+      raid_tier: raid_tier || 'GRUNT',
       success,
       sol_amount: sol_amount || 0,
       entry_fee: entry_fee || 0,
@@ -215,6 +217,7 @@ Deno.serve(async (req: Request) => {
         p_round_number: raidRoundNum,
         p_round_date:   raidRoundDate,
         p_amount:       poolContribution,
+        p_raid_tier:    raid_tier || 'GRUNT',
       });
     }
 

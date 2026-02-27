@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Mode, ENTRY_FEES, Difficulty, DIFFICULTY_CONFIG, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency } from '../types';
+import { Mode, ENTRY_FEES, Difficulty, DIFFICULTY_CONFIG, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, RaidTier, RAID_TIER_CONFIG, RAID_TIER_ALLOCATION, ROUND_MIN_PARTICIPANTS, DIFFICULTY_MAX_WIN } from '../types';
 import type { LivePrices } from '../hooks/usePrices';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
 import { formatCountdown, formatRoundWindow } from '../hooks/useRoundData';
@@ -32,7 +32,7 @@ interface LobbyScreenProps {
   onNavigateBounty?: () => void;
   onNavigateRoast?: () => void;
   onNavigateBriefing?: () => void;
-  onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency) => Promise<void>;
+  onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier) => Promise<void>;
   onRequestFullscreen?: () => void;
   raidTickets?: number;
   lastFreeRaidDate?: string | null;
@@ -76,6 +76,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const [roundDifficulty, setRoundDifficulty]   = useState<Difficulty>(Difficulty.MEDIUM);
   const [roundCurrency, setRoundCurrency]       = useState<Currency>(Currency.SOL);
   const [roundBoosts, setRoundBoosts]           = useState<string[]>([]);
+  const [roundTier, setRoundTier]               = useState<RaidTier>(RaidTier.GRUNT);
   const [toolsDisclaimerDismissed, setToolsDisclaimerDismissed] = useState(false);
 
   // FAQ
@@ -120,9 +121,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     setIsDeploying(true);
     try {
       if (onEnterRound) {
-        await onEnterRound(roundDifficulty, roundBoosts, roundCurrency);
+        await onEnterRound(roundDifficulty, roundBoosts, roundCurrency, roundTier);
       } else {
-        await onEnterRaid(Mode.SOLO, roundDifficulty, roundBoosts, roundCurrency, false);
+        await onEnterRaid(Mode.SOLO, roundDifficulty, roundBoosts, roundCurrency, false, RAID_TIER_CONFIG[roundTier].entryFee);
       }
     } finally {
       if (mountedRef.current) setIsDeploying(false);
@@ -148,8 +149,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const totalDisplay   = totalCostSol * displayRate;
   const insufficientBal = rateReady && totalCostSol > 0 && currentBalance < totalDisplay;
 
-  // Round cost calc (always SOLO, no boosts)
-  const roundFeeBase       = ENTRY_FEES[Mode.SOLO];
+  // Round cost calc — fee driven by selected tier
+  const roundFeeBase       = RAID_TIER_CONFIG[roundTier].entryFee;
   const roundRate          = rates[roundCurrency];
   const roundPricesLoading = roundCurrency !== Currency.SOL && roundRate === 0;
   const roundTotalDisplay  = roundFeeBase * roundRate;
@@ -210,29 +211,69 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         {/* ── ENTER RAID ── */}
         <button
           onClick={() => isConnected ? handleOpenModal() : onConnect()}
-          className="w-full relative overflow-hidden rounded-2xl group active:scale-[0.98] transition-all duration-150"
+          className="w-full relative overflow-hidden rounded-2xl group active:scale-[0.97] transition-all duration-200"
           style={{
-            background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)',
-            boxShadow: '0 2px 18px rgba(255,41,41,0.30)',
+            background: 'linear-gradient(135deg, #160404 0%, #0d0d1a 60%, #100404 100%)',
+            border: '1px solid rgba(255,41,41,0.38)',
+            boxShadow: '0 0 28px rgba(255,41,41,0.12), inset 0 0 60px rgba(255,41,41,0.05)',
           }}
         >
-          <div className="relative z-10 flex items-center justify-between px-5 py-2 sm:py-2.5">
-            <div>
-              <p className="text-white/55 mb-0.5 text-[11px]" style={INTER}>
-                {isConnected ? t('lobby.readyToDeploy') : t('lobby.connectToStart')}
-              </p>
-              <p className="text-white leading-none" style={{ ...BC, fontSize: '32px', letterSpacing: '-0.5px' }}>{t('lobby.enterRaid')}</p>
-              <p className="text-white/50 mt-0.5 text-[11px]" style={INTER}>{t('lobby.winSol')}</p>
-            </div>
-            <div className="flex flex-col items-center gap-1.5 shrink-0">
-              <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/18 transition-colors">
-                <i className="fa-solid fa-person-running" style={{ fontSize: '24px', color: 'rgba(255,255,255,0.85)' }} />
+          {/* Animated top scan-line */}
+          <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+            style={{ background: 'linear-gradient(90deg,transparent 0%,#FF2929 40%,#FF2929 60%,transparent 100%)', animation: 'scanline 3s linear infinite', opacity: 0.7 }}
+          />
+          <style>{`@keyframes scanline{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+
+          <div className="relative z-10 px-5 pt-4 pb-3">
+            {/* Top row */}
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929]" style={{ boxShadow: '0 0 6px #FF2929', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                  <p className="text-[10px] uppercase tracking-[3px] text-[#FF2929]/70" style={INTER}>
+                    {isConnected ? t('lobby.readyToDeploy') : t('lobby.connectToStart')}
+                  </p>
+                </div>
+                <p className="text-white leading-none" style={{ ...BC, fontSize: '36px', letterSpacing: '-0.5px', color: '#fff', textShadow: '0 0 20px rgba(255,41,41,0.4)' }}>
+                  {t('lobby.enterRaid')}
+                </p>
               </div>
-              {raidTickets > 0 && (
-                <span className="text-[9px] font-medium bg-white/15 text-white/75 rounded-full px-2 py-0.5" style={INTER}>
-                  🎟️ {raidTickets}x
-                </span>
-              )}
+              <div className="shrink-0 flex flex-col items-center gap-1.5">
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform"
+                  style={{ background: 'rgba(255,41,41,0.12)', border: '1px solid rgba(255,41,41,0.30)' }}
+                >
+                  <i className="fa-solid fa-person-running" style={{ fontSize: '26px', color: '#FF2929' }} />
+                </div>
+                {raidTickets > 0 && (
+                  <span className="text-[9px] font-bold bg-[#FFB800]/15 text-[#FFB800]/90 rounded-full px-2 py-0.5 border border-[#FFB800]/20" style={INTER}>
+                    🎟️ {raidTickets}×
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Stats strip */}
+            <div className="flex items-center gap-0 border-t border-white/[0.06] pt-2.5">
+              {[
+                { label: 'Base time', value: '90s',      color: 'rgba(255,255,255,0.65)' },
+                { label: 'Max win',   value: '0.60 SOL', color: '#FFB800' },
+                { label: 'Win rate',  value: '~25%',     color: 'rgba(255,255,255,0.65)' },
+              ].map(({ label, value, color }, i) => (
+                <div key={i} className="flex-1 text-center">
+                  <p className="text-[8px] text-white/25 uppercase tracking-wider mb-0.5" style={INTER}>{label}</p>
+                  <p className="text-[11px] font-black tabular-nums" style={{ ...SG_NUM, color }}>{value}</p>
+                </div>
+              ))}
+              <div className="shrink-0 ml-2">
+                <div className="rounded-lg px-3 py-1.5 flex items-center gap-1.5 group-hover:opacity-90 transition-opacity"
+                  style={{ background: 'rgba(255,41,41,0.18)', border: '1px solid rgba(255,41,41,0.35)' }}>
+                  <span style={{ ...BN, fontSize: '13px', color: '#FF4444', letterSpacing: '1.5px' }}>
+                    {isConnected ? 'CONFIGURE' : 'CONNECT'}
+                  </span>
+                  <i className="fa-solid fa-arrow-right text-[#FF4444] text-[10px]" />
+                </div>
+              </div>
             </div>
           </div>
         </button>
@@ -477,7 +518,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 },
                 {
                   q: 'How do Raid Rounds work?',
-                  a: 'There are 4 rounds per day (UTC), each lasting 6 hours. Your highest score in a round goes on the leaderboard. After the round closes, 8% of all entry fees from that window are split among the top 5 wallets by score: 1st 40% · 2nd 25% · 3rd 18% · 4th 11% · 5th 6%.',
+                  a: 'There are 4 rounds per day (UTC), each lasting 6 hours. Choose a tier: GRUNT (0.01 SOL), ELITE (0.05 SOL), or WHALE (0.25 SOL). Your highest score competes on that tier\'s leaderboard. After the round closes, 90% of all entry fees are split among the top 5 wallets. Prize splits vary by tier — GRUNT is more democratic, WHALE favours the winner. If fewer than 3 wallets enter a tier, all fees are fully refunded.',
                 },
                 {
                   q: 'How do I claim my round winnings?',
@@ -569,13 +610,14 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
                 {/* Rank rows */}
                 <div className="px-3 pb-3 space-y-1.5">
-                  {[
-                    { rank: 1, pct: 40, color: '#FFD700',           label: '1st' },
-                    { rank: 2, pct: 25, color: '#C0C0C0',           label: '2nd' },
-                    { rank: 3, pct: 18, color: '#CD7F32',           label: '3rd' },
-                    { rank: 4, pct: 11, color: 'rgba(255,255,255,0.35)', label: '4th' },
-                    { rank: 5, pct:  6, color: 'rgba(255,255,255,0.20)', label: '5th' },
-                  ].map(({ rank, pct, color, label }) => {
+                  {([
+                    { rank: 1, color: '#FFD700',                   label: '1st' },
+                    { rank: 2, color: '#C0C0C0',                   label: '2nd' },
+                    { rank: 3, color: '#CD7F32',                   label: '3rd' },
+                    { rank: 4, color: 'rgba(255,255,255,0.35)',    label: '4th' },
+                    { rank: 5, color: 'rgba(255,255,255,0.20)',    label: '5th' },
+                  ] as const).map(({ rank, color, label }) => {
+                    const pct = Math.round(RAID_TIER_ALLOCATION[roundTier][rank - 1] * 100);
                     const entry = currentRound.currentLeaders.find(e => e.rank === rank);
                     const topScore = currentRound.currentLeaders[0]?.pointsScored ?? 0;
                     const barWidth = entry && topScore > 0 ? Math.max(6, Math.round((entry.pointsScored / topScore) * 100)) : 0;
@@ -611,9 +653,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 </div>
 
                 {/* Footer note */}
-                <div className="px-4 py-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
+                <div className="px-4 py-2 border-t space-y-1" style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
                   <p className="text-[8px] text-white/25 text-center" style={INTER}>
                     Top 5 scores share the prize pool · Winners announced after round closes
+                  </p>
+                  <p className="text-[8px] text-amber-400/50 text-center" style={INTER}>
+                    ⚠ Rounds with fewer than {ROUND_MIN_PARTICIPANTS} unique entrants are cancelled — entry fees fully refunded
                   </p>
                 </div>
               </div>
@@ -622,18 +667,42 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-1">
                 <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">How it works</p>
                 {[
-                  'Pay an entry fee to compete — 90% goes straight into the prize pool',
+                  'Pay the tier entry fee to compete — 90% goes straight into the prize pool',
                   'Score as many points as possible during your raid',
                   'Your highest score this round is tracked on the live leaderboard',
-                  'Round closes every 6 hours — top 5 scores split the pool',
-                  'Prizes: 1st 40% · 2nd 25% · 3rd 18% · 4th 11% · 5th 6%',
+                  `Round closes every 6 hours — top 5 scores split the pool`,
+                  `${roundTier} split: ${RAID_TIER_ALLOCATION[roundTier].map((a, i) => `${['1st','2nd','3rd','4th','5th'][i]} ${Math.round(a*100)}%`).join(' · ')}`,
+                  `Rounds with fewer than ${ROUND_MIN_PARTICIPANTS} entrants are cancelled — full refund to all participants`,
                 ].map((line, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: '#FF2929' }}>{i + 1}.</span>
-                    <p className="text-[10px] text-white/45 font-medium leading-snug">{line}</p>
+                    <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: i === 5 ? '#FFB800' : '#FF2929' }}>{i === 5 ? '!' : `${i + 1}.`}</span>
+                    <p className="text-[10px] font-medium leading-snug" style={{ color: i === 5 ? 'rgba(255,184,0,0.65)' : 'rgba(255,255,255,0.45)' }}>{line}</p>
                   </div>
                 ))}
               </div>
+
+              {/* ── Tier Selector ── */}
+              <section>
+                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Competition Tier</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {(Object.values(RaidTier) as RaidTier[]).map(t => {
+                    const cfg = RAID_TIER_CONFIG[t];
+                    const active = roundTier === t;
+                    return (
+                      <button key={t} onClick={() => setRoundTier(t)}
+                        className={`p-3 rounded-xl border transition-all text-center active:scale-[0.97] ${active ? 'border-2' : 'border border-white/10 bg-white/3 hover:border-white/20'}`}
+                        style={active ? { borderColor: cfg.color, background: `${cfg.color}14` } : {}}>
+                        <span className="text-xl block mb-1">{cfg.emoji}</span>
+                        <p className="text-[10px] font-black" style={{ color: active ? cfg.color : 'rgba(255,255,255,0.55)' }}>{cfg.label}</p>
+                        <p className="text-[9px] font-semibold mt-0.5 tabular-nums" style={{ color: active ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                          {cfg.entryFee} SOL
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[9px] text-white/28 mt-2 leading-relaxed" style={INTER}>{RAID_TIER_CONFIG[roundTier].description}</p>
+              </section>
 
               {/* ── Battle Tools Disclaimer (dismissable) ── */}
               {!toolsDisclaimerDismissed && equippedGear.length === 0 && (

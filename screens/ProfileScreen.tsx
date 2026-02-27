@@ -104,9 +104,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const cooldownH = Math.floor(cooldownRemainingMs / 3600000);
   const cooldownM = Math.floor((cooldownRemainingMs % 3600000) / 60000);
 
-  // Avatar gate
-  const hasAvatar = !!equippedAvatarId;
-
   // Round win history
   const { wins: roundWins, loading: roundWinsLoading, refetch: refetchRoundWins } = usePlayerRoundWins(walletAddress ?? null);
   const [claimingRound, setClaimingRound] = useState<string | null>(null); // "roundNum:roundDate" key

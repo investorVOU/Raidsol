@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
-import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, GEAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent, PLATFORM_FEE_RAID } from './types';
+import { Screen, Mode, GameState, ENTRY_FEES, AVATAR_ITEMS, GEAR_ITEMS, RANKS, Rank, Difficulty, Currency, CURRENCY_RATES, RAID_BOOSTS, RAID_PASSES, Room, Opponent, PLATFORM_FEE_RAID, RaidTier, RAID_TIER_CONFIG } from './types';
 const LobbyScreen = lazy(() => import('./screens/LobbyScreen'));
 const RaidScreen = lazy(() => import('./screens/RaidScreen'));
 const TeamScreen = lazy(() => import('./screens/TeamScreen'));
@@ -87,7 +87,7 @@ const AppInner: React.FC = () => {
         walletBalance: 0, usdcBalance: 0, skrBalance: 0, unclaimedBalance: 0,
         srPoints: 0, isConnected: false, username: '', ownedItemIds: [],
         equippedAvatarId: '', equippedGearIds: [], activeRaidFee: ENTRY_FEES[Mode.SOLO],
-        activeRaidDifficulty: Difficulty.MEDIUM, activeRaidBoosts: [], activeRaidIsRound: false,
+        activeRaidDifficulty: Difficulty.MEDIUM, activeRaidBoosts: [], activeRaidIsRound: false, activeRaidTier: RaidTier.GRUNT,
         raidTickets: 0, lastFreeTicketDate: null, ticketBoostActive: false, raidStreak: 0,
         bustTimestamps: [], lastFreeRaidDate: null, activeStreakBonus: 0, drillCount: 0,
         drillWindowStart: 0, dailyStreak: 0, lastPlayedDate: null, personalBestPoints: 0,
@@ -111,6 +111,7 @@ const AppInner: React.FC = () => {
       activeRaidDifficulty: Difficulty.MEDIUM,
       activeRaidBoosts: [],
       activeRaidIsRound: false,
+      activeRaidTier: RaidTier.GRUNT,
       raidTickets: 0,
       lastFreeTicketDate: null,
       ticketBoostActive: false,
@@ -748,6 +749,7 @@ const AppInner: React.FC = () => {
           difficulty:     gameState.activeRaidDifficulty,
           entry_fee:      gameState.activeRaidFee,
           elapsed_sec:    Math.round(elapsedSec),
+          raid_tier:      gameState.activeRaidTier,
           ...(isPvp && activeRoomId ? { room_id: activeRoomId } : {}),
         },
       });
@@ -1496,9 +1498,14 @@ const AppInner: React.FC = () => {
     useTicket: boolean = false,
     customFeeOverride?: number,
     isRoundEntry: boolean = false,
+    tier: RaidTier = RaidTier.GRUNT,
   ) => {
-    // All SOLO raids are round-based — points ranked 1-5, 70% of pot distributed after round ends
+    // All SOLO raids are round-based — points ranked 1-5, 90% of pot distributed after round ends
     const effectiveIsRoundEntry = mode === Mode.SOLO ? true : (isRoundEntry || !!currentRound);
+    // For round entries, override fee with tier's entry fee (unless customFeeOverride explicitly set)
+    const effectiveTierFee = effectiveIsRoundEntry && customFeeOverride === undefined
+      ? RAID_TIER_CONFIG[tier].entryFee
+      : customFeeOverride;
 
     if (!requireWallet()) return;
     if (mode === Mode.PVP) {
@@ -1536,7 +1543,7 @@ const AppInner: React.FC = () => {
     const freeRaidToday = gameState.lastFreeRaidDate === todayStr;
 
     const applyTicket = useTicket && gameState.raidTickets > 0;
-    const entryFeeBase = customFeeOverride ?? ENTRY_FEES[mode]; // always in SOL units
+    const entryFeeBase = effectiveTierFee ?? ENTRY_FEES[mode]; // always in SOL units
     // Daily free raid: EASY mode, first raid of the day is free (never for round entries — pool requires fees)
     const isFreeRaid = !effectiveIsRoundEntry && !freeRaidToday && difficulty === Difficulty.EASY && mode === Mode.SOLO;
     const entryFee = isFreeRaid ? 0 : applyTicket ? entryFeeBase * 0.5 : entryFeeBase;
@@ -1633,10 +1640,11 @@ const AppInner: React.FC = () => {
       activeRaidDifficulty: difficulty,
       activeRaidBoosts: boosts,
       activeRaidIsRound: effectiveIsRoundEntry,
+      activeRaidTier: effectiveIsRoundEntry ? tier : RaidTier.GRUNT,
       activeSeedId: undefined,
       activeServerSeedHash: undefined,
       // Remember config so "Redeploy" button reuses same settings
-      lastRaidConfig: { mode, difficulty, boosts, currency, isRoundEntry: effectiveIsRoundEntry },
+      lastRaidConfig: { mode, difficulty, boosts, currency, isRoundEntry: effectiveIsRoundEntry, tier: effectiveIsRoundEntry ? tier : undefined },
       // Ticket
       raidTickets: applyTicket ? prev.raidTickets - 1 : prev.raidTickets,
       ticketBoostActive: applyTicket,
@@ -1689,10 +1697,10 @@ const AppInner: React.FC = () => {
     }
   };
 
-  const enterRoundRaid = async (difficulty: Difficulty, boosts: string[], currency: Currency) => {
+  const enterRoundRaid = async (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier = RaidTier.GRUNT) => {
     // effectiveIsRoundEntry in enterRaid auto-enrolls when currentRound is set;
     // pass isRoundEntry=true explicitly as a fallback for safety
-    await enterRaid(Mode.SOLO, difficulty, boosts, currency, false, undefined, true);
+    await enterRaid(Mode.SOLO, difficulty, boosts, currency, false, undefined, true, tier);
   };
 
   // ── Bounty Board ──────────────────────────────────────────────────────────

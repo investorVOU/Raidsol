@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { RaidTier, RAID_TIER_ALLOCATION } from '../types';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 // POOL_PCT (0.90) is applied server-side in submit-raid-result via increment_round_pool RPC
-export const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06]; // top 1-5 share of pool
+/** @deprecated Use RAID_TIER_ALLOCATION from types.ts — kept for backwards compat */
+export const ROUND_ALLOCATION = RAID_TIER_ALLOCATION[RaidTier.GRUNT];
 
 export interface RoundTopEntry {
   rank: number;
@@ -21,7 +23,9 @@ export interface CurrentRoundInfo {
   timeRemainingMs: number;
   isActive: boolean;           // true while round is still running
   isFinalized: boolean;        // true once finalize-round has locked in winners
+  isRefunded: boolean;         // true if round was cancelled due to insufficient participants
   poolSol: number;             // 90% of all entry fees this window
+  entrantCount: number;        // unique wallets that entered this round/tier
   currentLeaders: RoundTopEntry[];   // live top-5 during active round (from raid_history)
   finalWinners: RoundTopEntry[];     // locked top-5 after finalization (from round_winners)
 }
@@ -73,7 +77,7 @@ export function formatCountdown(ms: number): string {
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useRoundData() {
+export function useRoundData(tier = 'GRUNT') {
   const [info, setInfo] = useState<CurrentRoundInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -89,6 +93,7 @@ export function useRoundData() {
         .from('raid_history')
         .select('wallet_address, points')
         .eq('success', true)
+        .eq('raid_tier', tier)
         .gte('created_at', start.toISOString())
         .lt('created_at', end.toISOString())
         .order('points', { ascending: false })
@@ -99,11 +104,13 @@ export function useRoundData() {
         .select('pool_sol')
         .eq('round_number', roundNum)
         .eq('round_date', dateStr)
+        .eq('raid_tier', tier)
         .maybeSingle(),
       // fallback: sum all entry fees in the round window directly from raid_history
       supabase
         .from('raid_history')
-        .select('entry_fee')
+        .select('wallet_address, entry_fee')
+        .eq('raid_tier', tier)
         .gte('created_at', start.toISOString())
         .lt('created_at', end.toISOString()),
     ]);
@@ -112,6 +119,9 @@ export function useRoundData() {
     const poolFromHistory = ((feesRes.data ?? []).reduce((s, r) => s + Number(r.entry_fee), 0)) * 0.90;
     // Prefer the dedicated table; fall back to raid_history sum if the table is empty
     const poolSol = poolFromTable > 0 ? poolFromTable : poolFromHistory;
+    // Unique entrant count
+    const uniqueEntrantWallets = new Set((feesRes.data ?? []).map(r => r.wallet_address));
+    const entrantCount = uniqueEntrantWallets.size;
 
     // Deduplicate: keep best points per wallet
     const bestByWallet = new Map<string, number>();
@@ -139,56 +149,67 @@ export function useRoundData() {
       }
     }
 
+    const tierKey = (tier.toUpperCase() as RaidTier) in RAID_TIER_ALLOCATION
+      ? (tier.toUpperCase() as RaidTier)
+      : RaidTier.GRUNT;
+    const tierAlloc = RAID_TIER_ALLOCATION[tierKey];
+
     const currentLeaders: RoundTopEntry[] = sorted.map(([wallet, pts], i) => ({
       rank: i + 1,
       walletAddress: wallet,
       username: usernameMap[wallet] ?? `${wallet.slice(0, 4)}…${wallet.slice(-4)}`,
       pointsScored: pts,
-      allocationSol: poolSol * ROUND_ALLOCATION[i],
+      allocationSol: poolSol * tierAlloc[i],
     }));
 
     // ── If round has ended, check for finalization ───────────────────────────
     let isFinalized = false;
+    let isRefunded  = false;
     let finalWinners: RoundTopEntry[] = [];
 
     if (roundEnded) {
       const { data: finalizationRow } = await supabase
         .from('round_finalizations')
-        .select('pool_sol')
+        .select('pool_sol, refunded')
         .eq('round_number', roundNum)
         .eq('round_date', dateStr)
+        .eq('raid_tier', tier)
         .maybeSingle();
 
       if (finalizationRow) {
         isFinalized = true;
+        isRefunded  = !!finalizationRow.refunded;
 
-        const { data: winnersData } = await supabase
-          .from('round_winners')
-          .select('rank, wallet_address, points_scored, sol_allocation')
-          .eq('round_number', roundNum)
-          .eq('round_date', dateStr)
-          .order('rank');
+        if (!isRefunded) {
+          const { data: winnersData } = await supabase
+            .from('round_winners')
+            .select('rank, wallet_address, points_scored, sol_allocation')
+            .eq('round_number', roundNum)
+            .eq('round_date', dateStr)
+            .eq('raid_tier', tier)
+            .order('rank');
 
-        // Fetch usernames for final winners
-        const winnerWallets = (winnersData ?? []).map(w => w.wallet_address);
-        let winnerUsernameMap: Record<string, string> = {};
-        if (winnerWallets.length > 0) {
-          const { data: wProfiles } = await supabase
-            .from('profiles')
-            .select('wallet_address, username')
-            .in('wallet_address', winnerWallets);
-          for (const p of wProfiles ?? []) {
-            winnerUsernameMap[p.wallet_address] = p.username;
+          // Fetch usernames for final winners
+          const winnerWallets = (winnersData ?? []).map(w => w.wallet_address);
+          let winnerUsernameMap: Record<string, string> = {};
+          if (winnerWallets.length > 0) {
+            const { data: wProfiles } = await supabase
+              .from('profiles')
+              .select('wallet_address, username')
+              .in('wallet_address', winnerWallets);
+            for (const p of wProfiles ?? []) {
+              winnerUsernameMap[p.wallet_address] = p.username;
+            }
           }
-        }
 
-        finalWinners = (winnersData ?? []).map(w => ({
-          rank: w.rank,
-          walletAddress: w.wallet_address,
-          username: winnerUsernameMap[w.wallet_address] ?? `${w.wallet_address.slice(0, 4)}…${w.wallet_address.slice(-4)}`,
-          pointsScored: Number(w.points_scored),
-          allocationSol: Number(w.sol_allocation),
-        }));
+          finalWinners = (winnersData ?? []).map(w => ({
+            rank: w.rank,
+            walletAddress: w.wallet_address,
+            username: winnerUsernameMap[w.wallet_address] ?? `${w.wallet_address.slice(0, 4)}…${w.wallet_address.slice(-4)}`,
+            pointsScored: Number(w.points_scored),
+            allocationSol: Number(w.sol_allocation),
+          }));
+        }
       }
     }
 
@@ -200,12 +221,14 @@ export function useRoundData() {
       timeRemainingMs: Math.max(0, end.getTime() - now.getTime()),
       isActive,
       isFinalized,
+      isRefunded,
       poolSol,
+      entrantCount,
       currentLeaders,
       finalWinners,
     });
     setLoading(false);
-  }, []);
+  }, [tier]);
 
   // Fetch on mount + every 30s
   useEffect(() => {

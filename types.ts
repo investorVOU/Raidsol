@@ -135,6 +135,41 @@ export const ENTRY_FEES: Record<Mode, number> = {
   [Mode.PVP]: 0.00 // Dynamic in PvP
 };
 
+// ── Raid Tier System (Round Competition) ─────────────────────────────────────
+export enum RaidTier {
+  GRUNT = 'GRUNT',
+  ELITE = 'ELITE',
+  WHALE = 'WHALE',
+}
+
+export const RAID_TIER_CONFIG: Record<RaidTier, {
+  label: string;
+  entryFee: number; // SOL
+  color: string;
+  description: string;
+  emoji: string;
+}> = {
+  [RaidTier.GRUNT]: { label: 'GRUNT', entryFee: 0.01,  color: '#94a3b8', description: 'Casual — small pool, anyone can enter.',       emoji: '🔧' },
+  [RaidTier.ELITE]: { label: 'ELITE', entryFee: 0.05,  color: '#FFB800', description: 'Competitive — 5× bigger pool vs Grunt.',       emoji: '⚔️' },
+  [RaidTier.WHALE]: { label: 'WHALE', entryFee: 0.25,  color: '#FF2929', description: 'Degens only — 25× pool vs Grunt. High risk.',   emoji: '🐋' },
+};
+
+/**
+ * Prize pool allocation per tier — fractions of pool for ranks 1–5 (must sum to 1.0).
+ * GRUNT: flatter split — casual players share more equally.
+ * ELITE: standard competitive weighting.
+ * WHALE: winner-takes-most for high-stakes degen play.
+ */
+export const RAID_TIER_ALLOCATION: Record<RaidTier, [number, number, number, number, number]> = {
+  [RaidTier.GRUNT]: [0.38, 0.24, 0.18, 0.12, 0.08],
+  [RaidTier.ELITE]: [0.43, 0.25, 0.17, 0.10, 0.05],
+  [RaidTier.WHALE]: [0.55, 0.23, 0.13, 0.06, 0.03],
+};
+
+/** Minimum unique wallets that must compete for a round to be finalised with winners.
+ *  If fewer participate, all entry fees are refunded to participants' unclaimed_sol. */
+export const ROUND_MIN_PARTICIPANTS = 3;
+
 // --- MULTIPLAYER INTERFACES ---
 
 export interface Opponent {
@@ -312,6 +347,7 @@ export interface GameState {
   activeRaidDifficulty: Difficulty;
   activeRaidBoosts: string[];
   activeRaidIsRound: boolean;       // true when raid was entered as round competition
+  activeRaidTier: RaidTier;         // which competition tier this raid was entered at
   activeRoom?: Room;
   activeSeedId?: string;          // provably-fair: seed DB row id
   activeServerSeedHash?: string;  // provably-fair: shown to player pre-raid
@@ -346,6 +382,7 @@ export interface GameState {
     boosts: string[];
     currency: Currency;
     isRoundEntry?: boolean;
+    tier?: RaidTier;
   };
   // RaidCore Pass ticket system
   raidTickets: number;
