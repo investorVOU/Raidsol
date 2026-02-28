@@ -998,17 +998,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                       style={{
                         background: isEarned ? 'rgba(255,184,0,0.06)' : 'var(--modal-bg)',
                         border: isEarned ? '1px solid rgba(255,184,0,0.25)' : '1px solid rgba(255,255,255,0.05)',
-                        opacity: isEarned ? 1 : 0.45,
                       }}
                     >
                       <BadgePixelIcon id={a.id} isEarned={isEarned} size={28} />
-                      <p className="text-[9px] font-black uppercase tracking-wide leading-tight" style={{ color: isEarned ? '#FFB800' : 'rgba(255,255,255,0.4)' }}>
-                        {isEarned ? a.name : '???'}
+                      <p className="text-[9px] font-black uppercase tracking-wide leading-tight" style={{ color: isEarned ? '#FFB800' : 'rgba(255,255,255,0.55)' }}>
+                        {a.name}
                       </p>
                       {isEarned && dateStr ? (
                         <p className="text-[8px] text-white/30">{dateStr}</p>
                       ) : !isEarned ? (
-                        <p className="text-[8px] text-white/20">{a.description}</p>
+                        <p className="text-[8px] text-white/35">{a.description}</p>
                       ) : null}
                     </div>
                   );
