@@ -9,19 +9,25 @@ const SLIDES = [
     num: '01',
     tag: 'BRIEFING_01',
     title: 'WHAT IS A RAID?',
-    body: 'Pick a difficulty, pay a small entry fee, and compete for SOL. Score points by reading the vault and extracting at the right moment. Better timing, bigger reward.',
+    body: 'Every raid is a round-based competition. Pay an entry fee, score points, and your best result for the round competes on the leaderboard. The top 5 wallets split the entire prize pool when the round closes.',
   },
   {
     num: '02',
     tag: 'BRIEFING_02',
     title: 'THE RISK METER',
-    body: 'Every raid has a risk meter. Extract low for a safe payout, or push deeper for a higher score. It\'s a skill read — the best operators know exactly when to pull out.',
+    body: 'Every raid has a live risk meter. Extract before it hits 100% to lock in your score. If it busts, the entry fee is lost. If there are fewer than 3 entrants, the round is cancelled and everyone gets a full refund.',
   },
   {
     num: '03',
     tag: 'BRIEFING_03',
+    title: 'PRIZE POOL SPLIT',
+    body: '100% of entry fees go into the prize pool. Top 5 split it: 1st 40% · 2nd 28% · 3rd 18% · 4th 10% · 5th 4%. Rounds run 4× daily. Claim from Profile → Round Wins after each round closes.',
+  },
+  {
+    num: '04',
+    tag: 'BRIEFING_04',
     title: 'COLLECTING YOUR SOL',
-    body: 'Your earnings show up as Unclaimed Balance on your Profile. Hit HARVEST anytime to send SOL straight to your wallet. On-chain, instant, no platform custody.',
+    body: 'Winnings appear as Unclaimed Balance on your Profile. Hit HARVEST anytime to send SOL straight to your wallet. On-chain, instant, no platform custody.',
   },
 ];
 

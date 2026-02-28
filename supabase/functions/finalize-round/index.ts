@@ -30,9 +30,9 @@ const ALL_TIERS = ['GRUNT', 'ELITE', 'WHALE'] as const;
  * WHALE: winner-takes-most for high-stakes play.
  */
 const TIER_ALLOCATION: Record<typeof ALL_TIERS[number], number[]> = {
-  GRUNT: [0.38, 0.24, 0.18, 0.12, 0.08],
-  ELITE: [0.43, 0.25, 0.17, 0.10, 0.05],
-  WHALE: [0.55, 0.23, 0.13, 0.06, 0.03],
+  GRUNT: [0.35, 0.25, 0.20, 0.13, 0.07],
+  ELITE: [0.40, 0.28, 0.18, 0.10, 0.04],
+  WHALE: [0.50, 0.25, 0.15, 0.07, 0.03],
 };
 
 /**

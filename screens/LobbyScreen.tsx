@@ -230,8 +230,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>4</p>
                 </div>
                 <div className="flex-1 text-center">
-                  <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Top 5 split</p>
-                  <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>90%</p>
+                  <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Prize pool</p>
+                  <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>100%</p>
                 </div>
                 <div className="flex-1 text-center">
                   <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>

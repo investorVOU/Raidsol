@@ -2090,6 +2090,7 @@ const AppInner: React.FC = () => {
           isDark={isDark}
           walletAddress={publicKey ? publicKey.toBase58() : null}
           domainName={domainName}
+          isLobby={gameState.currentScreen === Screen.LOBBY}
         />
         <main className="flex-1 relative overflow-hidden">
           <Suspense fallback={<div className="flex-1 flex items-center justify-center text-white/40 text-xs font-black uppercase tracking-widest animate-pulse">LOADING...</div>}>{renderScreen()}</Suspense>
@@ -2129,7 +2130,7 @@ const AppInner: React.FC = () => {
         (() => {
           const win = unclaimedRoundWins[0];
           const medalMap: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉', 4: '4th', 5: '5th' };
-          const pctMap: Record<number, string> = { 1: '40%', 2: '25%', 3: '18%', 4: '11%', 5: '6%' };
+          const pctMap: Record<number, string> = { 1: '40%', 2: '28%', 3: '18%', 4: '10%', 5: '4%' };
           return (
             <div className="fixed top-20 left-0 right-0 z-[150] px-4 pointer-events-none">
               <div

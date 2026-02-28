@@ -184,9 +184,9 @@ export const RAID_TIER_CONFIG: Record<RaidTier, {
  * WHALE: winner-takes-most for high-stakes degen play.
  */
 export const RAID_TIER_ALLOCATION: Record<RaidTier, [number, number, number, number, number]> = {
-  [RaidTier.GRUNT]: [0.38, 0.24, 0.18, 0.12, 0.08],
-  [RaidTier.ELITE]: [0.43, 0.25, 0.17, 0.10, 0.05],
-  [RaidTier.WHALE]: [0.55, 0.23, 0.13, 0.06, 0.03],
+  [RaidTier.GRUNT]: [0.35, 0.25, 0.20, 0.13, 0.07],
+  [RaidTier.ELITE]: [0.40, 0.28, 0.18, 0.10, 0.04],
+  [RaidTier.WHALE]: [0.50, 0.25, 0.15, 0.07, 0.03],
 };
 
 /** Minimum unique wallets that must compete for a round to be finalised with winners.

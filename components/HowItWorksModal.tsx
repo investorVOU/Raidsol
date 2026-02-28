@@ -9,388 +9,451 @@ interface HowItWorksModalProps {
   onNavigateLegal: (screen: Screen) => void;
 }
 
+const MONO: React.CSSProperties = { fontFamily: "'JetBrains Mono', 'Courier New', monospace" };
+const INTER: React.CSSProperties = { fontFamily: "'Inter', system-ui, sans-serif" };
+const BN: React.CSSProperties = { fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' };
+
+type Tab = 'GUIDE' | 'EVENTS' | 'PVP' | 'ECONOMY' | 'REFERRAL';
+
 const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNavigateLegal }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'GUIDE' | 'EVENTS' | 'PVP' | 'ECONOMY' | 'REFERRAL'>('GUIDE');
+  const [activeTab, setActiveTab] = useState<Tab>('GUIDE');
 
   if (!isOpen) return null;
 
+  const tabs: { id: Tab; label: string; activeClass: string }[] = [
+    { id: 'GUIDE',    label: t('howItWorks.guide'),    activeClass: 'text-white border-b-2 border-white' },
+    { id: 'EVENTS',   label: t('howItWorks.events'),   activeClass: 'text-orange-400 border-b-2 border-orange-500' },
+    { id: 'PVP',      label: t('howItWorks.pvp'),      activeClass: 'text-[#FF2929] border-b-2 border-[#FF2929]' },
+    { id: 'ECONOMY',  label: t('howItWorks.economy'),  activeClass: 'text-[#FFB800] border-b-2 border-[#FFB800]' },
+    { id: 'REFERRAL', label: t('howItWorks.referral'), activeClass: 'text-amber-400 border-b-2 border-amber-500' },
+  ];
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/95 backdrop-blur-md animate-in fade-in duration-300"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-lg bg-[#050505] border-4 border-white/10 p-1 tech-border shadow-[0_0_100px_rgba(0,0,0,1)] animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-[#050505] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,1)] animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
 
         {/* Header */}
-        <div className="p-5 border-b border-white/5 flex justify-between items-center shrink-0">
+        <div className="px-5 py-4 border-b border-white/8 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">How it works</h2>
-            <p className="text-xs text-white/40 mt-1">Mechanics v8.0</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white leading-none" style={BN}>
+              How It Works
+            </h2>
+            <p className="text-[10px] text-white/30 mt-0.5" style={INTER}>Solana Raid — mechanics guide</p>
           </div>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors font-bold text-lg leading-none">✕</button>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-white/30 hover:text-white transition-colors text-base leading-none">✕</button>
         </div>
 
-        {/* Tabs — scrollable on small screens */}
-        <div className="flex border-b border-white/5 bg-black/50 overflow-x-auto scrollbar-hide shrink-0">
-          {([
-            { id: 'GUIDE',    label: t('howItWorks.guide'),    activeClass: 'bg-white/8 text-white border-b-2 border-white/60' },
-            { id: 'EVENTS',   label: t('howItWorks.events'),   activeClass: 'bg-orange-500/10 text-orange-400 border-b-2 border-orange-500' },
-            { id: 'PVP',      label: t('howItWorks.pvp'),      activeClass: 'bg-red-500/10 text-[#FF2929] border-b-2 border-[#FF2929]' },
-            { id: 'ECONOMY',  label: t('howItWorks.economy'),  activeClass: 'bg-yellow-500/10 text-yellow-400 border-b-2 border-yellow-500' },
-            { id: 'REFERRAL', label: t('howItWorks.referral'), activeClass: 'bg-amber-500/10 text-amber-400 border-b-2 border-amber-500' },
-          ] as const).map(tab => (
+        {/* Tabs */}
+        <div className="flex border-b border-white/8 bg-black/30 overflow-x-auto scrollbar-hide shrink-0">
+          {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-[72px] py-3.5 text-[9px] sm:text-[10px] font-semibold tracking-wide transition-all whitespace-nowrap px-2 ${activeTab === tab.id ? tab.activeClass : 'text-white/40 hover:text-white/75'}`}
+              className={`flex-1 min-w-[64px] py-3 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all whitespace-nowrap px-2 ${
+                activeTab === tab.id ? tab.activeClass : 'text-white/30 hover:text-white/60'
+              }`}
+              style={INTER}
             >
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5 scrollbar-hide bg-black/40">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-hide">
 
           {/* ── GUIDE ── */}
           {activeTab === 'GUIDE' && (
-            <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+            <div className="space-y-4 animate-in slide-in-from-right-4 duration-200">
 
-              <div className="bg-white/5 border border-white/10 p-4">
-                <h3 className="text-sm font-bold text-white uppercase mb-2">Objective</h3>
-                <p className="text-xs text-white/70 leading-relaxed">
-                  Enter a Raid. Watch your score multiply. <span className="text-white">Cash out before Risk hits 100%.</span> Stay longer = more reward, but higher bust probability. Skill, timing and gear decide your fate.
+              {/* What is a raid */}
+              <div className="p-4 border border-white/10 bg-white/[0.03]">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-2" style={INTER}>What is a Raid?</h3>
+                <p className="text-[11px] text-white/60 leading-relaxed">
+                  Every raid is a <span className="text-white">round-based competition</span>. Pay an entry fee, score as many points as possible, then extract before your risk hits 100%. Your best score in the 6-hour round window competes on the leaderboard. The <span className="text-[#FFB800]">top 5 wallets split the entire prize pool</span> when the round closes.
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <h3 className="text-xs font-bold uppercase text-white/40 tracking-wide">Actions</h3>
+              {/* Actions */}
+              <div>
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2" style={INTER}>Three actions</p>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="p-3 border border-red-500/30 bg-red-950/10 text-center">
-                    <span className="text-xs font-bold text-red-500 block mb-1">ATTACK</span>
-                    <span className="text-[10px] text-white/50 leading-tight block">Boosts multiplier. Spikes risk. Combo chains for bonus pts.</span>
-                  </div>
-                  <div className="p-3 border border-blue-500/30 bg-blue-950/10 text-center">
-                    <span className="text-xs font-bold text-blue-400 block mb-1">DEFEND</span>
-                    <span className="text-[10px] text-white/50 leading-tight block">Cuts risk. Max 2 in a row, then 3s cooldown.</span>
-                  </div>
-                  <div className="p-3 border border-[#FFB800]/30 bg-[#FFB800]/5 text-center">
-                    <span className="text-xs font-bold text-[#FFB800] block mb-1">EXIT</span>
-                    <span className="text-[10px] text-white/50 leading-tight block">Lock in earnings. Penalty if before 8s.</span>
-                  </div>
+                  {[
+                    { label: 'ATTACK', color: 'text-[#FF2929]', border: 'border-[#FF2929]/30 bg-[#FF2929]/5', desc: 'Pushes multiplier up. Also spikes risk. Combo with Defend for bonus points.' },
+                    { label: 'DEFEND', color: 'text-blue-400',  border: 'border-blue-500/25 bg-blue-950/20', desc: 'Cuts risk down. Max 2 in a row, then a 3-second cooldown applies.' },
+                    { label: 'EXTRACT', color: 'text-[#FFB800]', border: 'border-[#FFB800]/30 bg-[#FFB800]/5', desc: 'Locks in your score. Locked for 20s at round start. Exit before 20s = 50% penalty.' },
+                  ].map(a => (
+                    <div key={a.label} className={`p-3 border ${a.border} text-center`}>
+                      <span className={`text-[11px] font-black block mb-1.5 ${a.color}`} style={BN}>{a.label}</span>
+                      <span className="text-[9px] text-white/45 leading-snug block" style={INTER}>{a.desc}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold uppercase text-white/40 tracking-wide">Combo system</h3>
-                <div className="flex gap-2">
-                  <div className="flex-1 p-3 border border-yellow-500/20 bg-yellow-500/5">
-                    <span className="text-[10px] font-bold text-yellow-400 block mb-0.5">COMBO</span>
-                    <span className="text-[10px] text-white/50">Defend → Attack within 2.2s. +500 pts, -4 risk.</span>
+              {/* Combo system */}
+              <div>
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2" style={INTER}>Combo system</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-3 border border-yellow-500/20 bg-yellow-500/5">
+                    <span className="text-[10px] font-bold text-yellow-400 block mb-1" style={INTER}>COMBO</span>
+                    <span className="text-[10px] text-white/50" style={INTER}>Defend → Attack within 2.2s. +500 pts · −4 risk.</span>
                   </div>
-                  <div className="flex-1 p-3 border border-white/10 bg-white/5">
-                    <span className="text-[10px] font-bold text-white/70 block mb-0.5">COUNTER</span>
-                    <span className="text-[10px] text-white/50">Attack → Defend within 2.2s. +350 pts, -10 risk.</span>
+                  <div className="p-3 border border-white/10 bg-white/[0.03]">
+                    <span className="text-[10px] font-bold text-white/60 block mb-1" style={INTER}>COUNTER</span>
+                    <span className="text-[10px] text-white/50" style={INTER}>Attack → Defend within 2.2s. +350 pts · −10 risk.</span>
                   </div>
                 </div>
-                <p className="text-[10px] text-white/40">5 attacks without defending triggers an AGGRESSION surge (+15 risk).</p>
+                <p className="text-[10px] text-white/30 mt-2" style={INTER}>5 consecutive attacks without defending triggers an AGGRESSION surge (+15 risk).</p>
               </div>
 
-              <div className="flex gap-4 p-4 border border-white/5">
-                <div className="w-12 h-12 border-2 border-red-500 rounded-full flex items-center justify-center shrink-0">
-                  <span className="text-red-500 font-black text-xs">99%</span>
+              {/* Risk */}
+              <div className="flex gap-4 p-4 border border-red-500/20 bg-red-950/10">
+                <div className="w-11 h-11 border-2 border-[#FF2929] rounded-full flex items-center justify-center shrink-0">
+                  <span className="text-[#FF2929] font-black text-[10px]" style={MONO}>100%</span>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold uppercase text-red-500 mb-1">Risk — the enemy</h3>
-                  <p className="text-xs text-white/60 leading-relaxed">
-                    Risk climbs every tick. Idle for 3s+ = slow decay. At <span className="text-red-400">100%</span> the link severs — stake lost. Exit early (&lt;8s) = 50% penalty on reward.
+                  <h3 className="text-xs font-bold text-[#FF2929] uppercase mb-1" style={INTER}>Risk — the enemy</h3>
+                  <p className="text-[11px] text-white/55 leading-relaxed" style={INTER}>
+                    Risk climbs every tick as you stay inside. Idle for 3+ seconds and it decays slowly. Hit 100% and the session severs — entry fee is lost. Stay sharp and extract in time.
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white/5 border border-white/10 p-4 space-y-2">
-                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Two raid modes</h3>
-                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-white/75">Normal Raid</span> — Pay entry fee, extract SOL immediately on success. Reward paid out at end of session via Withdraw.</p>
-                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-[#FF2929]">Round-Based Raid</span> — Score points instead of SOL. Your best score in the 6-hour window competes on the leaderboard. Winnings are claimed after the round closes from Profile → Round Wins.</p>
+              {/* Gear & Passes */}
+              <div className="p-4 border border-white/10 bg-white/[0.03] space-y-2">
+                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-2" style={INTER}>Gear & Raid Passes</h3>
+                {[
+                  { label: 'Time Boost', color: 'text-white/80', desc: '+30s extra raid time. Stay in longer to score higher.' },
+                  { label: 'Mult Boost', color: 'text-white/80', desc: 'Higher starting multiplier — more points from the opening second.' },
+                  { label: 'Risk Reduction', color: 'text-white/80', desc: 'Slows risk drift rate. More room to push without busting.' },
+                  { label: 'Raid Pass', color: 'text-[#FFB800]', desc: '50% off entry fee + 10% score boost. Buy in the Store.' },
+                  { label: 'Free Ticket', color: 'text-white/60', desc: '+1 free ticket per day, stockpile up to 3. Toggle at deploy.' },
+                ].map(g => (
+                  <div key={g.label} className="flex items-start gap-2">
+                    <span className="text-[#FF2929] text-[10px] shrink-0 mt-0.5" style={MONO}>›</span>
+                    <p className="text-[10px] leading-snug" style={INTER}>
+                      <span className={`font-bold ${g.color}`}>{g.label}</span>
+                      <span className="text-white/45"> — {g.desc}</span>
+                    </p>
+                  </div>
+                ))}
               </div>
 
-              <div className="bg-white/5 border border-white/10 p-4">
-                <h3 className="text-sm font-bold text-white uppercase mb-3">Payment options</h3>
+              {/* Payment */}
+              <div className="p-4 border border-white/10 bg-white/[0.03]">
+                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-3" style={INTER}>Entry fee currencies</h3>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { token: 'SOL',  color: 'text-[#FFB800]', desc: 'Native Solana' },
                     { token: 'USDC', color: 'text-blue-400',  desc: 'USD Stablecoin' },
                     { token: 'SKR',  color: 'text-[#FFB800]', desc: 'Seeker Token' },
-                  ].map(t => (
-                    <div key={t.token} className="text-center p-2 border border-white/10">
-                      <span className={`text-sm font-bold block ${t.color}`}>{t.token}</span>
-                      <span className="text-[9px] text-white/50">{t.desc}</span>
+                  ].map(c => (
+                    <div key={c.token} className="text-center p-2.5 border border-white/10">
+                      <span className={`text-sm font-black block ${c.color}`} style={BN}>{c.token}</span>
+                      <span className="text-[9px] text-white/40" style={INTER}>{c.desc}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white/5 border border-white/10 p-4 space-y-2">
-                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Gear & Passes</h3>
-                <p className="text-[10px] text-white/50 leading-relaxed">Buy <span className="text-white/75">Gear</span> from the Store to boost multiplier, reduce risk drift, or extend raid time. Equip up to 4 pieces per raid.</p>
-                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-[#FFB800]">Raid Passes</span> give 50% off entry fee + 10% win boost. Toggle at deployment if you own one.</p>
-                <p className="text-[10px] text-white/50 leading-relaxed"><span className="text-white/60">Avatars</span> must be purchased — equip from your Profile to set your identity.</p>
-              </div>
             </div>
           )}
 
           {/* ── EVENTS ── */}
           {activeTab === 'EVENTS' && (
-            <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-              <p className="text-[10px] text-white/50">Random events fire during raids. Learn them — they change outcomes.</p>
+            <div className="space-y-3 animate-in slide-in-from-right-4 duration-200">
+              <p className="text-[10px] text-white/40 pb-1" style={INTER}>Random events fire mid-raid. Learning them is a core part of skill.</p>
 
               {[
                 {
                   name: 'GOLDEN WINDOW',
+                  tag: 'LUCKY',
                   color: 'text-yellow-400',
-                  border: 'border-yellow-500/30 bg-yellow-500/5',
-                  dot: 'bg-yellow-500',
-                  desc: 'Triggers when multiplier first crosses 2.5×. A 6-second window opens — if you extract during it, reward is boosted +5%. The banner pulses gold.',
-                },
-                {
-                  name: 'AMBUSH',
-                  color: 'text-red-400',
-                  border: 'border-red-500/30 bg-red-500/5',
-                  dot: 'bg-red-500',
-                  desc: '10% chance after 8s. Controls lock for 2.2 seconds, risk surges +10. You cannot attack, defend or extract during lockdown. Watch for the red flash.',
+                  border: 'border-yellow-500/25 bg-yellow-500/5',
+                  desc: 'Triggers the first time your multiplier crosses 2.5×. A 6-second extraction window opens with a +5% score bonus. The screen pulses gold — act fast.',
                 },
                 {
                   name: 'JACKPOT',
+                  tag: 'LUCKY',
                   color: 'text-yellow-300',
-                  border: 'border-yellow-300/30 bg-yellow-300/5',
-                  dot: 'bg-yellow-300',
-                  desc: '3% chance after 6s. A rare lucky event — multiplier jumps +0.5×. The arena flashes gold. Keep raiding to let it compound.',
+                  border: 'border-yellow-300/20 bg-yellow-300/5',
+                  desc: '3% chance after 6 seconds. Your multiplier jumps +0.5× instantly. Rare — let it compound if you can hold the risk.',
                 },
                 {
                   name: 'FIREWALL SAVE',
+                  tag: 'SAVED',
                   color: 'text-blue-400',
-                  border: 'border-blue-500/30 bg-blue-500/5',
-                  dot: 'bg-blue-400',
-                  desc: '12% chance at the moment of bust. A last-second save resets risk to 72% and shows the SHIELD overlay. You survive — but don\'t push your luck twice.',
+                  border: 'border-blue-500/25 bg-blue-950/20',
+                  desc: '12% chance at the exact moment of bust. Risk resets to 72% and the SHIELD overlay fires. You survive — but this is a one-time reprieve, not a strategy.',
+                },
+                {
+                  name: 'AMBUSH',
+                  tag: 'DANGER',
+                  color: 'text-[#FF2929]',
+                  border: 'border-[#FF2929]/25 bg-[#FF2929]/5',
+                  desc: '10% chance after 8 seconds. Controls freeze for 2.2 seconds while risk surges +10. You cannot attack, defend, or extract. Watch for the red flash and breathe.',
                 },
                 {
                   name: 'NETWORK SURGE',
+                  tag: 'DANGER',
                   color: 'text-orange-400',
-                  border: 'border-orange-500/30 bg-orange-500/5',
-                  dot: 'bg-orange-400',
-                  desc: 'Random risk spikes outside the normal drift. More frequent at higher multipliers. Greed factor amplifies these above 2× and 3×.',
+                  border: 'border-orange-500/25 bg-orange-500/5',
+                  desc: 'Sudden risk spikes outside normal drift. More frequent and more violent above 2× and 3× multipliers. Greed amplifies these — know when to stop attacking.',
                 },
                 {
                   name: 'HOT STREAK',
+                  tag: 'INFO',
                   color: 'text-[#FFB800]',
                   border: 'border-[#FFB800]/20 bg-[#FFB800]/5',
-                  dot: 'bg-[#FFB800]',
-                  desc: 'Visual indicator on the multiplier bar after sustained aggressive play. No mechanical effect — just a heads-up that you\'re going hard.',
+                  desc: 'A visual indicator that appears after sustained aggressive play. No direct mechanical effect — it signals that risk accumulation is now accelerating.',
                 },
               ].map(ev => (
                 <div key={ev.name} className={`p-4 border ${ev.border}`}>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className={`w-2 h-2 rounded-full shrink-0 ${ev.dot}`} />
-                    <span className={`text-xs font-bold uppercase tracking-wide ${ev.color}`}>{ev.name}</span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className={`text-xs font-black uppercase tracking-wide ${ev.color}`} style={INTER}>{ev.name}</span>
+                    <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest" style={MONO}>{ev.tag}</span>
                   </div>
-                  <p className="text-[11px] text-white/60 leading-relaxed">{ev.desc}</p>
+                  <p className="text-[11px] text-white/55 leading-relaxed" style={INTER}>{ev.desc}</p>
                 </div>
               ))}
 
-              <div className="p-4 bg-white/5 border border-white/10">
-                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-2">Post-raid debrief</h3>
-                <p className="text-[11px] text-white/50 leading-relaxed">
-                  After every raid the Result screen shows a full timeline of every event that fired — SURGE, AMBUSH, JACKPOT, COMBO, BUST reason and more. Use it to understand what happened and improve.
+              <div className="p-4 border border-white/10 bg-white/[0.03]">
+                <h3 className="text-xs font-bold text-white/50 uppercase tracking-wide mb-1.5" style={INTER}>Post-raid debrief</h3>
+                <p className="text-[11px] text-white/45 leading-relaxed" style={INTER}>
+                  The Result screen shows a full event timeline after every raid — every surge, ambush, combo, jackpot, and the exact bust trigger if it happened. Use it to improve your reads.
                 </p>
               </div>
             </div>
           )}
 
-          {/* ── MULTIPLAYER ── */}
+          {/* ── PVP ── */}
           {activeTab === 'PVP' && (
-            <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-[#FF2929]/10 border border-[#FF2929]/40 p-5 tech-border">
-                <h3 className="text-lg font-bold text-[#FF2929] uppercase mb-2">Winner takes all</h3>
-                <p className="text-xs text-white/75 leading-relaxed">
-                  In PvP all players raid the <span className="text-white">same RNG seed</span>. Same spikes, same drifts — pure skill separates you. The player who extracts with the <span className="text-white">highest score</span> wins the entire pot.
+            <div className="space-y-4 animate-in slide-in-from-right-4 duration-200">
+
+              <div className="p-4 border border-[#FF2929]/35 bg-[#FF2929]/8">
+                <h3 className="text-base font-black text-[#FF2929] uppercase mb-2" style={BN}>Winner takes the pot</h3>
+                <p className="text-[11px] text-white/65 leading-relaxed" style={INTER}>
+                  In a PvP room all players raid the <span className="text-white font-bold">same RNG seed</span> simultaneously — identical spikes, identical drifts. The only variable is your decisions. The player who extracts with the <span className="text-white font-bold">highest score</span> claims the entire combined stake.
                 </p>
               </div>
 
               <div className="space-y-3">
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest" style={INTER}>How to play</p>
                 {[
-                  { n: 1, title: 'Create & set stake', body: 'Host a lobby. Pick currency (SOL / USDC / SKR) and stake amount — choose a preset or enter a custom amount. Share the room code or QR.' },
-                  { n: 2, title: 'Join via code or QR', body: 'Enter the room code or tap the scan icon. Preview stake, currency and player count before paying. Confirm and pay in one tap.' },
-                  { n: 3, title: 'Live leaderboard', body: 'During the raid a real-time leaderboard shows everyone\'s score, risk bar and status. Know exactly where you stand at all times.' },
-                  { n: 4, title: 'Highest score wins', body: 'Everyone raids simultaneously on the same seed. The player with the highest points when they extract takes the full pot. No second place payout.' },
-                ].map(step => (
-                  <div key={step.n} className="flex gap-4 items-start">
-                    <div className="w-7 h-7 flex items-center justify-center bg-[#FF2929]/10 border border-[#FF2929]/30 text-[#FF2929] font-bold text-xs shrink-0">{step.n}</div>
+                  {
+                    n: '01',
+                    title: 'Create a room',
+                    body: 'Host sets the stake amount and currency (SOL, USDC, or SKR). Choose a preset or enter a custom amount. Share your room code or QR link.',
+                  },
+                  {
+                    n: '02',
+                    title: 'Join via code',
+                    body: 'Enter the room code or scan the QR. You see a preview of the stake and currency before committing. Tap Confirm & Pay to lock in.',
+                  },
+                  {
+                    n: '03',
+                    title: 'Raid simultaneously',
+                    body: 'All players start on the same seed at the same time. A live scoreboard shows every player\'s score, risk, and status in real time.',
+                  },
+                  {
+                    n: '04',
+                    title: 'Highest score wins',
+                    body: 'The player with the most points at extraction takes the full pot. No runner-up payout. If you bust, the entry fee is forfeited to the winner\'s pool.',
+                  },
+                ].map(s => (
+                  <div key={s.n} className="flex gap-3 items-start">
+                    <div className="w-7 h-7 shrink-0 flex items-center justify-center border border-[#FF2929]/35 bg-[#FF2929]/8">
+                      <span className="text-[9px] font-black text-[#FF2929]" style={MONO}>{s.n}</span>
+                    </div>
                     <div>
-                      <h4 className="text-xs font-bold uppercase text-white mb-1">{step.title}</h4>
-                      <p className="text-xs text-white/60">{step.body}</p>
+                      <h4 className="text-[11px] font-bold text-white uppercase mb-0.5" style={INTER}>{s.title}</h4>
+                      <p className="text-[11px] text-white/50 leading-relaxed" style={INTER}>{s.body}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="p-4 bg-white/5 border border-white/10">
-                <h3 className="text-xs font-bold uppercase text-white/60 tracking-wide mb-2">Lobby chat</h3>
-                <p className="text-[11px] text-white/50 leading-relaxed">
-                  The active lobby includes a live comms channel. Trash talk, coordinate, or just stare at the room code together.
+              <div className="p-4 border border-white/10 bg-white/[0.03]">
+                <h3 className="text-xs font-bold text-white/50 uppercase tracking-wide mb-1.5" style={INTER}>Share to challenge</h3>
+                <p className="text-[11px] text-white/45 leading-relaxed" style={INTER}>
+                  From the Lobby, tap <span className="text-white">Copy invite link</span> to generate a direct URL. Anyone who opens it is automatically dropped into your room code on the Join screen — no manual entry needed.
                 </p>
               </div>
+
             </div>
           )}
 
-          {/* ── ECONOMICS ── */}
+          {/* ── ECONOMY ── */}
           {activeTab === 'ECONOMY' && (
-            <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+            <div className="space-y-4 animate-in slide-in-from-right-4 duration-200">
 
-              <div className="bg-yellow-500/5 border border-yellow-500/20 p-4">
-                <h3 className="text-sm font-bold text-yellow-400 uppercase mb-2">How rewards work</h3>
-                <p className="text-xs text-white/70 leading-relaxed">
-                  Your reward is based <span className="text-white">entirely on your score</span>. The entry fee is the cost to play — it is <span className="text-red-400">not returned</span> on a win.
+              {/* Pool mechanic */}
+              <div className="p-4 border border-[#FFB800]/30 bg-[#FFB800]/5">
+                <h3 className="text-base font-black text-[#FFB800] uppercase mb-2" style={BN}>100% goes to the pool</h3>
+                <p className="text-[11px] text-white/65 leading-relaxed" style={INTER}>
+                  Every entry fee paid into a round goes directly into the prize pool — no platform cut taken upfront. Your best score across all your raids in the 6-hour window is your submission. <span className="text-white">Top 5 wallets</span> split the pool when the round closes.
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10">
-                  <span className="text-xs font-bold text-white/60 uppercase">Reward formula</span>
-                  <span className="text-xs font-bold text-yellow-400 mono">(score / 2500) × entry</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10">
-                  <span className="text-xs font-bold text-white/60 uppercase">House edge</span>
-                  <span className="text-xs font-bold text-white mono">~10%</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10">
-                  <span className="text-xs font-bold text-white/60 uppercase">Max payout</span>
-                  <span className="text-xs font-bold text-white mono">6× entry fee</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10">
-                  <span className="text-xs font-bold text-white/60 uppercase">On bust</span>
-                  <span className="text-xs font-bold text-red-400 mono">Entry fee lost</span>
-                </div>
-              </div>
-
-              {/* Round Competition */}
-              <div className="border border-[#FF2929]/25 bg-[#FF2929]/5 p-4 space-y-3">
-                <h3 className="text-xs font-bold text-[#FF2929] uppercase tracking-wide">Raid Round competition</h3>
-                <p className="text-[10px] text-white/60 leading-relaxed">
-                  4 rounds run daily (UTC), each 6 hours. Enter a round-based raid to submit your <span className="text-white">best point score</span> to the leaderboard. No immediate SOL payout — prizes are distributed after the round ends.
-                </p>
-                <div className="space-y-1.5">
+              {/* Tier splits */}
+              <div>
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2" style={INTER}>Prize split by tier</p>
+                <div className="space-y-2">
                   {[
-                    { label: 'Prize pool', value: '8% of all round entry fees' },
-                    { label: 'Eligibility', value: 'Top 5 wallets by highest single score' },
-                    { label: '1st place', value: '40% of pool' },
-                    { label: '2nd place', value: '25% of pool' },
-                    { label: '3rd – 5th', value: '18% · 11% · 6%' },
-                    { label: 'Claiming', value: 'Profile → Round Wins tab' },
+                    { tier: 'GRUNT',  fee: '0.026 SOL', color: '#94a3b8', splits: ['35%', '25%', '20%', '13%', '7%'],  note: 'Casual — most balanced split' },
+                    { tier: 'ELITE',  fee: '0.05 SOL',  color: '#FFB800', splits: ['40%', '28%', '18%', '10%', '4%'], note: 'Competitive — standard weighting' },
+                    { tier: 'WHALE',  fee: '0.25 SOL',  color: '#FF2929', splits: ['50%', '25%', '15%', '7%', '3%'],  note: 'High-stakes — winner takes most' },
                   ].map(row => (
-                    <div key={row.label} className="flex items-center justify-between">
-                      <span className="text-[10px] text-white/40">{row.label}</span>
-                      <span className="text-[10px] font-bold text-white/75 mono">{row.value}</span>
+                    <div key={row.tier} className="border border-white/10 p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black uppercase" style={{ ...INTER, color: row.color }}>{row.tier}</span>
+                          <span className="text-[9px] text-white/30" style={MONO}>{row.fee} entry</span>
+                        </div>
+                        <span className="text-[9px] text-white/25 italic" style={INTER}>{row.note}</span>
+                      </div>
+                      <div className="grid grid-cols-5 gap-1">
+                        {['1st', '2nd', '3rd', '4th', '5th'].map((rank, i) => (
+                          <div key={rank} className="text-center p-1.5 bg-white/[0.03] border border-white/8">
+                            <span className="text-[8px] text-white/30 block" style={INTER}>{rank}</span>
+                            <span className="text-[11px] font-black text-white" style={{ ...MONO, color: i === 0 ? row.color : undefined }}>{row.splits[i]}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold uppercase text-white/40 tracking-wide">Bonuses & savings</h3>
-                <div className="flex items-center justify-between p-3 bg-[#FFB800]/5 border border-[#FFB800]/20">
-                  <div>
-                    <span className="text-xs font-bold text-[#FFB800] uppercase block">Raid Pass</span>
-                    <span className="text-[10px] text-white/50">Buy in Store — 50% off entry + 10% win boost</span>
-                  </div>
-                  <span className="text-xs font-bold text-[#FFB800] mono shrink-0 ml-2">PASS</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10">
-                  <div>
-                    <span className="text-xs font-bold text-white/75 uppercase block">Free Tickets</span>
-                    <span className="text-[10px] text-white/50">+1 free ticket per day, max 3 stockpiled. Toggle at deployment.</span>
-                  </div>
-                  <span className="text-xs font-bold text-white/50 mono shrink-0 ml-2">FREE</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-[#FFB800]/5 border border-[#FFB800]/20">
-                  <div>
-                    <span className="text-xs font-bold text-[#FFB800] uppercase block">Win Streak Bonus</span>
-                    <span className="text-[10px] text-white/50">3+ consecutive wins → +0.15× starting multiplier</span>
-                  </div>
-                  <span className="text-xs font-bold text-[#FFB800] mono shrink-0 ml-2">+0.15×</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-red-900/10 border-l-2 border-red-500">
-                <h3 className="text-xs font-bold uppercase text-red-500 mb-2">Fail states</h3>
-                <div className="space-y-2 text-xs text-white/60">
-                  <p><span className="text-red-400">Greed</span> — Risk at 99% and you wait or attack. Most common loss.</p>
-                  <p><span className="text-orange-400">Early exit</span> — Cashing out before 8s cuts reward by 50%.</p>
-                  <p><span className="text-white/50">Bad RNG</span> — Spike pushes risk to 100% instantly. Rare but real.</p>
-                  <p><span className="text-white/50">Rage-quit protection</span> — 3 busts in 10 minutes locks you out briefly.</p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-white/5 border border-white/10">
-                <h3 className="text-xs font-bold uppercase text-white/60 tracking-wide mb-2">Provably fair</h3>
-                <p className="text-xs text-white/50 leading-relaxed">
-                  Every raid uses a server seed committed before play (SHA-256 hash shown pre-raid). After the raid the full seed is revealed. Verify on-chain that the RNG was never manipulated.
+              {/* Refund guarantee */}
+              <div className="p-4 border border-[#FFB800]/25 bg-[#FFB800]/5">
+                <h3 className="text-xs font-bold text-[#FFB800] uppercase tracking-wide mb-1.5" style={INTER}>Refund guarantee</h3>
+                <p className="text-[11px] text-white/55 leading-relaxed" style={INTER}>
+                  If fewer than 3 unique wallets enter a round, the round is cancelled automatically and every entry fee is refunded in full to each participant's unclaimed balance. No risk of playing into an empty pool.
                 </p>
               </div>
+
+              {/* Claim */}
+              <div className="space-y-1.5">
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest" style={INTER}>Claiming winnings</p>
+                {[
+                  { label: 'Where', value: 'Profile → Round Wins tab' },
+                  { label: 'When', value: 'After the 6-hour round closes' },
+                  { label: 'How', value: 'One-tap claim → SOL to wallet' },
+                  { label: 'On bust', value: 'Entry fee lost, score not submitted' },
+                ].map(r => (
+                  <div key={r.label} className="flex items-center justify-between p-2.5 border border-white/8 bg-white/[0.02]">
+                    <span className="text-[10px] text-white/35 uppercase" style={INTER}>{r.label}</span>
+                    <span className="text-[10px] font-bold text-white/70" style={MONO}>{r.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bonuses */}
+              <div>
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2" style={INTER}>Advantages</p>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Raid Pass', value: '−50% entry + +10% score', color: '#FFB800' },
+                    { label: 'Free Ticket', value: '+1/day · max 3 stacked', color: 'rgba(255,255,255,0.6)' },
+                    { label: 'Daily Streak', value: '+10% SR/day · cap +40%', color: '#FFB800' },
+                    { label: 'Gear (equipped)', value: 'Time / Mult / Risk bonuses', color: 'rgba(255,255,255,0.6)' },
+                  ].map(b => (
+                    <div key={b.label} className="flex items-center justify-between p-2.5 border border-white/8 bg-white/[0.02]">
+                      <span className="text-[10px] font-bold uppercase" style={{ ...INTER, color: b.color }}>{b.label}</span>
+                      <span className="text-[10px] text-white/50" style={MONO}>{b.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Provably fair */}
+              <div className="p-4 border border-white/10 bg-white/[0.03]">
+                <h3 className="text-xs font-bold text-white/50 uppercase tracking-wide mb-1.5" style={INTER}>Provably fair RNG</h3>
+                <p className="text-[11px] text-white/45 leading-relaxed" style={INTER}>
+                  Before every raid a server seed is committed as a SHA-256 hash shown to you pre-entry. After the raid the full seed is revealed. You can verify on-chain that the RNG was fixed before play and never altered.
+                </p>
+              </div>
+
             </div>
           )}
 
           {/* ── REFERRAL ── */}
           {activeTab === 'REFERRAL' && (
-            <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-white/5 border border-white/10 p-5">
-                <h3 className="text-lg font-bold text-white uppercase mb-2">Recruit & earn</h3>
-                <p className="text-xs text-white/75 leading-relaxed">
-                  Share your personal referral link. Every time a new player connects for the first time via your link, <span className="text-[#FFB800]">you earn 250 SR points</span> instantly.
+            <div className="space-y-4 animate-in slide-in-from-right-4 duration-200">
+
+              <div className="p-4 border border-white/10 bg-white/[0.03]">
+                <h3 className="text-base font-black text-white uppercase mb-2" style={BN}>Recruit & earn SR</h3>
+                <p className="text-[11px] text-white/60 leading-relaxed" style={INTER}>
+                  Every player has a unique referral code. When a new wallet connects for the first time through your link, <span className="text-[#FFB800] font-bold">you earn 250 SR points instantly</span>. No cap — recruit as many as you can.
                 </p>
               </div>
 
               <div className="space-y-3">
                 {[
-                  { step: 1, title: 'Find your link', body: 'Go to Profile → scroll to Referral. Your unique code (e.g. SR4F3A9B2E) is always shown there.' },
-                  { step: 2, title: 'Share it', body: 'Copy the link (https://solraid.app/ref/YOUR_CODE) and post on X, Discord, Telegram, or anywhere.' },
-                  { step: 3, title: 'Earn SR', body: 'When a new wallet connects for the first time through your link, 250 SR points are credited to you automatically.' },
-                  { step: 4, title: 'Track recruits', body: 'Your profile shows total recruits and total SR earned from referrals in real time. Build your network.' },
+                  {
+                    n: '01',
+                    title: 'Find your code',
+                    body: 'Go to Profile and scroll to the Referral section. Your unique code is always displayed there — something like SR4F3A9B2E.',
+                  },
+                  {
+                    n: '02',
+                    title: 'Share the link',
+                    body: 'Copy the full referral URL (solraid.app/ref/YOUR_CODE) and drop it anywhere — X, Discord, Telegram, group chats. The link auto-fills the join screen for new players.',
+                  },
+                  {
+                    n: '03',
+                    title: 'Earn on first connect',
+                    body: 'The moment a new wallet connects via your link for the first time, 250 SR points are credited to your account. Tracked automatically, no action needed.',
+                  },
+                  {
+                    n: '04',
+                    title: 'Track your network',
+                    body: 'Profile shows your total recruit count and cumulative SR earned from referrals in real time. Build a network and climb the SR leaderboard passively.',
+                  },
                 ].map(s => (
-                  <div key={s.step} className="flex gap-4 items-start">
-                    <div className="w-7 h-7 flex items-center justify-center bg-white/8 border border-white/20 text-white font-bold text-xs shrink-0">{s.step}</div>
+                  <div key={s.n} className="flex gap-3 items-start">
+                    <div className="w-7 h-7 shrink-0 flex items-center justify-center border border-white/15 bg-white/[0.04]">
+                      <span className="text-[9px] font-black text-white/50" style={MONO}>{s.n}</span>
+                    </div>
                     <div>
-                      <h4 className="text-xs font-bold uppercase text-white mb-1">{s.title}</h4>
-                      <p className="text-xs text-white/60">{s.body}</p>
+                      <h4 className="text-[11px] font-bold text-white uppercase mb-0.5" style={INTER}>{s.title}</h4>
+                      <p className="text-[11px] text-white/50 leading-relaxed" style={INTER}>{s.body}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10">
-                <span className="text-xs font-bold text-white/60 uppercase">SR per recruit</span>
-                <span className="text-xs font-bold text-[#FFB800] mono">+250 SR</span>
+              <div className="flex items-center justify-between p-3 border border-[#FFB800]/25 bg-[#FFB800]/5">
+                <span className="text-xs font-bold text-[#FFB800] uppercase" style={INTER}>SR per recruit</span>
+                <span className="text-sm font-black text-[#FFB800]" style={MONO}>+250 SR</span>
               </div>
+
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-white/5 bg-black shrink-0">
-          <div className="flex gap-3 mb-4">
+        <div className="px-5 py-4 border-t border-white/8 bg-black shrink-0">
+          <div className="flex gap-2 mb-3">
             <button
               onClick={() => { onClose(); onNavigateLegal(Screen.PRIVACY); }}
-              className="flex-1 p-3 bg-white/2 border border-white/5 text-xs font-bold tracking-wide hover:text-white transition-all text-white/50"
+              className="flex-1 py-2.5 border border-white/8 text-[10px] font-bold uppercase tracking-wide text-white/35 hover:text-white/70 transition-colors"
+              style={INTER}
             >
               Privacy
             </button>
             <button
               onClick={() => { onClose(); onNavigateLegal(Screen.TERMS); }}
-              className="flex-1 p-3 bg-white/2 border border-white/5 text-xs font-bold tracking-wide hover:text-white transition-all text-white/50"
+              className="flex-1 py-2.5 border border-white/8 text-[10px] font-bold uppercase tracking-wide text-white/35 hover:text-white/70 transition-colors"
+              style={INTER}
             >
               Terms
             </button>
@@ -398,17 +461,16 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               href="https://x.com/solraid_app"
               target="_blank"
               rel="noreferrer"
-              className="flex-1 p-3 bg-white text-black border border-white text-xs font-bold tracking-wide hover:bg-gray-200 transition-all flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 bg-white text-black text-[10px] font-bold uppercase tracking-wide hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5"
+              style={INTER}
             >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 shrink-0">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 shrink-0">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
-              <span>@solraid_app</span>
+              @solraid_app
             </a>
           </div>
-          <p className="text-[10px] text-center text-white/20">
-            For entertainment only · Not financial advice
-          </p>
+          <p className="text-[9px] text-center text-white/15" style={INTER}>For entertainment only · Not financial advice</p>
         </div>
       </div>
     </div>

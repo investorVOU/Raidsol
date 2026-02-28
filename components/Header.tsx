@@ -15,6 +15,7 @@ interface HeaderProps {
   isDark?: boolean;
   walletAddress?: string | null;
   domainName?: string | null;
+  isLobby?: boolean;
 }
 
 const INTER: React.CSSProperties  = { fontFamily: "'Inter', system-ui, sans-serif" };
@@ -33,6 +34,7 @@ const Header: React.FC<HeaderProps> = ({
   isDark = true,
   walletAddress,
   domainName,
+  isLobby = false,
 }) => {
   const { t } = useTranslation();
   const domain = domainName ?? null;
@@ -86,13 +88,23 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          <button
-            onClick={onOpenHowItWorks}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
-            style={{ background: 'var(--card-bg-mid)', border: '1px solid var(--border-col)', color: 'var(--text-35)' }}
-          >
-            <span className="text-[11px] font-bold" style={INTER}>?</span>
-          </button>
+          {isLobby ? (
+            <button
+              onClick={onOpenHowItWorks}
+              className="px-3 py-1.5 rounded-full flex items-center justify-center transition-all active:scale-95"
+              style={{ background: 'var(--card-bg-mid)', border: '1px solid var(--border-col)', color: 'var(--text-35)' }}
+            >
+              <span className="text-[10px] font-bold tracking-wide uppercase" style={INTER}>HOW TO PLAY</span>
+            </button>
+          ) : (
+            <button
+              onClick={onOpenHowItWorks}
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+              style={{ background: 'var(--card-bg-mid)', border: '1px solid var(--border-col)', color: 'var(--text-35)' }}
+            >
+              <span className="text-[11px] font-bold" style={INTER}>?</span>
+            </button>
+          )}
 
           {!isConnected ? (
             <button

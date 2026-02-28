@@ -60,8 +60,8 @@ const TYPE_LABELS: Record<string, string> = {
   SKILL_CHECK:       'BREACH',
 };
 
-const ROUND_ALLOCATION = [0.40, 0.25, 0.18, 0.11, 0.06];
-const ROUND_PCT_LABELS  = ['40%', '25%', '18%', '11%', '6%'];
+const ROUND_ALLOCATION = [0.40, 0.28, 0.18, 0.10, 0.04];
+const ROUND_PCT_LABELS  = ['40%', '28%', '18%', '10%', '4%'];
 
 const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvents, onPlayAgain, onRedeploy, onClaim, isRoundEntry, roundInfo, equippedGearCount = 0, onNavigateStore }) => {
   const { t } = useTranslation();
