@@ -80,6 +80,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining]   = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // QR scanner
   const qrCanvasRef    = useRef<HTMLCanvasElement>(null);
@@ -197,11 +198,37 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
     setPreviewLoading(false);
   };
 
-  const copyCode = () => {
+  const copyToClipboard = async (text: string): Promise<void> => {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const el = document.createElement('textarea');
+      el.value = text;
+      el.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+  };
+
+  const copyCode = async () => {
     if (!activeRoom) return;
-    navigator.clipboard.writeText(activeRoom.code);
-    setCodeCopied(true);
-    setTimeout(() => setCodeCopied(false), 2000);
+    try {
+      await copyToClipboard(activeRoom.code);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch { /* silent */ }
+  };
+
+  const copyInviteLink = async () => {
+    if (!activeRoom) return;
+    try {
+      await copyToClipboard(`https://solraid.app/?join=${activeRoom.code}`);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { /* silent */ }
   };
 
   const players  = activeRoom?.players ?? [];
@@ -265,18 +292,12 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                   </button>
                   <p className="text-[9px] font-bold text-white/40 mb-3">{codeCopied ? 'Copied!' : 'Tap to copy room code'}</p>
                   <button
-                    onClick={() => {
-                      if (!activeRoom) return;
-                      const url = `https://solraid.app/?join=${activeRoom.code}`;
-                      navigator.clipboard.writeText(url);
-                      setCodeCopied(true);
-                      setTimeout(() => setCodeCopied(false), 2000);
-                    }}
+                    onClick={copyInviteLink}
                     className="flex items-center gap-2 px-3 py-2 text-[9px] font-bold transition-all mb-4"
                     style={{ background: 'rgba(255,41,41,0.08)', border: '1px solid rgba(255,41,41,0.25)', color: '#FF2929' }}
                   >
-                    <Copy size={11} />
-                    Copy invite link
+                    {linkCopied ? <Check size={11} /> : <Copy size={11} />}
+                    {linkCopied ? 'Link copied!' : 'Copy invite link'}
                   </button>
 
                   <div className="grid grid-cols-2 gap-2">

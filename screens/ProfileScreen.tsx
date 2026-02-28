@@ -1,6 +1,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { AVATAR_ITEMS, GEAR_ITEMS, RANKS, Equipment, ACHIEVEMENTS } from '../types';
+import BadgePixelIcon from '../components/PixelBadgeIcons';
 import { Edit, Check, X, Lock, Wallet, ExternalLink } from 'lucide-react';
 import { useAchievements } from '../hooks/useAchievements';
 import { useRaidHistory } from '../hooks/useRaidHistory';
@@ -1000,9 +1001,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                         opacity: isEarned ? 1 : 0.45,
                       }}
                     >
-                      <span style={{ fontSize: '22px', filter: isEarned ? 'none' : 'grayscale(1)' }}>
-                        {a.icon}
-                      </span>
+                      <BadgePixelIcon id={a.id} isEarned={isEarned} size={28} />
                       <p className="text-[9px] font-black uppercase tracking-wide leading-tight" style={{ color: isEarned ? '#FFB800' : 'rgba(255,255,255,0.4)' }}>
                         {isEarned ? a.name : '???'}
                       </p>
