@@ -23,9 +23,9 @@ const HowItWorksModal = lazy(() => import('./components/HowItWorksModal'));
 import RaidLoadingScreen from './components/RaidLoadingScreen';
 const LevelUpModal = lazy(() => import('./components/LevelUpModal'));
 const PvpWinnerModal = lazy(() => import('./components/PvpWinnerModal'));
-const PWAInstallBanner = lazy(() => import('./components/PWAInstallBanner'));
 const DisclaimerModal = lazy(() => import('./components/DisclaimerModal'));
 const OnboardingFlow  = lazy(() => import('./components/OnboardingFlow'));
+const SuggestionModal = lazy(() => import('./components/SuggestionModal'));
 import { SolanaWalletContext } from './components/SolanaWalletContext';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -315,6 +315,7 @@ const AppInner: React.FC = () => {
   }, [connected, gameState.currentScreen, gameState.lastRaidConfig?.mode]);
 
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
+  const [showSuggestionModal, setShowSuggestionModal] = useState(false);
   const [newRank, setNewRank] = useState<Rank | null>(null);
   const [joinNotification, setJoinNotification] = useState<string | null>(null);
   const [achievementToast, setAchievementToast] = useState<string | null>(null);
@@ -2075,7 +2076,7 @@ const AppInner: React.FC = () => {
       )}
       <div className="absolute inset-0 pixel-grid z-0" />
       {showNavigation && (
-        <Navigation currentScreen={gameState.currentScreen} onNavigate={navigateTo} roundWinCount={unclaimedRoundWins.length} />
+        <Navigation currentScreen={gameState.currentScreen} onNavigate={navigateTo} roundWinCount={unclaimedRoundWins.length} onOpenSuggestions={() => setShowSuggestionModal(true)} />
       )}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
         <Header
@@ -2101,6 +2102,14 @@ const AppInner: React.FC = () => {
         onClose={() => setIsHowItWorksOpen(false)}
         onNavigateLegal={navigateTo}
       />
+      {showSuggestionModal && (
+        <Suspense fallback={null}>
+          <SuggestionModal
+            walletAddress={publicKey ? publicKey.toBase58() : null}
+            onClose={() => setShowSuggestionModal(false)}
+          />
+        </Suspense>
+      )}
       {newRank && (
         <LevelUpModal rank={newRank} onClose={() => setNewRank(null)} />
       )}
@@ -2217,7 +2226,6 @@ const AppInner: React.FC = () => {
           </div>
         </div>
       )}
-      <PWAInstallBanner />
       {gameState.isRaidLoading && (
         <RaidLoadingScreen
           mode={gameState.currentScreen === Screen.MULTIPLAYER_GAME ? 'PVP' : 'SOLO'}

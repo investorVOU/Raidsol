@@ -8,12 +8,13 @@ const USDC_MINT    = import.meta.env.VITE_USDC_MINT ?? 'EPjFWdd5AufqSSqeM2qN1xzy
 const SKR_MINT     = import.meta.env.VITE_SKR_MINT  ?? 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
 const RPC_URL      = import.meta.env.VITE_HELIUS_RPC_URL ?? import.meta.env.VITE_SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
 
-type Tab = 'OVERVIEW' | 'STATS' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS';
+type Tab = 'OVERVIEW' | 'STATS' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS' | 'FEEDBACK';
 
 interface RaidRow   { raid_id: string; wallet_address: string; difficulty: string; success: boolean; points: number; sol_amount: number; elapsed_sec: number; created_at: string; }
 interface UserRow   { wallet_address: string; username: string; sr_points: number; unclaimed_sol: number; raid_tickets: number; created_at: string; }
 interface ClaimRow  { id: string; wallet_address: string; action_type: string; reward_sr: number; twitter_handle: string | null; created_at: string; }
-interface WinnerRow { id: string; round_number: number; round_date: string; rank: number; wallet_address: string; prize_sol: number; claimed: boolean; }
+interface WinnerRow      { id: string; round_number: number; round_date: string; rank: number; wallet_address: string; prize_sol: number; claimed: boolean; }
+interface SuggestionRow  { id: number; wallet_address: string | null; category: string; suggestion_text: string; created_at: string; }
 
 interface Overview {
   totalUsers: number; totalRaids: number; totalWins: number;
@@ -150,6 +151,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [users, setUsers]         = useState<UserRow[]>([]);
   const [claims, setClaims]       = useState<ClaimRow[]>([]);
   const [winners, setWinners]     = useState<WinnerRow[]>([]);
+  const [suggestions, setSuggestions] = useState<SuggestionRow[]>([]);
   const [loading, setLoading]     = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
   const [finalizing, setFinalizing]     = useState(false);
@@ -191,6 +193,10 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       if (t === 'ROUNDS') {
         const { data } = await supabase.from('round_winners').select('*').order('round_date', { ascending: false }).order('rank').limit(100);
         setWinners((data ?? []) as WinnerRow[]);
+      }
+      if (t === 'FEEDBACK') {
+        const { data } = await supabase.from('suggestions').select('*').order('created_at', { ascending: false }).limit(500);
+        setSuggestions((data ?? []) as SuggestionRow[]);
       }
     } finally {
       setLoading(false);
@@ -288,7 +294,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     : raidFilter === 'WIN' ? raids.filter(r => r.success)
     : raids.filter(r => !r.success);
 
-  const TABS: Tab[] = ['OVERVIEW', 'STATS', 'RAIDS', 'USERS', 'CLAIMS', 'ROUNDS'];
+  const TABS: Tab[] = ['OVERVIEW', 'STATS', 'RAIDS', 'USERS', 'CLAIMS', 'ROUNDS', 'FEEDBACK'];
 
   const diffColor = (d: string) =>
     d === 'DEGEN' ? 'text-[#FF2929]' : d === 'HARD' ? 'text-orange-400' : d === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400';
@@ -573,6 +579,53 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* ── FEEDBACK ── */}
+        {!loading && tab === 'FEEDBACK' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[9px] text-white/25">{suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''}</p>
+              <button onClick={() => load('FEEDBACK')}
+                className="text-[9px] text-white/30 hover:text-white/60 font-bold uppercase tracking-wider transition-colors">
+                <i className="fa-solid fa-rotate-right text-[9px]" /> Refresh
+              </button>
+            </div>
+            {suggestions.length === 0 ? (
+              <p className="text-center text-white/20 text-xs py-16">No suggestions yet.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {suggestions.map(s => (
+                  <div key={s.id} className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5"
+                        style={{
+                          background: 'rgba(255,41,41,0.10)',
+                          border: '1px solid rgba(255,41,41,0.25)',
+                          color: '#FF2929',
+                        }}
+                      >
+                        {s.category}
+                      </span>
+                      <span className="text-[9px] text-white/25 font-mono">
+                        {new Date(s.created_at).toLocaleDateString()} {new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-white/80 leading-relaxed mb-2">{s.suggestion_text}</p>
+                    {s.wallet_address ? (
+                      <span className="flex items-center gap-1 text-[9px] font-mono text-white/25">
+                        {s.wallet_address.slice(0, 6)}…{s.wallet_address.slice(-4)}
+                        <CopyBtn text={s.wallet_address} />
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-white/20 italic">anonymous</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

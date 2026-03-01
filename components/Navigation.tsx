@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Screen } from '../types';
 
@@ -7,10 +7,21 @@ interface NavigationProps {
   currentScreen: Screen;
   onNavigate: (screen: Screen) => void;
   roundWinCount?: number;
+  onOpenSuggestions?: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roundWinCount = 0 }) => {
+const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roundWinCount = 0, onOpenSuggestions }) => {
   const { t } = useTranslation();
+  const [showSuggestLabel, setShowSuggestLabel] = useState(false);
+
+  // Slide in the label 1s after mount, slide out after 3.5s — every page load
+  useEffect(() => {
+    if (!onOpenSuggestions) return;
+    const inTimer  = setTimeout(() => setShowSuggestLabel(true),  1000);
+    const outTimer = setTimeout(() => setShowSuggestLabel(false), 4000);
+    return () => { clearTimeout(inTimer); clearTimeout(outTimer); };
+  }, [onOpenSuggestions]);
+
   const leftTabs = [
     { label: t('nav.home'),    icon: 'fa-solid fa-house',   screen: Screen.LOBBY      },
     { label: t('nav.market'),  icon: 'fa-solid fa-store',    screen: Screen.STORE      },
@@ -124,7 +135,77 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
             />
           ))}
         </div>
+
+        {/* Feedback button — desktop sidebar bottom */}
+        {onOpenSuggestions && (
+          <div className="shrink-0 pb-4 px-3" style={{ borderTop: '1px solid var(--border-col)' }}>
+            <button
+              onClick={onOpenSuggestions}
+              title="Suggest a feature"
+              className="w-full flex flex-col items-center gap-1.5 pt-3 pb-1 active:scale-95 transition-all rounded-xl"
+              style={{
+                touchAction: 'manipulation',
+                boxShadow: showSuggestLabel ? '0 0 14px rgba(255,184,0,0.25)' : 'none',
+                transition: 'box-shadow 0.4s',
+              }}
+            >
+              <i
+                className="fa-solid fa-lightbulb"
+                style={{
+                  fontSize: '17px',
+                  color: '#FFB800',
+                  filter: 'drop-shadow(0 0 5px rgba(255,184,0,0.7))',
+                }}
+              />
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: '#FFB800', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.75 }}>
+                SUGGEST
+              </span>
+            </button>
+          </div>
+        )}
       </aside>
+
+      {/* ── MOBILE: floating suggestion button (above nav bar) ── */}
+      {onOpenSuggestions && (
+        <button
+          onClick={onOpenSuggestions}
+          title="Suggest a feature"
+          className="md:hidden fixed bottom-28 right-3 z-40 flex items-center gap-2 active:scale-95"
+          style={{
+            touchAction: 'manipulation',
+            height: '40px',
+            borderRadius: '20px',
+            padding: '0 14px 0 10px',
+            background: 'rgba(9,9,11,0.95)',
+            border: '1px solid rgba(255,184,0,0.55)',
+            boxShadow: '0 0 18px rgba(255,184,0,0.35), 0 0 6px rgba(255,184,0,0.2)',
+            overflow: 'hidden',
+            transition: 'box-shadow 0.3s',
+          }}
+        >
+          <i
+            className="fa-solid fa-lightbulb"
+            style={{ fontSize: '15px', color: '#FFB800', filter: 'drop-shadow(0 0 6px rgba(255,184,0,0.8))', flexShrink: 0 }}
+          />
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '10px',
+              fontWeight: 700,
+              letterSpacing: '1.5px',
+              color: '#FFB800',
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+              maxWidth: showSuggestLabel ? '120px' : '0px',
+              opacity: showSuggestLabel ? 1 : 0,
+              transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease',
+              overflow: 'hidden',
+            }}
+          >
+            Suggestion Box
+          </span>
+        </button>
+      )}
     </>
   );
 };
