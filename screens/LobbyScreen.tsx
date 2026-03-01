@@ -33,6 +33,7 @@ interface LobbyScreenProps {
   onNavigateBounty?: () => void;
   onNavigateRoast?: () => void;
   onNavigateBriefing?: () => void;
+  onOpenSuggestions?: () => void;
   onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier, useTicket?: boolean) => Promise<void>;
   onRequestFullscreen?: () => void;
   raidTickets?: number;
@@ -56,7 +57,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onEnterRaid, isConnected, onConnect, currentLevel,
   walletBalance, usdcBalance, skrBalance,
   equippedGearIds, equippedAvatarId, ownedItemIds,
-  onToggleGear, onNavigateTreasury, onNavigateStore, onNavigateBounty, onNavigateRoast, onNavigateBriefing, onEnterRound, onRequestFullscreen,
+  onToggleGear, onNavigateTreasury, onNavigateStore, onNavigateBounty, onNavigateRoast, onNavigateBriefing, onEnterRound, onRequestFullscreen, onOpenSuggestions,
   raidTickets = 0, lastFreeRaidDate = null,
   drillCount = 0, drillWindowStart = 0,
   currencyRates, pricesFailed = false, currentRound, dailyStreak = 0,
@@ -150,13 +151,32 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {t('lobby.tagline')}
             </p>
           </div>
-          {/* FAQ button */}
-          <button
-            onClick={() => setShowFaq(true)}
-            className="w-9 h-9 rounded-full bg-white/6 border border-white/[0.14] flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 active:scale-95 transition-all shrink-0 ml-3"
-          >
-            <i className="fa-solid fa-question text-sm" />
-          </button>
+          {/* Suggestion box + FAQ buttons */}
+          <div className="flex items-center gap-2 ml-3">
+            {onOpenSuggestions && (
+              <button
+                onClick={onOpenSuggestions}
+                title="Suggest a feature"
+                className="flex items-center gap-1.5 px-3 h-9 rounded-full border active:scale-95 transition-all shrink-0"
+                style={{
+                  background: 'rgba(255,184,0,0.08)',
+                  border: '1px solid rgba(255,184,0,0.35)',
+                  touchAction: 'manipulation',
+                }}
+              >
+                <i className="fa-solid fa-lightbulb" style={{ fontSize: '13px', color: '#FFB800' }} />
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', fontWeight: 700, color: '#FFB800', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  Suggest
+                </span>
+              </button>
+            )}
+            <button
+              onClick={() => setShowFaq(true)}
+              className="w-9 h-9 rounded-full bg-white/6 border border-white/[0.14] flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 active:scale-95 transition-all shrink-0"
+            >
+              <i className="fa-solid fa-question text-sm" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -187,9 +207,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           onClick={() => isConnected ? (setToolsDisclaimerDismissed(false), setRoundUseTicket(false), setShowRoundModal(true)) : onConnect()}
           className="w-full relative overflow-hidden rounded-2xl group active:scale-[0.97] transition-all duration-200"
           style={{
-            background: 'linear-gradient(135deg, #CC0000 0%, #FF2929 50%, #CC0000 100%)',
-            border: '1px solid rgba(255,41,41,0.60)',
-            boxShadow: '0 0 32px rgba(255,41,41,0.35)',
+            background: 'linear-gradient(135deg, #A01515 0%, #6B0000 50%, #A01515 100%)',
+            border: '1px solid rgba(160,21,21,0.50)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
           }}
         >
           {/* Animated top scan-line — white on red */}
@@ -483,76 +503,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-2 space-y-4">
 
-              {/* Battle standings banner */}
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,41,41,0.22)' }}>
-                {/* Header row */}
-                <div className="flex items-center justify-between px-4 pt-3 pb-2"
-                  style={{ background: 'linear-gradient(135deg, rgba(255,41,41,0.12) 0%, rgba(20,20,40,0.0) 100%)' }}>
-                  <div className="flex items-center gap-2">
-                    <i className="fa-solid fa-ranking-star text-[#FF2929]/70 text-sm" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/70" style={SG}>Battle Standings</p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#FF2929' }} />
-                    <p className="text-[10px] font-bold tabular-nums text-white/55" style={SG_NUM}>{formatCountdown(currentRound.timeRemainingMs)}</p>
-                  </div>
-                </div>
-
-                {/* Rank rows */}
-                <div className="px-3 pb-3 space-y-1.5">
-                  {([
-                    { rank: 1, color: '#FFD700',                   label: '1st' },
-                    { rank: 2, color: '#C0C0C0',                   label: '2nd' },
-                    { rank: 3, color: '#CD7F32',                   label: '3rd' },
-                    { rank: 4, color: 'rgba(255,255,255,0.35)',    label: '4th' },
-                    { rank: 5, color: 'rgba(255,255,255,0.20)',    label: '5th' },
-                  ] as const).map(({ rank, color, label }) => {
-                    const pct = Math.round(RAID_TIER_ALLOCATION[roundTier][rank - 1] * 100);
-                    const entry = currentRound.currentLeaders.find(e => e.rank === rank);
-                    const topScore = currentRound.currentLeaders[0]?.pointsScored ?? 0;
-                    const barWidth = entry && topScore > 0 ? Math.max(6, Math.round((entry.pointsScored / topScore) * 100)) : 0;
-                    return (
-                      <div key={rank} className="flex items-center gap-2.5">
-                        {/* Rank badge */}
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-black"
-                          style={{ background: entry ? `${color}18` : 'var(--card-bg)', border: `1px solid ${entry ? `${color}40` : 'var(--border-col)'}`, color: entry ? color : 'var(--text-20)' }}>
-                          {label}
-                        </div>
-                        {/* Name + score bar */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[10px] font-semibold truncate" style={{ ...INTER, color: entry ? 'var(--text-75)' : 'var(--text-20)' }}>
-                              {entry ? entry.username : '— open slot —'}
-                            </span>
-                            <span className="text-[9px] font-black tabular-nums ml-2 shrink-0" style={{ color: entry ? color : 'var(--text-20)', fontFamily: "'Space Grotesk', sans-serif" }}>
-                              {entry ? entry.pointsScored.toLocaleString() + ' pts' : ''}
-                            </span>
-                          </div>
-                          <div className="h-1 rounded-full bg-white/5 overflow-hidden">
-                            <div className="h-full rounded-full transition-all duration-700"
-                              style={{ width: entry ? `${barWidth}%` : '0%', background: color, opacity: 0.7 }} />
-                          </div>
-                        </div>
-                        {/* Prize pct */}
-                        <span className="text-[9px] font-bold shrink-0 w-8 text-right tabular-nums" style={{ color: entry ? color : 'var(--text-20)', fontFamily: "'Space Grotesk', sans-serif" }}>
-                          {pct}%
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Footer note */}
-                <div className="px-4 py-2 border-t space-y-1" style={{ borderColor: 'var(--border-col)', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.04)' }}>
-                  <p className="text-[8px] text-white/25 text-center" style={INTER}>
-                    Top 5 split the pool · results locked after round closes
-                  </p>
-                  <p className="text-[8px] text-amber-400/50 text-center" style={INTER}>
-                    ⚠ Under {ROUND_MIN_PARTICIPANTS} entrants — round cancelled, full refund
-                  </p>
-                </div>
-              </div>
-
               {/* How it works */}
               <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-1">
                 <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">Rules</p>
@@ -766,7 +716,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   onClick={handleEnterRound}
                   disabled={roundPricesLoading || roundBalance < roundTotalDisplay}
                   className="flex-1 py-3.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed"
-                  style={{ background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', boxShadow: '0 0 20px rgba(255,41,41,0.25)', ...BN, fontSize: '15px' }}
+                  style={{ background: 'linear-gradient(135deg, #A01515 0%, #6B0000 100%)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.5)', ...BN, fontSize: '15px' }}
                 >
                   ENTER ROUND
                 </button>

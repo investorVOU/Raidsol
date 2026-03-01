@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Screen } from '../types';
 
@@ -12,16 +12,6 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roundWinCount = 0, onOpenSuggestions }) => {
   const { t } = useTranslation();
-  const [showSuggestLabel, setShowSuggestLabel] = useState(false);
-
-  // Slide in the label 1s after mount, slide out after 3.5s — every page load
-  useEffect(() => {
-    if (!onOpenSuggestions) return;
-    const inTimer  = setTimeout(() => setShowSuggestLabel(true),  1000);
-    const outTimer = setTimeout(() => setShowSuggestLabel(false), 4000);
-    return () => { clearTimeout(inTimer); clearTimeout(outTimer); };
-  }, [onOpenSuggestions]);
-
   const leftTabs = [
     { label: t('nav.home'),    icon: 'fa-solid fa-house',   screen: Screen.LOBBY      },
     { label: t('nav.market'),  icon: 'fa-solid fa-store',    screen: Screen.STORE      },
@@ -61,8 +51,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
               className="rounded-full flex items-center justify-center active:scale-95 transition-transform"
               style={{
                 width: '52px', height: '52px',
-                background: 'linear-gradient(145deg, #FF2929 0%, #CC0000 100%)',
-                boxShadow: '0 0 20px rgba(255,41,41,0.40), 0 4px 16px rgba(0,0,0,0.5)',
+                background: 'linear-gradient(145deg, #A01515 0%, #6B0000 100%)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
               }}
             >
               <i className="fa-solid fa-person-running" style={{ fontSize: '20px', color: '#fff' }} />
@@ -113,8 +103,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
               onClick={handleDeploy}
               className="w-full flex flex-col items-center gap-1.5 py-2.5 rounded-xl active:scale-95 transition-transform"
               style={{
-                background: 'linear-gradient(145deg, #FF2929 0%, #CC0000 100%)',
-                boxShadow: '0 0 16px rgba(255,41,41,0.35), 0 2px 8px rgba(0,0,0,0.4)',
+                background: 'linear-gradient(145deg, #A01515 0%, #6B0000 100%)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
               }}
             >
               <i className="fa-solid fa-person-running" style={{ fontSize: '18px', color: '#fff' }} />
@@ -145,8 +135,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
               className="w-full flex flex-col items-center gap-1.5 pt-3 pb-1 active:scale-95 transition-all rounded-xl"
               style={{
                 touchAction: 'manipulation',
-                boxShadow: showSuggestLabel ? '0 0 14px rgba(255,184,0,0.25)' : 'none',
-                transition: 'box-shadow 0.4s',
               }}
             >
               <i
@@ -165,47 +153,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
         )}
       </aside>
 
-      {/* ── MOBILE: floating suggestion button (above nav bar) ── */}
-      {onOpenSuggestions && (
-        <button
-          onClick={onOpenSuggestions}
-          title="Suggest a feature"
-          className="md:hidden fixed bottom-28 right-3 z-40 flex items-center gap-2 active:scale-95"
-          style={{
-            touchAction: 'manipulation',
-            height: '40px',
-            borderRadius: '20px',
-            padding: '0 14px 0 10px',
-            background: 'rgba(9,9,11,0.95)',
-            border: '1px solid rgba(255,184,0,0.55)',
-            boxShadow: '0 0 18px rgba(255,184,0,0.35), 0 0 6px rgba(255,184,0,0.2)',
-            overflow: 'hidden',
-            transition: 'box-shadow 0.3s',
-          }}
-        >
-          <i
-            className="fa-solid fa-lightbulb"
-            style={{ fontSize: '15px', color: '#FFB800', filter: 'drop-shadow(0 0 6px rgba(255,184,0,0.8))', flexShrink: 0 }}
-          />
-          <span
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '10px',
-              fontWeight: 700,
-              letterSpacing: '1.5px',
-              color: '#FFB800',
-              textTransform: 'uppercase',
-              whiteSpace: 'nowrap',
-              maxWidth: showSuggestLabel ? '120px' : '0px',
-              opacity: showSuggestLabel ? 1 : 0,
-              transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease',
-              overflow: 'hidden',
-            }}
-          >
-            Suggestion Box
-          </span>
-        </button>
-      )}
     </>
   );
 };

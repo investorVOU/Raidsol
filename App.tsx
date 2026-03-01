@@ -1833,6 +1833,7 @@ const AppInner: React.FC = () => {
             onNavigateBounty={() => navigateTo(Screen.BOUNTY)}
             onNavigateRoast={() => navigateTo(Screen.ROAST)}
             onNavigateBriefing={() => navigateTo(Screen.BRIEFING)}
+            onOpenSuggestions={() => setShowSuggestionModal(true)}
             raidTickets={gameState.raidTickets}
             lastFreeRaidDate={gameState.lastFreeRaidDate}
             drillCount={gameState.drillCount}
@@ -2046,6 +2047,7 @@ const AppInner: React.FC = () => {
             onNavigateBounty={() => navigateTo(Screen.BOUNTY)}
             onNavigateRoast={() => navigateTo(Screen.ROAST)}
             onNavigateBriefing={() => navigateTo(Screen.BRIEFING)}
+            onOpenSuggestions={() => setShowSuggestionModal(true)}
             currencyRates={liveCurrencyRates}
             pricesFailed={livePricesFailed}
             currentRound={currentRound}
