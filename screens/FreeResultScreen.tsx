@@ -217,31 +217,31 @@ const FreeResultScreen: React.FC<FreeResultScreenProps> = ({
       </div>{/* end scroll */}
 
       {/* ── STICKY FOOTER ── */}
-      <div className="shrink-0 px-5 pt-3 pb-7 space-y-2.5"
+      <div className="shrink-0 px-5 pt-2 pb-2 space-y-1.5"
         style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'var(--app-bg)' }}>
 
         <button
           onClick={onPlayForReal}
-          className="w-full py-4 rounded-2xl active:scale-[0.98] transition-transform"
+          className="w-full py-2 rounded-xl active:scale-[0.98] transition-transform"
           style={{
             background: 'linear-gradient(135deg, #7733cc 0%, #3d0099 100%)',
-            boxShadow: '0 4px 30px rgba(153,69,255,0.42)',
+            boxShadow: '0 3px 14px rgba(153,69,255,0.35)',
           }}>
-          <p className="font-black text-white" style={{ ...BN, fontSize: '22px', letterSpacing: '2.5px' }}>
+          <p className="font-black text-white" style={{ ...BN, fontSize: '17px', letterSpacing: '2px' }}>
             Raid for Real
           </p>
-          <p className="text-[11px] font-semibold mt-0.5" style={{ color: 'rgba(255,255,255,0.58)' }}>
-            0.026 SOL entry · real prizes · live leaderboard
+          <p className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.52)' }}>
+            0.026 SOL entry · real prizes
           </p>
         </button>
 
         <button
           onClick={onPlayAgain}
-          className="w-full py-3 rounded-2xl text-[12px] font-bold uppercase tracking-widest active:scale-[0.98] transition-transform"
+          className="w-full py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-widest active:scale-[0.98] transition-transform"
           style={{
             background: 'rgba(255,255,255,0.035)',
             border: '1px solid rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.45)',
+            color: 'rgba(255,255,255,0.40)',
           }}>
           Practice Again
         </button>
