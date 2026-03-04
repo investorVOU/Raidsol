@@ -1508,7 +1508,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             <div className="mt-2 text-center px-6 py-3 border border-white/10 bg-black/60">
               <p className="text-[9px] font-bold text-white mb-1">Points scored</p>
               <p className="mono text-3xl font-black text-white">{points.toLocaleString()} <span className="text-sm text-[#FFB800]/60">pts</span></p>
-              <p className="text-[8px] font-bold text-[#9945FF]/40 mt-1">No round allocation for failed raids</p>
+              <p className="text-[8px] font-bold text-[#14F195] mt-1">These points count toward the round</p>
             </div>
           )}
           {(() => {

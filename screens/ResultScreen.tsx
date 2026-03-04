@@ -208,12 +208,12 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
         </div>
 
         <h2 className={`text-4xl sm:text-6xl font-black uppercase tracking-tight mb-3 leading-none text-center ${result.success ? 'text-white glitch-text' : 'text-[#9945FF]'}`}>
-          {result.success ? (isRoundEntry ? 'Round Scored' : 'Mission Complete') : 'Raid Failed'}
+          {result.success ? (isRoundEntry ? 'Round Scored' : 'Mission Complete') : 'Got Busted'}
         </h2>
         <p className="text-white text-xs sm:text-sm font-bold mb-8 sm:mb-12 text-center">
           {result.success
             ? (isRoundEntry ? 'Score locked in · leaders updated after round ends.' : 'Operation complete · assets secured.')
-            : 'Critical failure · entry fee lost.'}
+            : 'Caught mid-raid · your points still count for the round.'}
         </p>
 
         <div className="w-full max-w-sm space-y-4">

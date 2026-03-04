@@ -347,7 +347,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                   { label: 'Where', value: 'Profile → Round Wins tab' },
                   { label: 'When', value: 'After the 6-hour round closes' },
                   { label: 'How', value: 'One-tap claim → SOL to wallet' },
-                  { label: 'On bust', value: 'Entry fee lost, score not submitted' },
+                  { label: 'On bust', value: 'Entry fee lost, points still count for round' },
                 ].map(r => (
                   <div key={r.label} className="flex items-center justify-between p-2.5 border border-white/8 bg-white/[0.02]">
                     <span className="text-[10px] text-white uppercase" style={INTER}>{r.label}</span>
