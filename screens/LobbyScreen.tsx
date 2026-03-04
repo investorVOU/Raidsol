@@ -50,7 +50,7 @@ const DIFF_CONFIG = {
   [Difficulty.EASY]:   { label: 'Easy',     emoji: '🔵', color: 'text-sky-400',    ring: 'border-sky-500/40',     bg: 'bg-sky-500/10',    mult: '0.8×' },
   [Difficulty.MEDIUM]: { label: 'Standard', emoji: '🔵', color: 'text-cyan-400',   ring: 'border-cyan-500/40',    bg: 'bg-cyan-500/10',   mult: '1.0×' },
   [Difficulty.HARD]:   { label: 'Hardcore', emoji: '🟠', color: 'text-orange-400', ring: 'border-orange-500/40',  bg: 'bg-orange-500/10', mult: '1.4×' },
-  [Difficulty.DEGEN]:  { label: 'Degen',    emoji: '🔴', color: 'text-red-400',    ring: 'border-red-500/40',     bg: 'bg-red-500/10',    mult: '2.5×' },
+  [Difficulty.DEGEN]:  { label: 'Degen',    emoji: '🔴', color: 'text-[#9945FF]',    ring: 'border-[#9945FF]/40',     bg: 'bg-[#9945FF]/10',    mult: '2.5×' },
 };
 
 const LobbyScreen: React.FC<LobbyScreenProps> = ({
@@ -144,7 +144,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       <div className="relative z-10 shrink-0 px-4 pt-2 pb-1">
         <div className="flex items-center justify-between">
           <div>
-            <p style={{ ...BN, fontSize: '28px', color: '#FF2929', letterSpacing: '2.5px', lineHeight: 1 }}>
+            <p style={{ ...BN, fontSize: '28px', color: '#9945FF', letterSpacing: '2.5px', lineHeight: 1 }}>
               SOL RAID
             </p>
             <p className="text-[11px] text-white/38 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
@@ -172,7 +172,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             )}
             <button
               onClick={() => setShowFaq(true)}
-              className="w-9 h-9 rounded-full bg-white/6 border border-white/[0.14] flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 active:scale-95 transition-all shrink-0"
+              className="w-9 h-9 rounded-full bg-white/6 border border-white/[0.14] flex items-center justify-center text-white hover:text-white hover:bg-white/10 active:scale-95 transition-all shrink-0"
             >
               <i className="fa-solid fa-question text-sm" />
             </button>
@@ -191,7 +191,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <span className="text-[11px] font-bold" style={{ color: '#FFB800' }}>
               {dailyStreak} DAY STREAK
             </span>
-            <span className="text-[10px] font-bold text-white/40">·</span>
+            <span className="text-[10px] font-bold text-white">·</span>
             <span className="text-[11px] font-bold" style={{ color: '#FFB800' }}>
               +{Math.min((dailyStreak - 1) * 10, 40)}% SR
             </span>
@@ -207,7 +207,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           onClick={() => isConnected ? (setToolsDisclaimerDismissed(false), setRoundUseTicket(false), setShowRoundModal(true)) : onConnect()}
           className="w-full relative overflow-hidden rounded-2xl group active:scale-[0.97] transition-all duration-200"
           style={{
-            background: 'linear-gradient(135deg, #A01515 0%, #6B0000 50%, #A01515 100%)',
+            background: 'linear-gradient(135deg, #6622BB 0%, #3d0099 50%, #6622BB 100%)',
             border: '1px solid rgba(160,21,21,0.50)',
             boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
           }}
@@ -223,7 +223,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="mb-3">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-white" style={{ boxShadow: '0 0 6px rgba(255,255,255,0.8)', animation: 'pulse 1.5s ease-in-out infinite' }} />
-                <p className="text-[10px] uppercase tracking-[3px] text-white/70" style={INTER}>
+                <p className="text-[10px] uppercase tracking-[3px] text-white" style={INTER}>
                   {isConnected
                     ? (currentRound ? `Round ${currentRound.roundNum} of 4 · ${dayLabel}` : `Active round · ${dayLabel}`)
                     : 'Connect to compete'}
@@ -237,7 +237,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <p className="leading-none" style={{ ...BN, fontSize: '36px', letterSpacing: '-0.5px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
                 RAID ROUND
               </p>
-              <p className="text-[10px] text-white/75 mt-1" style={{ ...INTER, fontWeight: 400 }}>
+              <p className="text-[10px] text-white mt-1" style={{ ...INTER, fontWeight: 400 }}>
                 6h window · top 5 split the pot
               </p>
             </div>
@@ -246,15 +246,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="flex items-center gap-0 border-t border-white/20 pt-2.5">
               <>
                 <div className="flex-1 text-center">
-                  <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Rounds/day</p>
+                  <p className="text-[8px] text-white uppercase tracking-wider mb-0.5" style={INTER}>Rounds/day</p>
                   <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>4</p>
                 </div>
                 <div className="flex-1 text-center">
-                  <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>Prize pool</p>
+                  <p className="text-[8px] text-white uppercase tracking-wider mb-0.5" style={INTER}>Prize pool</p>
                   <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>100%</p>
                 </div>
                 <div className="flex-1 text-center">
-                  <p className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5" style={INTER}>
+                  <p className="text-[8px] text-white uppercase tracking-wider mb-0.5" style={INTER}>
                     {currentRound ? 'Closes' : 'Window'}
                   </p>
                   <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>
@@ -279,25 +279,25 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           <button
             onClick={() => isConnected ? onEnterRaid(Mode.PVP, Difficulty.MEDIUM, []) : onConnect()}
             className="relative overflow-hidden rounded-xl p-3 text-left active:scale-[0.97] transition-all group"
-            style={{ background: 'rgba(255,41,41,0.05)', border: '1px solid rgba(255,41,41,0.22)' }}
+            style={{ background: 'rgba(153,69,255,0.05)', border: '1px solid rgba(153,69,255,0.22)' }}
           >
             <div className="absolute top-2.5 right-2.5">
-              <i className="fa-solid fa-swords text-[#FF2929]/60 text-lg" />
+              <i className="fa-solid fa-swords text-[#9945FF]/60 text-lg" />
             </div>
-            <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#FF2929', letterSpacing: '1.5px' }}>PVP DUEL</p>
-            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Stake · winner takes pot</p>
+            <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#9945FF', letterSpacing: '1.5px' }}>PVP DUEL</p>
+            <p className="text-[10px] text-white" style={{ ...INTER, fontWeight: 400 }}>Stake · winner takes pot</p>
           </button>
 
           <button
             onClick={() => onNavigateBounty?.()}
             className="relative overflow-hidden rounded-xl p-3 text-left transition-all active:scale-[0.97]"
-            style={{ background: 'rgba(255,41,41,0.06)', border: '1px solid rgba(255,41,41,0.22)' }}
+            style={{ background: 'rgba(153,69,255,0.06)', border: '1px solid rgba(153,69,255,0.22)' }}
           >
             <div className="absolute top-2.5 right-2.5">
-              <i className="fa-solid fa-crosshairs text-[#FF2929]/50 text-base" />
+              <i className="fa-solid fa-crosshairs text-[#9945FF]/50 text-base" />
             </div>
-            <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#FF2929', letterSpacing: '1.5px' }}>BOUNTIES</p>
-            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Kill tasks · earn SR</p>
+            <p className="leading-none mb-1" style={{ ...BN, fontSize: '22px', color: '#9945FF', letterSpacing: '1.5px' }}>BOUNTIES</p>
+            <p className="text-[10px] text-white" style={{ ...INTER, fontWeight: 400 }}>Kill tasks · earn SR</p>
           </button>
         </div>
 
@@ -313,12 +313,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {raidTickets > 0 ? (
                 <>
                   <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>{raidTickets}× RAID PASS ACTIVE</p>
-                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Half price entry · +10% winnings</p>
+                  <p className="text-[10px] text-white mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Half price entry · +10% winnings</p>
                 </>
               ) : (
                 <>
                   <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#FFB800', letterSpacing: '1.5px' }}>RAID PASS</p>
-                  <p className="text-[10px] text-white/45 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Half price entry · buy with SKR</p>
+                  <p className="text-[10px] text-white mt-0.5" style={{ ...INTER, fontWeight: 400 }}>Half price entry · buy with SKR</p>
                 </>
               )}
             </div>
@@ -330,18 +330,18 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         <button
           onClick={() => onEnterRaid(Mode.DRILL, Difficulty.EASY, [], Currency.SOL, false, 0)}
           className="w-full rounded-xl p-3 text-left active:scale-[0.98] transition-all group"
-          style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.09)' }}
+          style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.15)' }}
         >
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              <p className="leading-none" style={{ ...BN, fontSize: '16px', color: 'var(--text-secondary, rgba(255,255,255,0.6))', letterSpacing: '1.5px' }}>
+              <p className="leading-none" style={{ ...BN, fontSize: '16px', color: '#ffffff', letterSpacing: '1.5px' }}>
                 FREE DEMO RAID
               </p>
-              <p className="text-[10px] text-white/40 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
+              <p className="text-[10px] text-white mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
                 No wallet · no entry fee · see how it works
               </p>
             </div>
-            <i className="fa-solid fa-chevron-right text-white/20 text-xs shrink-0" />
+            <i className="fa-solid fa-chevron-right text-white text-xs shrink-0" />
           </div>
         </button>
 
@@ -350,10 +350,10 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           <button
             onClick={() => onNavigateRoast?.()}
             className="relative overflow-hidden rounded-xl p-3 text-left active:scale-[0.97] transition-all"
-            style={{ background: 'rgba(255,41,41,0.05)', border: '1px solid rgba(255,41,41,0.22)' }}
+            style={{ background: 'rgba(153,69,255,0.05)', border: '1px solid rgba(153,69,255,0.22)' }}
           >
-            <p className="leading-none mb-1" style={{ ...BN, fontSize: '20px', color: '#FF2929', letterSpacing: '1.5px' }}>WALLET ROAST</p>
-            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Get roasted · share it</p>
+            <p className="leading-none mb-1" style={{ ...BN, fontSize: '20px', color: '#9945FF', letterSpacing: '1.5px' }}>WALLET ROAST</p>
+            <p className="text-[10px] text-white" style={{ ...INTER, fontWeight: 400 }}>Get roasted · share it</p>
           </button>
 
           <button
@@ -362,7 +362,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             style={{ background: 'rgba(255,184,0,0.05)', border: '1px solid rgba(255,184,0,0.20)' }}
           >
             <p className="leading-none mb-1" style={{ ...BN, fontSize: '20px', color: '#FFB800', letterSpacing: '1.5px' }}>THE BRIEFING</p>
-            <p className="text-[10px] text-white/45" style={{ ...INTER, fontWeight: 400 }}>Daily cipher · +SR</p>
+            <p className="text-[10px] text-white" style={{ ...INTER, fontWeight: 400 }}>Daily cipher · +SR</p>
           </button>
         </div>
 
@@ -380,7 +380,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
         {!isConnected && (
           <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 text-center">
-            <p className="text-xs text-white/35 font-medium">{t('lobby.connectWalletStart')}</p>
+            <p className="text-xs text-white font-medium">{t('lobby.connectWalletStart')}</p>
           </div>
         )}
       </div>
@@ -388,9 +388,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       {/* ── LOADING OVERLAY ── */}
       {isDeploying && (
         <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center p-8" style={INTER}>
-          <i className="fa-solid fa-person-running text-[#FF2929] text-3xl mb-5" />
+          <i className="fa-solid fa-person-running text-[#9945FF] text-3xl mb-5" />
           <p className="text-white text-base font-medium mb-1">{t('lobby.waitingSignature')}</p>
-          <p className="text-white/35 text-sm">{t('lobby.approveWallet')}</p>
+          <p className="text-white text-sm">{t('lobby.approveWallet')}</p>
         </div>
       )}
 
@@ -407,11 +407,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="shrink-0 px-5 py-4 flex items-center justify-between border-b border-white/6">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white/8 flex items-center justify-center">
-                  <i className="fa-solid fa-question text-white/60 text-sm" />
+                  <i className="fa-solid fa-question text-white text-sm" />
                 </div>
                 <h2 className="text-base font-semibold text-white">{t('lobby.faq.title')}</h2>
               </div>
-              <button onClick={() => setShowFaq(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
+              <button onClick={() => setShowFaq(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white hover:text-white hover:bg-white/10 transition-all">
                 <i className="fa-solid fa-xmark text-sm" />
               </button>
             </div>
@@ -457,7 +457,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               ].map(({ q, a }, i) => (
                 <div key={i} className="rounded-xl bg-white/[0.025] border border-white/[0.12] p-4">
                   <p className="text-sm font-semibold text-white mb-1.5">{q}</p>
-                  <p className="text-[11px] text-white/45 font-medium leading-relaxed">{a}</p>
+                  <p className="text-[11px] text-white font-medium leading-relaxed">{a}</p>
                 </div>
               ))}
             </div>
@@ -472,7 +472,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
           <div
             className="relative w-full sm:max-w-lg border-t sm:border rounded-t-3xl sm:rounded-2xl shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 flex flex-col max-h-[90svh] sm:max-h-[85vh]"
-            style={{ background: 'var(--modal-bg-alt)', borderColor: 'rgba(255,41,41,0.25)', ...SG }}
+            style={{ background: 'var(--modal-bg-alt)', borderColor: 'rgba(153,69,255,0.25)', ...SG }}
           >
             {/* Drag handle */}
             <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
@@ -482,20 +482,20 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             {/* Header */}
             <div className="shrink-0 px-5 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,41,41,0.18)', border: '1px solid rgba(255,41,41,0.30)' }}>
-                  <i className="fa-solid fa-trophy" style={{ color: '#FF2929', fontSize: '15px' }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(153,69,255,0.18)', border: '1px solid rgba(153,69,255,0.30)' }}>
+                  <i className="fa-solid fa-trophy" style={{ color: '#9945FF', fontSize: '15px' }} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-black text-white">Raid Round</h2>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,41,41,0.18)', color: '#FF4444', border: '1px solid rgba(255,41,41,0.25)' }}>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(153,69,255,0.18)', color: '#9945FF', border: '1px solid rgba(153,69,255,0.25)' }}>
                       Round {currentRound.roundNum} / 4
                     </span>
                   </div>
-                  <p className="text-[10px] text-white/32 font-medium">{dayLabel}</p>
+                  <p className="text-[10px] text-white font-medium">{dayLabel}</p>
                 </div>
               </div>
-              <button onClick={() => setShowRoundModal(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
+              <button onClick={() => setShowRoundModal(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white hover:text-white hover:bg-white/10 transition-all">
                 <i className="fa-solid fa-xmark text-sm" />
               </button>
             </div>
@@ -505,7 +505,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
               {/* How it works */}
               <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-1">
-                <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-2">Rules</p>
+                <p className="text-[9px] text-white uppercase tracking-wider font-medium mb-2">Rules</p>
                 {[
                   'Entry fee goes 100% into the prize pool',
                   'Score points — your best raid counts',
@@ -514,7 +514,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   `Under ${ROUND_MIN_PARTICIPANTS} entrants — round cancelled, full refund`,
                 ].map((line, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: i === 4 ? '#FFB800' : '#FF2929' }}>{i === 4 ? '!' : `${i + 1}.`}</span>
+                    <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: i === 4 ? '#FFB800' : '#9945FF' }}>{i === 4 ? '!' : `${i + 1}.`}</span>
                     <p className="text-[10px] font-medium leading-snug" style={{ color: i === 4 ? 'rgba(255,184,0,0.65)' : 'var(--text-45)' }}>{line}</p>
                   </div>
                 ))}
@@ -522,7 +522,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
               {/* ── Tier Selector ── */}
               <section>
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Tier</p>
+                <p className="text-[9px] text-white uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Tier</p>
                 <div className="grid grid-cols-3 gap-2">
                   {(Object.values(RaidTier) as RaidTier[]).map(t => {
                     const cfg = RAID_TIER_CONFIG[t];
@@ -540,7 +540,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     );
                   })}
                 </div>
-                <p className="text-[9px] text-white/28 mt-2 leading-relaxed" style={INTER}>{RAID_TIER_CONFIG[roundTier].description}</p>
+                <p className="text-[9px] text-white mt-2 leading-relaxed" style={INTER}>{RAID_TIER_CONFIG[roundTier].description}</p>
               </section>
 
               {/* ── Battle Tools Disclaimer (dismissable) ── */}
@@ -553,7 +553,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         <p className="text-[11px] font-black uppercase tracking-widest text-[#FFB800]">
                           {ownedGear.length > 0 ? 'Gear not equipped' : 'No gear equipped'}
                         </p>
-                        <p className="text-[10px] text-white/50 mt-1 leading-relaxed">
+                        <p className="text-[10px] text-white mt-1 leading-relaxed">
                           {ownedGear.length > 0
                             ? `You own ${ownedGear.length} gear piece${ownedGear.length > 1 ? 's' : ''} — none equipped. Equip below for an edge.`
                             : 'Time Boost, Multiplier Boost, Risk Reduction — gear raises your score ceiling.'
@@ -571,7 +571,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                           )}
                           <button
                             onClick={() => setToolsDisclaimerDismissed(true)}
-                            className="px-3 py-1.5 text-[9px] font-semibold uppercase tracking-widest text-white/30 hover:text-white/60 transition-colors"
+                            className="px-3 py-1.5 text-[9px] font-semibold uppercase tracking-widest text-white hover:text-white transition-colors"
                           >
                             {ownedGear.length > 0 ? 'Dismiss' : 'Enter anyway'}
                           </button>
@@ -580,7 +580,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     </div>
                     <button
                       onClick={() => setToolsDisclaimerDismissed(true)}
-                      className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/8 transition-all"
+                      className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white hover:text-white hover:bg-white/8 transition-all"
                     >
                       <i className="fa-solid fa-xmark text-xs" />
                     </button>
@@ -590,12 +590,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
               {/* ── Battle Tools (gear + boosts) ── */}
               <section>
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Loadout</p>
+                <p className="text-[9px] text-white uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Loadout</p>
                 {/* Gear quick-swap */}
-                <div className="rounded-xl p-3 mb-2" style={{ background: 'rgba(255,41,41,0.04)', border: '1px solid rgba(255,41,41,0.14)' }}>
+                <div className="rounded-xl p-3 mb-2" style={{ background: 'rgba(153,69,255,0.04)', border: '1px solid rgba(153,69,255,0.14)' }}>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[9px] text-white/28 uppercase tracking-wider" style={{ ...INTER, fontWeight: 500 }}>Gear loadout</p>
-                    <span className="text-[9px] text-white/22" style={INTER}>{equippedGear.length}/4 slots</span>
+                    <p className="text-[9px] text-white uppercase tracking-wider" style={{ ...INTER, fontWeight: 500 }}>Gear loadout</p>
+                    <span className="text-[9px] text-white" style={INTER}>{equippedGear.length}/4 slots</span>
                   </div>
                   {ownedGear.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
@@ -604,7 +604,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                         return (
                           <button key={gear.id} onClick={() => onToggleGear(gear.id)}
                             title={`${gear.name} — ${gear.description}`}
-                            className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center active:scale-95 ${isEquipped ? 'border-[#FF2929]/50 bg-[#FF2929]/10' : 'border-white/[0.12] hover:border-white/22 bg-white/3'}`}>
+                            className={`w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center active:scale-95 ${isEquipped ? 'border-[#9945FF]/50 bg-[#9945FF]/10' : 'border-white/[0.12] hover:border-white/22 bg-white/3'}`}>
                             {gear.image && !gear.image.startsWith('http')
                               ? <span className="text-lg leading-none">{gear.image}</span>
                               : <img src={gear.image} className="w-full h-full object-contain rounded-xl" alt="gear" />
@@ -614,7 +614,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                       })}
                     </div>
                   ) : (
-                    <p className="text-[10px] text-white/22 text-center py-1" style={INTER}>{t('lobby.noGearStore')}</p>
+                    <p className="text-[10px] text-white text-center py-1" style={INTER}>{t('lobby.noGearStore')}</p>
                   )}
                 </div>
 
@@ -629,9 +629,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                           className={`p-3 rounded-xl border transition-all text-left active:scale-[0.97] ${active ? 'bg-amber-500/10 border-amber-500/35' : 'bg-white/3 border-white/[0.12] hover:border-white/18'}`}>
                           <div className="flex justify-between items-start mb-1">
                             <span className="text-lg">{boost.icon}</span>
-                            <span className={`text-[9px] font-semibold ${active ? 'text-amber-400' : 'text-white/30'}`} style={SG_NUM}>+{boost.cost} SOL</span>
+                            <span className={`text-[9px] font-semibold ${active ? 'text-amber-400' : 'text-white'}`} style={SG_NUM}>+{boost.cost} SOL</span>
                           </div>
-                          <p className={`text-[10px] leading-tight ${active ? 'text-white' : 'text-white/40'}`} style={{ ...INTER, fontWeight: 500 }}>{boost.name}</p>
+                          <p className={`text-[10px] leading-tight ${active ? 'text-white' : 'text-white'}`} style={{ ...INTER, fontWeight: 500 }}>{boost.name}</p>
                         </button>
                       );
                     })}
@@ -641,7 +641,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
               {/* Difficulty */}
               <section>
-                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Difficulty</p>
+                <p className="text-[9px] text-white uppercase tracking-wider mb-2" style={{ ...INTER, fontWeight: 600 }}>Difficulty</p>
                 <div className="grid grid-cols-4 gap-2">
                   {Object.values(Difficulty).map(diff => {
                     const cfg    = DIFF_CONFIG[diff];
@@ -650,8 +650,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                       <button key={diff} onClick={() => setRoundDifficulty(diff)}
                         className={`p-2.5 rounded-xl border transition-all text-center active:scale-[0.97] ${active ? `${cfg.ring} ${cfg.bg}` : 'border-white/[0.12] bg-white/3 hover:border-white/18'}`}>
                         <span className="text-lg block mb-1">{cfg.emoji}</span>
-                        <p className={`text-[9px] font-semibold ${active ? cfg.color : 'text-white/45'}`}>{cfg.label}</p>
-                        <p className="text-[8px] text-white/70 mt-0.5">{cfg.mult}</p>
+                        <p className={`text-[9px] font-semibold ${active ? cfg.color : 'text-white'}`}>{cfg.label}</p>
+                        <p className="text-[8px] text-white mt-0.5">{cfg.mult}</p>
                       </button>
                     );
                   })}
@@ -672,9 +672,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   const active = roundCurrency === c;
                   return (
                     <button key={c} onClick={() => setRoundCurrency(c)}
-                      className={`py-2.5 rounded-xl border-2 transition-all text-center ${active ? colActive : 'border-white/7 text-white/35 bg-white/3 hover:border-white/18'}`}>
+                      className={`py-2.5 rounded-xl border-2 transition-all text-center ${active ? colActive : 'border-white/7 text-white bg-white/3 hover:border-white/18'}`}>
                       <p className="text-[10px] font-semibold">{sym}</p>
-                      <p className="text-[9px] text-white/40 mt-0.5">{bal.toFixed(c === Currency.SKR ? 0 : 2)}</p>
+                      <p className="text-[9px] text-white mt-0.5">{bal.toFixed(c === Currency.SKR ? 0 : 2)}</p>
                     </button>
                   );
                 })}
@@ -687,8 +687,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-sm">🎟️</span>
                     <div>
-                      <p className={`text-[10px] font-semibold ${applyRoundTicket ? 'text-amber-400' : 'text-white/45'}`}>{t('lobby.useTicket')}</p>
-                      <p className="text-[8px] text-white/25">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
+                      <p className={`text-[10px] font-semibold ${applyRoundTicket ? 'text-amber-400' : 'text-white'}`}>{t('lobby.useTicket')}</p>
+                      <p className="text-[8px] text-white">{t('lobby.ticketsLeft', { count: raidTickets })}</p>
                     </div>
                   </div>
                   <div className={`w-8 h-4 rounded-full transition-all relative ${applyRoundTicket ? 'bg-amber-500' : 'bg-white/15'}`}>
@@ -700,23 +700,23 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {/* Cost + enter */}
               <div className="flex items-center gap-3">
                 <div className="shrink-0">
-                  <p className="text-[9px] text-white/28 font-semibold uppercase mb-0.5">{t('lobby.entryTotal')}</p>
+                  <p className="text-[9px] text-white font-semibold uppercase mb-0.5">{t('lobby.entryTotal')}</p>
                   <p className="text-xl font-bold text-white leading-none">
                     {roundPricesLoading
-                      ? <span className="text-white/28 text-sm animate-pulse">{t('common.loading')}</span>
-                      : <>{roundTotalDisplay.toFixed(roundCurDecimals)}<span className={`text-sm ml-1 font-semibold ${roundCurrency === Currency.SOL ? 'text-white/60' : roundCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{roundCurSymbol}</span></>
+                      ? <span className="text-white text-sm animate-pulse">{t('common.loading')}</span>
+                      : <>{roundTotalDisplay.toFixed(roundCurDecimals)}<span className={`text-sm ml-1 font-semibold ${roundCurrency === Currency.SOL ? 'text-white' : roundCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{roundCurSymbol}</span></>
                     }
                   </p>
                   {applyRoundTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">{t('lobby.ticketApplied')}</p>}
                   {!roundPricesLoading && roundBalance < roundTotalDisplay && (
-                    <p className="text-[9px] text-red-400 font-semibold mt-0.5">{t('common.insufficient')}</p>
+                    <p className="text-[9px] text-[#9945FF] font-semibold mt-0.5">{t('common.insufficient')}</p>
                   )}
                 </div>
                 <button
                   onClick={handleEnterRound}
                   disabled={roundPricesLoading || roundBalance < roundTotalDisplay}
                   className="flex-1 py-3.5 rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-35 disabled:cursor-not-allowed"
-                  style={{ background: 'linear-gradient(135deg, #A01515 0%, #6B0000 100%)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.5)', ...BN, fontSize: '15px' }}
+                  style={{ background: 'linear-gradient(135deg, #6622BB 0%, #3d0099 100%)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.5)', ...BN, fontSize: '15px' }}
                 >
                   ENTER ROUND
                 </button>

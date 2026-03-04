@@ -24,7 +24,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
   const tabs: { id: Tab; label: string; activeClass: string }[] = [
     { id: 'GUIDE',    label: t('howItWorks.guide'),    activeClass: 'text-white border-b-2 border-white' },
     { id: 'EVENTS',   label: t('howItWorks.events'),   activeClass: 'text-orange-400 border-b-2 border-orange-500' },
-    { id: 'PVP',      label: t('howItWorks.pvp'),      activeClass: 'text-[#FF2929] border-b-2 border-[#FF2929]' },
+    { id: 'PVP',      label: t('howItWorks.pvp'),      activeClass: 'text-[#9945FF] border-b-2 border-[#9945FF]' },
     { id: 'ECONOMY',  label: t('howItWorks.economy'),  activeClass: 'text-[#FFB800] border-b-2 border-[#FFB800]' },
     { id: 'REFERRAL', label: t('howItWorks.referral'), activeClass: 'text-amber-400 border-b-2 border-amber-500' },
   ];
@@ -36,7 +36,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-lg bg-[#050505] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,1)] animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-[#0c0c20] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,1)] animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
 
         {/* Header */}
         <div className="px-5 py-4 border-b border-white/8 flex justify-between items-center shrink-0">
@@ -44,9 +44,9 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
             <h2 className="text-2xl font-black uppercase tracking-tight text-white leading-none" style={BN}>
               How It Works
             </h2>
-            <p className="text-[10px] text-white/30 mt-0.5" style={INTER}>Solana Raid — mechanics guide</p>
+            <p className="text-[10px] text-white mt-0.5" style={INTER}>Solana Raid — mechanics guide</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-white/30 hover:text-white transition-colors text-base leading-none">✕</button>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-white hover:text-white transition-colors text-base leading-none">✕</button>
         </div>
 
         {/* Tabs */}
@@ -56,7 +56,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 min-w-[64px] py-3 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all whitespace-nowrap px-2 ${
-                activeTab === tab.id ? tab.activeClass : 'text-white/30 hover:text-white/60'
+                activeTab === tab.id ? tab.activeClass : 'text-white hover:text-white'
               }`}
               style={INTER}
             >
@@ -75,23 +75,23 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               {/* What is a raid */}
               <div className="p-4 border border-white/10 bg-white/[0.03]">
                 <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-2" style={INTER}>What is a Raid?</h3>
-                <p className="text-[11px] text-white/60 leading-relaxed">
+                <p className="text-[11px] text-white leading-relaxed">
                   Every raid is a <span className="text-white">round-based competition</span>. Pay an entry fee, score as many points as possible, then extract before your risk hits 100%. Your best score in the 6-hour round window competes on the leaderboard. The <span className="text-[#FFB800]">top 5 wallets split the entire prize pool</span> when the round closes.
                 </p>
               </div>
 
               {/* Actions */}
               <div>
-                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2" style={INTER}>Three actions</p>
+                <p className="text-[9px] font-bold text-white uppercase tracking-widest mb-2" style={INTER}>Three actions</p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: 'ATTACK', color: 'text-[#FF2929]', border: 'border-[#FF2929]/30 bg-[#FF2929]/5', desc: 'Pushes multiplier up. Also spikes risk. Combo with Defend for bonus points.' },
+                    { label: 'ATTACK', color: 'text-[#9945FF]', border: 'border-[#9945FF]/30 bg-[#9945FF]/5', desc: 'Pushes multiplier up. Also spikes risk. Combo with Defend for bonus points.' },
                     { label: 'DEFEND', color: 'text-blue-400',  border: 'border-blue-500/25 bg-blue-950/20', desc: 'Cuts risk down. Max 2 in a row, then a 3-second cooldown applies.' },
                     { label: 'EXTRACT', color: 'text-[#FFB800]', border: 'border-[#FFB800]/30 bg-[#FFB800]/5', desc: 'Locks in your score. Locked for 20s at round start. Exit before 20s = 50% penalty.' },
                   ].map(a => (
                     <div key={a.label} className={`p-3 border ${a.border} text-center`}>
                       <span className={`text-[11px] font-black block mb-1.5 ${a.color}`} style={BN}>{a.label}</span>
-                      <span className="text-[9px] text-white/45 leading-snug block" style={INTER}>{a.desc}</span>
+                      <span className="text-[9px] text-white leading-snug block" style={INTER}>{a.desc}</span>
                     </div>
                   ))}
                 </div>
@@ -99,28 +99,28 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
 
               {/* Combo system */}
               <div>
-                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2" style={INTER}>Combo system</p>
+                <p className="text-[9px] font-bold text-white uppercase tracking-widest mb-2" style={INTER}>Combo system</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-3 border border-yellow-500/20 bg-yellow-500/5">
                     <span className="text-[10px] font-bold text-yellow-400 block mb-1" style={INTER}>COMBO</span>
-                    <span className="text-[10px] text-white/50" style={INTER}>Defend → Attack within 2.2s. +500 pts · −4 risk.</span>
+                    <span className="text-[10px] text-white" style={INTER}>Defend → Attack within 2.2s. +500 pts · −4 risk.</span>
                   </div>
                   <div className="p-3 border border-white/10 bg-white/[0.03]">
-                    <span className="text-[10px] font-bold text-white/60 block mb-1" style={INTER}>COUNTER</span>
-                    <span className="text-[10px] text-white/50" style={INTER}>Attack → Defend within 2.2s. +350 pts · −10 risk.</span>
+                    <span className="text-[10px] font-bold text-white block mb-1" style={INTER}>COUNTER</span>
+                    <span className="text-[10px] text-white" style={INTER}>Attack → Defend within 2.2s. +350 pts · −10 risk.</span>
                   </div>
                 </div>
-                <p className="text-[10px] text-white/30 mt-2" style={INTER}>5 consecutive attacks without defending triggers an AGGRESSION surge (+15 risk).</p>
+                <p className="text-[10px] text-white mt-2" style={INTER}>5 consecutive attacks without defending triggers an AGGRESSION surge (+15 risk).</p>
               </div>
 
               {/* Risk */}
-              <div className="flex gap-4 p-4 border border-red-500/20 bg-red-950/10">
-                <div className="w-11 h-11 border-2 border-[#FF2929] rounded-full flex items-center justify-center shrink-0">
-                  <span className="text-[#FF2929] font-black text-[10px]" style={MONO}>100%</span>
+              <div className="flex gap-4 p-4 border border-[#9945FF]/20 bg-[#9945FF]/10">
+                <div className="w-11 h-11 border-2 border-[#9945FF] rounded-full flex items-center justify-center shrink-0">
+                  <span className="text-[#9945FF] font-black text-[10px]" style={MONO}>100%</span>
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-[#FF2929] uppercase mb-1" style={INTER}>Risk — the enemy</h3>
-                  <p className="text-[11px] text-white/55 leading-relaxed" style={INTER}>
+                  <h3 className="text-xs font-bold text-[#9945FF] uppercase mb-1" style={INTER}>Risk — the enemy</h3>
+                  <p className="text-[11px] text-white leading-relaxed" style={INTER}>
                     Risk climbs every tick as you stay inside. Idle for 3+ seconds and it decays slowly. Hit 100% and the session severs — entry fee is lost. Stay sharp and extract in time.
                   </p>
                 </div>
@@ -128,19 +128,19 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
 
               {/* Gear & Passes */}
               <div className="p-4 border border-white/10 bg-white/[0.03] space-y-2">
-                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-2" style={INTER}>Gear & Raid Passes</h3>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-2" style={INTER}>Gear & Raid Passes</h3>
                 {[
-                  { label: 'Time Boost', color: 'text-white/80', desc: '+30s extra raid time. Stay in longer to score higher.' },
-                  { label: 'Mult Boost', color: 'text-white/80', desc: 'Higher starting multiplier — more points from the opening second.' },
-                  { label: 'Risk Reduction', color: 'text-white/80', desc: 'Slows risk drift rate. More room to push without busting.' },
+                  { label: 'Time Boost', color: 'text-white', desc: '+30s extra raid time. Stay in longer to score higher.' },
+                  { label: 'Mult Boost', color: 'text-white', desc: 'Higher starting multiplier — more points from the opening second.' },
+                  { label: 'Risk Reduction', color: 'text-white', desc: 'Slows risk drift rate. More room to push without busting.' },
                   { label: 'Raid Pass', color: 'text-[#FFB800]', desc: '50% off entry fee + 10% score boost. Buy in the Store.' },
-                  { label: 'Free Ticket', color: 'text-white/60', desc: '+1 free ticket per day, stockpile up to 3. Toggle at deploy.' },
+                  { label: 'Free Ticket', color: 'text-white', desc: '+1 free ticket per day, stockpile up to 3. Toggle at deploy.' },
                 ].map(g => (
                   <div key={g.label} className="flex items-start gap-2">
-                    <span className="text-[#FF2929] text-[10px] shrink-0 mt-0.5" style={MONO}>›</span>
+                    <span className="text-[#9945FF] text-[10px] shrink-0 mt-0.5" style={MONO}>›</span>
                     <p className="text-[10px] leading-snug" style={INTER}>
                       <span className={`font-bold ${g.color}`}>{g.label}</span>
-                      <span className="text-white/45"> — {g.desc}</span>
+                      <span className="text-white"> — {g.desc}</span>
                     </p>
                   </div>
                 ))}
@@ -148,7 +148,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
 
               {/* Payment */}
               <div className="p-4 border border-white/10 bg-white/[0.03]">
-                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wide mb-3" style={INTER}>Entry fee currencies</h3>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-3" style={INTER}>Entry fee currencies</h3>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { token: 'SOL',  color: 'text-[#FFB800]', desc: 'Native Solana' },
@@ -157,7 +157,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                   ].map(c => (
                     <div key={c.token} className="text-center p-2.5 border border-white/10">
                       <span className={`text-sm font-black block ${c.color}`} style={BN}>{c.token}</span>
-                      <span className="text-[9px] text-white/40" style={INTER}>{c.desc}</span>
+                      <span className="text-[9px] text-white" style={INTER}>{c.desc}</span>
                     </div>
                   ))}
                 </div>
@@ -169,7 +169,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
           {/* ── EVENTS ── */}
           {activeTab === 'EVENTS' && (
             <div className="space-y-3 animate-in slide-in-from-right-4 duration-200">
-              <p className="text-[10px] text-white/40 pb-1" style={INTER}>Random events fire mid-raid. Learning them is a core part of skill.</p>
+              <p className="text-[10px] text-white pb-1" style={INTER}>Random events fire mid-raid. Learning them is a core part of skill.</p>
 
               {[
                 {
@@ -196,8 +196,8 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 {
                   name: 'AMBUSH',
                   tag: 'DANGER',
-                  color: 'text-[#FF2929]',
-                  border: 'border-[#FF2929]/25 bg-[#FF2929]/5',
+                  color: 'text-[#9945FF]',
+                  border: 'border-[#9945FF]/25 bg-[#9945FF]/5',
                   desc: '10% chance after 8 seconds. Controls freeze for 2.2 seconds while risk surges +10. You cannot attack, defend, or extract. Watch for the red flash and breathe.',
                 },
                 {
@@ -218,15 +218,15 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 <div key={ev.name} className={`p-4 border ${ev.border}`}>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className={`text-xs font-black uppercase tracking-wide ${ev.color}`} style={INTER}>{ev.name}</span>
-                    <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest" style={MONO}>{ev.tag}</span>
+                    <span className="text-[8px] font-bold text-white uppercase tracking-widest" style={MONO}>{ev.tag}</span>
                   </div>
-                  <p className="text-[11px] text-white/55 leading-relaxed" style={INTER}>{ev.desc}</p>
+                  <p className="text-[11px] text-white leading-relaxed" style={INTER}>{ev.desc}</p>
                 </div>
               ))}
 
               <div className="p-4 border border-white/10 bg-white/[0.03]">
-                <h3 className="text-xs font-bold text-white/50 uppercase tracking-wide mb-1.5" style={INTER}>Post-raid debrief</h3>
-                <p className="text-[11px] text-white/45 leading-relaxed" style={INTER}>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-1.5" style={INTER}>Post-raid debrief</h3>
+                <p className="text-[11px] text-white leading-relaxed" style={INTER}>
                   The Result screen shows a full event timeline after every raid — every surge, ambush, combo, jackpot, and the exact bust trigger if it happened. Use it to improve your reads.
                 </p>
               </div>
@@ -237,15 +237,15 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
           {activeTab === 'PVP' && (
             <div className="space-y-4 animate-in slide-in-from-right-4 duration-200">
 
-              <div className="p-4 border border-[#FF2929]/35 bg-[#FF2929]/8">
-                <h3 className="text-base font-black text-[#FF2929] uppercase mb-2" style={BN}>Winner takes the pot</h3>
-                <p className="text-[11px] text-white/65 leading-relaxed" style={INTER}>
+              <div className="p-4 border border-[#9945FF]/35 bg-[#9945FF]/8">
+                <h3 className="text-base font-black text-[#9945FF] uppercase mb-2" style={BN}>Winner takes the pot</h3>
+                <p className="text-[11px] text-white leading-relaxed" style={INTER}>
                   In a PvP room all players raid the <span className="text-white font-bold">same RNG seed</span> simultaneously — identical spikes, identical drifts. The only variable is your decisions. The player who extracts with the <span className="text-white font-bold">highest score</span> claims the entire combined stake.
                 </p>
               </div>
 
               <div className="space-y-3">
-                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest" style={INTER}>How to play</p>
+                <p className="text-[9px] font-bold text-white uppercase tracking-widest" style={INTER}>How to play</p>
                 {[
                   {
                     n: '01',
@@ -269,20 +269,20 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                   },
                 ].map(s => (
                   <div key={s.n} className="flex gap-3 items-start">
-                    <div className="w-7 h-7 shrink-0 flex items-center justify-center border border-[#FF2929]/35 bg-[#FF2929]/8">
-                      <span className="text-[9px] font-black text-[#FF2929]" style={MONO}>{s.n}</span>
+                    <div className="w-7 h-7 shrink-0 flex items-center justify-center border border-[#9945FF]/35 bg-[#9945FF]/8">
+                      <span className="text-[9px] font-black text-[#9945FF]" style={MONO}>{s.n}</span>
                     </div>
                     <div>
                       <h4 className="text-[11px] font-bold text-white uppercase mb-0.5" style={INTER}>{s.title}</h4>
-                      <p className="text-[11px] text-white/50 leading-relaxed" style={INTER}>{s.body}</p>
+                      <p className="text-[11px] text-white leading-relaxed" style={INTER}>{s.body}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
               <div className="p-4 border border-white/10 bg-white/[0.03]">
-                <h3 className="text-xs font-bold text-white/50 uppercase tracking-wide mb-1.5" style={INTER}>Share to challenge</h3>
-                <p className="text-[11px] text-white/45 leading-relaxed" style={INTER}>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-1.5" style={INTER}>Share to challenge</h3>
+                <p className="text-[11px] text-white leading-relaxed" style={INTER}>
                   From the Lobby, tap <span className="text-white">Copy invite link</span> to generate a direct URL. Anyone who opens it is automatically dropped into your room code on the Join screen — no manual entry needed.
                 </p>
               </div>
@@ -297,32 +297,32 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               {/* Pool mechanic */}
               <div className="p-4 border border-[#FFB800]/30 bg-[#FFB800]/5">
                 <h3 className="text-base font-black text-[#FFB800] uppercase mb-2" style={BN}>100% goes to the pool</h3>
-                <p className="text-[11px] text-white/65 leading-relaxed" style={INTER}>
+                <p className="text-[11px] text-white leading-relaxed" style={INTER}>
                   Every entry fee paid into a round goes directly into the prize pool — no platform cut taken upfront. Your best score across all your raids in the 6-hour window is your submission. <span className="text-white">Top 5 wallets</span> split the pool when the round closes.
                 </p>
               </div>
 
               {/* Tier splits */}
               <div>
-                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2" style={INTER}>Prize split by tier</p>
+                <p className="text-[9px] font-bold text-white uppercase tracking-widest mb-2" style={INTER}>Prize split by tier</p>
                 <div className="space-y-2">
                   {[
                     { tier: 'GRUNT',  fee: '0.026 SOL', color: '#94a3b8', splits: ['35%', '25%', '20%', '13%', '7%'],  note: 'Casual — most balanced split' },
                     { tier: 'ELITE',  fee: '0.05 SOL',  color: '#FFB800', splits: ['40%', '28%', '18%', '10%', '4%'], note: 'Competitive — standard weighting' },
-                    { tier: 'WHALE',  fee: '0.25 SOL',  color: '#FF2929', splits: ['50%', '25%', '15%', '7%', '3%'],  note: 'High-stakes — winner takes most' },
+                    { tier: 'WHALE',  fee: '0.25 SOL',  color: '#9945FF', splits: ['50%', '25%', '15%', '7%', '3%'],  note: 'High-stakes — winner takes most' },
                   ].map(row => (
                     <div key={row.tier} className="border border-white/10 p-3">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-black uppercase" style={{ ...INTER, color: row.color }}>{row.tier}</span>
-                          <span className="text-[9px] text-white/30" style={MONO}>{row.fee} entry</span>
+                          <span className="text-[9px] text-white" style={MONO}>{row.fee} entry</span>
                         </div>
-                        <span className="text-[9px] text-white/25 italic" style={INTER}>{row.note}</span>
+                        <span className="text-[9px] text-white italic" style={INTER}>{row.note}</span>
                       </div>
                       <div className="grid grid-cols-5 gap-1">
                         {['1st', '2nd', '3rd', '4th', '5th'].map((rank, i) => (
                           <div key={rank} className="text-center p-1.5 bg-white/[0.03] border border-white/8">
-                            <span className="text-[8px] text-white/30 block" style={INTER}>{rank}</span>
+                            <span className="text-[8px] text-white block" style={INTER}>{rank}</span>
                             <span className="text-[11px] font-black text-white" style={{ ...MONO, color: i === 0 ? row.color : undefined }}>{row.splits[i]}</span>
                           </div>
                         ))}
@@ -335,14 +335,14 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               {/* Refund guarantee */}
               <div className="p-4 border border-[#FFB800]/25 bg-[#FFB800]/5">
                 <h3 className="text-xs font-bold text-[#FFB800] uppercase tracking-wide mb-1.5" style={INTER}>Refund guarantee</h3>
-                <p className="text-[11px] text-white/55 leading-relaxed" style={INTER}>
+                <p className="text-[11px] text-white leading-relaxed" style={INTER}>
                   If fewer than 3 unique wallets enter a round, the round is cancelled automatically and every entry fee is refunded in full to each participant's unclaimed balance. No risk of playing into an empty pool.
                 </p>
               </div>
 
               {/* Claim */}
               <div className="space-y-1.5">
-                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest" style={INTER}>Claiming winnings</p>
+                <p className="text-[9px] font-bold text-white uppercase tracking-widest" style={INTER}>Claiming winnings</p>
                 {[
                   { label: 'Where', value: 'Profile → Round Wins tab' },
                   { label: 'When', value: 'After the 6-hour round closes' },
@@ -350,25 +350,25 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                   { label: 'On bust', value: 'Entry fee lost, score not submitted' },
                 ].map(r => (
                   <div key={r.label} className="flex items-center justify-between p-2.5 border border-white/8 bg-white/[0.02]">
-                    <span className="text-[10px] text-white/35 uppercase" style={INTER}>{r.label}</span>
-                    <span className="text-[10px] font-bold text-white/70" style={MONO}>{r.value}</span>
+                    <span className="text-[10px] text-white uppercase" style={INTER}>{r.label}</span>
+                    <span className="text-[10px] font-bold text-white" style={MONO}>{r.value}</span>
                   </div>
                 ))}
               </div>
 
               {/* Bonuses */}
               <div>
-                <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2" style={INTER}>Advantages</p>
+                <p className="text-[9px] font-bold text-white uppercase tracking-widest mb-2" style={INTER}>Advantages</p>
                 <div className="space-y-2">
                   {[
                     { label: 'Raid Pass', value: '−50% entry + +10% score', color: '#FFB800' },
-                    { label: 'Free Ticket', value: '+1/day · max 3 stacked', color: 'rgba(255,255,255,0.6)' },
+                    { label: 'Free Ticket', value: '+1/day · max 3 stacked', color: '#ffffff' },
                     { label: 'Daily Streak', value: '+10% SR/day · cap +40%', color: '#FFB800' },
-                    { label: 'Gear (equipped)', value: 'Time / Mult / Risk bonuses', color: 'rgba(255,255,255,0.6)' },
+                    { label: 'Gear (equipped)', value: 'Time / Mult / Risk bonuses', color: '#ffffff' },
                   ].map(b => (
                     <div key={b.label} className="flex items-center justify-between p-2.5 border border-white/8 bg-white/[0.02]">
                       <span className="text-[10px] font-bold uppercase" style={{ ...INTER, color: b.color }}>{b.label}</span>
-                      <span className="text-[10px] text-white/50" style={MONO}>{b.value}</span>
+                      <span className="text-[10px] text-white" style={MONO}>{b.value}</span>
                     </div>
                   ))}
                 </div>
@@ -376,8 +376,8 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
 
               {/* Provably fair */}
               <div className="p-4 border border-white/10 bg-white/[0.03]">
-                <h3 className="text-xs font-bold text-white/50 uppercase tracking-wide mb-1.5" style={INTER}>Provably fair RNG</h3>
-                <p className="text-[11px] text-white/45 leading-relaxed" style={INTER}>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-1.5" style={INTER}>Provably fair RNG</h3>
+                <p className="text-[11px] text-white leading-relaxed" style={INTER}>
                   Before every raid a server seed is committed as a SHA-256 hash shown to you pre-entry. After the raid the full seed is revealed. You can verify on-chain that the RNG was fixed before play and never altered.
                 </p>
               </div>
@@ -391,7 +391,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
 
               <div className="p-4 border border-white/10 bg-white/[0.03]">
                 <h3 className="text-base font-black text-white uppercase mb-2" style={BN}>Recruit & earn SR</h3>
-                <p className="text-[11px] text-white/60 leading-relaxed" style={INTER}>
+                <p className="text-[11px] text-white leading-relaxed" style={INTER}>
                   Every player has a unique referral code. When a new wallet connects for the first time through your link, <span className="text-[#FFB800] font-bold">you earn 250 SR points instantly</span>. No cap — recruit as many as you can.
                 </p>
               </div>
@@ -421,11 +421,11 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 ].map(s => (
                   <div key={s.n} className="flex gap-3 items-start">
                     <div className="w-7 h-7 shrink-0 flex items-center justify-center border border-white/15 bg-white/[0.04]">
-                      <span className="text-[9px] font-black text-white/50" style={MONO}>{s.n}</span>
+                      <span className="text-[9px] font-black text-white" style={MONO}>{s.n}</span>
                     </div>
                     <div>
                       <h4 className="text-[11px] font-bold text-white uppercase mb-0.5" style={INTER}>{s.title}</h4>
-                      <p className="text-[11px] text-white/50 leading-relaxed" style={INTER}>{s.body}</p>
+                      <p className="text-[11px] text-white leading-relaxed" style={INTER}>{s.body}</p>
                     </div>
                   </div>
                 ))}
@@ -445,14 +445,14 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
           <div className="flex gap-2 mb-3">
             <button
               onClick={() => { onClose(); onNavigateLegal(Screen.PRIVACY); }}
-              className="flex-1 py-2.5 border border-white/8 text-[10px] font-bold uppercase tracking-wide text-white/35 hover:text-white/70 transition-colors"
+              className="flex-1 py-2.5 border border-white/8 text-[10px] font-bold uppercase tracking-wide text-white hover:text-white transition-colors"
               style={INTER}
             >
               Privacy
             </button>
             <button
               onClick={() => { onClose(); onNavigateLegal(Screen.TERMS); }}
-              className="flex-1 py-2.5 border border-white/8 text-[10px] font-bold uppercase tracking-wide text-white/35 hover:text-white/70 transition-colors"
+              className="flex-1 py-2.5 border border-white/8 text-[10px] font-bold uppercase tracking-wide text-white hover:text-white transition-colors"
               style={INTER}
             >
               Terms
@@ -470,7 +470,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               @solraid_app
             </a>
           </div>
-          <p className="text-[9px] text-center text-white/15" style={INTER}>For entertainment only · Not financial advice</p>
+          <p className="text-[9px] text-center text-white" style={INTER}>For entertainment only · Not financial advice</p>
         </div>
       </div>
     </div>

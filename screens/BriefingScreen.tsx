@@ -518,7 +518,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
     <div className="h-full flex flex-col overflow-y-auto scrollbar-hide pb-28 md:pb-8" style={{ backgroundColor: 'var(--app-bg)' }}>
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-5 pb-4 border-b border-white/6">
-        <button onClick={onBack} className="text-white/40 hover:text-white transition-colors p-1">
+        <button onClick={onBack} className="text-white hover:text-white transition-colors p-1">
           <i className="fa-solid fa-arrow-left text-sm" />
         </button>
         <div className="text-center">
@@ -528,10 +528,10 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
           >
             The Briefing
           </h1>
-          <p className="text-[10px] text-white/30 font-bold">Daily Cipher · {todayDate}</p>
+          <p className="text-[10px] text-white font-bold">Daily Cipher · {todayDate}</p>
         </div>
         <div className="text-right">
-          <p className="text-[9px] text-white/30 font-bold uppercase tracking-widest">Next in</p>
+          <p className="text-[9px] text-white font-bold uppercase tracking-widest">Next in</p>
           <p className="text-xs font-black text-[#FFB800] font-mono">{countdown}</p>
         </div>
       </div>
@@ -545,14 +545,14 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
             style={{ background: 'rgba(255,184,0,0.06)', border: '1px solid rgba(255,184,0,0.20)' }}
           >
             <p className="text-base font-black text-[#FFB800]">🥇 +1,000 SR</p>
-            <p className="text-[9px] text-white/40 mt-0.5 font-bold uppercase tracking-wide">First solve</p>
+            <p className="text-[9px] text-white mt-0.5 font-bold uppercase tracking-wide">First solve</p>
           </div>
           <div
             className="flex-1 rounded-xl p-3 text-center"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)' }}
           >
             <p className="text-base font-black text-white">+200 SR</p>
-            <p className="text-[9px] text-white/40 mt-0.5 font-bold uppercase tracking-wide">All others</p>
+            <p className="text-[9px] text-white mt-0.5 font-bold uppercase tracking-wide">All others</p>
           </div>
         </div>
 
@@ -565,7 +565,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
             <span className="text-xl shrink-0">🥇</span>
             <div>
               <p className="text-xs font-black text-[#FFB800]">First solve: {shortWallet(winner.wallet)}</p>
-              <p className="text-[10px] text-white/40">
+              <p className="text-[10px] text-white">
                 {new Date(winner.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC
               </p>
             </div>
@@ -575,11 +575,11 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
         {/* Cipher display */}
         <div
           className="rounded-2xl p-5 space-y-3"
-          style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.10)' }}
+          style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.15)' }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-1.5 h-1.5 bg-[#FF2929] rounded-full animate-pulse" />
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Today's cipher</p>
+            <div className="w-1.5 h-1.5 bg-[#9945FF] rounded-full animate-pulse" />
+            <p className="text-[10px] text-white font-bold uppercase tracking-widest">Today's cipher</p>
           </div>
           <p
             className="text-3xl font-black text-white tracking-widest text-center py-3 select-all"
@@ -590,7 +590,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
           {/* Hint toggle */}
           <button
             onClick={() => setShowHint(v => !v)}
-            className="text-[10px] font-bold text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest flex items-center gap-1.5"
+            className="text-[10px] font-bold text-white hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1.5"
           >
             <i className={`fa-solid fa-chevron-${showHint ? 'up' : 'down'} text-[8px]`} />
             {showHint ? 'Hide hint' : 'Show hint'}
@@ -602,14 +602,14 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 {puzzle.cipher.split(' ').map((word, wi) => (
                   <div key={wi} className="flex items-center gap-1">
-                    {wi > 0 && <span className="text-white/20 text-xs mx-1">·</span>}
+                    {wi > 0 && <span className="text-white text-xs mx-1">·</span>}
                     {Array.from(word).map((_, li) => (
                       <div
                         key={li}
                         className="w-4 h-0.5 bg-[#FFB800]/50 rounded-full"
                       />
                     ))}
-                    <span className="text-[9px] text-white/25 font-bold ml-0.5">{word.length}</span>
+                    <span className="text-[9px] text-white font-bold ml-0.5">{word.length}</span>
                   </div>
                 ))}
               </div>
@@ -621,18 +621,18 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
         {!decoderUnlocked ? (
           <div
             className="rounded-xl overflow-hidden"
-            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ border: '1px solid rgba(255,255,255,0.15)' }}
           >
             {/* Blurred preview of the table */}
-            <div className="relative px-4 py-3 select-none" style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <div className="blur-sm pointer-events-none font-mono text-[10px] text-white/40 leading-5 space-y-0.5">
+            <div className="relative px-4 py-3 select-none" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="blur-sm pointer-events-none font-mono text-[10px] text-white leading-5 space-y-0.5">
                 <p>Plain&nbsp;&nbsp;A B C D E F G H I J K L M</p>
                 <p>Cipher D E F G H I J K L M N O P</p>
               </div>
               {/* Lock overlay */}
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                <i className="fa-solid fa-lock text-white/30 text-base" />
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Cipher Key</p>
+                <i className="fa-solid fa-lock text-white text-base" />
+                <p className="text-[10px] font-black text-white uppercase tracking-widest">Cipher Key</p>
               </div>
             </div>
             {/* Unlock button */}
@@ -643,7 +643,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
               style={
                 canAffordDecoder && walletAddress
                   ? { background: 'rgba(255,184,0,0.10)', borderTop: '1px solid rgba(255,184,0,0.20)', color: '#FFB800' }
-                  : { background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.25)' }
+                  : { background: 'rgba(255,255,255,0.06)', borderTop: '1px solid rgba(255,255,255,0.15)', color: '#ffffff' }
               }
             >
               <i className="fa-solid fa-unlock text-[10px]" />
@@ -665,9 +665,9 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
             </div>
             <div className="font-mono text-[10px] leading-6 overflow-x-auto scrollbar-hide">
               <div className="flex gap-0 min-w-max">
-                <span className="text-white/40 w-14 shrink-0">Plain</span>
+                <span className="text-white w-14 shrink-0">Plain</span>
                 {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c => (
-                  <span key={c} className="w-[18px] text-center text-white/60">{c}</span>
+                  <span key={c} className="w-[18px] text-center text-white">{c}</span>
                 ))}
               </div>
               <div className="flex gap-0 min-w-max">
@@ -677,7 +677,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
                 ))}
               </div>
             </div>
-            <p className="text-[9px] text-white/25 pt-1">
+            <p className="text-[9px] text-white pt-1">
               To decode: find the Cipher letter → read the Plain letter above it.
             </p>
           </div>
@@ -695,13 +695,13 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
                 <p className="text-base font-black text-[#FFB800]">
                   {result.isFirst ? '🥇 First solve!' : 'Correct!'}
                 </p>
-                <p className="text-sm text-white/70">+{result.reward_sr?.toLocaleString()} SR awarded</p>
-                {result.isFirst && <p className="text-xs text-white/40">You were the first to crack today's cipher</p>}
+                <p className="text-sm text-white">+{result.reward_sr?.toLocaleString()} SR awarded</p>
+                {result.isFirst && <p className="text-xs text-white">You were the first to crack today's cipher</p>}
               </>
             ) : (
               <>
-                <p className="text-base font-black text-white/60">Already claimed today</p>
-                <p className="text-xs text-white/30">Come back tomorrow for a new cipher</p>
+                <p className="text-base font-black text-white">Already claimed today</p>
+                <p className="text-xs text-white">Come back tomorrow for a new cipher</p>
               </>
             )}
           </div>
@@ -710,7 +710,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
             {/* Input */}
             {!walletAddress ? (
               <div className="rounded-xl bg-white/3 border border-white/10 p-4 text-center">
-                <p className="text-white/40 text-sm font-bold">Connect wallet to claim SR</p>
+                <p className="text-white text-sm font-bold">Connect wallet to claim SR</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -724,12 +724,12 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
                     maxLength={40}
                     disabled={submitting}
                     className="w-full rounded-xl px-4 py-3.5 text-sm font-bold text-white placeholder-white/20 focus:outline-none transition-all"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: "'Inter', sans-serif" }}
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', fontFamily: "'Inter', sans-serif" }}
                   />
                 </div>
 
                 {errorMsg && (
-                  <p className="text-xs font-bold text-[#FF2929] animate-in fade-in duration-200">{errorMsg}</p>
+                  <p className="text-xs font-bold text-[#9945FF] animate-in fade-in duration-200">{errorMsg}</p>
                 )}
 
                 <button
@@ -738,8 +738,8 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
                   className="w-full py-4 rounded-xl font-black text-base transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                   style={
                     !submitting && answer.trim()
-                      ? { background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', boxShadow: '0 0 25px rgba(255,41,41,0.25)', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px', fontSize: '18px' }
-                      : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px', fontSize: '18px' }
+                      ? { background: 'linear-gradient(135deg, #9945FF 0%, #7c2dd6 100%)', color: '#fff', boxShadow: '0 0 25px rgba(153,69,255,0.25)', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px', fontSize: '18px' }
+                      : { background: 'rgba(255,255,255,0.06)', color: '#ffffff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px', fontSize: '18px' }
                   }
                 >
                   {submitting ? (
@@ -757,14 +757,14 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({
         {/* Loading skeleton */}
         {loading && (
           <div className="rounded-xl bg-white/3 border border-white/5 p-4 animate-pulse text-center">
-            <p className="text-white/20 text-xs font-bold">Checking claim status...</p>
+            <p className="text-white text-xs font-bold">Checking claim status...</p>
           </div>
         )}
 
         {/* Info footer */}
         <div className="pt-2 border-t border-white/5 space-y-1.5">
-          <p className="text-[10px] text-white/25 font-bold uppercase tracking-widest">How it works</p>
-          <p className="text-[11px] text-white/35 leading-relaxed">
+          <p className="text-[10px] text-white font-bold uppercase tracking-widest">How it works</p>
+          <p className="text-[11px] text-white leading-relaxed">
             Each day a new cipher rotates. Decode it and claim SR. First solver earns 1,000 SR, all others earn 200 SR. One claim per wallet per day.
           </p>
         </div>

@@ -48,7 +48,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       {/* Skip */}
       <button
         onClick={onComplete}
-        className="absolute top-5 right-5 text-white/25 hover:text-white/60 transition-colors uppercase text-[10px] font-bold"
+        className="absolute top-5 right-5 text-white hover:text-white transition-colors uppercase text-[10px] font-bold"
         style={{ ...MONO, letterSpacing: '0.2em' }}
       >
         SKIP ›
@@ -56,7 +56,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
       <div
         className="w-full max-w-sm tech-border relative overflow-hidden"
-        style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.09)' }}
+        style={{ background: '#0a0a1a', border: '1px solid rgba(255,255,255,0.15)' }}
       >
         {/* Progress bar */}
         <div className="flex" style={{ height: '3px' }}>
@@ -65,7 +65,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               key={i}
               className="flex-1 transition-all duration-300"
               style={{
-                background: i <= slide ? '#FF2929' : 'rgba(255,255,255,0.07)',
+                background: i <= slide ? '#9945FF' :'#ffffff'
                 marginRight: i < SLIDES.length - 1 ? '2px' : 0,
               }}
             />
@@ -74,7 +74,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
         {/* Step tag */}
         <div className="px-6 pt-5 pb-1">
-          <p className="text-[9px] text-white/25 font-bold uppercase tracking-[0.3em]" style={MONO}>
+          <p className="text-[9px] text-white font-bold uppercase tracking-[0.3em]" style={MONO}>
             {current.tag} &nbsp;·&nbsp; {slide + 1} OF {SLIDES.length}
           </p>
         </div>
@@ -87,7 +87,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               fontSize: '72px',
               lineHeight: 0.9,
               color: 'transparent',
-              WebkitTextStroke: '1.5px rgba(255,41,41,0.5)',
+              WebkitTextStroke: '1.5px rgba(153,69,255,0.5)',
               display: 'block',
             }}
           >
@@ -100,7 +100,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
         {/* Body */}
         <div className="px-6 py-5">
-          <p className="text-[13px] text-white/55 leading-relaxed" style={SG}>
+          <p className="text-[13px] text-white leading-relaxed" style={SG}>
             {current.body}
           </p>
         </div>
@@ -117,9 +117,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 fontSize: '12px',
                 letterSpacing: '0.1em',
                 padding: '12px 20px',
-                border: '1px solid rgba(255,255,255,0.10)',
+                border: '1px solid rgba(255,255,255,0.15)',
                 background: 'transparent',
-                color: 'rgba(255,255,255,0.4)',
+                color: '#ffffff',
                 cursor: 'pointer',
                 textTransform: 'uppercase',
               }}
@@ -135,7 +135,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               fontSize: '17px',
               letterSpacing: '2.5px',
               padding: '13px 0',
-              background: '#FF2929',
+              background: '#9945FF',
               color: '#fff',
               border: 'none',
               cursor: 'pointer',

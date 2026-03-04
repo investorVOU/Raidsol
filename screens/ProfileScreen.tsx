@@ -258,21 +258,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <div className="border-2 border-white/10 tech-border p-10 sm:p-14 text-center space-y-6 max-w-sm w-full">
           <div className="flex justify-center">
             <div className="w-16 h-16 border-2 border-white/10 tech-border flex items-center justify-center">
-              <Wallet size={28} className="text-white/40" />
+              <Wallet size={28} className="text-white" />
             </div>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white/75 mb-2">
+            <h2 className="text-xl font-bold text-white mb-2">
               Wallet required
             </h2>
-            <p className="text-[10px] text-white/40 leading-relaxed">
+            <p className="text-[10px] text-white leading-relaxed">
               Connect your wallet to access your profile, inventory, and mission logs.
             </p>
           </div>
           <button
             onClick={onConnect}
             className="w-full px-8 py-4 font-black uppercase tracking-tight tech-border active:scale-95 transition-all"
-            style={{ background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px', boxShadow: '0 0 20px rgba(255,41,41,0.25)' }}
+            style={{ background: 'linear-gradient(135deg, #9945FF 0%, #7c2dd6 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px', boxShadow: '0 0 20px rgba(153,69,255,0.25)' }}
           >
             Connect wallet
           </button>
@@ -287,12 +287,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       {/* Name Change Notification */}
       {showNotification && (
         <div className="fixed top-24 right-6 z-[200] animate-in slide-in-from-right duration-500">
-            <div className="bg-[#FF2929]/10 border border-[#FF2929] text-[#FF2929] px-6 py-4 tech-border shadow-[0_0_20px_rgba(255,41,41,0.2)]">
+            <div className="bg-[#9945FF]/10 border border-[#9945FF] text-[#9945FF] px-6 py-4 tech-border shadow-[0_0_20px_rgba(153,69,255,0.2)]">
                 <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-[#FF2929] rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-[#9945FF] rounded-full animate-pulse" />
                     <div>
                         <h4 className="font-bold text-sm">Name updated</h4>
-                        <p className="text-[10px] text-[#FF2929]/60">Saved successfully</p>
+                        <p className="text-[10px] text-[#9945FF]/60">Saved successfully</p>
                     </div>
                 </div>
             </div>
@@ -318,7 +318,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   <ExternalLink size={10} className="shrink-0" />
                 </a>
               </div>
-              <button onClick={() => setLastWithdrawTx(null)} className="text-white/40 hover:text-white text-xs ml-1 shrink-0">×</button>
+              <button onClick={() => setLastWithdrawTx(null)} className="text-white hover:text-white text-xs ml-1 shrink-0">×</button>
             </div>
           </div>
         </div>
@@ -342,29 +342,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 />
               ) : (
                 <div className="flex flex-col items-center gap-2 px-3">
-                  <div className="text-3xl font-black text-white/20">?</div>
-                  <span className="text-[9px] font-bold text-white/30 text-center leading-tight">No avatar</span>
+                  <div className="text-3xl font-black text-white">?</div>
+                  <span className="text-[9px] font-bold text-white text-center leading-tight">No avatar</span>
                 </div>
               )}
-              <div className="absolute bottom-0 left-0 w-full h-1 bg-[#FF2929] shadow-[0_0_15px_#FF2929]" />
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-[#9945FF] shadow-[0_0_15px_#9945FF]" />
             </div>
             {/* Purchase prompt when no avatar equipped */}
             {!equippedAvatar && onNavigateStore && (
               <button
                 onClick={() => onNavigateStore('AVATAR')}
-                className="px-3 py-1.5 bg-[#FF2929]/10 border border-[#FF2929]/40 text-[#FF2929] text-[9px] font-bold hover:bg-[#FF2929]/20 active:scale-95 transition-all"
+                className="px-3 py-1.5 bg-[#9945FF]/10 border border-[#9945FF]/40 text-[#9945FF] text-[9px] font-bold hover:bg-[#9945FF]/20 active:scale-95 transition-all"
               >
                 Get avatar →
               </button>
             )}
             {equippedAvatar && (
-              <span className="text-[9px] font-bold text-white/40">{equippedAvatar.name}</span>
+              <span className="text-[9px] font-bold text-white">{equippedAvatar.name}</span>
             )}
             {/* Mint — coming soon badge */}
             {equippedAvatar && isConnected && ownedItemIds.includes(equippedAvatarId ?? '') && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 border border-white/10 bg-white/3">
                 <div className="w-1.5 h-1.5 bg-[#FFB800] rounded-full animate-pulse shrink-0" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/40">
+                <span className="text-[9px] font-black uppercase tracking-widest text-white">
                   NFT Mint — Coming Soon
                 </span>
               </div>
@@ -380,12 +380,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                           type="text" 
                           value={editName}
                           onChange={(e) => setEditName(e.target.value.toUpperCase())}
-                          className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase italic tracking-tighter text-white bg-transparent border-b-2 border-[#FF2929] focus:outline-none w-full"
+                          className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase italic tracking-tighter text-white bg-transparent border-b-2 border-[#9945FF] focus:outline-none w-full"
                           autoFocus
                           maxLength={12}
                       />
-                      <button onClick={saveName} className="p-2 bg-[#FF2929] text-white rounded hover:bg-[#E60000]"><Check size={24} /></button>
-                      <button onClick={() => setIsEditing(false)} className="p-2 bg-red-500 text-white rounded hover:bg-red-400"><X size={24} /></button>
+                      <button onClick={saveName} className="p-2 bg-[#9945FF] text-white rounded hover:bg-[#8833ee]"><Check size={24} /></button>
+                      <button onClick={() => setIsEditing(false)} className="p-2 bg-[#9945FF] text-white rounded hover:bg-[#8833ee]"><X size={24} /></button>
                   </div>
               ) : (
                   <div className="flex flex-col gap-1.5 items-center md:items-start">
@@ -402,7 +402,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                                   setShowLockTip(prev => !prev);
                               }
                           }}
-                          className={`p-2 transition-all rounded-full border ${canEditName ? 'text-white/40 hover:text-[#FF2929] border-transparent hover:border-[#FF2929]/30 cursor-pointer hover:bg-white/5' : 'text-orange-400/70 hover:text-orange-400 border-orange-500/20 hover:border-orange-500/50 cursor-pointer hover:bg-orange-500/5'}`}
+                          className={`p-2 transition-all rounded-full border ${canEditName ? 'text-white hover:text-[#9945FF] border-transparent hover:border-[#9945FF]/30 cursor-pointer hover:bg-white/5' : 'text-orange-400/70 hover:text-orange-400 border-orange-500/20 hover:border-orange-500/50 cursor-pointer hover:bg-orange-500/5'}`}
                           title={canEditName ? 'Edit Callsign' : 'Locked — click for info'}
                       >
                           {canEditName ? <Edit size={20} /> : <Lock size={20} />}
@@ -441,7 +441,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
             {/* Wallet — shows .skr domain if owned, else truncated address */}
             <div className="flex items-center gap-2 justify-center md:justify-start">
-              <span className="text-[9px] font-bold text-white/40 uppercase tracking-wide">Wallet:</span>
+              <span className="text-[9px] font-bold text-white uppercase tracking-wide">Wallet:</span>
               <span
                 className="text-[10px] font-mono font-bold px-2 py-0.5 border"
                 style={{
@@ -457,8 +457,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             {/* Progress Bar Container */}
             <div className="w-full max-w-lg mx-auto md:mx-0 pt-3">
               <div className="flex justify-between items-end mb-2">
-                <span className="text-[10px] font-bold text-white/50 uppercase tracking-wide">Rank progress</span>
-                <span className="mono text-[10px] sm:text-xs text-white/60 font-bold">
+                <span className="text-[10px] font-bold text-white uppercase tracking-wide">Rank progress</span>
+                <span className="mono text-[10px] sm:text-xs text-white font-bold">
                   {Math.floor(progress)}% to {nextRank?.title || 'Max'}
                 </span>
               </div>
@@ -474,8 +474,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-2">
               {currentRank.perks.map((perk, i) => (
                 <div key={i} className="px-3 py-1.5 bg-white/2 border border-white/5 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-[#FF2929] shrink-0" />
-                  <span className="text-[8px] sm:text-[9px] font-bold text-white/60">{perk}</span>
+                  <div className="w-1.5 h-1.5 bg-[#9945FF] shrink-0" />
+                  <span className="text-[8px] sm:text-[9px] font-bold text-white">{perk}</span>
                 </div>
               ))}
             </div>
@@ -485,20 +485,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         {/* Combined Gear Stats Section */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
           <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border">
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Mult boost</p>
+            <p className="text-[10px] text-white font-bold uppercase tracking-wide mb-1">Mult boost</p>
             <p className="text-2xl font-black mono text-purple-400">+{gearStats.mult.toFixed(2)}x</p>
           </div>
           <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border">
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Risk shield</p>
-            <p className="text-2xl font-black mono text-[#FF2929]">-{gearStats.riskReduc}%</p>
+            <p className="text-[10px] text-white font-bold uppercase tracking-wide mb-1">Risk shield</p>
+            <p className="text-2xl font-black mono text-[#9945FF]">-{gearStats.riskReduc}%</p>
           </div>
           <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border">
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Time bonus</p>
+            <p className="text-[10px] text-white font-bold uppercase tracking-wide mb-1">Time bonus</p>
             <p className="text-2xl font-black mono text-cyan-400">+{gearStats.timeBoost}s</p>
           </div>
           <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border" style={{ borderColor: dailyStreak >= 2 ? 'rgba(255,184,0,0.25)' : undefined }}>
-            <p className="text-[10px] text-white/40 font-bold uppercase tracking-wide mb-1">Daily streak</p>
-            <p className="text-2xl font-black mono" style={{ color: dailyStreak >= 2 ? '#FFB800' : 'rgba(255,255,255,0.3)' }}>
+            <p className="text-[10px] text-white font-bold uppercase tracking-wide mb-1">Daily streak</p>
+            <p className="text-2xl font-black mono" style={{ color: dailyStreak >= 2 ? '#FFB800' :'#ffffff'}}>
               {dailyStreak >= 2 ? `🔥 ${dailyStreak}` : dailyStreak > 0 ? '1' : '—'}
             </p>
             {dailyStreak >= 2 && (
@@ -542,7 +542,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                           key={label}
                           onClick={() => setWithdrawAmount((unclaimedBalance * pct).toFixed(4))}
                           disabled={unclaimedBalance <= 0}
-                          className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest tech-border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${active ? 'border-[#FFB800]/60 text-[#FFB800] bg-[#FFB800]/10' : 'border-white/10 text-white/40 hover:border-white/30 hover:text-white/70'}`}
+                          className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest tech-border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${active ? 'border-[#FFB800]/60 text-[#FFB800] bg-[#FFB800]/10' : 'border-white/10 text-white hover:border-white/30 hover:text-white'}`}
                         >
                           {label}
                         </button>
@@ -568,8 +568,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     <button
                       onClick={handleWithdraw}
                       disabled={unclaimedBalance <= 0 || isClaiming || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > unclaimedBalance || cooldownActive}
-                      className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? 'active:translate-y-1' : 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed opacity-50'}`}
-                      style={unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? { background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
+                      className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? 'active:translate-y-1' : 'bg-white/5 text-white border-white/5 cursor-not-allowed opacity-50'}`}
+                      style={unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? { background: 'linear-gradient(135deg, #9945FF 0%, #7c2dd6 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
                     >
                       {isClaiming ? 'Processing...' : 'Withdraw'}
                     </button>
@@ -578,11 +578,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   {/* Fee info */}
                   {feeRate > 0 && unclaimedBalance > 0 && (
                     <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
-                      <span className="text-white/40">Withdrawal fee</span>
-                      <span className="text-[#FF2929]">
+                      <span className="text-white">Withdrawal fee</span>
+                      <span className="text-[#9945FF]">
                         {feeRate}%{feePreview > 0 ? ` (−${feePreview.toFixed(4)} SOL)` : ''}
                         {' · '}
-                        <span className="text-white/30">
+                        <span className="text-white">
                           {todayRaidCount < 3 ? `Play ${3 - todayRaidCount} more to remove` : 'No fee'}
                         </span>
                       </span>
@@ -596,11 +596,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
                   {/* Cooldown info */}
                   {cooldownActive && (
-                    <div className="bg-[#FF2929]/10 border border-[#FF2929]/30 p-3 text-center">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2929]">
+                    <div className="bg-[#9945FF]/10 border border-[#9945FF]/30 p-3 text-center">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#9945FF]">
                         Claim locked — {cooldownH}h {cooldownM}m remaining
                       </p>
-                      <p className="text-[9px] text-white/40 mt-1 uppercase tracking-wide">
+                      <p className="text-[9px] text-white mt-1 uppercase tracking-wide">
                         Play any raid to unlock immediately
                       </p>
                     </div>
@@ -612,14 +612,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-6 tech-border hover:border-yellow-500/20 transition-all">
-                <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Reputation</p>
+                <p className="text-[9px] text-white font-bold uppercase tracking-wide mb-1">Reputation</p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-2xl sm:text-3xl font-black mono text-yellow-500">{srPoints.toLocaleString()}</p>
                   <span className="text-xs font-black text-yellow-500/70">$SR</span>
                 </div>
               </div>
               <div className="bg-[var(--modal-bg)] border-2 border-white/5 p-6 tech-border hover:border-purple-500/20 transition-all">
-                <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Inventory</p>
+                <p className="text-[9px] text-white font-bold uppercase tracking-wide mb-1">Inventory</p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-2xl sm:text-3xl font-black mono text-white">{ownedItemIds.length}</p>
                   <span className="text-xs font-bold text-purple-400/60">/ 24</span>
@@ -628,48 +628,48 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </div>
 
             {/* Referral Protocol Card */}
-            <div className="bg-[var(--modal-bg)] border-2 border-[#FF2929]/20 p-6 sm:p-8 tech-border relative overflow-hidden group">
+            <div className="bg-[var(--modal-bg)] border-2 border-[#9945FF]/20 p-6 sm:p-8 tech-border relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-5 opacity-5 mono text-2xl sm:text-4xl font-black italic uppercase pointer-events-none group-hover:opacity-10 transition-opacity">
                 [LINK]
               </div>
               <div className="relative z-10">
-                <p className="text-[10px] text-[#FF2929]/60 font-bold uppercase tracking-wide mb-4">Referral</p>
+                <p className="text-[10px] text-[#9945FF]/60 font-bold uppercase tracking-wide mb-4">Referral</p>
 
                 {/* Stats row */}
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   <div className="bg-[var(--modal-bg)]/60 border border-white/5 p-3 text-center">
-                    <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Recruits</p>
+                    <p className="text-[9px] text-white font-bold uppercase tracking-wide mb-1">Recruits</p>
                     <p className="text-2xl font-black mono text-white">{referralCount}</p>
                   </div>
                   <div className="bg-[var(--modal-bg)]/60 border border-white/5 p-3 text-center">
-                    <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">SR earned</p>
+                    <p className="text-[9px] text-white font-bold uppercase tracking-wide mb-1">SR earned</p>
                     <p className="text-2xl font-black mono text-yellow-500">{referralSREarned.toLocaleString()}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-col space-y-4">
                   {/* Code display */}
-                  <div className="bg-[var(--modal-bg)] border border-[#FF2929]/20 p-3 tech-border">
-                    <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-1">Your code</p>
-                    <p className="mono text-lg font-black text-[#FF2929] tracking-widest">{displayRefCode}</p>
+                  <div className="bg-[var(--modal-bg)] border border-[#9945FF]/20 p-3 tech-border">
+                    <p className="text-[9px] text-white font-bold uppercase tracking-wide mb-1">Your code</p>
+                    <p className="mono text-lg font-black text-[#9945FF] tracking-widest">{displayRefCode}</p>
                   </div>
 
                   {/* Link + copy */}
                   <div className="bg-[var(--modal-bg)] border border-white/10 p-4 tech-border flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <span className="mono text-xs text-white/70 truncate w-full sm:w-auto text-center sm:text-left">
+                    <span className="mono text-xs text-white truncate w-full sm:w-auto text-center sm:text-left">
                       {referralLink}
                     </span>
                     <button
                       onClick={handleCopyLink}
-                      className={`w-full sm:w-auto px-6 py-2.5 font-bold uppercase tracking-tight text-xs tech-border transition-all whitespace-nowrap ${copied ? 'bg-[#FF2929] text-white border-[#FF2929]' : 'bg-white/5 text-[#FF2929] border-[#FF2929]/30 hover:bg-[#FF2929]/10'}`}
+                      className={`w-full sm:w-auto px-6 py-2.5 font-bold uppercase tracking-tight text-xs tech-border transition-all whitespace-nowrap ${copied ? 'bg-[#9945FF] text-white border-[#9945FF]' : 'bg-white/5 text-[#9945FF] border-[#9945FF]/30 hover:bg-[#9945FF]/10'}`}
                     >
                       {copied ? 'Copied!' : 'Copy link'}
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-3 bg-[#FF2929]/5 border-l-2 border-[#FF2929] px-4 py-3">
-                    <div className="w-2 h-2 bg-[#FF2929] animate-pulse shrink-0" />
-                    <p className="text-[10px] font-bold text-white/60 leading-relaxed">
+                  <div className="flex items-center gap-3 bg-[#9945FF]/5 border-l-2 border-[#9945FF] px-4 py-3">
+                    <div className="w-2 h-2 bg-[#9945FF] animate-pulse shrink-0" />
+                    <p className="text-[10px] font-bold text-white leading-relaxed">
                       Earn <span className="text-yellow-500">+250 $SR</span> instantly when someone joins via your link
                     </p>
                   </div>
@@ -680,8 +680,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             {/* Inventory Grid */}
             <div className="bg-[var(--modal-bg)]/40 border-2 border-white/5 p-6 sm:p-10 tech-border">
                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-8">
-                 <h3 className="text-[10px] font-bold uppercase tracking-wide text-white/50 leading-none">Inventory</h3>
-                 <span className="text-[9px] font-bold text-white/30 hidden sm:block">Click to equip</span>
+                 <h3 className="text-[10px] font-bold uppercase tracking-wide text-white leading-none">Inventory</h3>
+                 <span className="text-[9px] font-bold text-white hidden sm:block">Click to equip</span>
                </div>
               
               <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-6 gap-4 sm:gap-5">
@@ -690,7 +690,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   if (!item) return null;
                   const isAvatar = item.type === 'AVATAR';
                   const isEquipped = isAvatar ? equippedAvatarId === id : equippedGearIds.includes(id);
-                  const equipColor = isAvatar ? 'border-[#FF2929]' : 'border-[#FFB800]';
+                  const equipColor = isAvatar ? 'border-[#9945FF]' : 'border-[#FFB800]';
 
                   return (
                     <button 
@@ -710,12 +710,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                           style={{ imageRendering: 'pixelated' }}
                         />
                       ) : (
-                        <span className="text-[9px] font-black text-white/40">{item.type === 'GEAR' ? 'GR' : 'AV'}</span>
+                        <span className="text-[9px] font-black text-white">{item.type === 'GEAR' ? 'GR' : 'AV'}</span>
                       )}
                       
                       {!isEquipped && (
-                        <div className={`absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${isAvatar ? 'bg-[#FF2929]/10' : 'bg-purple-500/10'}`}>
-                          <span className={`text-[8px] font-black px-1.5 py-0.5 uppercase tracking-tighter ${isAvatar ? 'bg-[#FF2929] text-white' : 'bg-purple-500 text-white'}`}>
+                        <div className={`absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${isAvatar ? 'bg-[#9945FF]/10' : 'bg-purple-500/10'}`}>
+                          <span className={`text-[8px] font-black px-1.5 py-0.5 uppercase tracking-tighter ${isAvatar ? 'bg-[#9945FF] text-white' : 'bg-purple-500 text-white'}`}>
                             {isAvatar ? 'EQUIP' : 'ACTIVATE'}
                           </span>
                         </div>
@@ -723,8 +723,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
                       {isEquipped && (
                         <>
-                          <div className={`absolute top-0 right-0 w-2 h-2 ${isAvatar ? 'bg-[#FF2929]' : 'bg-purple-500'}`} />
-                          <div className={`absolute bottom-0 left-0 w-full h-0.5 opacity-80 ${isAvatar ? 'bg-[#FF2929]' : 'bg-purple-500'}`} />
+                          <div className={`absolute top-0 right-0 w-2 h-2 ${isAvatar ? 'bg-[#9945FF]' : 'bg-purple-500'}`} />
+                          <div className={`absolute bottom-0 left-0 w-full h-0.5 opacity-80 ${isAvatar ? 'bg-[#9945FF]' : 'bg-purple-500'}`} />
                         </>
                       )}
                     </button>
@@ -750,14 +750,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   <button
                     key={tab}
                     onClick={() => setRightTab(tab)}
-                    className={`px-4 py-2 text-[9px] font-bold uppercase tracking-wide transition-all tech-border flex items-center gap-1.5 ${rightTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-white/40 border-white/5 hover:text-white/60'}`}
+                    className={`px-4 py-2 text-[9px] font-bold uppercase tracking-wide transition-all tech-border flex items-center gap-1.5 ${rightTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-white border-white/5 hover:text-white'}`}
                   >
                     {tab === 'RAIDS' ? 'Raids' : tab === 'ROUNDS' ? 'Round Wins' : tab === 'WITHDRAWALS' ? 'Withdrawals' : 'Badges'}
                     {tab === 'WITHDRAWALS' && withdrawals.length > 0 && (
                       <span className="px-1 bg-[#FFB800] text-black text-[8px] rounded-sm">{withdrawals.length}</span>
                     )}
                     {tab === 'ROUNDS' && unclaimedCount > 0 && (
-                      <span className="px-1 bg-[#FF2929] text-white text-[8px] rounded-sm animate-pulse">{unclaimedCount}</span>
+                      <span className="px-1 bg-[#9945FF] text-white text-[8px] rounded-sm animate-pulse">{unclaimedCount}</span>
                     )}
                     {tab === 'ACHIEVEMENTS' && earnedCount > 0 && (
                       <span className="px-1 bg-[#FFB800] text-black text-[8px] rounded-sm">{earnedCount}</span>
@@ -778,8 +778,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   ))
                 ) : raidHistory.length === 0 ? (
                   <div className="py-12 text-center">
-                    <p className="text-white/40 font-bold text-xs">No missions yet</p>
-                    <p className="text-white/20 text-[10px] mt-1">Deploy into a raid to begin your record.</p>
+                    <p className="text-white font-bold text-xs">No missions yet</p>
+                    <p className="text-white text-[10px] mt-1">Deploy into a raid to begin your record.</p>
                   </div>
                 ) : (
                   raidHistory.map((h) => {
@@ -797,20 +797,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                         className="bg-[var(--modal-bg)] border-2 border-white/5 p-4 sm:p-5 tech-border flex items-center justify-between group hover:bg-white/2 transition-colors"
                       >
                         <div className="flex flex-col gap-1">
-                          <span className={`text-xs font-black uppercase tracking-widest ${!h.success ? 'text-red-500' : 'text-[#FFB800]'}`}>
+                          <span className={`text-xs font-black uppercase tracking-widest ${!h.success ? 'text-[#9945FF]' : 'text-[#FFB800]'}`}>
                             {resultLabel}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="text-[9px] mono text-white/40 font-black uppercase tracking-tighter italic">{date}</span>
-                            <span className="text-[9px] text-white/20">|</span>
-                            <span className="text-[9px] mono text-white/40 font-black uppercase tracking-tighter">{h.difficulty}</span>
+                            <span className="text-[9px] mono text-white font-black uppercase tracking-tighter italic">{date}</span>
+                            <span className="text-[9px] text-white">|</span>
+                            <span className="text-[9px] mono text-white font-black uppercase tracking-tighter">{h.difficulty}</span>
                           </div>
                         </div>
                         <div className="text-right flex flex-col items-end gap-0.5">
-                          <p className={`mono text-sm sm:text-base font-black ${!h.success ? 'text-red-500/50' : 'text-white'}`}>
+                          <p className={`mono text-sm sm:text-base font-black ${!h.success ? 'text-[#9945FF]/50' : 'text-white'}`}>
                             {amountStr}
                           </p>
-                          <span className="text-[9px] text-white/25 font-bold">
+                          <span className="text-[9px] text-white font-bold">
                             seed: {txShort}
                           </span>
                         </div>
@@ -833,8 +833,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 ) : roundWins.length === 0 ? (
                   <div className="py-12 text-center space-y-2">
                     <div className="text-4xl mb-3">🏆</div>
-                    <p className="text-white/40 font-bold text-xs">No round wins yet</p>
-                    <p className="text-white/20 text-[10px] leading-relaxed">
+                    <p className="text-white font-bold text-xs">No round wins yet</p>
+                    <p className="text-white text-[10px] leading-relaxed">
                       Top 5 extractors in each 6-hour round share the pool.<br />
                       Raid hard to claim your place.
                     </p>
@@ -846,7 +846,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     const claimKey = `${w.roundNum}:${w.roundDate}`;
                     const isClaiming = claimingRound === claimKey;
                     const medals = ['🥇', '🥈', '🥉', '4th', '5th'];
-                    const rankColors = ['text-yellow-400', 'text-white/75', 'text-orange-400', 'text-white/50', 'text-white/40'];
+                    const rankColors = ['text-yellow-400', 'text-white', 'text-orange-400', 'text-white', 'text-white'];
                     const borderColors = ['border-yellow-500/40', 'border-white/15', 'border-orange-500/30', 'border-white/10', 'border-white/8'];
                     const glowColors = ['shadow-[0_0_20px_rgba(234,179,8,0.08)]', '', 'shadow-[0_0_15px_rgba(249,115,22,0.06)]', '', ''];
 
@@ -868,20 +868,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                                   #{w.rank} · Round {w.roundNum}
                                 </span>
                               </div>
-                              <p className="text-[9px] font-bold text-white/40 uppercase tracking-wider">
+                              <p className="text-[9px] font-bold text-white uppercase tracking-wider">
                                 {dateLabel} · {formatRoundWindow(w.roundNum)}
                               </p>
                             </div>
                             <div className="text-right shrink-0 ml-3">
                               {w.claimed ? (
-                                <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 border border-white/15 text-white/45">
+                                <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 border border-white/15 text-white">
                                   Claimed
                                 </span>
                               ) : (
                                 <button
                                   onClick={() => handleClaimRoundWinLocal(w.roundNum, w.roundDate)}
                                   disabled={isClaiming}
-                                  className="text-[9px] font-black uppercase px-3 py-1.5 bg-[#FF2929] text-white hover:bg-[#E60000] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="text-[9px] font-black uppercase px-3 py-1.5 bg-[#9945FF] text-white hover:bg-[#8833ee] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {isClaiming ? 'Claiming…' : 'Claim'}
                                 </button>
@@ -892,24 +892,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                           {/* Stats row */}
                           <div className="grid grid-cols-3 gap-2 bg-white/3 border border-white/5 p-2.5">
                             <div>
-                              <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Score</p>
+                              <p className="text-[8px] text-white font-bold uppercase mb-0.5">Score</p>
                               <p className="text-sm font-black mono text-white">{w.pointsScored.toLocaleString()}</p>
-                              <p className="text-[8px] text-white/35 font-bold">pts</p>
+                              <p className="text-[8px] text-white font-bold">pts</p>
                             </div>
                             <div className="border-x border-white/5 px-2">
-                              <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Pool</p>
+                              <p className="text-[8px] text-white font-bold uppercase mb-0.5">Pool</p>
                               <p className="text-sm font-black mono text-white">{w.poolSol.toFixed(3)}</p>
                               <p className="text-[8px] text-[#FFB800] font-bold">SOL</p>
                             </div>
                             <div>
-                              <p className="text-[8px] text-white/40 font-bold uppercase mb-0.5">Allocated</p>
+                              <p className="text-[8px] text-white font-bold uppercase mb-0.5">Allocated</p>
                               <p className="text-sm font-black mono text-yellow-400">{w.solAllocation.toFixed(4)}</p>
                               <p className="text-[8px] text-yellow-400/60 font-bold">SOL</p>
                             </div>
                           </div>
 
                           {w.claimed && w.claimedAt && (
-                            <p className="text-[8px] text-white/25 font-bold mt-1.5 text-right">
+                            <p className="text-[8px] text-white font-bold mt-1.5 text-right">
                               Claimed {new Date(w.claimedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </p>
                           )}
@@ -932,8 +932,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   ))
                 ) : withdrawals.length === 0 ? (
                   <div className="py-12 text-center">
-                    <p className="text-white/40 font-bold text-xs">No withdrawals yet</p>
-                    <p className="text-white/20 text-[10px] mt-1">Withdraw your unclaimed SOL to see records here.</p>
+                    <p className="text-white font-bold text-xs">No withdrawals yet</p>
+                    <p className="text-white text-[10px] mt-1">Withdraw your unclaimed SOL to see records here.</p>
                   </div>
                 ) : (
                   withdrawals.map((w) => {
@@ -950,7 +950,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                           <div className="flex flex-col gap-1 min-w-0">
                             <span className="text-xs font-bold text-[#FFB800]">Withdrawn</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-[9px] mono text-white/40 font-black italic">{date} {time}</span>
+                              <span className="text-[9px] mono text-white font-black italic">{date} {time}</span>
                               <span className={`text-[8px] font-black uppercase px-1 py-0.5 ${w.status === 'CONFIRMED' ? 'bg-[#FFB800]/10 text-[#FFB800]' : 'bg-yellow-500/10 text-yellow-500'}`}>
                                 {w.status}
                               </span>
@@ -960,13 +960,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                                 href={solscanTx(sig)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-[9px] font-black text-white/35 hover:text-white/65 uppercase tracking-wider group/link"
+                                className="flex items-center gap-1 text-[9px] font-black text-white hover:text-white uppercase tracking-wider group/link"
                               >
                                 <span className="mono">{sigShort}</span>
                                 <ExternalLink size={9} className="shrink-0" />
                               </a>
                             ) : (
-                              <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">{sigShort}</span>
+                              <span className="text-[9px] font-black text-white uppercase tracking-wider">{sigShort}</span>
                             )}
                           </div>
                           <div className="text-right shrink-0">
@@ -997,17 +997,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                       className="flex flex-col items-center gap-1.5 p-3 tech-border text-center transition-all"
                       style={{
                         background: isEarned ? 'rgba(255,184,0,0.06)' : 'var(--modal-bg)',
-                        border: isEarned ? '1px solid rgba(255,184,0,0.25)' : '1px solid rgba(255,255,255,0.05)',
+                        border: isEarned ? '1px solid rgba(255,184,0,0.25)' : '1px solid rgba(255,255,255,0.15)',
                       }}
                     >
                       <BadgePixelIcon id={a.id} isEarned={isEarned} size={28} />
-                      <p className="text-[9px] font-black uppercase tracking-wide leading-tight" style={{ color: isEarned ? '#FFB800' : 'rgba(255,255,255,0.55)' }}>
+                      <p className="text-[9px] font-black uppercase tracking-wide leading-tight" style={{ color: isEarned ? '#FFB800' :'#ffffff'}}>
                         {a.name}
                       </p>
                       {isEarned && dateStr ? (
-                        <p className="text-[8px] text-white/30">{dateStr}</p>
+                        <p className="text-[8px] text-white">{dateStr}</p>
                       ) : !isEarned ? (
-                        <p className="text-[8px] text-white/35">{a.description}</p>
+                        <p className="text-[8px] text-white">{a.description}</p>
                       ) : null}
                     </div>
                   );

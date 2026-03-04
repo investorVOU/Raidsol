@@ -7,7 +7,7 @@ class CanvasErrorBoundary extends Component<{ children: React.ReactNode }, { err
   render() {
     if (this.state.error) return (
       <div className="absolute inset-0 flex items-center justify-center">
-        <p className="text-white/20 text-xs">3D unavailable</p>
+        <p className="text-white text-xs">3D unavailable</p>
       </div>
     );
     return this.props.children;
@@ -104,7 +104,7 @@ const GameStyles = `
     100% { transform: scale(0.8); opacity:0; }
   }
   @keyframes hot-streak {
-    0%,100% { text-shadow: 0 0 12px #f97316, 0 0 24px #ef4444; }
+    0%,100% { text-shadow: 0 0 12px #f97316, 0 0 24px #9945FF; }
     50%     { text-shadow: 0 0 28px #fbbf24, 0 0 56px #f97316; }
   }
   @keyframes ambush-in {
@@ -145,12 +145,12 @@ const GameStyles = `
     to   { width: 0%; }
   }
   @keyframes sc-target-pulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(255,41,41,0.5); }
-    50%     { box-shadow: 0 0 0 10px rgba(255,41,41,0); }
+    0%,100% { box-shadow: 0 0 0 0 rgba(153,69,255,0.5); }
+    50%     { box-shadow: 0 0 0 10px rgba(153,69,255,0); }
   }
   .sc-panel       { animation: sc-in 0.18s ease-out forwards; }
   .sc-cursor      { position: absolute; top: 0; width: 14px; height: 100%; background: #fff; border-radius: 3px;
-                    box-shadow: 0 0 10px #fff, 0 0 20px rgba(255,255,255,0.5);
+                    box-shadow: 0 0 10px #fff, 0 0 20px '#ffffff';
                     animation: sc-cursor 1.8s linear infinite; pointer-events: none; }
   .sc-result-pop  { animation: sc-result-pop 0.3s ease-out forwards; }
   .sc-target-btn  { animation: sc-target-pulse 0.6s ease-in-out infinite; }
@@ -243,7 +243,7 @@ const getAvatarColor = (id?: string) => {
   if (!id) return '#00FBFF';
   if (id.includes('gold') || id.includes('god'))    return '#FFD700';
   if (id.includes('void') || id.includes('ghost'))  return '#A855F7';
-  if (id.includes('red')  || id.includes('striker'))return '#EF4444';
+  if (id.includes('red')  || id.includes('striker'))return '#9945FF';
   if (id.includes('green')|| id.includes('whale'))  return '#22C55E';
   const item = AVATAR_ITEMS.find(a => a.id === id);
   if (item?.rarity === 'EXCLUSIVE') return '#FFD700';
@@ -360,7 +360,7 @@ const FighterModel: React.FC<FighterProps> = ({
         <group position={[0, 1.1, isEnemy ? -0.7 : 0.7]} rotation={[isEnemy ? -Math.PI / 10 : Math.PI / 10, 0, 0]}>
           <mesh position={[0, 0.4, 0]}>
             <boxGeometry args={[0.07, 1.2, 0.04]} />
-            <meshStandardMaterial color={isEnemy ? '#ef4444' : '#00fbff'} emissive={isEnemy ? '#ef4444' : '#00fbff'} emissiveIntensity={3} />
+            <meshStandardMaterial color={isEnemy ? '#9945FF' : '#00fbff'} emissive={isEnemy ? '#9945FF' : '#00fbff'} emissiveIntensity={3} />
           </mesh>
           <Sparkles count={8} scale={1.4} size={2.5} speed={0.4} opacity={0.5} color={isEnemy ? 'red' : 'cyan'} />
         </group>
@@ -658,7 +658,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       if (cardType === 'FIREWALL_SURGE') {
         // ignored → +15 risk
         setRisk(prev => Math.min(98, prev + 15));
-        addDmgPopup('+15 RISK!', '#FF2929');
+        addDmgPopup('+15 RISK!', '#9945FF');
         logEvent('EVENT_CARD', 'FIREWALL_SURGE ignored', '+15 RISK', 'danger');
       } else if (cardType === 'DATA_CACHE') {
         // auto-grant SKR shard
@@ -725,8 +725,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     } else {
       setSkillCheckResult('FAIL');
       setRisk(prev => Math.min(98, prev + meta.failRisk));
-      addComboPopup(meta.failMsg, '#EF4444');
-      spawnSparks('#EF4444', '#f97316', 10);
+      addComboPopup(meta.failMsg, '#9945FF');
+      spawnSparks('#9945FF', '#f97316', 10);
       sounds.playDefend();
       logEvent('SKILL_CHECK', `${meta.label} — Fail`, meta.failMsg, 'warning');
     }
@@ -840,8 +840,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     setEnemyAction('Dance');
     sounds.playBust();
     sounds.hapticBust();
-    spawnSparks('#EF4444', '#ff6600', 22);
-    addDmgPopup('BUSTED!', '#EF4444', true);
+    spawnSparks('#9945FF', '#ff6600', 22);
+    addDmgPopup('BUSTED!', '#9945FF', true);
     setTimeout(() => onFinish(false, 0, stateRef.current.points, bustTimeRef.current, [...raidEventsRef.current], peakMultRef.current, nearWinCountRef.current, 0, buildLootDrops()), 2500);
   }, [onFinish, initialTime, difficulty, ticketBoost, sounds, spawnSparks, addDmgPopup, buildLootDrops]); // eslint-disable-line
 
@@ -937,7 +937,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             setGoldenCountdown(0);
             logEvent('GOLDEN_EXPIRED', 'Golden extraction window expired unused', 'Bonus opportunity missed — no penalty', 'warning');
             addLog('Window expired');
-            addDmgPopup('WINDOW CLOSED!', '#EF4444');
+            addDmgPopup('WINDOW CLOSED!', '#9945FF');
           }
         }, 1000);
       }
@@ -963,8 +963,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         logEvent('AMBUSH', 'Enemy flanked your position — random event', '+14 RISK + 2.2s controls locked', 'danger');
         setAmbushed(true);
         addLog('Ambush detected');
-        addDmgPopup('AMBUSH!', '#EF4444', true);
-        spawnSparks('#EF4444', '#f97316', 18);
+        addDmgPopup('AMBUSH!', '#9945FF', true);
+        spawnSparks('#9945FF', '#f97316', 18);
         setRisk(prev => Math.min(98, prev + 14));
         sounds.hapticCritical();
         ambushTimeoutRef.current = setTimeout(() => {
@@ -996,7 +996,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         logEvent('NETWORK_SURGE', 'Random protocol traffic spike — occurs ~9% of ticks', `+${randomSpike} RISK applied`, 'danger');
         addLog('Network surge');
         addDmgPopup(`+${randomSpike} RISK!`, '#f97316');
-        spawnSparks('#f97316', '#EF4444', 6);
+        spawnSparks('#f97316', '#9945FF', 6);
       }
 
       if (!corpSweepActiveRef.current) {
@@ -1143,7 +1143,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       logEvent('AGGRESSION', `${newAttackCount} attacks fired without defending — aggression penalty triggered`, '+15 RISK surge', 'danger');
       addLog('Aggression detected');
       addDmgPopup('AGGRESSION! +15', '#f97316', true);
-      spawnSparks('#f97316', '#EF4444', 12);
+      spawnSparks('#f97316', '#9945FF', 12);
       setTimeout(() => { if (!stateRef.current.isEnding) setRisk(prev => Math.min(99, prev + 15)); }, 200);
     }
 
@@ -1153,9 +1153,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
     hotStreakTimerRef.current = setTimeout(() => { setHotStreak(false); hotStreakTimerRef.current = null; }, 2000);
 
     const riskAdded = isCombo ? Math.max(6, 10 + Math.random() * 7) : 12 + Math.random() * 9;
-    spawnSparks('#EF4444', '#f97316', 14);
-    if (!isCombo) addDmgPopup(`+${Math.floor(riskAdded)} RISK`, '#EF4444');
-    setFlash('rgba(239,68,68,0.25)');
+    spawnSparks('#9945FF', '#f97316', 14);
+    if (!isCombo) addDmgPopup(`+${Math.floor(riskAdded)} RISK`, '#9945FF');
+    setFlash('rgba(153,69,255,0.25)');
     setTimeout(() => setFlash(null), 250);
 
     setMultiplier(prev => {
@@ -1170,8 +1170,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         logEvent('CRITICAL', `Attack at ${Math.floor(next)}% risk triggered critical overload (25% chance above 85%)`, 'Instant bust — do not attack above 85% risk', 'danger');
         sounds.playCritical();
         sounds.hapticCritical();
-        addDmgPopup('CRITICAL!', '#EF4444', true);
-        spawnSparks('#EF4444', '#ffffff', 20);
+        addDmgPopup('CRITICAL!', '#9945FF', true);
+        spawnSparks('#9945FF', '#ffffff', 20);
         addLog('Critical overload');
         setTimeout(() => handleBust('RISK_CRITICAL'), 350);
         return 100;
@@ -1277,14 +1277,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const shakeClass = isEnding ? '' : risk > 93 ? 'shake-critical' : risk > 82 ? 'shake-heavy' : risk > 72 ? 'shake-mild' : '';
 
   const timerGlowClass = isCritical
-    ? 'shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-500 animate-pulse bg-red-950/40'
+    ? 'shadow-[0_0_20px_rgba(153,69,255,0.6)] border-[#9945FF] animate-pulse bg-red-950/40'
     : isUrgent
-    ? 'shadow-[0_0_15px_rgba(239,68,68,0.3)] border-red-500/50 bg-red-950/20'
+    ? 'shadow-[0_0_15px_rgba(153,69,255,0.3)] border-[#9945FF]/50 bg-red-950/20'
     : 'shadow-[0_0_10px_rgba(0,251,255,0.2)] border-[#00FBFF]/30';
 
   // Risk bar gradient
   const riskBarBg = risk > 75
-    ? 'linear-gradient(90deg, #f97316, #ef4444)'
+    ? 'linear-gradient(90deg, #f97316, #9945FF)'
     : risk > 45
     ? 'linear-gradient(90deg, #9945FF, #f97316)'
     : 'linear-gradient(90deg, #14F195, #9945FF)';
@@ -1298,7 +1298,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
       {/* Background pulse on high risk */}
       {(risk > 80 || isUrgent) && !isEnding && (
-        <div className={`absolute inset-0 pointer-events-none z-0 ${isCritical ? 'bg-red-600/15' : 'bg-red-600/5'} animate-pulse`} />
+        <div className={`absolute inset-0 pointer-events-none z-0 ${isCritical ? 'bg-[#8833ee]/15' : 'bg-[#8833ee]/5'} animate-pulse`} />
       )}
 
       {/* Sparks overlay */}
@@ -1347,12 +1347,12 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         <div className="absolute inset-0 z-[200] flex flex-col bg-black/95 backdrop-blur-sm p-4">
           <div className="shrink-0 flex items-center justify-between mb-4">
             <div>
-              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-0.5">Intel Report</p>
+              <p className="text-[9px] font-bold text-white uppercase tracking-widest mb-0.5">Intel Report</p>
               <p className="text-sm font-black text-white uppercase">SELECT ENTRY NODE</p>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 border border-white/20 bg-white/5">
-              <span className="text-[9px] font-bold text-white/50 uppercase">Auto in</span>
-              <span className="mono text-lg font-black text-[#FF2929]">{scoutCountdown}s</span>
+              <span className="text-[9px] font-bold text-white uppercase">Auto in</span>
+              <span className="mono text-lg font-black text-[#9945FF]">{scoutCountdown}s</span>
             </div>
           </div>
           <div className="flex-1 flex flex-col gap-3 min-h-0">
@@ -1365,22 +1365,22 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-black uppercase tracking-wider" style={{ color: node.color }}>{node.label}</span>
-                  <div className="flex items-center gap-2 text-[9px] font-bold text-white/50">
-                    <span style={{ color: node.riskMod > 0 ? '#FF2929' : node.riskMod < 0 ? '#4ade80' : '#FFB800' }}>
+                  <div className="flex items-center gap-2 text-[9px] font-bold text-white">
+                    <span style={{ color: node.riskMod > 0 ? '#9945FF' : node.riskMod < 0 ? '#4ade80' : '#FFB800' }}>
                       {node.riskMod > 0 ? '+' : ''}{node.riskMod} RISK
                     </span>
-                    <span className="text-white/25">·</span>
+                    <span className="text-white">·</span>
                     <span>LOOT: {node.lootBias}</span>
                   </div>
                 </div>
-                <p className="text-[10px] text-white/55 leading-snug">{node.description}</p>
+                <p className="text-[10px] text-white leading-snug">{node.description}</p>
                 {node.checkpointBankBonus > 1 && (
                   <p className="text-[8px] font-bold mt-1" style={{ color: '#FFB800' }}>⬆ +{Math.round((node.checkpointBankBonus - 1) * 100)}% checkpoint bonus</p>
                 )}
               </button>
             ))}
           </div>
-          <p className="shrink-0 text-center text-[8px] text-white/25 mt-3 font-bold uppercase tracking-widest">
+          <p className="shrink-0 text-center text-[8px] text-white mt-3 font-bold uppercase tracking-widest">
             Auto-selects LOW THREAT if no choice made
           </p>
         </div>
@@ -1406,9 +1406,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: meta.color }}>{meta.label}</span>
-              <button onClick={dismissEventCard} className="text-white/30 hover:text-white/60 text-xs leading-none">✕</button>
+              <button onClick={dismissEventCard} className="text-white hover:text-white text-xs leading-none">✕</button>
             </div>
-            <p className="text-[9px] text-white/55 mb-2">{meta.sub}</p>
+            <p className="text-[9px] text-white mb-2">{meta.sub}</p>
             {/* Drain bar */}
             <div className="h-0.5 bg-white/10 overflow-hidden mb-2">
               <div className="h-full transition-none" style={{ width: `${progress * 100}%`, backgroundColor: meta.color }} />
@@ -1427,7 +1427,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                   dismissEventCard();
                 }}
                 className="w-full py-1.5 text-[10px] font-black uppercase transition-all disabled:opacity-30"
-                style={{ background: '#FF2929', color: '#fff' }}
+                style={{ background: '#9945FF', color: '#fff' }}
               >
                 ABSORB
               </button>
@@ -1446,7 +1446,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                   dismissEventCard();
                 }}
                 className="w-full py-1.5 text-[10px] font-black uppercase transition-all disabled:opacity-30"
-                style={{ background: '#FF2929', color: '#fff' }}
+                style={{ background: '#9945FF', color: '#fff' }}
               >
                 EXTRACT (LURE)
               </button>
@@ -1466,21 +1466,21 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
       {/* LOSS OVERLAY */}
       {isEnding === 'LOSS' && (
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-red-950/40 backdrop-blur-sm animate-in fade-in duration-300 gap-3">
-          <span className="text-5xl font-black text-red-500 glitch-text uppercase">Link Severed</span>
-          <span className="text-xs text-red-500/60 font-bold animate-pulse">
+          <span className="text-5xl font-black text-[#9945FF] glitch-text uppercase">Link Severed</span>
+          <span className="text-xs text-[#9945FF]/60 font-bold animate-pulse">
             {timeLeft <= 0 ? 'Timeout' : 'Protocol failure'}
           </span>
           {points > 0 && (
             <div className="mt-2 text-center px-6 py-3 border border-white/10 bg-black/60">
-              <p className="text-[9px] font-bold text-white/50 mb-1">Points scored</p>
-              <p className="mono text-3xl font-black text-white/70">{points.toLocaleString()} <span className="text-sm text-[#FFB800]/60">pts</span></p>
-              <p className="text-[8px] font-bold text-red-500/40 mt-1">No round allocation for failed raids</p>
+              <p className="text-[9px] font-bold text-white mb-1">Points scored</p>
+              <p className="mono text-3xl font-black text-white">{points.toLocaleString()} <span className="text-sm text-[#FFB800]/60">pts</span></p>
+              <p className="text-[8px] font-bold text-[#9945FF]/40 mt-1">No round allocation for failed raids</p>
             </div>
           )}
           {(() => {
             const g = equippedGearIds.length;
             if (g >= 4) return (
-              <p className="text-[9px] font-bold text-white/30 mt-2 px-4 text-center">
+              <p className="text-[9px] font-bold text-white mt-2 px-4 text-center">
                 Full loadout — try a Raid Pass for 50% off + 10% boost
               </p>
             );
@@ -1490,7 +1490,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               </p>
             );
             return (
-              <p className="text-[9px] font-bold text-white/30 mt-2 px-4 text-center">
+              <p className="text-[9px] font-bold text-white mt-2 px-4 text-center">
                 {g}/4 gear slots — {4 - g} more slot{4 - g > 1 ? 's' : ''} open in the Market
               </p>
             );
@@ -1548,19 +1548,19 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         {/* ── TOP HUD ── */}
         <div className="shrink-0 flex justify-between items-center gap-2 mb-2">
           <div className={`flex-1 bg-black/80 p-2 border tech-border transition-colors duration-300 ${goldenWindow ? 'border-yellow-500/60' : 'border-white/10'}`}>
-            <p className={`text-[9px] font-bold leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : 'text-white/60'}`}>
+            <p className={`text-[9px] font-bold leading-none mb-1 ${goldenWindow ? 'text-yellow-500/80' : 'text-white'}`}>
               {goldenWindow ? 'Golden lock' : 'Score'}
             </p>
             <div className="flex items-baseline gap-2">
-              <span className={`mono text-xl font-black ${goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-red-500' : 'text-white'}`}>{points.toLocaleString()}</span>
+              <span className={`mono text-xl font-black ${goldenWindow ? 'text-yellow-400' : risk > 85 ? 'text-[#9945FF]' : 'text-white'}`}>{points.toLocaleString()}</span>
               <span className={`text-[10px] font-bold ${goldenWindow ? 'text-yellow-500' : 'text-[#FFB800]'}`}>pts</span>
             </div>
           </div>
           <div className={`relative w-28 px-2 py-2 bg-black/80 border tech-border flex flex-col items-center ${timerGlowClass}`}>
-            <span className={`text-[8px] font-bold mb-0.5 ${isUrgent ? 'text-red-500 animate-pulse' : 'text-white/50'}`}>Time left</span>
+            <span className={`text-[8px] font-bold mb-0.5 ${isUrgent ? 'text-[#9945FF] animate-pulse' : 'text-white'}`}>Time left</span>
             <div className="flex items-baseline gap-1">
-              <span className={`mono text-2xl font-black leading-none ${isUrgent ? 'text-red-500' : 'text-[#00FBFF]'}`}>{Math.max(0, Math.floor(timeLeft))}</span>
-              <span className="text-[10px] font-bold text-white/40">s</span>
+              <span className={`mono text-2xl font-black leading-none ${isUrgent ? 'text-[#9945FF]' : 'text-[#00FBFF]'}`}>{Math.max(0, Math.floor(timeLeft))}</span>
+              <span className="text-[10px] font-bold text-white">s</span>
             </div>
           </div>
           {dailyStreak >= 2 && (
@@ -1592,17 +1592,17 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             )}
             {/* SR bursts */}
             {srBursts > 0 && (
-              <span className="text-[8px] font-bold text-white/50 px-1.5 py-0.5 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <span className="text-[8px] font-bold text-white px-1.5 py-0.5 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)' }}>
                 +{srBursts} SR
               </span>
             )}
             {/* Round badge */}
             {isRoundEntry && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(255,41,41,0.15)', border: '1px solid rgba(255,41,41,0.45)' }}>
-                <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929] animate-pulse" />
-                <span className="text-[8px] font-black text-[#FF2929] uppercase tracking-widest">Round</span>
+                style={{ background: 'rgba(153,69,255,0.15)', border: '1px solid rgba(153,69,255,0.45)' }}>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#9945FF] animate-pulse" />
+                <span className="text-[8px] font-black text-[#9945FF] uppercase tracking-widest">Round</span>
               </div>
             )}
           </div>
@@ -1611,9 +1611,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         {isRoundEntry && !isEnding && scoutPhase !== 'DONE' && (
           <div className="shrink-0 flex justify-center mb-1.5">
             <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full"
-              style={{ background: 'rgba(255,41,41,0.15)', border: '1px solid rgba(255,41,41,0.45)' }}>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#FF2929] animate-pulse" />
-              <span className="text-[9px] font-black text-[#FF2929] uppercase tracking-widest">Round Competition</span>
+              style={{ background: 'rgba(153,69,255,0.15)', border: '1px solid rgba(153,69,255,0.45)' }}>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#9945FF] animate-pulse" />
+              <span className="text-[9px] font-black text-[#9945FF] uppercase tracking-widest">Round Competition</span>
             </div>
           </div>
         )}
@@ -1623,7 +1623,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           {/* Logs bg */}
           <div className="absolute top-2 left-2 z-0 opacity-40 pointer-events-none">
             {logs.map((log, i) => (
-              <div key={i} className={`text-[9px] mono font-bold mb-1 ${log.includes('overheat') || log.includes('surge') || log.includes('overload') || log.includes('Ambush') || log.includes('Critical') ? 'text-red-500' : 'text-[#14F195]'}`}>
+              <div key={i} className={`text-[9px] mono font-bold mb-1 ${log.includes('overheat') || log.includes('surge') || log.includes('overload') || log.includes('Ambush') || log.includes('Critical') ? 'text-[#9945FF]' : 'text-[#14F195]'}`}>
                 {'>'} {log}
               </div>
             ))}
@@ -1655,16 +1655,16 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           {/* Risk tag */}
           <div className="relative z-20 w-56 h-56 md:w-64 md:h-64 flex items-center justify-center pointer-events-none">
             <div className="absolute inset-0 border-[3px] border-dashed rounded-full animate-[spin_30s_linear_infinite] transition-colors duration-300"
-                 style={{ borderColor: risk > 80 ? 'rgba(239,68,68,0.6)' : risk > 50 ? 'rgba(249,115,22,0.6)' : 'rgba(153,69,255,0.4)' }} />
+                 style={{ borderColor: risk > 80 ? 'rgba(153,69,255,0.6)' : risk > 50 ? 'rgba(249,115,22,0.6)' : 'rgba(153,69,255,0.4)' }} />
             <div className="absolute top-0 right-0 bg-black/80 backdrop-blur-sm px-2 py-1 border tech-border border-white/10 min-w-[68px]">
-              <p className="text-[8px] font-bold text-white/60 uppercase">Risk</p>
+              <p className="text-[8px] font-bold text-white uppercase">Risk</p>
               <div className="flex items-baseline gap-0.5">
-                <span className={`mono text-xl font-black ${risk > 85 ? 'text-red-500 animate-pulse' : risk > 60 ? 'text-orange-400' : 'text-white'}`}>{Math.floor(risk)}</span>
-                <span className="text-[10px] text-white/60">%</span>
+                <span className={`mono text-xl font-black ${risk > 85 ? 'text-[#9945FF] animate-pulse' : risk > 60 ? 'text-orange-400' : 'text-white'}`}>{Math.floor(risk)}</span>
+                <span className="text-[10px] text-white">%</span>
               </div>
               <div className="w-full h-0.5 bg-white/10 overflow-hidden mt-1">
                 <div className="h-full transition-all duration-500"
-                     style={{ width: `${Math.min(100, risk)}%`, background: riskBarBg, boxShadow: `0 0 6px ${risk > 75 ? '#ef4444' : risk > 45 ? '#9945FF' : '#14F195'}` }} />
+                     style={{ width: `${Math.min(100, risk)}%`, background: riskBarBg, boxShadow: `0 0 6px ${risk > 75 ? '#9945FF' : risk > 45 ? '#9945FF' : '#14F195'}` }} />
               </div>
             </div>
             <div className="absolute bottom-0 left-0 bg-black/80 backdrop-blur-sm px-2 py-1 border tech-border border-white/10">
@@ -1677,8 +1677,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             <div className="absolute inset-0 z-[55] flex items-center justify-center" style={{ animation: 'ambush-in 0.2s ease-out' }}>
               <div className="absolute inset-0 bg-red-950/70 backdrop-blur-[2px]" />
               <div className="relative flex flex-col items-center gap-1">
-                <span className="text-4xl font-black text-red-500 uppercase animate-pulse" style={{ textShadow: '0 0 30px #ef4444' }}>AMBUSH!</span>
-                <span className="text-xs font-bold text-red-400/70">Controls locked</span>
+                <span className="text-4xl font-black text-[#9945FF] uppercase animate-pulse" style={{ textShadow: '0 0 30px #9945FF' }}>AMBUSH!</span>
+                <span className="text-xs font-bold text-[#9945FF]/70">Controls locked</span>
               </div>
             </div>
           )}
@@ -1689,11 +1689,11 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             <div className="absolute inset-0 z-[50] flex items-center justify-center pointer-events-none">
               <div className="flex flex-col items-center gap-2">
                 <span key={graceCount}
-                  className={`text-9xl font-black leading-none drop-shadow-[0_0_40px_rgba(255,255,255,0.6)] animate-in zoom-in-75 duration-200 ${graceCount === 0 ? 'text-[#14F195]' : 'text-white'}`}>
+                  className={`text-9xl font-black leading-none drop-shadow-[0_0_40px_'#ffffff'] animate-in zoom-in-75 duration-200 ${graceCount === 0 ? 'text-[#14F195]' : 'text-white'}`}>
                   {graceCount === 0 ? 'GO!' : graceCount}
                 </span>
                 {graceCount > 0 && (
-                  <span className="text-[10px] font-bold text-white/50 animate-pulse">Get ready</span>
+                  <span className="text-[10px] font-bold text-white animate-pulse">Get ready</span>
                 )}
               </div>
             </div>
@@ -1705,7 +1705,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
           {/* Multiplier + Score row */}
           <div className="bg-black/60 backdrop-blur-sm p-2 rounded border border-white/5 flex justify-between items-center">
             <div>
-              <p className="text-[8px] text-white/50 font-bold mb-0.5">Mult</p>
+              <p className="text-[8px] text-white font-bold mb-0.5">Mult</p>
               <div className="flex items-center gap-2">
                 <p className={`mono text-2xl font-black ${
                   hotStreak ? 'hot-streak-text text-orange-400' :
@@ -1719,14 +1719,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
             </div>
             <div className="text-center">
               {attackCount >= 4 && (
-                <div className="px-2 py-0.5 bg-red-950/80 border border-red-500/40 mb-1">
-                  <span className="text-[8px] font-bold text-red-400">Aggression {attackCount}/5</span>
+                <div className="px-2 py-0.5 bg-red-950/80 border border-[#9945FF]/40 mb-1">
+                  <span className="text-[8px] font-bold text-[#9945FF]">Aggression {attackCount}/5</span>
                 </div>
               )}
             </div>
             <div className="text-right">
-              <p className="text-[8px] text-white/50 font-bold mb-0.5">Score</p>
-              <p className="mono text-xl font-black text-white/75">{points.toLocaleString()}</p>
+              <p className="text-[8px] text-white font-bold mb-0.5">Score</p>
+              <p className="mono text-xl font-black text-white">{points.toLocaleString()}</p>
             </div>
           </div>
 
@@ -1736,14 +1736,14 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2929]">{SC_META[skillCheck.type].label}</p>
-                  <p className="text-[8px] text-white/40 font-bold mt-0.5">{SC_META[skillCheck.type].sub}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#9945FF]">{SC_META[skillCheck.type].label}</p>
+                  <p className="text-[8px] text-white font-bold mt-0.5">{SC_META[skillCheck.type].sub}</p>
                 </div>
                 {skillCheckResult && (
                   <div className={`sc-result-pop px-3 py-1 border font-black text-xs uppercase ${
                     skillCheckResult === 'SUCCESS'
                       ? 'border-[#14F195]/60 text-[#14F195] bg-[#14F195]/10'
-                      : 'border-[#EF4444]/60 text-[#EF4444] bg-[#EF4444]/10'
+                      : 'border-[#9945FF]/60 text-[#9945FF] bg-[#9945FF]/10'
                   }`}>
                     {skillCheckResult}
                   </div>
@@ -1753,7 +1753,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               {/* Timer drain bar — only during INPUT phase */}
               {!skillCheckResult && skillCheck.phase === 'INPUT' && (
                 <div className="h-0.5 bg-white/10 overflow-hidden">
-                  <div className="h-full bg-[#FF2929]"
+                  <div className="h-full bg-[#9945FF]"
                        style={{ animation: `sc-bar-drain ${skillCheck.duration}ms linear forwards` }} />
                 </div>
               )}
@@ -1765,7 +1765,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                     <div className="absolute top-0 bottom-0 bg-[#14F195]/20 border-l border-r border-[#14F195]/50"
                          style={{ left: '35%', width: '20%' }} />
                     <div className="sc-cursor" />
-                    <p className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white/25 pointer-events-none">HIT GREEN ZONE</p>
+                    <p className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white pointer-events-none">HIT GREEN ZONE</p>
                   </div>
                   <button
                     onClick={() => {
@@ -1774,7 +1774,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                       const pos = t <= 0.5 ? 4 + 76 * t * 2 : 80 - 76 * (t - 0.5) * 2;
                       applySkillCheckResult(pos >= 35 && pos <= 55);
                     }}
-                    className="w-full py-3 bg-[#FF2929]/10 border border-[#FF2929]/40 font-black uppercase text-[#FF2929] text-sm active:scale-95 transition-transform"
+                    className="w-full py-3 bg-[#9945FF]/10 border border-[#9945FF]/40 font-black uppercase text-[#9945FF] text-sm active:scale-95 transition-transform"
                   >
                     TAP!
                   </button>
@@ -1790,8 +1790,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                       onClick={() => applySkillCheckResult(i === skillCheck.data.targetIdx)}
                       className={`py-3 border font-black uppercase text-sm active:scale-95 transition-all ${
                         i === skillCheck.data.targetIdx
-                          ? 'sc-target-btn border-[#FF2929] bg-[#FF2929]/20 text-[#FF2929]'
-                          : 'border-white/10 bg-white/5 text-white/25'
+                          ? 'sc-target-btn border-[#9945FF] bg-[#9945FF]/20 text-[#9945FF]'
+                          : 'border-white/10 bg-white/5 text-white'
                       }`}
                     >
                       {i === skillCheck.data.targetIdx ? 'TAP!' : `NODE ${String.fromCharCode(65 + i)}`}
@@ -1804,7 +1804,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               {skillCheck.type === 'CODE_BREACH' && (
                 <>
                   <p className={`text-[8px] font-bold text-center ${
-                    skillCheck.phase === 'SHOW' ? 'text-[#FFB800]/70 animate-pulse' : 'text-white/30'
+                    skillCheck.phase === 'SHOW' ? 'text-[#FFB800]/70 animate-pulse' : 'text-white'
                   }`}>
                     {skillCheck.phase === 'SHOW' ? 'MEMORISE THE HIGHLIGHTED CODE' : 'SELECT THE CODE YOU SAW'}
                   </p>
@@ -1818,8 +1818,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                           skillCheck.phase === 'SHOW' && i === skillCheck.data.targetIdx
                             ? 'border-[#FFB800] bg-[#FFB800]/20 text-[#FFB800]'
                             : skillCheck.phase === 'INPUT' && !skillCheckResult
-                            ? 'border-white/20 bg-white/5 text-white/70 hover:border-white/40'
-                            : 'border-white/10 bg-white/5 text-white/30'
+                            ? 'border-white/20 bg-white/5 text-white hover:border-white/40'
+                            : 'border-white/10 bg-white/5 text-white'
                         }`}
                       >
                         {code}
@@ -1833,7 +1833,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               {skillCheck.type === 'PATTERN_DODGE' && (
                 <>
                   <p className={`text-[8px] font-bold text-center ${
-                    skillCheck.phase === 'SHOW' ? 'text-[#14F195]/70 animate-pulse' : 'text-white/30'
+                    skillCheck.phase === 'SHOW' ? 'text-[#14F195]/70 animate-pulse' : 'text-white'
                   }`}>
                     {skillCheck.phase === 'SHOW' ? 'MEMORISE THE SAFE NODE' : skillCheckResult ? '' : 'SELECT THE SAFE NODE'}
                   </p>
@@ -1849,8 +1849,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                             skillCheck.phase === 'SHOW' && isSafe
                               ? 'border-[#14F195] bg-[#14F195]/20 text-[#14F195]'
                               : skillCheck.phase === 'INPUT' && !skillCheckResult
-                              ? 'border-white/20 bg-white/5 text-white/60 hover:border-white/40'
-                              : 'border-white/10 bg-white/5 text-white/30'
+                              ? 'border-white/20 bg-white/5 text-white hover:border-white/40'
+                              : 'border-white/10 bg-white/5 text-white'
                           }`}
                         >
                           {`NODE ${String.fromCharCode(65 + i)}`}
@@ -1862,7 +1862,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               )}
 
               {skillCheckResult && (
-                <p className="text-[8px] text-white/30 text-center font-bold animate-pulse">Resuming...</p>
+                <p className="text-[8px] text-white text-center font-bold animate-pulse">Resuming...</p>
               )}
             </div>
           ) : !isEnding && (
@@ -1871,11 +1871,11 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               {/* ATTACK button */}
               <button onClick={handleAttack} disabled={!!isEnding || graceActive || ambushed}
                 className={`col-span-1 bg-black/90 border p-3 tech-border active:translate-y-0.5 transition-all disabled:opacity-40 group ${
-                  ambushed ? 'border-red-900/30 opacity-30' : 'border-red-600/50'
+                  ambushed ? 'border-red-900/30 opacity-30' : 'border-[#8833ee]/50'
                 }`}>
                 <div className="flex flex-col items-center group-active:scale-95 transition-transform">
-                  <span className="text-base font-bold uppercase text-red-500">ATTACK</span>
-                  <span className="text-[8px] font-bold text-red-500/40 uppercase">
+                  <span className="text-base font-bold uppercase text-[#9945FF]">ATTACK</span>
+                  <span className="text-[8px] font-bold text-[#9945FF]/40 uppercase">
                     {attackCount >= 4 ? `Rage ${attackCount}/5` : 'RISK ++'}
                   </span>
                 </div>
@@ -1920,12 +1920,12 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
               <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed}
                 className={`col-span-2 p-4 tech-border transition-all duration-300 relative overflow-hidden disabled:opacity-80 ${
                   ambushed
-                    ? 'bg-red-950/40 text-red-500/40 border-red-900/20 cursor-not-allowed'
+                    ? 'bg-red-950/40 text-[#9945FF]/40 border-red-900/20 cursor-not-allowed'
                     : !hasInteracted || graceActive
-                    ? 'bg-[#1a1a1a] text-white/40 border-white/5 cursor-not-allowed grayscale'
+                    ? 'bg-[#1a1a1a] text-white border-white/5 cursor-not-allowed grayscale'
                     : goldenWindow
                     ? 'bg-yellow-500 text-black active:translate-y-1 golden-glow'
-                    : `bg-[#FF2929] text-white active:translate-y-1 ${multiplier > 3 ? 'shadow-[0_0_35px_rgba(255,41,41,0.6)]' : multiplier > 2 ? 'shadow-[0_0_22px_rgba(255,41,41,0.4)]' : 'shadow-[0_0_12px_rgba(255,41,41,0.2)]'}`
+                    : `bg-[#9945FF] text-white active:translate-y-1 ${multiplier > 3 ? 'shadow-[0_0_35px_rgba(153,69,255,0.6)]' : multiplier > 2 ? 'shadow-[0_0_22px_rgba(153,69,255,0.4)]' : 'shadow-[0_0_12px_rgba(153,69,255,0.2)]'}`
                 }`}>
                 <div className="flex flex-col items-center">
                   <span className="text-2xl font-bold uppercase leading-none">
@@ -1937,7 +1937,7 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                       : 'LOCK IN SCORE'}
                   </span>
                   {hasInteracted && !graceActive && !ambushed && (
-                    <span className="mono text-sm font-black mt-1 text-white/70">
+                    <span className="mono text-sm font-black mt-1 text-white">
                       {points.toLocaleString()} pts
                     </span>
                   )}

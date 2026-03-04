@@ -51,13 +51,13 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
               className="rounded-full flex items-center justify-center active:scale-95 transition-transform"
               style={{
                 width: '52px', height: '52px',
-                background: 'linear-gradient(145deg, #A01515 0%, #6B0000 100%)',
+                background: 'linear-gradient(145deg, #6622BB 0%, #3d0099 100%)',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
               }}
             >
               <i className="fa-solid fa-person-running" style={{ fontSize: '20px', color: '#fff' }} />
             </button>
-            <span className="text-[9px] font-medium text-[#FF4444]/80 mt-1">{t('nav.deploy')}</span>
+            <span className="text-[9px] font-medium text-[#9945FF]/80 mt-1">{t('nav.deploy')}</span>
           </div>
 
           {rightTabs.map(tab => (
@@ -79,9 +79,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
         <div className="flex items-center justify-center h-[60px] shrink-0" style={{ borderBottom: '1px solid var(--border-col)' }}>
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(255,41,41,0.10)', border: '1px solid rgba(255,41,41,0.28)' }}
+            style={{ background: 'rgba(153,69,255,0.10)', border: '1px solid rgba(153,69,255,0.28)' }}
           >
-            <i className="fa-solid fa-person-running" style={{ fontSize: '16px', color: '#FF2929' }} />
+            <i className="fa-solid fa-person-running" style={{ fontSize: '16px', color: '#9945FF' }} />
           </div>
         </div>
 
@@ -103,7 +103,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, roun
               onClick={handleDeploy}
               className="w-full flex flex-col items-center gap-1.5 py-2.5 rounded-xl active:scale-95 transition-transform"
               style={{
-                background: 'linear-gradient(145deg, #A01515 0%, #6B0000 100%)',
+                background: 'linear-gradient(145deg, #6622BB 0%, #3d0099 100%)',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
               }}
             >
@@ -195,7 +195,7 @@ const SidebarNavItem: React.FC<{
     }}
   >
     {active && (
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-[#FF2929]" />
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-[#9945FF]" />
     )}
     <div className="relative">
       <i

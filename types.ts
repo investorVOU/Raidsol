@@ -46,7 +46,7 @@ export const DIFFICULTY_CONFIG: Record<Difficulty, { riskMod: number, driftMod: 
   [Difficulty.EASY]: { riskMod: -10, driftMod: 0.8, multMod: 0.85, label: 'SAFE_MODE', color: 'text-green-500' },
   [Difficulty.MEDIUM]: { riskMod: 0, driftMod: 1.0, multMod: 1.0, label: 'STANDARD', color: 'text-cyan-400' },
   [Difficulty.HARD]: { riskMod: 15, driftMod: 1.3, multMod: 1.4, label: 'HARDCORE', color: 'text-orange-500' },
-  [Difficulty.DEGEN]: { riskMod: 30, driftMod: 1.8, multMod: 2.5, label: 'DEGEN_SUICIDE', color: 'text-red-600' }
+  [Difficulty.DEGEN]: { riskMod: 30, driftMod: 1.8, multMod: 2.5, label: 'DEGEN_SUICIDE', color: 'text-[#8833ee]' }
 };
 
 /** Maximum SOL payout at 5,000 points (no bonuses, pre-platform-fee) — decoupled from entry fee */
@@ -174,7 +174,7 @@ export const RAID_TIER_CONFIG: Record<RaidTier, {
 }> = {
   [RaidTier.GRUNT]: { label: 'GRUNT', entryFee: 0.026, color: '#94a3b8', description: 'Casual — small pool, anyone can enter.',       emoji: '🔧' },
   [RaidTier.ELITE]: { label: 'ELITE', entryFee: 0.05,  color: '#FFB800', description: 'Competitive — 5× bigger pool vs Grunt.',       emoji: '⚔️' },
-  [RaidTier.WHALE]: { label: 'WHALE', entryFee: 0.25,  color: '#FF2929', description: 'Degens only — 25× pool vs Grunt. High risk.',   emoji: '🐋' },
+  [RaidTier.WHALE]: { label: 'WHALE', entryFee: 0.25,  color: '#9945FF', description: 'Degens only — 25× pool vs Grunt. High risk.',   emoji: '🐋' },
 };
 
 /**
@@ -261,7 +261,7 @@ export const RANKS: Rank[] = [
   { level: 10, title: 'OPERATIVE', minSR: 3000, perks: ['Reduced RISK Drift', 'Store Discount 5%'], color: '#00FBFF' },
   { level: 15, title: 'COMMANDER', minSR: 7000, perks: ['Unlocks TOURNAMENT_MODE', '10% Yield Boost'], color: '#9945FF' },
   { level: 20, title: 'GHOST', minSR: 15000, perks: ['Exclusive GHOST Gear Access', '20% SR Bonus'], color: '#f59e0b' },
-  { level: 50, title: 'PROTOCOL_GOD', minSR: 50000, perks: ['Admin Terminal Access', 'Zero Fee Thursdays'], color: '#ef4444' }
+  { level: 50, title: 'PROTOCOL_GOD', minSR: 50000, perks: ['Admin Terminal Access', 'Zero Fee Thursdays'], color: '#9945FF' }
 ];
 
 export interface Equipment {
@@ -452,9 +452,9 @@ export type RaidPhase = 'BREACH' | 'DEEP_RUN' | 'CORE';
 export const RAID_PHASE_CONFIG: Record<RaidPhase, {
   label: string; driftMod: number; riskResetOnEntry: number; color: string;
 }> = {
-  BREACH:   { label: 'BREACH',   driftMod: 1.00, riskResetOnEntry:  0, color: '#FF2929' },
+  BREACH:   { label: 'BREACH',   driftMod: 1.00, riskResetOnEntry:  0, color: '#9945FF' },
   DEEP_RUN: { label: 'DEEP RUN', driftMod: 1.08, riskResetOnEntry: 12, color: '#FFB800' },
-  CORE:     { label: 'CORE',     driftMod: 1.18, riskResetOnEntry: 12, color: '#FF2929' },
+  CORE:     { label: 'CORE',     driftMod: 1.18, riskResetOnEntry: 12, color: '#9945FF' },
 };
 
 export type EventCardType = 'DATA_CACHE' | 'FIREWALL_SURGE' | 'GHOST_SIGNAL' | 'CORP_SWEEP';
@@ -467,7 +467,7 @@ export const EVENT_CARD_META: Record<EventCardType, {
   label: string; sub: string; actionLabel?: string; duration: number; color: string;
 }> = {
   DATA_CACHE:     { label: 'DATA CACHE',     sub: 'Auto-collecting node data...',            duration: 3000, color: '#FFB800' },
-  FIREWALL_SURGE: { label: 'FIREWALL SURGE', sub: 'Absorb the surge to reduce risk',         actionLabel: 'ABSORB',  duration: 3000, color: '#FF2929' },
+  FIREWALL_SURGE: { label: 'FIREWALL SURGE', sub: 'Absorb the surge to reduce risk',         actionLabel: 'ABSORB',  duration: 3000, color: '#9945FF' },
   GHOST_SIGNAL:   { label: 'GHOST SIGNAL',   sub: 'Lure detected — ignore or tap EXTRACT',  actionLabel: 'EXTRACT', duration: 4000, color: '#ffffff' },
   CORP_SWEEP:     { label: 'CORP SWEEP',     sub: 'Corp is sweeping — going dark for 4s',    duration: 4000, color: '#ffffff' },
 };
@@ -482,7 +482,7 @@ export interface ScoutNode {
 export const SCOUT_NODES: ScoutNode[] = [
   { id: 'NODE_A', label: 'LOW THREAT',   threat: 'LOW',    riskMod: -5, lootBias: 'SKR', checkpointBankBonus: 1.0, description: 'Lightly guarded sector. Stable entry, SKR-dense data nodes.', color: '#4ade80' },
   { id: 'NODE_B', label: 'STANDARD',     threat: 'MEDIUM', riskMod:  0, lootBias: 'SR',  checkpointBankBonus: 1.0, description: 'Balanced risk. Reputation-dense. No entry modifier.',         color: '#FFB800' },
-  { id: 'NODE_C', label: 'HIGH THREAT',  threat: 'HIGH',   riskMod:  8, lootBias: 'SOL', checkpointBankBonus: 1.3, description: 'Heavy corp presence. +8 starting risk. Checkpoint banks 30% more.', color: '#FF2929' },
+  { id: 'NODE_C', label: 'HIGH THREAT',  threat: 'HIGH',   riskMod:  8, lootBias: 'SOL', checkpointBankBonus: 1.3, description: 'Heavy corp presence. +8 starting risk. Checkpoint banks 30% more.', color: '#9945FF' },
 ];
 
 export interface LootDrop {

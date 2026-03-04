@@ -22,7 +22,7 @@ const DIFF_COLORS: Record<string, string> = {
   EASY:   'text-green-400 border-green-500/40 bg-green-500/10',
   MEDIUM: 'text-cyan-400  border-cyan-500/40  bg-cyan-500/10',
   HARD:   'text-orange-400 border-orange-500/40 bg-orange-500/10',
-  DEGEN:  'text-red-400   border-red-500/40   bg-red-500/10',
+  DEGEN:  'text-[#9945FF]   border-[#9945FF]/40   bg-[#9945FF]/10',
 };
 
 function timeLeft(expiresAt: string): string {
@@ -182,17 +182,17 @@ const PostBountyModal: React.FC<{
       <div className="w-full max-w-sm bg-[#0d0d18] border border-white/10 rounded-2xl p-5 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between shrink-0">
           <span className="font-black text-white text-base uppercase tracking-wider">Post Bounty</span>
-          <button onClick={onClose} className="text-white/40 hover:text-white text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-white hover:text-white text-xl leading-none">×</button>
         </div>
 
         {/* Difficulty */}
         <div>
-          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Difficulty required</p>
+          <p className="text-[10px] text-white uppercase tracking-widest mb-1.5">Difficulty required</p>
           <div className="grid grid-cols-4 gap-1.5">
             {Object.values(Difficulty).map(d => (
               <button key={d}
                 onClick={() => setDifficulty(d)}
-                className={`py-1.5 rounded-lg text-[10px] font-black uppercase border transition-all ${difficulty === d ? DIFF_COLORS[d] : 'border-white/10 text-white/30'}`}>
+                className={`py-1.5 rounded-lg text-[10px] font-black uppercase border transition-all ${difficulty === d ? DIFF_COLORS[d] : 'border-white/10 text-white'}`}>
                 {d}
               </button>
             ))}
@@ -201,36 +201,36 @@ const PostBountyModal: React.FC<{
 
         {/* Target points */}
         <div>
-          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">
-            Min points to win — <span className="text-white/60">{targetPoints.toLocaleString()} pts</span>
+          <p className="text-[10px] text-white uppercase tracking-widest mb-1.5">
+            Min points to win — <span className="text-white">{targetPoints.toLocaleString()} pts</span>
           </p>
           <input type="range" min={100} max={5000} step={100}
             value={targetPoints} onChange={e => setTargetPoints(Number(e.target.value))}
-            className="w-full accent-[#FF2929]" />
-          <div className="flex justify-between text-[9px] text-white/30 mt-0.5">
+            className="w-full accent-[#9945FF]" />
+          <div className="flex justify-between text-[9px] text-white mt-0.5">
             <span>100</span><span>5,000</span>
           </div>
         </div>
 
         {/* Reward type */}
         <div>
-          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Reward currency</p>
+          <p className="text-[10px] text-white uppercase tracking-widest mb-1.5">Reward currency</p>
           <div className="grid grid-cols-2 gap-2">
             {(['SOL', 'SR'] as const).map(t => (
               <button key={t} onClick={() => { setRewardType(t); setRewardAmount(''); }}
-                className={`py-2 rounded-xl text-sm font-black uppercase border transition-all ${rewardType === t ? 'bg-[#FF2929]/20 border-[#FF2929]/60 text-[#FF2929]' : 'border-white/10 text-white/30'}`}>
+                className={`py-2 rounded-xl text-sm font-black uppercase border transition-all ${rewardType === t ? 'bg-[#9945FF]/20 border-[#9945FF]/60 text-[#9945FF]' : 'border-white/10 text-white'}`}>
                 {t === 'SOL' ? '◎ SOL' : '⭐ SR'}
               </button>
             ))}
           </div>
-          <p className="text-[9px] text-white/30 mt-1">
+          <p className="text-[9px] text-white mt-1">
             Available: {rewardType === 'SOL' ? `${unclaimedSol.toFixed(4)} SOL (unclaimed)` : `${srPoints.toLocaleString()} SR`}
           </p>
         </div>
 
         {/* Reward amount */}
         <div>
-          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Reward amount</p>
+          <p className="text-[10px] text-white uppercase tracking-widest mb-1.5">Reward amount</p>
           <input type="number"
             value={rewardAmount}
             onChange={e => setRewardAmount(e.target.value)}
@@ -238,27 +238,27 @@ const PostBountyModal: React.FC<{
             step={rewardType === 'SOL' ? '0.001' : '50'}
             min={rewardType === 'SOL' ? '0.001' : '50'}
             max={maxReward}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-[#FF2929]/50"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-[#9945FF]/50"
           />
         </div>
 
         {/* Duration */}
         <div>
-          <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Expires in</p>
+          <p className="text-[10px] text-white uppercase tracking-widest mb-1.5">Expires in</p>
           <div className="grid grid-cols-3 gap-1.5">
             {[24, 48, 168].map(h => (
               <button key={h} onClick={() => setDurationHours(h)}
-                className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${durationHours === h ? 'bg-white/10 border-white/30 text-white' : 'border-white/10 text-white/30'}`}>
+                className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${durationHours === h ? 'bg-white/10 border-white/30 text-white' : 'border-white/10 text-white'}`}>
                 {h === 168 ? '7 days' : `${h}h`}
               </button>
             ))}
           </div>
         </div>
 
-        {err && <p className="text-[11px] text-red-400 font-bold">{err}</p>}
+        {err && <p className="text-[11px] text-[#9945FF] font-bold">{err}</p>}
 
         <button onClick={handleSubmit} disabled={posting}
-          className="w-full py-3 rounded-xl bg-[#FF2929] text-white font-black text-sm uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-transform shrink-0">
+          className="w-full py-3 rounded-xl bg-[#9945FF] text-white font-black text-sm uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-transform shrink-0">
           {posting ? 'Posting...' : 'Lock & Post Bounty'}
         </button>
       </div>
@@ -307,7 +307,7 @@ const SocialClaimModal: React.FC<{
             <i className={`${task.icon} text-white text-base`} />
             <span className="font-black text-white text-sm uppercase tracking-wider">{task.label}</span>
           </div>
-          <button onClick={onClose} className="text-white/40 hover:text-white text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-white hover:text-white text-xl leading-none">×</button>
         </div>
 
         <div className="bg-[#FFB800]/10 border border-[#FFB800]/20 rounded-xl px-3 py-2.5">
@@ -316,44 +316,44 @@ const SocialClaimModal: React.FC<{
 
         <div className="flex flex-col gap-3">
           <div>
-            <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Your X / Twitter username</p>
+            <p className="text-[10px] text-white uppercase tracking-widest mb-1.5">Your X / Twitter username</p>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white text-sm">@</span>
               <input
                 value={handle}
                 onChange={e => setHandle(e.target.value.replace(/^@/, ''))}
                 placeholder="yourhandle"
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#FF2929]/50"
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#9945FF]/50"
               />
             </div>
           </div>
 
           {task.needsUrl && (
             <div>
-              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Your tweet URL</p>
+              <p className="text-[10px] text-white uppercase tracking-widest mb-1.5">Your tweet URL</p>
               <input
                 value={tweetUrl}
                 onChange={e => setTweetUrl(e.target.value)}
                 placeholder="https://x.com/yourhandle/status/..."
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#FF2929]/50"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#9945FF]/50"
               />
-              <p className="text-[9px] text-white/30 mt-1.5">
+              <p className="text-[9px] text-white mt-1.5">
                 Post your raid score, extraction, or anything SolRaid on X, then paste the link here.
               </p>
             </div>
           )}
 
           {!task.needsUrl && (
-            <p className="text-[9px] text-white/30">
+            <p className="text-[9px] text-white">
               Complete the action on X before claiming. Honour system — one-time per wallet.
             </p>
           )}
         </div>
 
-        {err && <p className="text-[11px] text-red-400 font-bold">{err}</p>}
+        {err && <p className="text-[11px] text-[#9945FF] font-bold">{err}</p>}
 
         <button onClick={handleClaim} disabled={claiming}
-          className="w-full py-3 rounded-xl bg-[#FF2929] text-white font-black text-sm uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-transform">
+          className="w-full py-3 rounded-xl bg-[#9945FF] text-white font-black text-sm uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-transform">
           {claiming ? 'Claiming...' : 'Claim SR Reward'}
         </button>
       </div>
@@ -379,18 +379,18 @@ const BountyCard: React.FC<{
           {bounty.difficulty}
         </span>
         {isClaimed ? (
-          <span className="text-[9px] font-bold text-white/30 uppercase">Claimed</span>
+          <span className="text-[9px] font-bold text-white uppercase">Claimed</span>
         ) : expired ? (
-          <span className="text-[9px] font-bold text-white/30 uppercase">Expired</span>
+          <span className="text-[9px] font-bold text-white uppercase">Expired</span>
         ) : (
-          <span className="text-[9px] text-white/40">{timeLeft(bounty.expires_at)} left</span>
+          <span className="text-[9px] text-white">{timeLeft(bounty.expires_at)} left</span>
         )}
       </div>
 
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-black text-white leading-tight">Score {bounty.target_points.toLocaleString()}+ pts</p>
-          <p className="text-[10px] text-white/40 mt-0.5">by {bounty.poster_username || bounty.poster_wallet.slice(0, 8)}</p>
+          <p className="text-[10px] text-white mt-0.5">by {bounty.poster_username || bounty.poster_wallet.slice(0, 8)}</p>
         </div>
         <div className="text-right">
           <p className={`text-base font-black ${bounty.reward_type === 'SOL' ? 'text-[#FFB800]' : 'text-[#14F195]'}`}>
@@ -398,22 +398,22 @@ const BountyCard: React.FC<{
               ? `${Number(bounty.reward_amount).toFixed(4)} SOL`
               : `${Math.floor(bounty.reward_amount).toLocaleString()} SR`}
           </p>
-          <p className="text-[9px] text-white/30">reward</p>
+          <p className="text-[9px] text-white">reward</p>
         </div>
       </div>
 
       {isClaimed && bounty.claimed_by_username && (
-        <p className="text-[9px] text-white/40">Won by <span className="text-white/60 font-bold">{bounty.claimed_by_username}</span></p>
+        <p className="text-[9px] text-white">Won by <span className="text-white font-bold">{bounty.claimed_by_username}</span></p>
       )}
 
       {!isClaimed && !expired && !isMine && walletAddress && (
         <button onClick={() => onClaim(bounty.id)} disabled={claiming === bounty.id}
-          className="w-full py-2 rounded-lg bg-[#FF2929]/90 text-white text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all disabled:opacity-50">
+          className="w-full py-2 rounded-lg bg-[#9945FF]/90 text-white text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all disabled:opacity-50">
           {claiming === bounty.id ? 'Claiming...' : 'Claim Reward'}
         </button>
       )}
       {!isClaimed && !expired && isMine && (
-        <p className="text-[9px] text-white/30 text-center">Your bounty — waiting for a raider</p>
+        <p className="text-[9px] text-white text-center">Your bounty — waiting for a raider</p>
       )}
     </div>
   );
@@ -494,17 +494,17 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="text-white/40 hover:text-white transition-colors">
+          <button onClick={onBack} className="text-white hover:text-white transition-colors">
             <i className="fa-solid fa-arrow-left text-sm" />
           </button>
           <div>
             <h1 className="text-base font-black uppercase tracking-wider text-white leading-tight">Bounty Board</h1>
-            <p className="text-[10px] text-white/35">Raid targets · Social rewards · Post challenges</p>
+            <p className="text-[10px] text-white">Raid targets · Social rewards · Post challenges</p>
           </div>
         </div>
         {walletAddress && tab === 'OPEN' && (
           <button onClick={() => setShowPost(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FF2929]/90 text-white text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#9945FF]/90 text-white text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all">
             <i className="fa-solid fa-plus text-[10px]" />
             Post
           </button>
@@ -519,9 +519,9 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
         </div>
       )}
       {claimErr && (
-        <div className="shrink-0 mx-4 mt-3 px-4 py-2.5 rounded-xl bg-[#FF2929]/15 border border-[#FF2929]/30 flex items-center gap-2">
-          <i className="fa-solid fa-circle-exclamation text-[#FF2929] text-sm" />
-          <span className="text-[12px] font-bold text-[#FF2929]">{claimErr}</span>
+        <div className="shrink-0 mx-4 mt-3 px-4 py-2.5 rounded-xl bg-[#9945FF]/15 border border-[#9945FF]/30 flex items-center gap-2">
+          <i className="fa-solid fa-circle-exclamation text-[#9945FF] text-sm" />
+          <span className="text-[12px] font-bold text-[#9945FF]">{claimErr}</span>
         </div>
       )}
 
@@ -530,7 +530,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
         {(['SOCIAL', 'OPEN', 'MINE'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${
-              tab === t ? 'bg-[#FF2929]/20 text-[#FF2929] border border-[#FF2929]/40' : 'text-white/30 border border-transparent'
+              tab === t ? 'bg-[#9945FF]/20 text-[#9945FF] border border-[#9945FF]/40' : 'text-white border border-transparent'
             }`}>
             {t === 'OPEN' ? `Board (${openBounties.length})` : t === 'SOCIAL' ? 'Tasks' : 'Mine'}
           </button>
@@ -546,8 +546,8 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
             {/* ── Pass discount tasks ── */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <p className="text-[9px] text-[#FF2929]/80 uppercase tracking-widest font-bold">Pass Discounts</p>
-                <span className="text-[8px] text-white/25 font-bold">— complete tasks, save on entry passes</span>
+                <p className="text-[9px] text-[#9945FF]/80 uppercase tracking-widest font-bold">Pass Discounts</p>
+                <span className="text-[8px] text-white font-bold">— complete tasks, save on entry passes</span>
               </div>
 
               {/* Earned coupons row */}
@@ -573,7 +573,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
                           style={{ background: 'rgba(255,184,0,0.12)', border: '1px dashed rgba(255,184,0,0.50)' }}>
                           <i className="fa-solid fa-ticket text-[#FFB800] text-[10px]" />
                           <span className="text-[10px] font-black text-[#FFB800]">{t.discountPct}% OFF PASS</span>
-                          <span className="text-[8px] text-white/35 ml-1">· use in Store</span>
+                          <span className="text-[8px] text-white ml-1">· use in Store</span>
                         </div>
                       ))}
                     </div>
@@ -586,28 +586,28 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
                   const done = claimedActions.includes(task.actionType);
                   return (
                     <div key={task.actionType}
-                      className={`rounded-xl border p-3 ${done ? 'border-white/5 opacity-50' : 'border-[#FF2929]/20 bg-[#FF2929]/[0.04]'}`}>
+                      className={`rounded-xl border p-3 ${done ? 'border-white/5 opacity-50' : 'border-[#9945FF]/20 bg-[#9945FF]/[0.04]'}`}>
                       <div className="flex items-start gap-3">
                         {/* Discount badge */}
                         <div className="shrink-0 flex flex-col items-center justify-center w-10 h-10 rounded-xl"
                           style={{
-                            background: done ? 'rgba(255,255,255,0.05)' : task.discountPct === 50 ? 'rgba(255,41,41,0.20)' : 'rgba(255,184,0,0.15)',
-                            border: done ? '1px solid rgba(255,255,255,0.08)' : task.discountPct === 50 ? '1px solid rgba(255,41,41,0.40)' : '1px solid rgba(255,184,0,0.35)',
+                            background: done ?'#ffffff': task.discountPct === 50 ? 'rgba(153,69,255,0.20)' : 'rgba(255,184,0,0.15)',
+                            border: done ? '1px solid rgba(255,255,255,0.15)' : task.discountPct === 50 ? '1px solid rgba(153,69,255,0.40)' : '1px solid rgba(255,184,0,0.35)',
                           }}>
                           <span className="text-[10px] font-black leading-none"
-                            style={{ color: done ? 'rgba(255,255,255,0.3)' : task.discountPct === 50 ? '#FF2929' : '#FFB800' }}>
+                            style={{ color: done ?'#ffffff': task.discountPct === 50 ? '#9945FF' : '#FFB800' }}>
                             {task.discountPct}%
                           </span>
-                          <span className="text-[7px] text-white/30 leading-none">OFF</span>
+                          <span className="text-[7px] text-white leading-none">OFF</span>
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
-                            <i className={`${task.icon} text-white/50 text-[10px]`} />
+                            <i className={`${task.icon} text-white text-[10px]`} />
                             <p className="text-[11px] font-black text-white leading-tight">{task.label}</p>
                           </div>
-                          <p className="text-[9px] text-white/40 leading-snug">{task.sub}</p>
-                          <p className="text-[9px] text-white/30 mt-0.5">+{task.rewardSR} SR bonus</p>
+                          <p className="text-[9px] text-white leading-snug">{task.sub}</p>
+                          <p className="text-[9px] text-white mt-0.5">+{task.rewardSR} SR bonus</p>
                         </div>
 
                         {done ? (
@@ -619,7 +619,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
                             onClick={() => setSocialModal(task)}
                             disabled={!walletAddress}
                             className="shrink-0 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all"
-                            style={{ background: task.discountPct === 50 ? '#FF2929' : '#CC8800' }}>
+                            style={{ background: task.discountPct === 50 ? '#9945FF' : '#CC8800' }}>
                             Claim
                           </button>
                         ) : (
@@ -627,7 +627,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
                             onClick={() => handleClaimChallenge(task.actionType)}
                             disabled={!walletAddress || claiming === task.actionType}
                             className="shrink-0 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all"
-                            style={{ background: task.discountPct === 50 ? '#FF2929' : '#CC8800' }}>
+                            style={{ background: task.discountPct === 50 ? '#9945FF' : '#CC8800' }}>
                             {claiming === task.actionType ? '...' : 'Claim'}
                           </button>
                         )}
@@ -636,7 +636,7 @@ const BountyScreen: React.FC<BountyScreenProps> = ({
                   );
                 })}
               </div>
-              <p className="text-[8px] text-white/20 mt-1.5 text-center">
+              <p className="text-[8px] text-white mt-1.5 text-center">
                 Score tasks verified on-chain · Tweet task honour system · One-time per wallet
               </p>
             </div>
@@ -657,7 +657,7 @@ Score Challenges — one-time SR
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-black text-white leading-tight">Score {c.minPoints.toLocaleString()}+ pts</p>
-                        <p className="text-[10px] text-white/40">+{c.rewardSR} SR reward</p>
+                        <p className="text-[10px] text-white">+{c.rewardSR} SR reward</p>
                       </div>
                       {done ? (
                         <span className="text-[10px] text-[#14F195] font-bold shrink-0">
@@ -666,7 +666,7 @@ Score Challenges — one-time SR
                       ) : (
                         <button onClick={() => handleClaimChallenge(c.actionType)}
                           disabled={!walletAddress || claiming === c.actionType}
-                          className="shrink-0 px-3 py-1.5 rounded-lg bg-[#FF2929]/90 text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all">
+                          className="shrink-0 px-3 py-1.5 rounded-lg bg-[#9945FF]/90 text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all">
                           {claiming === c.actionType ? '...' : 'Claim'}
                         </button>
                       )}
@@ -678,7 +678,7 @@ Score Challenges — one-time SR
 
             {/* X / Twitter social tasks */}
             <div>
-              <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-2">
+              <p className="text-[9px] text-white uppercase tracking-widest font-bold mb-2">
                 <i className="fa-brands fa-x-twitter mr-1" />X / Twitter — @solraid_app
               </p>
               <div className="flex flex-col gap-2">
@@ -692,7 +692,7 @@ Score Challenges — one-time SR
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-black text-white leading-tight">{task.label}</p>
-                        <p className="text-[10px] text-white/40">{task.sub} · +{task.rewardSR} SR</p>
+                        <p className="text-[10px] text-white">{task.sub} · +{task.rewardSR} SR</p>
                       </div>
                       {done ? (
                         <span className="text-[10px] text-[#14F195] font-bold shrink-0">
@@ -701,7 +701,7 @@ Score Challenges — one-time SR
                       ) : (
                         <button onClick={() => setSocialModal(task)}
                           disabled={!walletAddress}
-                          className="shrink-0 px-3 py-1.5 rounded-lg bg-[#FF2929]/90 text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all">
+                          className="shrink-0 px-3 py-1.5 rounded-lg bg-[#9945FF]/90 text-white text-[10px] font-black uppercase disabled:opacity-40 active:scale-95 transition-all">
                           Claim
                         </button>
                       )}
@@ -709,7 +709,7 @@ Score Challenges — one-time SR
                   );
                 })}
               </div>
-              <p className="text-[9px] text-white/20 mt-2 text-center">
+              <p className="text-[9px] text-white mt-2 text-center">
                 Retweets verified via X API · Follow/Like honour system · One-time per wallet
               </p>
             </div>
@@ -725,7 +725,7 @@ Score Challenges — one-time SR
                   className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border transition-all ${
                     diffFilter === d
                       ? d === 'ALL' ? 'bg-white/15 border-white/30 text-white' : DIFF_COLORS[d]
-                      : 'border-white/10 text-white/30'
+                      : 'border-white/10 text-white'
                   }`}>
                   {d}
                 </button>
@@ -733,13 +733,13 @@ Score Challenges — one-time SR
             </div>
 
             {loading ? (
-              <p className="text-white/30 text-xs text-center py-8">Loading...</p>
+              <p className="text-white text-xs text-center py-8">Loading...</p>
             ) : filtered.length === 0 ? (
               <div className="text-center py-10">
-                <i className="fa-solid fa-crosshairs text-white/10 text-3xl mb-3" />
-                <p className="text-white/30 text-xs">No open bounties.</p>
+                <i className="fa-solid fa-crosshairs text-white text-3xl mb-3" />
+                <p className="text-white text-xs">No open bounties.</p>
                 {walletAddress && (
-                  <button onClick={() => setShowPost(true)} className="mt-3 text-[#FF2929] text-xs font-bold underline">
+                  <button onClick={() => setShowPost(true)} className="mt-3 text-[#9945FF] text-xs font-bold underline">
                     Post the first one
                   </button>
                 )}
@@ -759,15 +759,15 @@ Score Challenges — one-time SR
         {tab === 'MINE' && (
           <>
             {!walletAddress ? (
-              <p className="text-white/30 text-xs text-center py-10">Connect wallet to view your bounties</p>
+              <p className="text-white text-xs text-center py-10">Connect wallet to view your bounties</p>
             ) : loading ? (
-              <p className="text-white/30 text-xs text-center py-8">Loading...</p>
+              <p className="text-white text-xs text-center py-8">Loading...</p>
             ) : myBounties.length === 0 ? (
               <div className="text-center py-10">
-                <i className="fa-solid fa-crosshairs text-white/10 text-3xl mb-3" />
-                <p className="text-white/30 text-xs">No bounties posted or claimed yet.</p>
+                <i className="fa-solid fa-crosshairs text-white text-3xl mb-3" />
+                <p className="text-white text-xs">No bounties posted or claimed yet.</p>
                 <button onClick={() => { setTab('OPEN'); setShowPost(true); }}
-                  className="mt-3 text-[#FF2929] text-xs font-bold underline">
+                  className="mt-3 text-[#9945FF] text-xs font-bold underline">
                   Post a bounty
                 </button>
               </div>

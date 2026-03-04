@@ -59,7 +59,7 @@ const PWAInstallBanner: React.FC = () => {
     <div
       className="fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-2rem)] max-w-sm"
       style={{
-        background: 'linear-gradient(135deg, #020202 0%, #060f08 100%)',
+        background: 'linear-gradient(135deg, #0a0a1a 0%, #060f08 100%)',
         border: '1px solid rgba(20,241,149,0.35)',
         boxShadow: '0 0 24px rgba(20,241,149,0.15), 0 4px 24px rgba(0,0,0,0.8)',
       }}
@@ -71,7 +71,7 @@ const PWAInstallBanner: React.FC = () => {
         {/* Icon */}
         <div
           className="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#14F195]/30"
-          style={{ background: '#020202' }}
+          style={{ background: '#0a0a1a' }}
         >
           <img src="/icon.svg" alt="Solana Raid" className="w-9 h-9" />
         </div>
@@ -82,11 +82,11 @@ const PWAInstallBanner: React.FC = () => {
             INSTALL_SOLANA_RAID
           </p>
           {showIos ? (
-            <p className="text-[9px] text-white/60 font-mono mt-0.5 leading-snug">
+            <p className="text-[9px] text-white font-mono mt-0.5 leading-snug">
               Tap <span className="text-[#14F195]">Share</span> → <span className="text-[#14F195]">Add to Home Screen</span>
             </p>
           ) : (
-            <p className="text-[9px] text-white/60 font-mono mt-0.5">
+            <p className="text-[9px] text-white font-mono mt-0.5">
               Play offline · Fast load · No browser UI
             </p>
           )}
@@ -104,7 +104,7 @@ const PWAInstallBanner: React.FC = () => {
           )}
           <button
             onClick={handleDismiss}
-            className="w-6 h-6 flex items-center justify-center text-white/50 hover:text-white/70 transition-colors text-lg leading-none"
+            className="w-6 h-6 flex items-center justify-center text-white hover:text-white transition-colors text-lg leading-none"
             aria-label="Dismiss"
           >
             ×

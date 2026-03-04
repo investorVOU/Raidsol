@@ -15,7 +15,7 @@ const PixelIcon: React.FC<PixelIconProps> = ({ pixels, color, size = 28, dimmed 
   const rows = pixels.split('\n');
   const h = rows.length;
   const w = Math.max(...rows.map(r => r.length));
-  const fill = dimmed ? 'rgba(255,255,255,0.12)' : color;
+  const fill = dimmed ?'#ffffff': color;
 
   const rects: React.ReactNode[] = [];
   rows.forEach((row, y) => {
@@ -45,7 +45,7 @@ const ICONS: Record<string, { pixels: string; color: string }> = {
 
   // Crosshair — red
   FIRST_RAID: {
-    color: '#FF2929',
+    color: '#9945FF',
     pixels: [
       '..XXXX..',
       '.X....X.',
@@ -210,7 +210,7 @@ const ICONS: Record<string, { pixels: string; color: string }> = {
 
   // Shield — red
   PVP_WIN: {
-    color: '#FF2929',
+    color: '#9945FF',
     pixels: [
       '.XXXXXX.',
       'XXXXXXXX',

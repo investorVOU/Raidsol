@@ -72,7 +72,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
             <h2 className="text-xl font-black uppercase tracking-tight text-white">
               Squad Ops
             </h2>
-            <p className="text-[10px] text-white/40 mt-0.5">Co-op raid · 4-player unit</p>
+            <p className="text-[10px] text-white mt-0.5">Co-op raid · 4-player unit</p>
           </div>
           <div className="flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/25 px-2 py-1">
             <span className="text-sm font-black text-cyan-400 mono">1</span>
@@ -86,7 +86,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
         {/* ─── SQUAD ROSTER ─── */}
         <div>
-          <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wide mb-2">Roster</p>
+          <p className="text-[10px] font-semibold text-white uppercase tracking-wide mb-2">Roster</p>
           <div className="space-y-1.5">
 
             {/* YOU */}
@@ -110,7 +110,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                   </span>
                 </div>
                 {shortAddr && (
-                  <p className="text-[9px] font-mono text-white/30 mt-0.5 truncate">{shortAddr}</p>
+                  <p className="text-[9px] font-mono text-white mt-0.5 truncate">{shortAddr}</p>
                 )}
               </div>
               <div className={`shrink-0 text-[8px] font-bold uppercase border px-1.5 py-0.5 ${ROLE_META[selectedRole].color}`}>
@@ -122,11 +122,11 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
             {[2, 3, 4].map(n => (
               <div key={n} className="border border-dashed border-white/8 p-3 flex items-center gap-3">
                 <div className="shrink-0 w-9 h-9 rounded-full bg-white/3 border border-dashed border-white/10 flex items-center justify-center">
-                  <span className="text-white/20">+</span>
+                  <span className="text-white">+</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-white/25">Waiting for player…</p>
-                  <p className="text-[9px] mono text-white/15 mt-0.5">Slot {n}</p>
+                  <p className="text-xs text-white">Waiting for player…</p>
+                  <p className="text-[9px] mono text-white mt-0.5">Slot {n}</p>
                 </div>
                 <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
               </div>
@@ -136,7 +136,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
         {/* ─── ROLE SELECTION ─── */}
         <div>
-          <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wide mb-2">Your role</p>
+          <p className="text-[10px] font-semibold text-white uppercase tracking-wide mb-2">Your role</p>
           <div className="grid grid-cols-2 gap-1.5">
             {ROLES.map(role => (
               <button
@@ -148,10 +148,10 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                     : 'bg-black border-white/10 hover:border-white/20'
                 }`}
               >
-                <p className={`text-xs font-bold uppercase tracking-wide ${selectedRole === role ? '' : 'text-white/50'}`}>
+                <p className={`text-xs font-bold uppercase tracking-wide ${selectedRole === role ? '' : 'text-white'}`}>
                   {role}
                 </p>
-                <p className="text-[9px] text-white/40 mt-0.5 leading-tight">{ROLE_META[role].desc}</p>
+                <p className="text-[9px] text-white mt-0.5 leading-tight">{ROLE_META[role].desc}</p>
               </button>
             ))}
           </div>
@@ -159,27 +159,27 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
         {/* ─── ENTRY INFO ─── */}
         <div className="bg-black border border-white/8 p-3 space-y-2">
-          <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wide">Raid info</p>
+          <p className="text-[10px] font-semibold text-white uppercase tracking-wide">Raid info</p>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <p className="text-[9px] text-white/40 uppercase tracking-wide mb-0.5">Entry fee</p>
+              <p className="text-[9px] text-white uppercase tracking-wide mb-0.5">Entry fee</p>
               <p className="mono font-bold text-white text-sm">
                 {pricesLoading
-                  ? <span className="text-white/40 text-xs animate-pulse">Fetching…</span>
-                  : <>{fee % 1 === 0 ? fee.toFixed(0) : fee.toFixed(meta.decimals === 0 ? 0 : meta.decimals)}{' '}<span className="text-white/50 text-xs">{meta.label}</span></>
+                  ? <span className="text-white text-xs animate-pulse">Fetching…</span>
+                  : <>{fee % 1 === 0 ? fee.toFixed(0) : fee.toFixed(meta.decimals === 0 ? 0 : meta.decimals)}{' '}<span className="text-white text-xs">{meta.label}</span></>
                 }
               </p>
             </div>
             <div>
-              <p className="text-[9px] text-white/40 uppercase tracking-wide mb-0.5">Payout</p>
+              <p className="text-[9px] text-white uppercase tracking-wide mb-0.5">Payout</p>
               <p className="mono font-bold text-white text-sm">Equal split</p>
             </div>
             <div>
-              <p className="text-[9px] text-white/40 uppercase tracking-wide mb-0.5">Bust penalty</p>
-              <p className="mono font-bold text-red-400 text-sm">−25% pool</p>
+              <p className="text-[9px] text-white uppercase tracking-wide mb-0.5">Bust penalty</p>
+              <p className="mono font-bold text-[#9945FF] text-sm">−25% pool</p>
             </div>
             <div>
-              <p className="text-[9px] text-white/40 uppercase tracking-wide mb-0.5">Squad bonus</p>
+              <p className="text-[9px] text-white uppercase tracking-wide mb-0.5">Squad bonus</p>
               <p className="mono font-bold text-cyan-400 text-sm">+1.25× pool</p>
             </div>
           </div>
@@ -190,7 +190,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
           <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse shrink-0" />
           <div>
             <p className="text-[10px] font-semibold text-yellow-400">Matchmaking coming soon</p>
-            <p className="text-[9px] text-white/40 mt-0.5">Share code · Invite direct · Auto-match queue</p>
+            <p className="text-[9px] text-white mt-0.5">Share code · Invite direct · Auto-match queue</p>
           </div>
         </div>
 
@@ -201,7 +201,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
         {/* Currency selector */}
         <div>
-          <p className="text-[9px] text-white/40 uppercase tracking-wide mb-1.5">Pay with</p>
+          <p className="text-[9px] text-white uppercase tracking-wide mb-1.5">Pay with</p>
           <div className="grid grid-cols-3 gap-1.5">
             {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
               const m = CURRENCY_META[c];
@@ -214,11 +214,11 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                   key={c}
                   onClick={() => setCurrency(c)}
                   className={`py-1.5 border text-center transition-all ${
-                    active ? `${m.color} bg-white/5` : 'border-white/10 text-white/40 hover:border-white/20'
+                    active ? `${m.color} bg-white/5` : 'border-white/10 text-white hover:border-white/20'
                   }`}
                 >
                   <p className="text-[10px] font-bold uppercase">{m.label}</p>
-                  <p className={`text-[9px] mono mt-0.5 ${ok ? 'text-white/50' : 'text-red-400/60'}`}>
+                  <p className={`text-[9px] mono mt-0.5 ${ok ? 'text-white' : 'text-[#9945FF]/60'}`}>
                     {bal.toFixed(c === Currency.SKR ? 0 : 2)}
                   </p>
                 </button>
@@ -228,7 +228,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
         </div>
 
         {!isConnected && (
-          <p className="text-center text-[10px] text-red-400/70 font-semibold">
+          <p className="text-center text-[10px] text-[#9945FF]/70 font-semibold">
             Connect wallet to deploy
           </p>
         )}
@@ -239,13 +239,13 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
           className={`w-full py-3 font-bold uppercase tracking-wide text-sm transition-all flex items-center justify-center gap-2 ${
             isConnected && canAfford
               ? 'bg-cyan-500 text-black active:scale-[0.98] shadow-[0_0_20px_rgba(6,182,212,0.2)]'
-              : 'bg-white/5 border border-white/5 text-white/25 cursor-not-allowed'
+              : 'bg-white/5 border border-white/5 text-white cursor-not-allowed'
           }`}
         >
           {!isConnected ? '🔒 Wallet required' : pricesLoading ? 'Fetching prices…' : !canAfford ? 'Insufficient funds' : '⚡ Deploy Squad'}
         </button>
 
-        <p className="text-center text-[9px] text-white/30">
+        <p className="text-center text-[9px] text-white">
           {pricesLoading ? '---' : `${fee % 1 === 0 ? fee.toFixed(0) : fee.toFixed(meta.decimals)} ${meta.label}`} entry · shared payout
         </p>
       </div>

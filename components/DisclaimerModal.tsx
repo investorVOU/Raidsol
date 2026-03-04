@@ -31,25 +31,25 @@ const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onComplete }) => {
     >
       <div
         className="w-full max-w-md tech-border relative overflow-hidden"
-        style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.10)' }}
+        style={{ background: '#0a0a1a', border: '1px solid rgba(255,255,255,0.15)' }}
       >
         {/* Top red accent */}
-        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: '#FF2929', boxShadow: '0 0 12px rgba(255,41,41,0.5)' }} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: '#9945FF', boxShadow: '0 0 12px rgba(153,69,255,0.5)' }} />
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-white/[0.07]">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1" style={MONO}>
+              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white mb-1" style={MONO}>
                 // EXTRACTION_GAME
               </p>
-              <h1 style={{ ...BN, fontSize: '32px', color: '#FF2929', lineHeight: 1 }}>
+              <h1 style={{ ...BN, fontSize: '32px', color: '#9945FF', lineHeight: 1 }}>
                 SOL RAID
               </h1>
             </div>
             <span
               className="text-[9px] font-bold px-2 py-1"
-              style={{ ...MONO, color: '#FF2929', border: '1px solid rgba(255,41,41,0.3)', background: 'rgba(255,41,41,0.06)' }}
+              style={{ ...MONO, color: '#9945FF', border: '1px solid rgba(153,69,255,0.3)', background: 'rgba(153,69,255,0.06)' }}
             >
               V1
             </span>
@@ -62,7 +62,7 @@ const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onComplete }) => {
             <div key={tag} className="flex items-start gap-4">
               <span
                 className="shrink-0 text-[11px] font-black px-1.5 py-px"
-                style={{ ...MONO, color: '#FF2929', border: '1px solid rgba(255,41,41,0.35)', background: 'rgba(255,41,41,0.06)', minWidth: '28px', textAlign: 'center' }}
+                style={{ ...MONO, color: '#9945FF', border: '1px solid rgba(153,69,255,0.35)', background: 'rgba(153,69,255,0.06)', minWidth: '28px', textAlign: 'center' }}
               >
                 {tag}
               </span>
@@ -70,7 +70,7 @@ const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onComplete }) => {
                 <p className="text-[11px] font-black uppercase tracking-widest text-white mb-0.5" style={SG}>
                   {head}
                 </p>
-                <p className="text-[12px] text-white/45 leading-snug" style={SG}>
+                <p className="text-[12px] text-white leading-snug" style={SG}>
                   {body}
                 </p>
               </div>
@@ -93,15 +93,15 @@ const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onComplete }) => {
               style={{
                 width: '18px',
                 height: '18px',
-                border: confirmed ? '2px solid #FF2929' : '2px solid rgba(255,255,255,0.18)',
-                background: confirmed ? '#FF2929' : 'transparent',
+                border: confirmed ? '2px solid #9945FF' : '2px solid rgba(255,255,255,0.15)',
+                background: confirmed ? '#9945FF' : 'transparent',
               }}
             >
               {confirmed && <div style={{ width: '6px', height: '6px', background: '#fff' }} />}
             </div>
             <span
               className="text-[12px] uppercase tracking-wide transition-colors"
-              style={{ ...SG, fontWeight: 700, color: confirmed ? '#fff' : 'rgba(255,255,255,0.5)' }}
+              style={{ ...SG, fontWeight: 700, color: confirmed ? '#fff' :'#ffffff'}}
             >
               I understand how the game works
             </span>
@@ -117,13 +117,13 @@ const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onComplete }) => {
               style={{
                 width: '18px',
                 height: '18px',
-                border: dontShowAgain ? '2px solid rgba(255,255,255,0.35)' : '2px solid rgba(255,255,255,0.10)',
-                background: dontShowAgain ? 'rgba(255,255,255,0.08)' : 'transparent',
+                border: dontShowAgain ? '2px solid rgba(255,255,255,0.15)' : '2px solid rgba(255,255,255,0.15)',
+                background: dontShowAgain ?'#ffffff': 'transparent',
               }}
             >
-              {dontShowAgain && <div style={{ width: '6px', height: '6px', background: 'rgba(255,255,255,0.6)' }} />}
+              {dontShowAgain && <div style={{ width: '6px', height: '6px', background: 'rgba(255,255,255,0.06)' }} />}
             </div>
-            <span className="text-[11px] uppercase tracking-wide text-white/30" style={{ ...SG, fontWeight: 600 }}>
+            <span className="text-[11px] uppercase tracking-wide text-white" style={{ ...SG, fontWeight: 600 }}>
               Don't show again
             </span>
           </div>
@@ -141,9 +141,9 @@ const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onComplete }) => {
               padding: '14px 0',
               fontSize: '18px',
               letterSpacing: '3px',
-              background: confirmed ? '#FF2929' : 'transparent',
-              color: confirmed ? '#fff' : 'rgba(255,255,255,0.15)',
-              border: confirmed ? 'none' : '1px solid rgba(255,255,255,0.07)',
+              background: confirmed ? '#9945FF' : 'transparent',
+              color: confirmed ? '#fff' :'#ffffff'
+              border: confirmed ? 'none' : '1px solid rgba(255,255,255,0.15)',
               cursor: confirmed ? 'pointer' : 'not-allowed',
               transition: 'all 0.15s',
             }}
@@ -151,7 +151,7 @@ const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onComplete }) => {
             ENTER SOL RAID
           </button>
           {!confirmed && (
-            <p className="text-center text-[9px] text-white/20 mt-2 uppercase tracking-widest" style={MONO}>
+            <p className="text-center text-[9px] text-white mt-2 uppercase tracking-widest" style={MONO}>
               confirm above to unlock
             </p>
           )}

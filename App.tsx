@@ -2096,7 +2096,7 @@ const AppInner: React.FC = () => {
           isLobby={gameState.currentScreen === Screen.LOBBY}
         />
         <main className="flex-1 relative overflow-hidden">
-          <Suspense fallback={<div className="flex-1 flex items-center justify-center text-white/40 text-xs font-black uppercase tracking-widest animate-pulse">LOADING...</div>}>{renderScreen()}</Suspense>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center text-white text-xs font-black uppercase tracking-widest animate-pulse">LOADING...</div>}>{renderScreen()}</Suspense>
         </main>
       </div>
       <HowItWorksModal
@@ -2125,7 +2125,7 @@ const AppInner: React.FC = () => {
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] pointer-events-none animate-in slide-in-from-top-2 duration-300">
           <div className="px-5 py-3 text-sm font-black text-white flex items-center gap-2" style={{ background: '#0d0d18', border: '1px solid rgba(255,184,0,0.45)', borderRadius: '10px', boxShadow: '0 0 24px rgba(255,184,0,0.2)' }}>
             <span style={{ color: '#FFB800' }}>BADGE EARNED</span>
-            <span className="text-white/60">·</span>
+            <span className="text-white">·</span>
             <span>{achievementToast}</span>
           </div>
         </div>
@@ -2156,12 +2156,12 @@ const AppInner: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[10px] font-semibold" style={{ color: '#b77aff' }}>ROUND WIN</p>
-                        <p className="text-[9px] text-white/35">R{win.roundNum}/4 · {win.roundDate}</p>
+                        <p className="text-[9px] text-white">R{win.roundNum}/4 · {win.roundDate}</p>
                       </div>
                     </div>
                     <button
                       onClick={() => setRoundWinPopupDismissed(win.id)}
-                      className="w-6 h-6 rounded-full bg-white/6 flex items-center justify-center text-white/35 hover:text-white transition-colors shrink-0 mt-0.5"
+                      className="w-6 h-6 rounded-full bg-white/6 flex items-center justify-center text-white hover:text-white transition-colors shrink-0 mt-0.5"
                     >
                       <i className="fa-solid fa-xmark text-[10px]" />
                     </button>
@@ -2169,11 +2169,11 @@ const AppInner: React.FC = () => {
 
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-[9px] text-white/35 mb-0.5">Rank · Allocation</p>
+                      <p className="text-[9px] text-white mb-0.5">Rank · Allocation</p>
                       <p className="text-lg font-black text-white leading-none">
                         {medalMap[win.rank]} <span style={{ color: '#b77aff' }}>{win.solAllocation.toFixed(4)} SOL</span>
                       </p>
-                      <p className="text-[9px] text-white/40 mt-0.5">{pctMap[win.rank]} of {win.poolSol.toFixed(3)} SOL pool</p>
+                      <p className="text-[9px] text-white mt-0.5">{pctMap[win.rank]} of {win.poolSol.toFixed(3)} SOL pool</p>
                     </div>
                     <button
                       onClick={() => { setRoundWinPopupDismissed(win.id); navigateTo(Screen.PROFILE); }}
@@ -2185,7 +2185,7 @@ const AppInner: React.FC = () => {
                   </div>
 
                   {unclaimedRoundWins.length > 1 && (
-                    <p className="text-[9px] text-white/28 text-center">+{unclaimedRoundWins.length - 1} more unclaimed win{unclaimedRoundWins.length - 1 > 1 ? 's' : ''}</p>
+                    <p className="text-[9px] text-white text-center">+{unclaimedRoundWins.length - 1} more unclaimed win{unclaimedRoundWins.length - 1 > 1 ? 's' : ''}</p>
                   )}
                 </div>
               </div>
@@ -2201,20 +2201,20 @@ const AppInner: React.FC = () => {
             <h2 className="text-lg font-black uppercase tracking-widest text-white">
               VAULT ACCESS DENIED
             </h2>
-            <p className="text-xs text-white/70 font-black uppercase tracking-widest leading-relaxed">
+            <p className="text-xs text-white font-black uppercase tracking-widest leading-relaxed">
               The vault is restricted to<br />
               <span className="text-[#00FBFF]">OPERATIVE</span> rank and above.
             </p>
             <div className="w-full border border-white/5 bg-white/5 p-3 flex flex-col gap-1">
-              <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">YOUR CURRENT RANK</p>
+              <p className="text-[10px] text-white font-black uppercase tracking-[0.2em]">YOUR CURRENT RANK</p>
               <p className="font-black uppercase tracking-widest text-sm" style={{ color: currentRank.color }}>
                 {currentRank.title}
               </p>
-              <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">
+              <p className="text-[10px] text-white font-black uppercase tracking-widest">
                 {gameState.srPoints.toLocaleString()} / 3,000 SR REQUIRED
               </p>
             </div>
-            <p className="text-[10px] text-white/50 font-black uppercase tracking-widest leading-relaxed">
+            <p className="text-[10px] text-white font-black uppercase tracking-widest leading-relaxed">
               Keep raiding to reach OPERATIVE.<br />
               The vault will be waiting.
             </p>

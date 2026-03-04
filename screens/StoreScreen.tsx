@@ -152,17 +152,17 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         };
       default:
         return {
-          text: 'text-white/60',
+          text: 'text-white',
           border: 'border-white/10',
           bg: 'bg-white/5',
-          button: 'bg-[#FF2929] text-white',
-          shadow: 'hover:shadow-[0_0_20px_rgba(255,41,41,0.1)]'
+          button: 'bg-[#9945FF] text-white',
+          shadow: 'hover:shadow-[0_0_20px_rgba(153,69,255,0.1)]'
         };
     }
   };
 
   const currentBalance = selectedCurrency === Currency.SOL ? walletBalance : selectedCurrency === Currency.USDC ? usdcBalance : skrBalance;
-  const currencyColor = selectedCurrency === Currency.SOL ? 'text-white/70' : selectedCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400';
+  const currencyColor = selectedCurrency === Currency.SOL ? 'text-white' : selectedCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400';
 
   return (
     <div className="h-full flex flex-col p-3 sm:p-6 lg:p-12 animate-in slide-in-from-bottom-4 duration-300 overflow-y-auto scrollbar-hide pb-24 relative" style={{ backgroundColor: 'var(--app-bg)' }}>
@@ -190,14 +190,14 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-10 gap-3 sm:gap-6">
           <div>
             <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black uppercase tracking-tight text-white leading-none">
-              Black <span className="text-[#FF2929]">Market</span>
+              Black <span className="text-[#9945FF]">Market</span>
             </h2>
-            <p className="text-[10px] font-bold text-white/40 mt-1 sm:mt-3">Equipment depot</p>
+            <p className="text-[10px] font-bold text-white mt-1 sm:mt-3">Equipment depot</p>
           </div>
 
           <div className="flex flex-col gap-2 w-full sm:w-72">
             <div className="bg-[var(--modal-bg)]/60 px-3 py-2 sm:p-6 border border-white/10 tech-border w-full">
-              <p className="text-[9px] text-white/40 font-bold uppercase tracking-wide mb-0.5">Balance</p>
+              <p className="text-[9px] text-white font-bold uppercase tracking-wide mb-0.5">Balance</p>
               <div className="flex items-baseline justify-between gap-2">
                 <p className="mono text-lg sm:text-3xl font-black text-white">{selectedCurrency === Currency.SOL ? currentBalance.toFixed(3) : Math.floor(currentBalance).toLocaleString()}</p>
                 <span className={`text-xs font-black ${currencyColor}`}>{selectedCurrency}</span>
@@ -205,12 +205,12 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             </div>
 
             <div className="grid grid-cols-3 gap-1 w-full">
-              <p className="col-span-3 text-[9px] font-bold text-white/50 uppercase tracking-wide mb-0.5">Buy with</p>
+              <p className="col-span-3 text-[9px] font-bold text-white uppercase tracking-wide mb-0.5">Buy with</p>
               {[Currency.SOL, Currency.USDC, Currency.SKR].map(curr => (
                 <button
                   key={curr}
                   onClick={() => setSelectedCurrency(curr)}
-                  className={`py-2 text-[10px] font-bold uppercase tracking-wide border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-[var(--modal-bg)] border-white/20 text-white/50 hover:text-white hover:border-white/40'}`}
+                  className={`py-2 text-[10px] font-bold uppercase tracking-wide border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-[var(--modal-bg)] border-white/20 text-white hover:text-white hover:border-white/40'}`}
                 >
                   {curr}
                 </button>
@@ -222,19 +222,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         <div className="flex gap-1.5 mb-6 sm:mb-10">
           <button
             onClick={() => setActiveTab('GEAR')}
-            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'GEAR' ? 'border-[#FF2929] text-[#FF2929] bg-[#FF2929]/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'GEAR' ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10' : 'border-white/20 text-white hover:text-white'}`}
           >
             {t('store.gear')}
           </button>
           <button
             onClick={() => setActiveTab('AVATAR')}
-            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'AVATAR' ? 'border-white text-white bg-white/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'AVATAR' ? 'border-white text-white bg-white/10' : 'border-white/20 text-white hover:text-white'}`}
           >
             {t('store.avatar')}
           </button>
           <button
             onClick={() => setActiveTab('PASS')}
-            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all relative ${activeTab === 'PASS' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all relative ${activeTab === 'PASS' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-white/20 text-white hover:text-white'}`}
           >
             {t('store.pass')}
             {raidTickets > 0 && (
@@ -245,7 +245,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
           </button>
           <button
             onClick={() => { setActiveTab('FORGE'); setForgeSelected([]); setForgeResult(null); }}
-            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'FORGE' ? 'border-orange-500 text-orange-400 bg-orange-500/10' : 'border-white/20 text-white/50 hover:text-white/70'}`}
+            className={`flex-1 py-3 sm:py-4 border-2 tech-border font-bold uppercase text-[10px] tracking-wide transition-all ${activeTab === 'FORGE' ? 'border-orange-500 text-orange-400 bg-orange-500/10' : 'border-white/20 text-white hover:text-white'}`}
           >
             Forge
           </button>
@@ -261,7 +261,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                 <i className="fa-solid fa-ticket text-[#FFB800] text-sm shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-black text-[#FFB800] leading-none">{passDiscountPct}% PASS DISCOUNT ACTIVE</p>
-                  <p className="text-[9px] text-white/40 mt-0.5">Earned via Bounty Board · applied to all passes below</p>
+                  <p className="text-[9px] text-white mt-0.5">Earned via Bounty Board · applied to all passes below</p>
                 </div>
               </div>
             )}
@@ -273,7 +273,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
               </div>
               <div className="flex gap-4 sm:block sm:text-right">
                 <div>
-                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-wide hidden sm:block">Per ticket</p>
+                  <p className="text-[9px] font-bold text-white uppercase tracking-wide hidden sm:block">Per ticket</p>
                   <p className="text-[9px] text-yellow-500/70 font-bold">🎟️ 50% off entry fee</p>
                   <p className="text-[9px] text-yellow-500/70 font-bold">🎟️ +10% win boost</p>
                 </div>
@@ -322,13 +322,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                 const canAfford = !passesLoading && currentBalance >= priceValue;
                 const isLoading = passesLoading;
                 // tier accent: game palette — red / cyan / orange / gold
-                const tierColor = pass.id === 'pass_basic'  ? '#FF2929'
+                const tierColor = pass.id === 'pass_basic'  ? '#9945FF'
                                 : pass.id === 'pass_core'   ? '#22d3ee'
                                 : pass.id === 'pass_pro'    ? '#fb923c'
                                 : pass.id === 'pass_elite'  ? '#FFB800'
                                 : '#eab308';
                 const badgeColors = 'border-white/10 bg-white/[0.02]';
-                const btnColors = pass.id === 'pass_basic'  ? 'bg-[#FF2929] text-white'
+                const btnColors = pass.id === 'pass_basic'  ? 'bg-[#9945FF] text-white'
                                 : pass.id === 'pass_core'   ? 'bg-cyan-400 text-black'
                                 : pass.id === 'pass_pro'    ? 'bg-orange-500 text-black'
                                 : pass.id === 'pass_elite'  ? 'bg-[#FFB800] text-black'
@@ -353,7 +353,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         </div>
                         <div>
                           <p className="text-sm font-black uppercase text-white leading-none">{pass.name}</p>
-                          <p className="text-xs font-bold text-white/50 mt-0.5"><span className="text-white font-black">{pass.tickets}</span> tickets · <span className="text-white/40">${pass.usdPrice}</span></p>
+                          <p className="text-xs font-bold text-white mt-0.5"><span className="text-white font-black">{pass.tickets}</span> tickets · <span className="text-white">${pass.usdPrice}</span></p>
                         </div>
                       </div>
 
@@ -372,11 +372,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         <div className="flex flex-col gap-1.5 pt-2 border-t border-white/5">
                           <div>
                             {displayFull && (
-                              <p className="text-xs font-black text-white/30 mono line-through leading-none">
+                              <p className="text-xs font-black text-white mono line-through leading-none">
                                 {displayFull} <span className="text-[9px]">{selectedCurrency}</span>
                               </p>
                             )}
-                            <p className={`text-base font-black mono leading-none ${isLoading ? 'text-white/30 animate-pulse' : skrDiscount ? 'text-orange-400' : 'text-white'}`}>
+                            <p className={`text-base font-black mono leading-none ${isLoading ? 'text-white animate-pulse' : skrDiscount ? 'text-orange-400' : 'text-white'}`}>
                               {displayPrice} <span className={`text-xs ${skrDiscount ? 'text-orange-400' : currencyColor}`}>{selectedCurrency}</span>
                             </p>
                           </div>
@@ -385,9 +385,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                             disabled={!canAfford || !onBuyPass || loadingItemId !== null}
                             className={`w-full py-2 font-bold uppercase tracking-wide text-[10px] tech-border transition-all flex items-center justify-center gap-1 ${
                               !canAfford || !onBuyPass || (loadingItemId !== null && loadingItemId !== pass.id)
-                                ? 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed'
+                                ? 'bg-white/5 text-white border-white/5 cursor-not-allowed'
                                 : loadingItemId === pass.id
-                                ? 'bg-white/10 text-white/70 border-white/10 cursor-wait'
+                                ? 'bg-white/10 text-white border-white/10 cursor-wait'
                                 : `${btnColors} hover:opacity-90 active:translate-y-0.5`
                             }`}
                           >
@@ -417,7 +417,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             {/* Header */}
             <div className="p-4 sm:p-6 bg-orange-500/5 border border-orange-500/20 tech-border">
               <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-orange-400">Gear Forge</h3>
-              <p className="text-[10px] font-bold text-white/50 mt-1">
+              <p className="text-[10px] font-bold text-white mt-1">
                 Salvage 2 standard gear → receive 1 random limited gear. Both items are destroyed.
               </p>
             </div>
@@ -425,8 +425,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
             {/* Selection grid */}
             {ownedStandardGear.length < 2 ? (
               <div className="p-8 border-2 border-dashed border-white/10 tech-border text-center">
-                <p className="text-white/50 font-bold text-sm">Not enough gear</p>
-                <p className="text-white/40 text-xs font-bold mt-2">You need at least 2 standard gear items to forge.</p>
+                <p className="text-white font-bold text-sm">Not enough gear</p>
+                <p className="text-white text-xs font-bold mt-2">You need at least 2 standard gear items to forge.</p>
               </div>
             ) : (
               <>
@@ -455,8 +455,8 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                           </div>
                         )}
                         <span className="text-3xl leading-none">{gear.image}</span>
-                        <span className="text-[9px] font-bold uppercase tracking-wide text-white/75 leading-tight">{gear.name}</span>
-                        <span className="text-[8px] text-white/50 font-bold">{gear.effect?.replace('_', ' ')}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wide text-white leading-tight">{gear.name}</span>
+                        <span className="text-[8px] text-white font-bold">{gear.effect?.replace('_', ' ')}</span>
                       </button>
                     );
                   })}
@@ -480,9 +480,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                     {forgeSelected.length < 2 && (
                       [...Array(2 - forgeSelected.length)].map((_, i) => (
                         <React.Fragment key={i}>
-                          {forgeSelected.length + i > 0 && <span className="text-white/40 font-black text-xl">+</span>}
+                          {forgeSelected.length + i > 0 && <span className="text-white font-black text-xl">+</span>}
                           <div className="w-14 h-14 border-2 border-dashed border-white/15 bg-[var(--modal-bg)]/50 flex items-center justify-center">
-                            <span className="text-white/40 text-xs font-black">?</span>
+                            <span className="text-white text-xs font-black">?</span>
                           </div>
                         </React.Fragment>
                       ))
@@ -506,7 +506,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         <span className="text-orange-400/40 text-2xl font-black">?</span>
                       </div>
                     )}
-                    <span className="text-[8px] text-white/40 font-bold">Random limited</span>
+                    <span className="text-[8px] text-white font-bold">Random limited</span>
                   </div>
 
                   {/* Forge button */}
@@ -515,7 +515,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                     disabled={forgeSelected.length !== 2 || !onForgeGear || forging}
                     className={`ml-auto shrink-0 px-6 py-4 font-black uppercase tracking-tight tech-border transition-all text-sm flex items-center gap-2 ${
                       forgeSelected.length !== 2 || !onForgeGear
-                        ? 'bg-white/5 text-white/30 border-white/5 cursor-not-allowed'
+                        ? 'bg-white/5 text-white border-white/5 cursor-not-allowed'
                         : forging
                         ? 'bg-orange-500/20 text-orange-400/50 border-orange-500/20 cursor-wait'
                         : 'bg-orange-500 text-black hover:bg-orange-400 active:scale-95 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
@@ -558,7 +558,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
               <div 
                 key={item.id} 
                 className={`bg-[var(--modal-bg)] border-2 p-6 tech-border group transition-all flex flex-col 
-                  ${isOwned ? 'border-amber-500/20 bg-amber-950/5' : levelLocked ? 'border-red-950/20 opacity-60 grayscale' : `border-white/5 ${rarityStyle.shadow}`}`}
+                  ${isOwned ? 'border-amber-500/20 bg-amber-950/5' : levelLocked ? 'border-[#9945FF]/20 opacity-60 grayscale' : `border-white/5 ${rarityStyle.shadow}`}`}
               >
                 <div className="flex gap-5 mb-5">
                   <div className={`relative w-24 h-24 md:w-28 md:h-28 bg-[var(--modal-bg)] border ${isOwned ? 'border-amber-500/50' : rarityStyle.border} flex items-center justify-center shrink-0 overflow-hidden`}>
@@ -582,7 +582,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                         />
                         ) : (
                         <div className="w-full h-full flex items-center justify-center bg-white/5">
-                            <span className="text-[10px] font-bold text-white/30 text-center">?</span>
+                            <span className="text-[10px] font-bold text-white text-center">?</span>
                         </div>
                         )}
                         
@@ -611,7 +611,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                     </div>
                     <div className="mt-2 space-y-1.5">
                       {levelLocked ? (
-                        <span className="block text-[10px] font-bold text-red-500 animate-pulse">Locked · Lv.{item.minLevel}</span>
+                        <span className="block text-[10px] font-bold text-[#9945FF] animate-pulse">Locked · Lv.{item.minLevel}</span>
                       ) : (
                         <>
                           {item.effect && (
@@ -624,13 +624,13 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   </div>
                 </div>
 
-                <p className="text-xs text-white/50 font-medium leading-tight mb-8 flex-1">{item.description}</p>
+                <p className="text-xs text-white font-medium leading-tight mb-8 flex-1">{item.description}</p>
                 
                 <div className="flex justify-between items-end mt-auto pt-5 border-t border-white/5">
                   <div className="mono flex flex-col">
-                     <span className="text-[9px] font-bold text-white/30 uppercase tracking-wide mb-1">Cost</span>
-                     <span className={`text-base font-black ${isOwned ? 'text-white/40 line-through' : 'text-white'}`}>
-                        {displayPrice} <span className={`text-xs ${isOwned ? 'text-white/40' : currencyColor}`}>{selectedCurrency}</span>
+                     <span className="text-[9px] font-bold text-white uppercase tracking-wide mb-1">Cost</span>
+                     <span className={`text-base font-black ${isOwned ? 'text-white line-through' : 'text-white'}`}>
+                        {displayPrice} <span className={`text-xs ${isOwned ? 'text-white' : currencyColor}`}>{selectedCurrency}</span>
                      </span>
                   </div>
                   
@@ -639,7 +639,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                       Owned
                     </div>
                   ) : levelLocked ? (
-                    <div className="px-8 py-3 font-bold uppercase tracking-wide text-xs tech-border bg-red-950/20 text-red-500/40 border-red-500/10 text-center cursor-default">
+                    <div className="px-8 py-3 font-bold uppercase tracking-wide text-xs tech-border bg-[#9945FF]/10 text-[#9945FF]/40 border-[#9945FF]/10 text-center cursor-default">
                       Locked
                     </div>
                   ) : (
@@ -648,9 +648,9 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                       disabled={!canAfford || loadingItemId !== null}
                       className={`px-8 py-3 font-bold uppercase tracking-wide text-xs tech-border transition-all min-w-[90px] flex items-center justify-center gap-1.5
                         ${!canAfford || (loadingItemId !== null && loadingItemId !== item.id)
-                          ? 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed'
+                          ? 'bg-white/5 text-white border-white/5 cursor-not-allowed'
                           : loadingItemId === item.id
-                          ? 'bg-white/10 text-white/70 border-white/10 cursor-wait'
+                          ? 'bg-white/10 text-white border-white/10 cursor-wait'
                           : `${rarityStyle.button} hover:opacity-90 active:translate-y-0.5 shadow-lg`}`}
                     >
                       {loadingItemId === item.id ? (
@@ -671,7 +671,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
         </div>}
 
         <div className="mt-16 p-8 bg-white/2 border-2 border-dashed border-white/5 tech-border text-center">
-          <p className="text-xs font-bold text-white/30">End of catalogue</p>
+          <p className="text-xs font-bold text-white">End of catalogue</p>
         </div>
       </div>
     </div>

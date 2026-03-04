@@ -198,14 +198,14 @@ const WalletRoastScreen: React.FC<WalletRoastScreenProps> = ({
     <div className="h-full flex flex-col overflow-y-auto scrollbar-hide pb-28 md:pb-8" style={{ backgroundColor: 'var(--app-bg)' }}>
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-5 pb-4 border-b border-white/6">
-        <button onClick={onBack} className="text-white/40 hover:text-white transition-colors p-1">
+        <button onClick={onBack} className="text-white hover:text-white transition-colors p-1">
           <i className="fa-solid fa-arrow-left text-sm" />
         </button>
         <div className="text-center">
           <h1 className="text-lg font-black text-white uppercase tracking-widest" style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '3px' }}>
             Wallet Roast
           </h1>
-          <p className="text-[10px] text-white/30 font-bold">On-chain comedy</p>
+          <p className="text-[10px] text-white font-bold">On-chain comedy</p>
         </div>
         <div className="w-6" />
       </div>
@@ -217,20 +217,20 @@ const WalletRoastScreen: React.FC<WalletRoastScreenProps> = ({
             <div className="text-6xl">🔥</div>
             <div className="text-center space-y-2">
               <h2 className="text-xl font-black text-white">Let's roast your wallet</h2>
-              <p className="text-sm text-white/40">
+              <p className="text-sm text-white">
                 We'll analyse your on-chain history and craft a personalised roast. Share at your own risk.
               </p>
             </div>
 
             {!walletAddress ? (
               <div className="w-full rounded-xl bg-white/3 border border-white/10 p-5 text-center">
-                <p className="text-white/40 text-sm font-bold">Connect wallet to get roasted</p>
+                <p className="text-white text-sm font-bold">Connect wallet to get roasted</p>
               </div>
             ) : (
               <button
                 onClick={handleStart}
                 className="w-full py-4 rounded-xl font-black text-base text-white active:scale-95 transition-all"
-                style={{ background: 'linear-gradient(135deg, #FF2929 0%, #CC0000 100%)', boxShadow: '0 0 25px rgba(255,41,41,0.30)', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px', fontSize: '18px' }}
+                style={{ background: 'linear-gradient(135deg, #9945FF 0%, #7c2dd6 100%)', boxShadow: '0 0 25px rgba(153,69,255,0.30)', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px', fontSize: '18px' }}
               >
                 🔥 ROAST MY WALLET
               </button>
@@ -242,16 +242,16 @@ const WalletRoastScreen: React.FC<WalletRoastScreenProps> = ({
           <div className="flex flex-col items-center gap-4 py-12">
             <div className="text-4xl animate-bounce">🔍</div>
             <p className="text-white font-black text-sm animate-pulse" style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px' }}>ANALYSING WALLET...</p>
-            <p className="text-white/30 text-xs text-center">Reading your on-chain history.<br />This will hurt.</p>
+            <p className="text-white text-xs text-center">Reading your on-chain history.<br />This will hurt.</p>
           </div>
         )}
 
         {status === 'error' && (
-          <div className="w-full rounded-xl bg-[#FF2929]/8 border border-[#FF2929]/30 p-5 text-center space-y-3">
-            <p className="text-[#FF2929] font-bold text-sm">{errorMsg}</p>
+          <div className="w-full rounded-xl bg-[#9945FF]/8 border border-[#9945FF]/30 p-5 text-center space-y-3">
+            <p className="text-[#9945FF] font-bold text-sm">{errorMsg}</p>
             <button
               onClick={handleStart}
-              className="px-6 py-2.5 rounded-xl font-bold text-sm text-white border border-[#FF2929]/40 hover:bg-[#FF2929]/10 transition-colors"
+              className="px-6 py-2.5 rounded-xl font-bold text-sm text-white border border-[#9945FF]/40 hover:bg-[#9945FF]/10 transition-colors"
             >
               Try again
             </button>
@@ -263,26 +263,26 @@ const WalletRoastScreen: React.FC<WalletRoastScreenProps> = ({
             {/* Roast Card */}
             <div
               className="w-full rounded-2xl p-5 space-y-4"
-              style={{ background: 'linear-gradient(135deg, #0d0000 0%, #150505 100%)', border: '1px solid rgba(255,41,41,0.25)', boxShadow: '0 0 30px rgba(255,41,41,0.08)' }}
+              style={{ background: 'linear-gradient(135deg, #0d0000 0%, #150505 100%)', border: '1px solid rgba(153,69,255,0.25)', boxShadow: '0 0 30px rgba(153,69,255,0.08)' }}
             >
               {/* Card header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] text-white/30 font-bold uppercase tracking-widest">SolRaid · Wallet Roast</p>
-                  <p className="text-sm font-black text-[#FF2929] font-mono">{shortAddr}</p>
+                  <p className="text-[9px] text-white font-bold uppercase tracking-widest">SolRaid · Wallet Roast</p>
+                  <p className="text-sm font-black text-[#9945FF] font-mono">{shortAddr}</p>
                 </div>
                 <span className="text-2xl">🔥</span>
               </div>
 
               {/* Divider */}
-              <div className="h-px bg-[#FF2929]/20" />
+              <div className="h-px bg-[#9945FF]/20" />
 
               {/* Roast lines */}
               <div className="space-y-3">
                 {roastLines.map((line, i) => (
                   <p key={i} className="text-sm text-white/85 leading-relaxed font-medium">
                     {i < roastLines.length - 1 ? line : (
-                      <span className="text-white/40 text-xs italic">{line}</span>
+                      <span className="text-white text-xs italic">{line}</span>
                     )}
                   </p>
                 ))}
@@ -293,17 +293,17 @@ const WalletRoastScreen: React.FC<WalletRoastScreenProps> = ({
                 <div className="flex items-center gap-4 pt-2 border-t border-white/5">
                   <div className="flex-1 text-center">
                     <p className="text-lg font-black text-white">{roastData.totalTokens}</p>
-                    <p className="text-[8px] text-white/30 uppercase tracking-wide">Tokens</p>
+                    <p className="text-[8px] text-white uppercase tracking-wide">Tokens</p>
                   </div>
                   <div className="w-px h-8 bg-white/10" />
                   <div className="flex-1 text-center">
-                    <p className="text-lg font-black text-[#FF2929]">{roastData.zeroTokens}</p>
-                    <p className="text-[8px] text-white/30 uppercase tracking-wide">Rugs</p>
+                    <p className="text-lg font-black text-[#9945FF]">{roastData.zeroTokens}</p>
+                    <p className="text-[8px] text-white uppercase tracking-wide">Rugs</p>
                   </div>
                   <div className="w-px h-8 bg-white/10" />
                   <div className="flex-1 text-center">
                     <p className="text-lg font-black text-[#FFB800]">{roastData.txCount}</p>
-                    <p className="text-[8px] text-white/30 uppercase tracking-wide">TXs</p>
+                    <p className="text-[8px] text-white uppercase tracking-wide">TXs</p>
                   </div>
                 </div>
               )}
@@ -332,7 +332,7 @@ const WalletRoastScreen: React.FC<WalletRoastScreenProps> = ({
             <button
               onClick={handleRoastAgain}
               className="w-full py-3 rounded-xl font-black text-sm active:scale-95 transition-all"
-              style={{ background: 'rgba(255,41,41,0.08)', border: '1px solid rgba(255,41,41,0.30)', color: '#FF2929', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px', fontSize: '16px' }}
+              style={{ background: 'rgba(153,69,255,0.08)', border: '1px solid rgba(153,69,255,0.30)', color: '#9945FF', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px', fontSize: '16px' }}
             >
               🔥 ROAST AGAIN
             </button>

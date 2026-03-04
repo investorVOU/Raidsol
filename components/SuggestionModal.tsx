@@ -50,26 +50,26 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
     >
       <div
         className="w-full max-w-md relative overflow-hidden"
-        style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.10)' }}
+        style={{ background: '#0a0a1a', border: '1px solid rgba(255,255,255,0.15)' }}
       >
         {/* top accent */}
-        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: '#FF2929', boxShadow: '0 0 12px rgba(255,41,41,0.5)' }} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: '#9945FF', boxShadow: '0 0 12px rgba(153,69,255,0.5)' }} />
 
         {/* header */}
         <div className="px-6 pt-6 pb-4 flex items-start justify-between border-b border-white/[0.07]">
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1" style={MONO}>
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white mb-1" style={MONO}>
               // DROP YOUR IDEAS
             </p>
             <h2 style={{ ...BN, fontSize: '26px', color: '#fff', lineHeight: 1 }}>SUGGESTION BOX</h2>
-            <p className="text-[12px] text-white/40 mt-1.5 leading-snug" style={SG}>
+            <p className="text-[12px] text-white mt-1.5 leading-snug" style={SG}>
               We read every message. Help us build the raid you want.
             </p>
           </div>
           <button
             onClick={onClose}
             className="shrink-0 ml-4 transition-colors"
-            style={{ color: 'rgba(255,255,255,0.30)', fontSize: '20px', lineHeight: 1, touchAction: 'manipulation' }}
+            style={{ color: '#ffffff', fontSize: '20px', lineHeight: 1, touchAction: 'manipulation' }}
           >
             ✕
           </button>
@@ -78,7 +78,7 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
         <div className="px-6 py-5 space-y-5">
           {/* category chips */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/35 mb-2.5" style={MONO}>CATEGORY</p>
+            <p className="text-[10px] uppercase tracking-widest text-white mb-2.5" style={MONO}>CATEGORY</p>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map(cat => {
                 const active = category === cat;
@@ -92,9 +92,9 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
                       fontSize: '11px',
                       fontWeight: 700,
                       padding: '5px 12px',
-                      border: active ? '1px solid #FF2929' : '1px solid rgba(255,255,255,0.12)',
-                      background: active ? 'rgba(255,41,41,0.12)' : 'transparent',
-                      color: active ? '#FF2929' : 'rgba(255,255,255,0.40)',
+                      border: active ? '1px solid #9945FF' : '1px solid rgba(255,255,255,0.15)',
+                      background: active ? 'rgba(153,69,255,0.12)' : 'transparent',
+                      color: active ? '#9945FF' :'#ffffff'
                       transition: 'all 0.15s',
                       cursor: 'pointer',
                     }}
@@ -108,7 +108,7 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
 
           {/* text input */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/35 mb-2.5" style={MONO}>YOUR SUGGESTION</p>
+            <p className="text-[10px] uppercase tracking-widest text-white mb-2.5" style={MONO}>YOUR SUGGESTION</p>
             <textarea
               value={text}
               onChange={e => {
@@ -122,8 +122,8 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
               style={{
                 ...SG,
                 width: '100%',
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.10)',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.15)',
                 color: '#fff',
                 fontSize: '13px',
                 padding: '12px',
@@ -134,22 +134,22 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
             />
             <div className="flex justify-between items-center mt-1">
               {text.trim().length > 0 && text.trim().length < 10 ? (
-                <p className="text-[10px] text-white/30 uppercase tracking-widest" style={MONO}>min 10 characters</p>
+                <p className="text-[10px] text-white uppercase tracking-widest" style={MONO}>min 10 characters</p>
               ) : <span />}
-              <p className="text-[10px] text-white/25 ml-auto" style={MONO}>{text.length}/500</p>
+              <p className="text-[10px] text-white ml-auto" style={MONO}>{text.length}/500</p>
             </div>
           </div>
 
           {/* status messages */}
           {status === 'error' && (
-            <p className="text-[12px]" style={{ ...SG, color: '#FF2929' }}>{errorMsg}</p>
+            <p className="text-[12px]" style={{ ...SG, color: '#9945FF' }}>{errorMsg}</p>
           )}
           {status === 'done' && (
             <div className="py-3 text-center">
               <p className="text-[13px] font-black uppercase tracking-widest" style={{ ...MONO, color: '#FFB800' }}>
                 RECEIVED — THANK YOU
               </p>
-              <p className="text-[12px] text-white/40 mt-1" style={SG}>We read every suggestion.</p>
+              <p className="text-[12px] text-white mt-1" style={SG}>We read every suggestion.</p>
             </div>
           )}
         </div>
@@ -184,9 +184,9 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
                 padding: '14px 0',
                 fontSize: '18px',
                 letterSpacing: '3px',
-                background: canSubmit ? '#FF2929' : 'transparent',
-                color: canSubmit ? '#fff' : 'rgba(255,255,255,0.15)',
-                border: canSubmit ? 'none' : '1px solid rgba(255,255,255,0.07)',
+                background: canSubmit ? '#9945FF' : 'transparent',
+                color: canSubmit ? '#fff' :'#ffffff'
+                border: canSubmit ? 'none' : '1px solid rgba(255,255,255,0.15)',
                 cursor: canSubmit ? 'pointer' : 'not-allowed',
                 transition: 'all 0.15s',
               }}

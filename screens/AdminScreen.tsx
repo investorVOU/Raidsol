@@ -72,7 +72,7 @@ const CopyBtn: React.FC<{ text: string }> = ({ text }) => {
   };
   return (
     <button onClick={copy}
-      className="ml-1.5 text-white/20 hover:text-white/60 transition-colors shrink-0 align-middle"
+      className="ml-1.5 text-white hover:text-white transition-colors shrink-0 align-middle"
       title={text}>
       {copied
         ? <i className="fa-solid fa-check text-[#14F195] text-[9px]" />
@@ -85,7 +85,7 @@ const CopyBtn: React.FC<{ text: string }> = ({ text }) => {
 const WalletCell: React.FC<{ address: string }> = ({ address }) => (
   <td className="py-1.5 pr-3">
     <span className="flex items-center gap-0.5">
-      <span className="font-mono text-white/50 text-[10px]">{address.slice(0, 6)}…{address.slice(-4)}</span>
+      <span className="font-mono text-white text-[10px]">{address.slice(0, 6)}…{address.slice(-4)}</span>
       <CopyBtn text={address} />
     </span>
   </td>
@@ -94,9 +94,9 @@ const WalletCell: React.FC<{ address: string }> = ({ address }) => (
 // ── Stat card ─────────────────────────────────────────────────────────────────
 const Stat: React.FC<{ label: string; value: string | number; sub?: string; color?: string }> = ({ label, value, sub, color = 'text-white' }) => (
   <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3">
-    <p className="text-[9px] text-white/35 uppercase tracking-widest mb-1">{label}</p>
+    <p className="text-[9px] text-white uppercase tracking-widest mb-1">{label}</p>
     <p className={`text-xl font-black mono leading-none ${color}`}>{value}</p>
-    {sub && <p className="text-[9px] text-white/30 mt-0.5">{sub}</p>}
+    {sub && <p className="text-[9px] text-white mt-0.5">{sub}</p>}
   </div>
 );
 
@@ -117,24 +117,24 @@ const PasswordGate: React.FC<{ onAuth: () => void }> = ({ onAuth }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#07070f] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#07071a] flex items-center justify-center p-6">
       <div className="w-full max-w-xs flex flex-col gap-5">
         <div className="text-center">
-          <p className="text-[10px] text-white/25 uppercase tracking-[0.3em] mb-1">RESTRICTED</p>
+          <p className="text-[10px] text-white uppercase tracking-[0.3em] mb-1">RESTRICTED</p>
           <h1 className="text-2xl font-black text-white uppercase tracking-widest">RUSHTIK</h1>
-          <p className="text-[10px] text-white/30 mt-1">Admin Panel — SolRaid</p>
+          <p className="text-[10px] text-white mt-1">Admin Panel — SolRaid</p>
         </div>
-        <div className={`border rounded-xl p-1 transition-colors ${err ? 'border-[#FF2929]/60' : 'border-white/10'}`}>
+        <div className={`border rounded-xl p-1 transition-colors ${err ? 'border-[#9945FF]/60' : 'border-white/10'}`}>
           <input type="password" value={pwd}
             onChange={e => setPwd(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && attempt()}
             placeholder="Access key" autoFocus
-            className="w-full bg-transparent px-4 py-3 text-white text-sm font-mono focus:outline-none placeholder:text-white/20"
+            className="w-full bg-transparent px-4 py-3 text-white text-sm font-mono focus:outline-none placeholder:text-white"
           />
         </div>
-        {err && <p className="text-[11px] text-[#FF2929] font-bold text-center -mt-2">Access denied</p>}
+        {err && <p className="text-[11px] text-[#9945FF] font-bold text-center -mt-2">Access denied</p>}
         <button onClick={attempt}
-          className="w-full py-3 rounded-xl bg-[#FF2929] text-white font-black text-sm uppercase tracking-wider active:scale-95 transition-transform">
+          className="w-full py-3 rounded-xl bg-[#9945FF] text-white font-black text-sm uppercase tracking-wider active:scale-95 transition-transform">
           Enter
         </button>
       </div>
@@ -297,18 +297,18 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const TABS: Tab[] = ['OVERVIEW', 'STATS', 'RAIDS', 'USERS', 'CLAIMS', 'ROUNDS', 'FEEDBACK'];
 
   const diffColor = (d: string) =>
-    d === 'DEGEN' ? 'text-[#FF2929]' : d === 'HARD' ? 'text-orange-400' : d === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400';
+    d === 'DEGEN' ? 'text-[#9945FF]' : d === 'HARD' ? 'text-orange-400' : d === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400';
 
   return (
     <div className="h-full text-white flex flex-col" style={{ backgroundColor: 'var(--app-bg)' }}>
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
         <div>
-          <h1 className="text-sm font-black uppercase tracking-widest text-[#FF2929]">RUSHTIK</h1>
-          <p className="text-[9px] text-white/25 uppercase tracking-wider">SolRaid Admin Panel</p>
+          <h1 className="text-sm font-black uppercase tracking-widest text-[#9945FF]">RUSHTIK</h1>
+          <p className="text-[9px] text-white uppercase tracking-wider">SolRaid Admin Panel</p>
         </div>
         <button onClick={onLogout}
-          className="text-[10px] text-white/30 hover:text-white/60 font-bold uppercase tracking-wider transition-colors">
+          className="text-[10px] text-white hover:text-white font-bold uppercase tracking-wider transition-colors">
           Logout
         </button>
       </div>
@@ -318,7 +318,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all shrink-0 ${
-              tab === t ? 'bg-[#FF2929]/20 text-[#FF2929] border border-[#FF2929]/40' : 'text-white/30 border border-transparent'
+              tab === t ? 'bg-[#9945FF]/20 text-[#9945FF] border border-[#9945FF]/40' : 'text-white border border-transparent'
             }`}>
             {t}
           </button>
@@ -331,7 +331,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         {/* ── Loading spinner ── */}
         {(loading || (tab === 'STATS' && statsLoading)) && (
           <div className="flex items-center justify-center py-20">
-            <p className="text-white/30 text-xs animate-pulse">Loading...</p>
+            <p className="text-white text-xs animate-pulse">Loading...</p>
           </div>
         )}
 
@@ -343,24 +343,24 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
               <Stat label="Total Raids"   value={overview.totalRaids.toLocaleString()} />
               <Stat label="Win Rate"      value={`${overview.totalRaids > 0 ? ((overview.totalWins / overview.totalRaids) * 100).toFixed(1) : 0}%`} color="text-[#FFB800]" />
               <Stat label="SOL Wagered"   value={`${overview.totalSolWagered.toFixed(3)}`} sub="SOL (all raids)" color="text-[#FFB800]" />
-              <Stat label="Total SR"      value={overview.totalSR.toLocaleString()} color="text-white/70" />
-              <Stat label="Open Bounties" value={overview.openBounties} color="text-[#FF2929]" />
+              <Stat label="Total SR"      value={overview.totalSR.toLocaleString()} color="text-white" />
+              <Stat label="Open Bounties" value={overview.openBounties} color="text-[#9945FF]" />
             </div>
 
             <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
-              <p className="text-[9px] text-white/35 uppercase tracking-widest mb-3">Quick Actions</p>
+              <p className="text-[9px] text-white uppercase tracking-widest mb-3">Quick Actions</p>
               <div className="flex flex-col gap-2">
                 <button onClick={handleFinalizeRound} disabled={finalizing}
-                  className="w-full py-2.5 rounded-xl bg-[#FF2929]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
+                  className="w-full py-2.5 rounded-xl bg-[#9945FF]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
                   {finalizing ? 'Finalizing...' : 'Finalize Current Round'}
                 </button>
                 <button onClick={() => load(tab)}
-                  className="w-full py-2 rounded-xl border border-white/10 text-white/50 font-bold text-xs uppercase tracking-wider active:scale-95 transition-all">
+                  className="w-full py-2 rounded-xl border border-white/10 text-white font-bold text-xs uppercase tracking-wider active:scale-95 transition-all">
                   Refresh Data
                 </button>
               </div>
               {finalizeMsg && (
-                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#FF2929]' : 'text-[#14F195]'}`}>{finalizeMsg}</p>
+                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#9945FF]' : 'text-[#14F195]'}`}>{finalizeMsg}</p>
               )}
             </div>
           </div>
@@ -376,13 +376,13 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 <p className="text-[9px] text-[#FFB800]/70 uppercase tracking-widest font-bold">Treasury Wallet</p>
                 <div className="flex items-center gap-2">
                   {TREASURY && (
-                    <span className="flex items-center gap-1 text-[9px] font-mono text-white/30">
+                    <span className="flex items-center gap-1 text-[9px] font-mono text-white">
                       {TREASURY.slice(0, 6)}…{TREASURY.slice(-4)}
                       <CopyBtn text={TREASURY} />
                     </span>
                   )}
                   <button onClick={loadStats}
-                    className="text-[9px] text-white/30 hover:text-white/60 font-bold uppercase tracking-wider transition-colors">
+                    className="text-[9px] text-white hover:text-white font-bold uppercase tracking-wider transition-colors">
                     <i className="fa-solid fa-rotate-right text-[9px]" /> Refresh
                   </button>
                 </div>
@@ -396,22 +396,22 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   sub="USDC" color="text-green-400" />
                 <Stat label="SKR Balance"
                   value={treasury.skrBalance !== null ? Math.floor(treasury.skrBalance).toLocaleString() : '—'}
-                  sub="SKR" color="text-white/70" />
+                  sub="SKR" color="text-white" />
               </div>
             </div>
 
             {/* Financial flow */}
             <div>
-              <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-2">Financial Flow</p>
+              <p className="text-[9px] text-white uppercase tracking-widest font-bold mb-2">Financial Flow</p>
               <div className="grid grid-cols-2 gap-2">
-                <Stat label="Total Unclaimed (all users)" value={`${treasury.totalUnclaimed.toFixed(4)}`} sub="SOL owed to players" color="text-[#FF2929]" />
+                <Stat label="Total Unclaimed (all users)" value={`${treasury.totalUnclaimed.toFixed(4)}`} sub="SOL owed to players" color="text-[#9945FF]" />
                 <Stat label="Total Paid Out" value={`${treasury.totalPaidOut.toFixed(4)}`} sub="SOL withdrawn (all time)" color="text-[#14F195]" />
               </div>
             </div>
 
             {/* Activity */}
             <div>
-              <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-2">Raid Activity</p>
+              <p className="text-[9px] text-white uppercase tracking-widest font-bold mb-2">Raid Activity</p>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <Stat label="Today's Raids"      value={treasury.todayRaids} color="text-white" />
                 <Stat label="Last 7 Days Raids"  value={treasury.weekRaids}  color="text-white" />
@@ -421,17 +421,17 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 <table className="w-full text-[10px]">
                   <thead>
                     <tr className="border-b border-white/[0.06]">
-                      <th className="text-left px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Difficulty</th>
-                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Raids</th>
-                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Wins</th>
-                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Win %</th>
+                      <th className="text-left px-3 py-2 text-white font-bold uppercase tracking-wider">Difficulty</th>
+                      <th className="text-right px-3 py-2 text-white font-bold uppercase tracking-wider">Raids</th>
+                      <th className="text-right px-3 py-2 text-white font-bold uppercase tracking-wider">Wins</th>
+                      <th className="text-right px-3 py-2 text-white font-bold uppercase tracking-wider">Win %</th>
                     </tr>
                   </thead>
                   <tbody>
                     {treasury.byDifficulty.map(d => (
                       <tr key={d.difficulty} className="border-b border-white/[0.04]">
                         <td className={`px-3 py-1.5 font-black ${diffColor(d.difficulty)}`}>{d.difficulty}</td>
-                        <td className="px-3 py-1.5 text-right text-white/60">{d.total.toLocaleString()}</td>
+                        <td className="px-3 py-1.5 text-right text-white">{d.total.toLocaleString()}</td>
                         <td className="px-3 py-1.5 text-right text-[#14F195]">{d.wins.toLocaleString()}</td>
                         <td className="px-3 py-1.5 text-right text-[#FFB800] font-bold">
                           {d.total > 0 ? ((d.wins / d.total) * 100).toFixed(1) : 0}%
@@ -445,28 +445,28 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
             {/* Claims breakdown */}
             <div>
-              <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-2">Bounty / Social Claims</p>
+              <p className="text-[9px] text-white uppercase tracking-widest font-bold mb-2">Bounty / Social Claims</p>
               <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
                 <table className="w-full text-[10px]">
                   <thead>
                     <tr className="border-b border-white/[0.06]">
-                      <th className="text-left px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Action Type</th>
-                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Claims</th>
-                      <th className="text-right px-3 py-2 text-white/30 font-bold uppercase tracking-wider">Total SR</th>
+                      <th className="text-left px-3 py-2 text-white font-bold uppercase tracking-wider">Action Type</th>
+                      <th className="text-right px-3 py-2 text-white font-bold uppercase tracking-wider">Claims</th>
+                      <th className="text-right px-3 py-2 text-white font-bold uppercase tracking-wider">Total SR</th>
                     </tr>
                   </thead>
                   <tbody>
                     {treasury.byClaimType.map(c => (
                       <tr key={c.action_type} className="border-b border-white/[0.04]">
-                        <td className={`px-3 py-1.5 font-bold ${c.action_type.startsWith('PASS_DISC') ? 'text-[#FFB800]' : c.action_type.startsWith('CHALLENGE') ? 'text-cyan-400' : 'text-white/60'}`}>
+                        <td className={`px-3 py-1.5 font-bold ${c.action_type.startsWith('PASS_DISC') ? 'text-[#FFB800]' : c.action_type.startsWith('CHALLENGE') ? 'text-cyan-400' : 'text-white'}`}>
                           {c.action_type}
                         </td>
-                        <td className="px-3 py-1.5 text-right text-white/60">{c.count}</td>
+                        <td className="px-3 py-1.5 text-right text-white">{c.count}</td>
                         <td className="px-3 py-1.5 text-right text-[#14F195] font-bold">+{c.total_sr.toLocaleString()}</td>
                       </tr>
                     ))}
                     {treasury.byClaimType.length === 0 && (
-                      <tr><td colSpan={3} className="px-3 py-4 text-center text-white/20">No claims yet</td></tr>
+                      <tr><td colSpan={3} className="px-3 py-4 text-center text-white">No claims yet</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -482,17 +482,17 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
               {(['ALL', 'WIN', 'BUST'] as const).map(f => (
                 <button key={f} onClick={() => setRaidFilter(f)}
                   className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase border transition-all ${
-                    raidFilter === f ? 'border-[#FF2929]/50 text-[#FF2929] bg-[#FF2929]/10' : 'border-white/10 text-white/30'
+                    raidFilter === f ? 'border-[#9945FF]/50 text-[#9945FF] bg-[#9945FF]/10' : 'border-white/10 text-white'
                   }`}>
                   {f}{f !== 'ALL' && ` (${f === 'WIN' ? raids.filter(r => r.success).length : raids.filter(r => !r.success).length})`}
                 </button>
               ))}
-              <span className="ml-auto text-[9px] text-white/25 self-center">{filteredRaids.length} raids</span>
+              <span className="ml-auto text-[9px] text-white self-center">{filteredRaids.length} raids</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-[10px] border-collapse">
                 <thead>
-                  <tr className="text-white/30 border-b border-white/[0.06]">
+                  <tr className="text-white border-b border-white/[0.06]">
                     <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
                     <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Diff</th>
                     <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Result</th>
@@ -506,10 +506,10 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                     <tr key={r.raid_id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
                       <WalletCell address={r.wallet_address} />
                       <td className="py-1.5 pr-3"><span className={`font-bold ${diffColor(r.difficulty)}`}>{r.difficulty}</span></td>
-                      <td className="py-1.5 pr-3"><span className={`font-black ${r.success ? 'text-[#14F195]' : 'text-[#FF2929]/70'}`}>{r.success ? 'WIN' : 'BUST'}</span></td>
-                      <td className="py-1.5 pr-3 text-right font-mono text-white/70">{r.points.toLocaleString()}</td>
+                      <td className="py-1.5 pr-3"><span className={`font-black ${r.success ? 'text-[#14F195]' : 'text-[#9945FF]/70'}`}>{r.success ? 'WIN' : 'BUST'}</span></td>
+                      <td className="py-1.5 pr-3 text-right font-mono text-white">{r.points.toLocaleString()}</td>
                       <td className="py-1.5 pr-3 text-right font-mono text-[#FFB800]">{Number(r.sol_amount).toFixed(4)}</td>
-                      <td className="py-1.5 text-right text-white/30">{new Date(r.created_at).toLocaleDateString()}</td>
+                      <td className="py-1.5 text-right text-white">{new Date(r.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -521,10 +521,10 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         {/* ── USERS ── */}
         {!loading && tab === 'USERS' && (
           <div className="overflow-x-auto">
-            <p className="text-[9px] text-white/25 mb-2">{users.length} users — sorted by SR</p>
+            <p className="text-[9px] text-white mb-2">{users.length} users — sorted by SR</p>
             <table className="w-full text-[10px] border-collapse">
               <thead>
-                <tr className="text-white/30 border-b border-white/[0.06]">
+                <tr className="text-white border-b border-white/[0.06]">
                   <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
                   <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Username</th>
                   <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SR</th>
@@ -537,11 +537,11 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 {users.map(u => (
                   <tr key={u.wallet_address} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
                     <WalletCell address={u.wallet_address} />
-                    <td className="py-1.5 pr-3 text-white/70">{u.username || <span className="text-white/20">—</span>}</td>
+                    <td className="py-1.5 pr-3 text-white">{u.username || <span className="text-white">—</span>}</td>
                     <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(u.sr_points).toLocaleString()}</td>
-                    <td className="py-1.5 pr-3 text-right font-mono text-white/60">{Number(u.unclaimed_sol).toFixed(4)}</td>
-                    <td className="py-1.5 pr-3 text-right text-white/50">{u.raid_tickets}</td>
-                    <td className="py-1.5 text-right text-white/30">{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td className="py-1.5 pr-3 text-right font-mono text-white">{Number(u.unclaimed_sol).toFixed(4)}</td>
+                    <td className="py-1.5 pr-3 text-right text-white">{u.raid_tickets}</td>
+                    <td className="py-1.5 text-right text-white">{new Date(u.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -552,10 +552,10 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         {/* ── CLAIMS ── */}
         {!loading && tab === 'CLAIMS' && (
           <div className="overflow-x-auto">
-            <p className="text-[9px] text-white/25 mb-2">{claims.length} claims</p>
+            <p className="text-[9px] text-white mb-2">{claims.length} claims</p>
             <table className="w-full text-[10px] border-collapse">
               <thead>
-                <tr className="text-white/30 border-b border-white/[0.06]">
+                <tr className="text-white border-b border-white/[0.06]">
                   <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
                   <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Action</th>
                   <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SR</th>
@@ -568,13 +568,13 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   <tr key={c.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
                     <WalletCell address={c.wallet_address} />
                     <td className="py-1.5 pr-3">
-                      <span className={`font-bold ${c.action_type.startsWith('PASS_DISC') ? 'text-[#FFB800]' : c.action_type.startsWith('CHALLENGE') ? 'text-cyan-400' : 'text-white/60'}`}>
+                      <span className={`font-bold ${c.action_type.startsWith('PASS_DISC') ? 'text-[#FFB800]' : c.action_type.startsWith('CHALLENGE') ? 'text-cyan-400' : 'text-white'}`}>
                         {c.action_type}
                       </span>
                     </td>
                     <td className="py-1.5 pr-3 text-right text-[#14F195] font-bold">+{c.reward_sr}</td>
-                    <td className="py-1.5 pr-3 text-white/40 max-w-[160px] truncate">{c.twitter_handle ?? '—'}</td>
-                    <td className="py-1.5 text-right text-white/30">{new Date(c.created_at).toLocaleDateString()}</td>
+                    <td className="py-1.5 pr-3 text-white max-w-[160px] truncate">{c.twitter_handle ?? '—'}</td>
+                    <td className="py-1.5 text-right text-white">{new Date(c.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -586,14 +586,14 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         {!loading && tab === 'FEEDBACK' && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <p className="text-[9px] text-white/25">{suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''}</p>
+              <p className="text-[9px] text-white">{suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''}</p>
               <button onClick={() => load('FEEDBACK')}
-                className="text-[9px] text-white/30 hover:text-white/60 font-bold uppercase tracking-wider transition-colors">
+                className="text-[9px] text-white hover:text-white font-bold uppercase tracking-wider transition-colors">
                 <i className="fa-solid fa-rotate-right text-[9px]" /> Refresh
               </button>
             </div>
             {suggestions.length === 0 ? (
-              <p className="text-center text-white/20 text-xs py-16">No suggestions yet.</p>
+              <p className="text-center text-white text-xs py-16">No suggestions yet.</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {suggestions.map(s => (
@@ -602,25 +602,25 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       <span
                         className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5"
                         style={{
-                          background: 'rgba(255,41,41,0.10)',
-                          border: '1px solid rgba(255,41,41,0.25)',
-                          color: '#FF2929',
+                          background: 'rgba(153,69,255,0.10)',
+                          border: '1px solid rgba(153,69,255,0.25)',
+                          color: '#9945FF',
                         }}
                       >
                         {s.category}
                       </span>
-                      <span className="text-[9px] text-white/25 font-mono">
+                      <span className="text-[9px] text-white font-mono">
                         {new Date(s.created_at).toLocaleDateString()} {new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-[13px] text-white/80 leading-relaxed mb-2">{s.suggestion_text}</p>
+                    <p className="text-[13px] text-white leading-relaxed mb-2">{s.suggestion_text}</p>
                     {s.wallet_address ? (
-                      <span className="flex items-center gap-1 text-[9px] font-mono text-white/25">
+                      <span className="flex items-center gap-1 text-[9px] font-mono text-white">
                         {s.wallet_address.slice(0, 6)}…{s.wallet_address.slice(-4)}
                         <CopyBtn text={s.wallet_address} />
                       </span>
                     ) : (
-                      <span className="text-[9px] text-white/20 italic">anonymous</span>
+                      <span className="text-[9px] text-white italic">anonymous</span>
                     )}
                   </div>
                 ))}
@@ -633,24 +633,24 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         {!loading && tab === 'ROUNDS' && (
           <div className="flex flex-col gap-4">
             <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
-              <p className="text-[9px] text-white/35 uppercase tracking-widest mb-2">Finalize Round</p>
-              <p className="text-[10px] text-white/40 mb-3">
+              <p className="text-[9px] text-white uppercase tracking-widest mb-2">Finalize Round</p>
+              <p className="text-[10px] text-white mb-3">
                 Manually finalize the current active round. Only run after a round ends (every 6h UTC). Idempotent — safe to re-run.
               </p>
               <button onClick={handleFinalizeRound} disabled={finalizing}
-                className="w-full py-2.5 rounded-xl bg-[#FF2929]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
+                className="w-full py-2.5 rounded-xl bg-[#9945FF]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
                 {finalizing ? 'Finalizing...' : 'Finalize Current Round'}
               </button>
               {finalizeMsg && (
-                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#FF2929]' : 'text-[#14F195]'}`}>{finalizeMsg}</p>
+                <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#9945FF]' : 'text-[#14F195]'}`}>{finalizeMsg}</p>
               )}
             </div>
 
             <div className="overflow-x-auto">
-              <p className="text-[9px] text-white/25 mb-2">{winners.length} winner records</p>
+              <p className="text-[9px] text-white mb-2">{winners.length} winner records</p>
               <table className="w-full text-[10px] border-collapse">
                 <thead>
-                  <tr className="text-white/30 border-b border-white/[0.06]">
+                  <tr className="text-white border-b border-white/[0.06]">
                     <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Round</th>
                     <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Date</th>
                     <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">Rank</th>
@@ -662,15 +662,15 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 <tbody>
                   {winners.map(w => (
                     <tr key={w.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                      <td className="py-1.5 pr-3 font-bold text-[#FF2929]">R{w.round_number}</td>
-                      <td className="py-1.5 pr-3 text-white/40">{w.round_date}</td>
+                      <td className="py-1.5 pr-3 font-bold text-[#9945FF]">R{w.round_number}</td>
+                      <td className="py-1.5 pr-3 text-white">{w.round_date}</td>
                       <td className="py-1.5 pr-3 text-center">
-                        <span className={`font-black ${w.rank === 1 ? 'text-[#FFB800]' : w.rank === 2 ? 'text-white/70' : 'text-white/40'}`}>#{w.rank}</span>
+                        <span className={`font-black ${w.rank === 1 ? 'text-[#FFB800]' : w.rank === 2 ? 'text-white' : 'text-white'}`}>#{w.rank}</span>
                       </td>
                       <WalletCell address={w.wallet_address} />
                       <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(w.prize_sol).toFixed(4)} SOL</td>
                       <td className="py-1.5 text-center">
-                        <span className={w.claimed ? 'text-[#14F195] font-bold' : 'text-white/20'}>{w.claimed ? '✓' : '—'}</span>
+                        <span className={w.claimed ? 'text-[#14F195] font-bold' : 'text-white'}>{w.claimed ? '✓' : '—'}</span>
                       </td>
                     </tr>
                   ))}
