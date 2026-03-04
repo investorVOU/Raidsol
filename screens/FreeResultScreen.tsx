@@ -154,19 +154,19 @@ const FreeResultScreen: React.FC<FreeResultScreenProps> = ({
           <p className="text-[10px] font-black uppercase tracking-[0.25em] mb-3" style={{ color: '#14F195' }}>
             What you'd earn in a real raid
           </p>
-          <div className="grid grid-cols-3 gap-3 mb-3">
+          <div className="flex flex-col gap-2 mb-3">
             {[
               { label: 'Entry fee', value: '0.026 SOL' },
-              { label: 'Top 1 prize', value: '40% pool' },
-              { label: 'Your points', value: `${points.toLocaleString()} pts` },
+              { label: 'Top 1 prize', value: '40% of pool' },
+              { label: 'Your score', value: `${points.toLocaleString()} pts` },
             ].map(s => (
-              <div key={s.label} className="text-center">
-                <p className="text-[10px] font-black text-white mb-0.5" style={{ ...MONO }}>{s.value}</p>
-                <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</p>
+              <div key={s.label} className="flex items-center justify-between">
+                <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>{s.label}</p>
+                <p className="text-[12px] font-black text-white" style={{ ...MONO }}>{s.value}</p>
               </div>
             ))}
           </div>
-          <p className="text-[11px] font-medium text-white" style={{ opacity: 0.55, lineHeight: 1.5 }}>
+          <p className="text-[12px] font-medium text-white" style={{ opacity: 0.55, lineHeight: 1.6 }}>
             Connect a wallet, pay the entry fee, and your score competes live on the round leaderboard. Top 5 split the prize pool.
           </p>
         </div>
