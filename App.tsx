@@ -653,9 +653,19 @@ const AppInner: React.FC = () => {
     }
   };
 
+  const [showDemoNotice, setShowDemoNotice] = useState(false);
+
   const handleOnboardingComplete = () => {
     localStorage.setItem('solraid-onboarding-seen', 'true');
     setShowOnboarding(false);
+    if (!localStorage.getItem('solraid-demo-notice-seen')) {
+      setShowDemoNotice(true);
+    }
+  };
+
+  const handleDismissDemoNotice = () => {
+    localStorage.setItem('solraid-demo-notice-seen', 'true');
+    setShowDemoNotice(false);
   };
 
   // Auto-navigate to multiplayer setup when ?join= param is present
@@ -2075,6 +2085,42 @@ const AppInner: React.FC = () => {
       )}
       {showOnboarding && (
         <Suspense fallback={null}><OnboardingFlow onComplete={handleOnboardingComplete} /></Suspense>
+      )}
+      {showDemoNotice && (
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-400"
+            style={{ background: '#080820', border: '2px solid rgba(153,69,255,0.40)', boxShadow: '0 0 40px rgba(153,69,255,0.15)' }}>
+            {/* Top accent bar */}
+            <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #9945FF, #14F195)' }} />
+            <div className="p-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#14F195] mb-2">Before you dive in</p>
+              <h2 className="text-2xl font-black text-white uppercase leading-tight mb-3"
+                style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '2px' }}>
+                Try the Free Demo First
+              </h2>
+              <p className="text-[13px] text-white leading-relaxed mb-5">
+                No wallet, no fees — just you and the game. The free demo is the best way to learn when to extract before your risk goes too high.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleDismissDemoNotice}
+                  className="w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-wider active:scale-[0.98] transition-all"
+                  style={{ background: 'linear-gradient(135deg, #6622BB, #3d0099)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", fontSize: '16px', letterSpacing: '2px' }}
+                >
+                  Got it — show me the demo
+                </button>
+                <button
+                  onClick={handleDismissDemoNotice}
+                  className="w-full py-2 text-[11px] font-bold text-white uppercase tracking-wider"
+                  style={{ opacity: 0.45 }}
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       <div className="absolute inset-0 pixel-grid z-0" />
       {showNavigation && (
