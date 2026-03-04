@@ -663,9 +663,10 @@ const AppInner: React.FC = () => {
     }
   };
 
-  const handleDismissDemoNotice = () => {
+  const handleDismissDemoNotice = (startDemo = false) => {
     localStorage.setItem('solraid-demo-notice-seen', 'true');
     setShowDemoNotice(false);
+    if (startDemo) enterRaid(Mode.DRILL, Difficulty.EASY, [], Currency.SOL, false, 0);
   };
 
   // Auto-navigate to multiplayer setup when ?join= param is present
@@ -2104,7 +2105,7 @@ const AppInner: React.FC = () => {
               </p>
               <div className="flex flex-col gap-2">
                 <button
-                  onClick={handleDismissDemoNotice}
+                  onClick={() => handleDismissDemoNotice(true)}
                   className="w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-wider active:scale-[0.98] transition-all"
                   style={{ background: 'linear-gradient(135deg, #6622BB, #3d0099)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", fontSize: '16px', letterSpacing: '2px' }}
                 >
