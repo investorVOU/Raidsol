@@ -373,7 +373,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
           {isDemoRaid && (
             <div className="p-5 rounded-xl text-center" style={{ background: 'rgba(153,69,255,0.08)', border: '2px solid rgba(153,69,255,0.30)' }}>
               <p className="text-[10px] font-black uppercase tracking-widest text-[#9945FF] mb-1">Ready for the real thing?</p>
-              <p className="text-[13px] font-bold text-white mb-3">Connect your wallet and raid for actual SOL. Your points compete on the live round leaderboard.</p>
+              <p className="text-[13px] font-bold text-white mb-3">Connect your wallet and raid for <span className="text-[#FFB800] font-black">0.026 SOL</span>. Your points compete on the live round leaderboard.</p>
               <button onClick={onPlayAgain}
                 className="w-full py-3 rounded-xl font-black uppercase tracking-wide text-sm active:scale-[0.98] transition-all"
                 style={{ background: 'linear-gradient(135deg, #6622BB, #3d0099)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", fontSize: '15px', letterSpacing: '2px' }}>
