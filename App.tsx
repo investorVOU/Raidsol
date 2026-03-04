@@ -1917,8 +1917,9 @@ const AppInner: React.FC = () => {
                 )
               : undefined}
             onClaim={() => navigateTo(Screen.PROFILE)}
-            isRoundEntry={true}
-            roundInfo={currentRound}
+            isRoundEntry={gameState.lastRaidConfig?.mode !== Mode.DRILL}
+            isDemoRaid={gameState.lastRaidConfig?.mode === Mode.DRILL}
+            roundInfo={gameState.lastRaidConfig?.mode !== Mode.DRILL ? currentRound : null}
           />
         );
       case Screen.PRIVACY:
