@@ -6,6 +6,7 @@ import { Mode, Difficulty, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, Raid
 import type { LivePrices } from '../hooks/usePrices';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
 import { formatCountdown, formatRoundWindow } from '../hooks/useRoundData';
+import { useActivityFeed } from '../hooks/useActivityFeed';
 
 const INTER:  React.CSSProperties = { fontFamily: "'Inter', system-ui, sans-serif" };
 const SG_H1:  React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, letterSpacing: '0.8px', lineHeight: 1.1 };
@@ -78,6 +79,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
   // FAQ
   const [showFaq, setShowFaq]                   = useState(false);
+  // Provably fair tooltip
+  const [showFairInfo, setShowFairInfo]         = useState(false);
+  // Recent wins ticker
+  const { feed: activityFeed } = useActivityFeed();
+  const winTicker = activityFeed.filter(e => e.event_type === 'EXTRACTED' && (e.amount_sol ?? 0) > 0);
 
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
@@ -147,9 +153,27 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <p style={{ ...BN, fontSize: '28px', color: '#9945FF', letterSpacing: '2.5px', lineHeight: 1 }}>
               SOL RAID
             </p>
-            <p className="text-[11px] text-white/38 mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
-              {t('lobby.tagline')}
+            <p className="text-[11px] text-white mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
+              Skill-based extraction · anyone can play
             </p>
+            {/* Provably fair badge */}
+            <div className="relative mt-1.5">
+              <button
+                onClick={() => setShowFairInfo(v => !v)}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all active:scale-95"
+                style={{ background: 'rgba(20,241,149,0.10)', border: '1px solid rgba(20,241,149,0.30)', color: '#14F195' }}
+              >
+                <span>⚡</span> Provably Fair
+              </button>
+              {showFairInfo && (
+                <div className="absolute left-0 top-7 z-50 w-64 p-3 rounded-xl text-left shadow-xl"
+                  style={{ background: '#080820', border: '1px solid rgba(20,241,149,0.25)' }}>
+                  <p className="text-[10px] font-black text-[#14F195] uppercase tracking-wider mb-1.5">How it works</p>
+                  <p className="text-[10px] text-white leading-relaxed">Before each raid a SHA-256 server seed commitment is generated. After you extract or bust, the original seed is revealed — you can verify the RNG outcome was determined before you started.</p>
+                  <button onClick={() => setShowFairInfo(false)} className="mt-2 text-[9px] text-white font-bold uppercase">Got it ✕</button>
+                </div>
+              )}
+            </div>
           </div>
           {/* Suggestion box + FAQ buttons */}
           <div className="flex items-center gap-2 ml-3">
@@ -200,6 +224,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       )}
 
       {/* ── SCROLLABLE CONTENT ── */}
+      {/* ── RECENT WINS TICKER ── */}
+      {winTicker.length > 0 && (
+        <div className="shrink-0 overflow-hidden border-y py-1" style={{ borderColor: 'rgba(20,241,149,0.12)', background: 'rgba(20,241,149,0.04)' }}>
+          <div className="flex gap-6 whitespace-nowrap" style={{ animation: 'marquee 22s linear infinite' }}>
+            {[...winTicker, ...winTicker].map((e, i) => {
+              const ago = Math.round((Date.now() - new Date(e.created_at).getTime()) / 60000);
+              const name = e.username?.length > 8 ? e.username.slice(0, 6) + '…' : (e.username || '???');
+              return (
+                <span key={i} className="text-[10px] font-bold" style={{ color: '#14F195' }}>
+                  ⚡ {name} extracted {Number(e.amount_sol).toFixed(3)} SOL
+                  <span className="text-white ml-1" style={{ opacity: 0.5 }}>{ago < 2 ? 'just now' : `${ago}m ago`}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-44 md:pb-6 space-y-2">
 
         {/* ── RAID ROUND — Primary Hero CTA ── */}

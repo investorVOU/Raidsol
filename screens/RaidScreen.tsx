@@ -426,6 +426,8 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
 
   // Anti-cheat
   const [hasInteracted,      setHasInteracted]      = useState(false);
+  const [showExtractHint,    setShowExtractHint]    = useState(false);
+  const extractHintShownRef = useRef(false);
   const [consecutiveDefends, setConsecutiveDefends] = useState(0);
   const [defendLocked,       setDefendLocked]       = useState(false);
   const [defendLockTimer,    setDefendLockTimer]     = useState(0);
@@ -1114,6 +1116,11 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
   const handleAttack = () => {
     if (isEnding || graceActive || ambushed) return;
     setHasInteracted(true);
+    if (!extractHintShownRef.current && personalBestPoints === 0) {
+      extractHintShownRef.current = true;
+      setShowExtractHint(true);
+      setTimeout(() => setShowExtractHint(false), 5000);
+    }
     setConsecutiveDefends(0);
 
     const now = Date.now();
@@ -1666,6 +1673,9 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                 <div className="h-full transition-all duration-500"
                      style={{ width: `${Math.min(100, risk)}%`, background: riskBarBg, boxShadow: `0 0 6px ${risk > 75 ? '#9945FF' : risk > 45 ? '#9945FF' : '#14F195'}` }} />
               </div>
+              <p className={`text-[7px] font-black uppercase tracking-widest mt-0.5 ${risk > 70 ? 'text-[#9945FF] animate-pulse' : risk > 40 ? 'text-orange-400' : 'text-[#14F195]'}`}>
+                {risk > 70 ? 'DANGER' : risk > 40 ? 'CAUTION' : 'LOW RISK'}
+              </p>
             </div>
             <div className="absolute bottom-0 left-0 bg-black/80 backdrop-blur-sm px-2 py-1 border tech-border border-white/10">
               <span className={`text-[10px] font-bold uppercase ${diffConfig.color}`}>{difficulty}</span>
@@ -1915,6 +1925,15 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                   </div>
                 </button>
               </div>
+
+              {/* First-raid extract hint */}
+              {showExtractHint && (
+                <div className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  style={{ background: 'rgba(153,69,255,0.15)', border: '1px solid rgba(153,69,255,0.40)' }}>
+                  <span className="text-lg animate-bounce">👇</span>
+                  <p className="text-[11px] font-bold text-white">Press <span className="text-[#9945FF]">LOCK IN SCORE</span> when you're ready to extract and secure your SOL!</p>
+                </div>
+              )}
 
               {/* LOCK IN SCORE button */}
               <button onClick={handleCashOut} disabled={!!isEnding || !hasInteracted || graceActive || ambushed}
