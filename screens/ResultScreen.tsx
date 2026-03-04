@@ -27,7 +27,6 @@ interface ResultScreenProps {
   onRedeploy?: () => void;
   onClaim: () => void;
   isRoundEntry?: boolean;
-  isDemoRaid?: boolean;
   roundInfo?: CurrentRoundInfo | null;
   equippedGearCount?: number;
   onNavigateStore?: () => void;
@@ -64,7 +63,7 @@ const TYPE_LABELS: Record<string, string> = {
 const ROUND_ALLOCATION = [0.40, 0.28, 0.18, 0.10, 0.04];
 const ROUND_PCT_LABELS  = ['40%', '28%', '18%', '10%', '4%'];
 
-const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvents, onPlayAgain, onRedeploy, onClaim, isRoundEntry, isDemoRaid = false, roundInfo, equippedGearCount = 0, onNavigateStore }) => {
+const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvents, onPlayAgain, onRedeploy, onClaim, isRoundEntry, roundInfo, equippedGearCount = 0, onNavigateStore }) => {
   const { t } = useTranslation();
   const [debriefOpen, setDebriefOpen] = useState(true);
 
@@ -204,26 +203,17 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
   return (
     <div className="h-full flex flex-col p-6 animate-in zoom-in-95 duration-500 overflow-y-auto scrollbar-hide">
       <div className="flex-1 flex flex-col items-center justify-center py-6 sm:py-10">
-        {isDemoRaid && (
-          <div className="mb-4 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest"
-            style={{ background: 'rgba(20,241,149,0.10)', border: '1px solid rgba(20,241,149,0.30)', color: '#14F195' }}>
-            Free Demo · Simulation Only
-          </div>
-        )}
-
         <div className={`mb-6 sm:mb-8 px-8 py-4 border-2 ${result.success ? 'bg-[#FFB800]/10 border-[#FFB800] text-[#FFB800]' : 'bg-[#9945FF]/10 border-[#9945FF] text-[#9945FF]'} tech-border font-bold text-3xl sm:text-4xl uppercase tracking-wide`}>
-          {result.success ? (isDemoRaid ? 'Extracted' : isRoundEntry ? 'Scored' : 'Extracted') : 'Busted'}
+          {result.success ? (isRoundEntry ? 'Scored' : 'Extracted') : 'Busted'}
         </div>
 
         <h2 className={`text-4xl sm:text-6xl font-black uppercase tracking-tight mb-3 leading-none text-center ${result.success ? 'text-white glitch-text' : 'text-[#9945FF]'}`}>
-          {result.success ? (isDemoRaid ? 'Demo Complete' : isRoundEntry ? 'Round Scored' : 'Mission Complete') : 'Got Busted'}
+          {result.success ? (isRoundEntry ? 'Round Scored' : 'Mission Complete') : 'Got Busted'}
         </h2>
         <p className="text-white text-xs sm:text-sm font-bold mb-8 sm:mb-12 text-center">
-          {isDemoRaid
-            ? (result.success ? 'Nice run! No SOL earned — this was a simulation.' : 'Caught this time — no penalty, try again!')
-            : result.success
-              ? (isRoundEntry ? 'Score locked in · leaders updated after round ends.' : 'Operation complete · assets secured.')
-              : 'Caught mid-raid · your points still count for the round.'}
+          {result.success
+            ? (isRoundEntry ? 'Score locked in · leaders updated after round ends.' : 'Operation complete · assets secured.')
+            : 'Caught mid-raid · your points still count for the round.'}
         </p>
 
         <div className="w-full max-w-sm space-y-4">
@@ -368,19 +358,6 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
               </div>
             );
           })()}
-
-          {/* ── DEMO CTA — shown instead of round standing for free drills ── */}
-          {isDemoRaid && (
-            <div className="p-5 rounded-xl text-center" style={{ background: 'rgba(153,69,255,0.08)', border: '2px solid rgba(153,69,255,0.30)' }}>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#9945FF] mb-1">Ready for the real thing?</p>
-              <p className="text-[13px] font-bold text-white mb-3">Connect your wallet and raid for <span className="text-[#FFB800] font-black">0.026 SOL</span>. Your points compete on the live round leaderboard.</p>
-              <button onClick={onPlayAgain}
-                className="w-full py-3 rounded-xl font-black uppercase tracking-wide text-sm active:scale-[0.98] transition-all"
-                style={{ background: 'linear-gradient(135deg, #6622BB, #3d0099)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", fontSize: '15px', letterSpacing: '2px' }}>
-                Play for Real
-              </button>
-            </div>
-          )}
 
           {/* ── ROUND STANDING ── */}
           {isRoundEntry && roundInfo && (() => {

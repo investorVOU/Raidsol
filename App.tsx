@@ -4,7 +4,8 @@ const LobbyScreen = lazy(() => import('./screens/LobbyScreen'));
 const RaidScreen = lazy(() => import('./screens/RaidScreen'));
 const TeamScreen = lazy(() => import('./screens/TeamScreen'));
 const TournamentScreen = lazy(() => import('./screens/TournamentScreen'));
-const ResultScreen = lazy(() => import('./screens/ResultScreen'));
+const ResultScreen     = lazy(() => import('./screens/ResultScreen'));
+const FreeResultScreen = lazy(() => import('./screens/FreeResultScreen'));
 const PrivacyScreen = lazy(() => import('./screens/PrivacyScreen'));
 const TermsScreen = lazy(() => import('./screens/TermsScreen'));
 const ProfileScreen = lazy(() => import('./screens/ProfileScreen'));
@@ -1900,6 +1901,19 @@ const AppInner: React.FC = () => {
           />
         );
       case Screen.RESULT:
+        if (gameState.lastRaidConfig?.mode === Mode.DRILL) {
+          return (
+            <Suspense fallback={null}>
+              <FreeResultScreen
+                success={gameState.lastResult?.success ?? false}
+                points={gameState.lastResult?.points ?? 0}
+                peakMult={gameState.lastResult?.peakMult}
+                onPlayAgain={() => enterRaid(Mode.DRILL, Difficulty.EASY, [], Currency.SOL, false, 0)}
+                onPlayForReal={() => navigateTo(Screen.LOBBY)}
+              />
+            </Suspense>
+          );
+        }
         return (
           <ResultScreen
             result={gameState.lastResult!}
@@ -1917,9 +1931,8 @@ const AppInner: React.FC = () => {
                 )
               : undefined}
             onClaim={() => navigateTo(Screen.PROFILE)}
-            isRoundEntry={gameState.lastRaidConfig?.mode !== Mode.DRILL}
-            isDemoRaid={gameState.lastRaidConfig?.mode === Mode.DRILL}
-            roundInfo={gameState.lastRaidConfig?.mode !== Mode.DRILL ? currentRound : null}
+            isRoundEntry={true}
+            roundInfo={currentRound}
           />
         );
       case Screen.PRIVACY:
