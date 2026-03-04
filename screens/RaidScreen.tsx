@@ -1462,11 +1462,38 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
         );
       })()}
 
-      {/* WIN OVERLAY */}
+      {/* WIN OVERLAY — big celebration moment */}
       {isEnding === 'WIN' && (
-        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#14F195]/20 backdrop-blur-sm animate-in fade-in duration-300">
-          <span className="text-5xl font-black text-[#14F195] glitch-text uppercase">Score Locked!</span>
-          <span className="text-xs text-white font-bold mt-4 animate-pulse">Uploading score...</span>
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in duration-300"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(20,241,149,0.18) 0%, rgba(10,10,26,0.92) 70%)' }}>
+          {/* Confetti particles */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <div key={i} className="absolute animate-bounce"
+                style={{
+                  left: `${4 + (i * 17) % 93}%`,
+                  top: `${(i * 23) % 60}%`,
+                  width: `${6 + (i % 4) * 3}px`,
+                  height: `${6 + (i % 3) * 3}px`,
+                  borderRadius: i % 3 === 0 ? '50%' : '2px',
+                  background: ['#14F195','#9945FF','#FFB800','#00FBFF'][i % 4],
+                  opacity: 0.7,
+                  animationDelay: `${(i * 0.12) % 0.8}s`,
+                  animationDuration: `${0.6 + (i % 4) * 0.2}s`,
+                  transform: `rotate(${i * 37}deg)`,
+                }}
+              />
+            ))}
+          </div>
+          <p className="text-[11px] font-black uppercase tracking-[0.4em] text-[#14F195] mb-3 animate-pulse">Extraction complete</p>
+          <p className="font-black uppercase leading-none mb-4"
+            style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(56px, 14vw, 88px)', color: '#14F195', textShadow: '0 0 40px rgba(20,241,149,0.6)', letterSpacing: '4px' }}>
+            EXTRACTED
+          </p>
+          <p className="font-black" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(28px, 8vw, 48px)', color: '#FFB800', textShadow: '0 0 20px rgba(255,184,0,0.5)' }}>
+            {points.toLocaleString()} <span style={{ fontSize: '0.55em', color: 'rgba(255,184,0,0.7)' }}>PTS</span>
+          </p>
+          <p className="text-[10px] font-bold text-white mt-4 animate-pulse" style={{ opacity: 0.6 }}>Uploading to leaderboard...</p>
         </div>
       )}
 
@@ -1926,12 +1953,16 @@ const RaidScreen: React.FC<RaidScreenProps> = ({
                 </button>
               </div>
 
-              {/* First-raid extract hint */}
+              {/* First-raid extract hint — prominent guided callout */}
               {showExtractHint && (
-                <div className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg animate-in fade-in slide-in-from-bottom-2 duration-300"
-                  style={{ background: 'rgba(153,69,255,0.15)', border: '1px solid rgba(153,69,255,0.40)' }}>
-                  <span className="text-lg animate-bounce">👇</span>
-                  <p className="text-[11px] font-bold text-white">Press <span className="text-[#9945FF]">LOCK IN SCORE</span> when you're ready to extract and secure your SOL!</p>
+                <div className="col-span-2 relative animate-in fade-in slide-in-from-bottom-3 duration-400">
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0"
+                    style={{ borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderBottom: '8px solid #9945FF' }} />
+                  <div className="px-4 py-3 rounded-xl text-center"
+                    style={{ background: 'linear-gradient(135deg, rgba(153,69,255,0.25), rgba(153,69,255,0.12))', border: '2px solid #9945FF', boxShadow: '0 0 20px rgba(153,69,255,0.3)' }}>
+                    <p className="text-[13px] font-black text-white uppercase tracking-wide">Extract here to lock in your score!</p>
+                    <p className="text-[10px] text-white mt-1" style={{ opacity: 0.7 }}>Don't wait too long — risk climbs every second</p>
+                  </div>
                 </div>
               )}
 

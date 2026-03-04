@@ -79,8 +79,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
   // FAQ
   const [showFaq, setShowFaq]                   = useState(false);
-  // Provably fair tooltip
-  const [showFairInfo, setShowFairInfo]         = useState(false);
   // Recent wins ticker
   const { feed: activityFeed } = useActivityFeed();
   const winTicker = activityFeed.filter(e => e.event_type === 'EXTRACTED' && (e.amount_sol ?? 0) > 0);
@@ -156,24 +154,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <p className="text-[11px] text-white mt-0.5" style={{ ...INTER, fontWeight: 400 }}>
               Skill-based extraction · anyone can play
             </p>
-            {/* Provably fair badge */}
-            <div className="relative mt-1.5">
-              <button
-                onClick={() => setShowFairInfo(v => !v)}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all active:scale-95"
-                style={{ background: 'rgba(20,241,149,0.10)', border: '1px solid rgba(20,241,149,0.30)', color: '#14F195' }}
-              >
-                <span>⚡</span> Provably Fair
-              </button>
-              {showFairInfo && (
-                <div className="absolute left-0 top-7 z-50 w-64 p-3 rounded-xl text-left shadow-xl"
-                  style={{ background: '#080820', border: '1px solid rgba(20,241,149,0.25)' }}>
-                  <p className="text-[10px] font-black text-[#14F195] uppercase tracking-wider mb-1.5">How it works</p>
-                  <p className="text-[10px] text-white leading-relaxed">Before each raid a SHA-256 server seed commitment is generated. After you extract or bust, the original seed is revealed — you can verify the RNG outcome was determined before you started.</p>
-                  <button onClick={() => setShowFairInfo(false)} className="mt-2 text-[9px] text-white font-bold uppercase">Got it ✕</button>
-                </div>
-              )}
-            </div>
           </div>
           {/* Suggestion box + FAQ buttons */}
           <div className="flex items-center gap-2 ml-3">
@@ -204,24 +184,30 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         </div>
       </div>
 
-      {/* ── DAILY STREAK PILL ── */}
-      {dailyStreak >= 2 && (
-        <div className="relative z-10 shrink-0 px-4 pb-1">
-          <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
-            style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.30)' }}
-          >
-            <span style={{ fontSize: '13px' }}>🔥</span>
-            <span className="text-[11px] font-bold" style={{ color: '#FFB800' }}>
-              {dailyStreak} DAY STREAK
-            </span>
-            <span className="text-[10px] font-bold text-white">·</span>
-            <span className="text-[11px] font-bold" style={{ color: '#FFB800' }}>
-              +{Math.min((dailyStreak - 1) * 10, 40)}% SR
-            </span>
+      {/* ── DAILY OPERATOR BONUS ── */}
+      <div className="relative z-10 shrink-0 px-4 pb-1">
+        <div className="flex items-center justify-between px-3 py-2 rounded-xl"
+          style={{ background: 'rgba(255,184,0,0.08)', border: '1px solid rgba(255,184,0,0.22)' }}>
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: '16px' }}>{dailyStreak >= 2 ? '🔥' : '⚡'}</span>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#FFB800' }}>
+                Daily Operator Bonus
+              </p>
+              <p className="text-[10px] text-white mt-0.5">
+                {dailyStreak >= 2
+                  ? `${dailyStreak}-day streak · +${Math.min((dailyStreak - 1) * 10, 40)}% SR active`
+                  : 'Come back tomorrow for +10% SR bonus'}
+              </p>
+            </div>
           </div>
+          {dailyStreak >= 2 && (
+            <span className="text-[11px] font-black px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,184,0,0.18)', color: '#FFB800' }}>
+              +{Math.min((dailyStreak - 1) * 10, 40)}%
+            </span>
+          )}
         </div>
-      )}
+      </div>
 
       {/* ── SCROLLABLE CONTENT ── */}
       {/* ── RECENT WINS TICKER ── */}
