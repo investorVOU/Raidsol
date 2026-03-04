@@ -87,7 +87,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
     ctx.fillRect(0, 0, W, H);
 
     // Subtle grid
-    ctx.strokeStyle ='#ffffff'
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
     for (let x = 0; x <= W; x += 80) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
     for (let y = 0; y <= H; y += 80) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
@@ -111,7 +111,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
     ctx.fillText('[ SOL_RAID ]', barW + 40, 46);
 
     // Website (top-right)
-    ctx.fillStyle ='#ffffff'
+    ctx.fillStyle = '#ffffff';
     ctx.font = '13px monospace';
     ctx.textAlign = 'right';
     ctx.fillText('solraid.app', W - 40, 46);
@@ -129,7 +129,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
     ctx.fillText(badge, barW + 60, 106);
 
     // Wallet address
-    ctx.fillStyle ='#ffffff'
+    ctx.fillStyle = '#ffffff';
     ctx.font = '13px monospace';
     ctx.fillText(result.userWallet || '—', barW + 40, 155);
 
@@ -138,7 +138,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 92px monospace';
       ctx.fillText(`+${result.points.toLocaleString()}`, barW + 40, 310);
-      ctx.fillStyle ='#ffffff'
+      ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 22px monospace';
       ctx.fillText('POINTS SCORED', barW + 40, 348);
     } else {
@@ -162,7 +162,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
 
     stats.forEach((s, i) => {
       const cx = startX + i * (cellW + gutter);
-      ctx.fillStyle ='#ffffff'
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(cx, cellY, cellW, cellH);
       ctx.strokeStyle = `${accent}50`;
       ctx.lineWidth = 1;
@@ -178,7 +178,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
     });
 
     // ── Watermark corner decoration ─────────────────────────────────────
-    ctx.fillStyle ='#ffffff'
+    ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 160px monospace';
     ctx.textAlign = 'right';
     ctx.fillText('SR', W - 30, H - 20);

@@ -96,7 +96,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
     addLog('⚔ ATTACK — risk elevated');
   };
 
-  const riskColor = risk > 85 ? '#9945FF' : risk > 60 ? '#f97316' :'#ffffff'
+  const riskColor = risk > 85 ? '#9945FF' : risk > 60 ? '#f97316' : '#ffffff',
   const riskBg    = risk > 85 ? 'bg-[#9945FF]' : risk > 60 ? 'bg-orange-400' : 'bg-white/30';
 
   // Leaderboard snapshot

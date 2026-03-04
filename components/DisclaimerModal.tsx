@@ -142,7 +142,7 @@ const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onComplete }) => {
               fontSize: '18px',
               letterSpacing: '3px',
               background: confirmed ? '#9945FF' : 'transparent',
-              color: confirmed ? '#fff' :'#ffffff'
+              color: confirmed ? '#fff' : '#ffffff',
               border: confirmed ? 'none' : '1px solid rgba(255,255,255,0.15)',
               cursor: confirmed ? 'pointer' : 'not-allowed',
               transition: 'all 0.15s',

@@ -94,7 +94,7 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
                       padding: '5px 12px',
                       border: active ? '1px solid #9945FF' : '1px solid rgba(255,255,255,0.15)',
                       background: active ? 'rgba(153,69,255,0.12)' : 'transparent',
-                      color: active ? '#9945FF' :'#ffffff'
+                      color: active ? '#9945FF' : '#ffffff',
                       transition: 'all 0.15s',
                       cursor: 'pointer',
                     }}
@@ -185,7 +185,7 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ walletAddress, onClos
                 fontSize: '18px',
                 letterSpacing: '3px',
                 background: canSubmit ? '#9945FF' : 'transparent',
-                color: canSubmit ? '#fff' :'#ffffff'
+                color: canSubmit ? '#fff' : '#ffffff',
                 border: canSubmit ? 'none' : '1px solid rgba(255,255,255,0.15)',
                 cursor: canSubmit ? 'pointer' : 'not-allowed',
                 transition: 'all 0.15s',

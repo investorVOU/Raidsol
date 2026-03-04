@@ -65,7 +65,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               key={i}
               className="flex-1 transition-all duration-300"
               style={{
-                background: i <= slide ? '#9945FF' :'#ffffff'
+                background: i <= slide ? '#9945FF' : '#ffffff',
                 marginRight: i < SLIDES.length - 1 ? '2px' : 0,
               }}
             />
