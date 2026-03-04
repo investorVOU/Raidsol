@@ -221,11 +221,14 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
           <div className={`bg-black border-2 p-6 sm:p-8 tech-border relative overflow-hidden transition-colors ${result.success ? 'border-[#9945FF]/50' : 'border-[#9945FF]/40'}`}>
             <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black uppercase text-[#9945FF]">PTS</div>
             <p className="text-xs text-white font-bold uppercase tracking-wide mb-3">Round score</p>
-            <p className={`mono text-5xl sm:text-6xl font-black tracking-tight leading-none ${result.success ? 'text-white' : 'text-[#9945FF]/40'}`}>
-              {result.success ? `+${result.points.toLocaleString()}` : '0'}
+            <p className="mono text-5xl sm:text-6xl font-black tracking-tight leading-none text-white">
+              +{result.points.toLocaleString()}
               <span className="text-sm sm:text-base font-normal opacity-30 ml-2">pts</span>
             </p>
-            {result.success && result.peakMult != null && (
+            {!result.success && result.points > 0 && (
+              <p className="text-[10px] font-bold mt-2" style={{ color: '#9945FF' }}>Busted — but your best score counts for the round</p>
+            )}
+            {result.peakMult != null && (
               <p className="text-xs text-[#FFB800]/60 font-bold mt-2">
                 Peak mult: {result.peakMult.toFixed(2)}x
               </p>
@@ -377,15 +380,22 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
 
                 {/* Player's score this raid */}
                 <div className="mb-4">
-                  <p className="text-[10px] text-white font-bold uppercase tracking-wide mb-1">Your score</p>
+                  <p className="text-[10px] text-white font-bold uppercase tracking-wide mb-1">
+                    {result.success ? 'Your score' : 'Points scored before bust'}
+                  </p>
                   <p className="mono text-4xl font-black text-white leading-none">
-                    {result.success ? `+${result.points.toLocaleString()}` : '0'}
+                    +{result.points.toLocaleString()}
                     <span className="text-base font-normal text-white ml-2">pts</span>
                   </p>
+                  {!result.success && (
+                    <p className="text-[10px] font-bold mt-1" style={{ color: '#9945FF' }}>
+                      Your best score this round is submitted — this counts.
+                    </p>
+                  )}
                 </div>
 
-                {/* Rank badge */}
-                {result.success && myEntry ? (
+                {/* Rank badge — shown for both wins AND busts if in top 5 */}
+                {myEntry ? (
                   <div className="rounded-lg p-4 mb-4" style={{ background: 'rgba(255,184,0,0.08)', border: '1px solid rgba(255,184,0,0.25)' }}>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm font-black uppercase tracking-wide text-[#FFB800]">
@@ -394,38 +404,40 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                       <span className="text-[10px] font-bold text-white">{myEntry.rank === 1 ? '🥇' : myEntry.rank === 2 ? '🥈' : myEntry.rank === 3 ? '🥉' : `#${myEntry.rank}`}</span>
                     </div>
                     <p className="text-[11px] text-white">
-                      Est. allocation:{' '}
-                      <span className="font-bold text-white">
-                        {(roundInfo.poolSol * ROUND_ALLOCATION[myEntry.rank - 1]).toFixed(4)} SOL
-                      </span>
+                      Est. allocation: <span className="font-bold text-white">{(roundInfo.poolSol * ROUND_ALLOCATION[myEntry.rank - 1]).toFixed(4)} SOL</span>
                     </p>
-                  </div>
-                ) : result.success ? (
-                  <div className="rounded-lg p-3 mb-4 bg-white/3 border border-white/8">
-                    <p className="text-xs font-bold text-white">Not in top 5 yet — score more points to qualify</p>
+                    {!result.success && (
+                      <p className="text-[10px] mt-1" style={{ color: '#FFB800' }}>You're in top 5 — even after busting!</p>
+                    )}
                   </div>
                 ) : (
-                  <div className="rounded-lg p-3 mb-4" style={{ background: 'rgba(153,69,255,0.08)', border: '1px solid rgba(153,69,255,0.18)' }}>
-                    <p className="text-xs font-bold text-[#9945FF]/60">Raid failed — no score recorded for this round</p>
+                  <div className="rounded-lg p-3 mb-4 bg-white/3 border border-white/8">
+                    <p className="text-xs font-bold text-white">
+                      {result.points > 0
+                        ? 'Not in top 5 yet — raid again for a higher score'
+                        : 'No points scored this run — try again'}
+                    </p>
                   </div>
                 )}
 
-                {/* Top 3 leaderboard preview */}
+                {/* Top 5 leaderboard — live, rotates as scores update */}
                 {roundInfo.currentLeaders.length > 0 && (
                   <div className="space-y-1 mb-4">
-                    <p className="text-[9px] text-white uppercase tracking-wider font-bold mb-2">Current leaders</p>
-                    {roundInfo.currentLeaders.slice(0, 3).map(e => (
-                      <div key={e.rank} className="flex items-center justify-between py-1.5 border-b border-white/5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] w-5 text-white font-bold">#{e.rank}</span>
-                          <span className="text-[10px] text-white font-medium truncate max-w-[120px]">{e.username}</span>
-                          {e.walletAddress === result.userWallet && (
-                            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#9945FF]/15 text-[#9945FF]">YOU</span>
-                          )}
+                    <p className="text-[9px] text-white uppercase tracking-wider font-bold mb-2">Live top 5</p>
+                    {roundInfo.currentLeaders.slice(0, 5).map(e => {
+                      const isMe = e.walletAddress === result.userWallet;
+                      return (
+                        <div key={e.rank} className={`flex items-center justify-between py-1.5 border-b ${isMe ? 'border-[#9945FF]/20' : 'border-white/5'}`}
+                          style={isMe ? { background: 'rgba(153,69,255,0.07)', borderRadius: '4px', padding: '6px 4px' } : {}}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] w-5 font-bold" style={{ color: isMe ? '#9945FF' : 'rgba(255,255,255,0.6)' }}>#{e.rank}</span>
+                            <span className={`text-[10px] font-medium truncate max-w-[110px] ${isMe ? 'text-white font-bold' : 'text-white'}`}>{e.username}</span>
+                            {isMe && <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#9945FF]/20 text-[#9945FF]">YOU</span>}
+                          </div>
+                          <span className={`mono text-[10px] font-bold ${isMe ? 'text-[#FFB800]' : 'text-[#FFB800]'}`}>{e.pointsScored.toLocaleString()} pts</span>
                         </div>
-                        <span className="mono text-[10px] font-bold text-[#FFB800]">{e.pointsScored.toLocaleString()} pts</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
