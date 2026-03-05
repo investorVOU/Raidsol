@@ -15,6 +15,7 @@ interface UserRow   { wallet_address: string; username: string; sr_points: numbe
 interface ClaimRow  { id: string; wallet_address: string; action_type: string; reward_sr: number; twitter_handle: string | null; created_at: string; }
 interface WinnerRow      { id: string; round_number: number; round_date: string; rank: number; wallet_address: string; prize_sol: number; claimed: boolean; }
 interface SuggestionRow  { id: number; wallet_address: string | null; category: string; suggestion_text: string; created_at: string; }
+interface PushSubRow    { endpoint: string; wallet_address: string | null; created_at: string; }
 
 interface Overview {
   totalUsers: number; totalRaids: number; totalWins: number;
@@ -159,6 +160,10 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [raidFilter, setRaidFilter]     = useState<'ALL' | 'WIN' | 'BUST'>('ALL');
   const [userSort, setUserSort]         = useState<'SR' | 'DATE'>('DATE');
 
+  // Push subscribers list
+  const [pushSubs, setPushSubs]       = useState<PushSubRow[]>([]);
+  const [pushSubsLoading, setPushSubsLoading] = useState(false);
+
   // Push compose state
   const [pushTarget, setPushTarget]   = useState<'ALL' | 'WALLET'>('ALL');
   const [pushWallet, setPushWallet]   = useState('');
@@ -278,10 +283,22 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     }
   }, []);
 
+  const loadPushSubs = useCallback(async () => {
+    setPushSubsLoading(true);
+    try {
+      const { data } = await supabase
+        .from('push_subscriptions')
+        .select('endpoint, wallet_address, created_at')
+        .order('created_at', { ascending: false });
+      setPushSubs((data ?? []) as PushSubRow[]);
+    } finally { setPushSubsLoading(false); }
+  }, []);
+
   useEffect(() => {
     if (tab === 'STATS') loadStats();
+    else if (tab === 'PUSH') loadPushSubs();
     else load(tab);
-  }, [tab, load, loadStats]);
+  }, [tab, load, loadStats, loadPushSubs]);
 
   const handleFinalizeRound = async () => {
     setFinalizing(true);
@@ -684,7 +701,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
         {/* ── PUSH ── */}
         {!loading && tab === 'PUSH' && (
-          <div className="flex flex-col gap-4 max-w-lg">
+          <div className="flex flex-col gap-5">
             <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 flex flex-col gap-4">
               <p className="text-[9px] text-white uppercase tracking-widest font-bold">Compose Push Notification</p>
 
@@ -763,6 +780,61 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 <p className={`text-[11px] font-bold text-center ${pushResult.ok ? 'text-[#14F195]' : 'text-[#9945FF]'}`}>
                   {pushResult.ok ? <><i className="fa-solid fa-check mr-1" />{pushResult.msg}</> : pushResult.msg}
                 </p>
+              )}
+            </div>
+
+            {/* Subscriber list */}
+            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] text-white uppercase tracking-widest font-bold">Opted-in Subscribers</p>
+                  <p className="text-[9px] text-white mt-0.5">
+                    {pushSubsLoading ? 'Loading...' : `${pushSubs.length} device${pushSubs.length !== 1 ? 's' : ''} · ${pushSubs.filter(s => s.wallet_address).length} linked to wallets`}
+                  </p>
+                </div>
+                <button onClick={loadPushSubs}
+                  className="text-[9px] text-white hover:text-white font-bold uppercase tracking-wider transition-colors">
+                  <i className="fa-solid fa-rotate-right text-[9px]" /> Refresh
+                </button>
+              </div>
+
+              {!pushSubsLoading && pushSubs.length === 0 && (
+                <p className="text-center text-white text-xs py-6">No subscribers yet.</p>
+              )}
+
+              {!pushSubsLoading && pushSubs.length > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[10px] border-collapse">
+                    <thead>
+                      <tr className="text-white border-b border-white/[0.06]">
+                        <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">#</th>
+                        <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
+                        <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Endpoint</th>
+                        <th className="text-right py-2 font-bold uppercase tracking-wider">Subscribed</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pushSubs.map((s, i) => (
+                        <tr key={s.endpoint} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                          <td className="py-1.5 pr-3 text-white">{i + 1}</td>
+                          <td className="py-1.5 pr-3">
+                            {s.wallet_address
+                              ? <span className="flex items-center gap-0.5">
+                                  <span className="font-mono text-white text-[10px]">{s.wallet_address.slice(0, 6)}…{s.wallet_address.slice(-4)}</span>
+                                  <CopyBtn text={s.wallet_address} />
+                                </span>
+                              : <span className="text-white italic">anonymous</span>
+                            }
+                          </td>
+                          <td className="py-1.5 pr-3 font-mono text-white max-w-[180px] truncate">
+                            {s.endpoint.replace('https://', '').slice(0, 40)}…
+                          </td>
+                          <td className="py-1.5 text-right text-white">{new Date(s.created_at).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>

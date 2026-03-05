@@ -87,15 +87,15 @@ const AppInner: React.FC = () => {
   const unclaimedRoundWins = roundWins.filter(w => !w.claimed);
   const [roundWinPopupDismissed, setRoundWinPopupDismissed] = React.useState<string | null>(null);
 
-  // Push notifications — prompt once after wallet connect
+  // Push notifications — prompt once for any visitor (wallet optional)
   const { status: pushStatus, subscribe: pushSubscribe } = usePushNotifications(walletAddr);
   const [showPushPrompt, setShowPushPrompt] = useState(false);
   useEffect(() => {
-    if (!connected || pushStatus !== 'unsubscribed') return;
+    if (pushStatus !== 'unsubscribed') return;
     if (localStorage.getItem('solraid-push-prompted')) return;
-    const t = setTimeout(() => setShowPushPrompt(true), 3000);
+    const t = setTimeout(() => setShowPushPrompt(true), 4000);
     return () => clearTimeout(t);
-  }, [connected, pushStatus]);
+  }, [pushStatus]);
   const handlePushEnable = async () => {
     const ok = await pushSubscribe();
     setShowPushPrompt(false);

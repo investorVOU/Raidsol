@@ -45,7 +45,6 @@ export function usePushNotifications(walletAddress: string | null) {
   useEffect(() => { checkStatus(); }, [checkStatus]);
 
   const subscribe = useCallback(async (): Promise<boolean> => {
-    if (!walletAddress) return false;
     try {
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') { setStatus('denied'); return false; }
@@ -65,8 +64,9 @@ export function usePushNotifications(walletAddress: string | null) {
         keys: { p256dh: string; auth: string };
       };
 
+      // wallet_address is nullable — anonymous visitors still get saved for broadcasts
       await supabase.from('push_subscriptions').upsert(
-        { wallet_address: walletAddress, endpoint, p256dh: keys.p256dh, auth: keys.auth },
+        { wallet_address: walletAddress ?? null, endpoint, p256dh: keys.p256dh, auth: keys.auth },
         { onConflict: 'endpoint' }
       );
 
