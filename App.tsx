@@ -820,6 +820,7 @@ const AppInner: React.FC = () => {
           mode:           isPvp ? 'PVP' : 'SOLO',
           difficulty:     gameState.activeRaidDifficulty,
           entry_fee:      gameState.activeRaidFee,
+          entry_tx_sig:   gameState.activeEntryTxSig,
           elapsed_sec:    Math.round(elapsedSec),
           peak_mult:      peakMult ?? 1,
           insurance:      gameState.activeRaidInsurance,
@@ -1682,6 +1683,7 @@ const AppInner: React.FC = () => {
     if (currency === Currency.SKR  && gameState.skrBalance    < totalCostCurrency) { alert('INSUFFICIENT SKR FOR DEPLOYMENT');  return; }
 
     // ── On-chain entry fee payment ──────────────────────────────────────
+    let entryTxSig: string | undefined;
     if (totalCostSol > 0) {
       if (!TREASURY_PUBKEY) {
         alert('Treasury address not configured. Set VITE_TREASURY_ADDRESS in .env');
@@ -1715,8 +1717,12 @@ const AppInner: React.FC = () => {
             createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
           );
         }
-        const { sig, conn: raidConn } = await sendWithFallback(tx);
-        await raidConn.confirmTransaction(sig, 'confirmed');
+        const { sig: entrySig } = await sendWithFallback(tx);
+        // Store sig so submit-raid-result can verify payment on-chain
+        entryTxSig = entrySig;
+        // Do NOT await confirmTransaction — it times out on slow RPC nodes and
+        // would block the raid even though the SOL is already spent. The edge
+        // function verifies the tx server-side instead.
       } catch (err: any) {
         console.error('Entry fee payment failed', err);
         alert('Entry fee payment failed: ' + (err?.message ?? String(err)));
@@ -1743,6 +1749,7 @@ const AppInner: React.FC = () => {
       activeRaidTier: effectiveIsRoundEntry ? tier : RaidTier.GRUNT,
       activeSeedId: undefined,
       activeServerSeedHash: undefined,
+      activeEntryTxSig: entryTxSig,
       // Remember config so "Redeploy" button reuses same settings
       lastRaidConfig: { mode, difficulty, boosts, currency, isRoundEntry: effectiveIsRoundEntry, tier: effectiveIsRoundEntry ? tier : undefined },
       // Ticket

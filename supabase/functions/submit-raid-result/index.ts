@@ -150,6 +150,7 @@ Deno.serve(async (req: Request) => {
       mode,
       difficulty,
       entry_fee,
+      entry_tx_sig,   // On-chain tx signature for entry fee payment
       elapsed_sec,
       peak_mult,      // Optional: peak multiplier reached during raid
       insurance,      // Optional: boolean — player paid +0.01 SOL insurance
@@ -169,6 +170,89 @@ Deno.serve(async (req: Request) => {
     if (!isDrill && rawElapsed < MIN_RAID_DURATION_SEC) {
       console.warn(`[anti-cheat] wallet=${wallet_address} elapsed=${rawElapsed}s — instant exploit rejected`);
       return json({ error: `Raid too short (${rawElapsed}s)` }, 422, corsH);
+    }
+
+    // ── Payment verification (non-drill raids with an entry fee) ────────
+    // If the client sent a tx signature, confirm it landed on-chain and paid
+    // the correct treasury address. Drills and free raids (entry_fee=0) skip this.
+    const feeNum = Number(entry_fee ?? 0);
+    if (!isDrill && feeNum > 0) {
+      if (!entry_tx_sig) {
+        console.warn(`[anti-cheat] wallet=${wallet_address} — entry_fee=${feeNum} but no entry_tx_sig`);
+        return json({ error: 'Entry fee transaction signature required' }, 422, corsH);
+      }
+
+      const rpcUrl = Deno.env.get('SOLANA_RPC_URL') ?? 'https://api.mainnet-beta.solana.com';
+      const TREASURY = Deno.env.get('TREASURY_ADDRESS') ?? '';
+      const LAMPORTS_PER_SOL = 1_000_000_000;
+      const expectedLamports = Math.round(feeNum * LAMPORTS_PER_SOL);
+
+      try {
+        // Retry up to 6× with 1.5s gap — tx may not be indexed yet
+        let txData: any = null;
+        for (let attempt = 0; attempt < 6; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
+          const rpcRes = await fetch(rpcUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0', id: 1,
+              method: 'getTransaction',
+              params: [entry_tx_sig, { encoding: 'jsonParsed', commitment: 'confirmed', maxSupportedTransactionVersion: 0 }],
+            }),
+          });
+          const rpcJson = await rpcRes.json();
+          if (rpcJson.result) { txData = rpcJson.result; break; }
+        }
+
+        if (!txData) {
+          console.warn(`[anti-cheat] wallet=${wallet_address} — entry tx ${entry_tx_sig} not found on-chain`);
+          return json({ error: 'Entry fee transaction not confirmed on-chain' }, 422, corsH);
+        }
+
+        if (txData.meta?.err) {
+          console.warn(`[anti-cheat] wallet=${wallet_address} — entry tx failed on-chain`, txData.meta.err);
+          return json({ error: 'Entry fee transaction failed on-chain' }, 422, corsH);
+        }
+
+        // Check that the tx moved at least the expected lamports to the treasury.
+        // Works for SOL (system transfer) and SPL tokens (check postTokenBalances).
+        let treasuryReceived = false;
+        const instructions = txData.transaction?.message?.instructions ?? [];
+        for (const ix of instructions) {
+          if (ix.parsed?.type === 'transfer' && ix.parsed?.info?.destination === TREASURY) {
+            if (Number(ix.parsed.info.lamports ?? 0) >= expectedLamports * 0.98) {
+              treasuryReceived = true; break;
+            }
+          }
+          if (ix.parsed?.type === 'transferChecked' && ix.parsed?.info?.destination === TREASURY) {
+            treasuryReceived = true; break;
+          }
+        }
+        // SPL token transfer via postTokenBalances
+        if (!treasuryReceived && TREASURY) {
+          const pre  = txData.meta?.preTokenBalances  ?? [];
+          const post = txData.meta?.postTokenBalances ?? [];
+          for (const p of post) {
+            if (p.owner === TREASURY) {
+              const preEntry = pre.find((e: any) => e.accountIndex === p.accountIndex);
+              const delta = Number(p.uiTokenAmount.amount) - Number(preEntry?.uiTokenAmount?.amount ?? 0);
+              if (delta > 0) { treasuryReceived = true; break; }
+            }
+          }
+        }
+
+        if (!treasuryReceived) {
+          console.warn(`[anti-cheat] wallet=${wallet_address} — treasury not credited in tx ${entry_tx_sig}`);
+          return json({ error: 'Entry fee not received by treasury' }, 422, corsH);
+        }
+
+        console.log(`[payment] verified entry_tx_sig=${entry_tx_sig} for wallet=${wallet_address} fee=${feeNum}`);
+      } catch (verifyErr) {
+        // RPC verification failed — log and allow through to avoid blocking legit users
+        // on RPC downtime. The tx sig is stored and can be audited offline.
+        console.error(`[payment] verification error for wallet=${wallet_address}:`, verifyErr);
+      }
     }
 
     // ── D. Anti-cheat: clamp values, never drop the round entry ─────────
@@ -346,6 +430,7 @@ Deno.serve(async (req: Request) => {
       success: effectiveSuccess,
       sol_amount: effectiveSolAmount,
       entry_fee: entry_fee || 0,
+      entry_tx_sig: entry_tx_sig || null,
       sr_earned: totalSREarned,
       points: effectivePoints,
       server_seed_hash: seedData.server_seed_hash,

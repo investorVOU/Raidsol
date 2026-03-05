@@ -374,6 +374,7 @@ export interface GameState {
   activeRoom?: Room;
   activeSeedId?: string;          // provably-fair: seed DB row id
   activeServerSeedHash?: string;  // provably-fair: shown to player pre-raid
+  activeEntryTxSig?: string;      // on-chain tx sig for entry fee — verified server-side
   lastResult?: {
     success: boolean;
     solAmount: number;
