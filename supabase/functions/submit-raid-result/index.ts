@@ -107,6 +107,30 @@ const json = (body: object, status = 200, corsH: Record<string, string>) =>
     headers: { ...corsH, 'Content-Type': 'application/json' },
   });
 
+/** Fire-and-forget push notification to a single wallet. Never throws. */
+async function notifyWallet(
+  wallet: string,
+  title: string,
+  body: string,
+  url = '/',
+) {
+  try {
+    await fetch(
+      `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-push`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({ wallet_address: wallet, title, body, url }),
+      },
+    );
+  } catch (e) {
+    console.error('[notify] push failed for', wallet, e);
+  }
+}
+
 Deno.serve(async (req: Request) => {
   const corsH = getCorsHeaders(req);
 
@@ -284,6 +308,17 @@ Deno.serve(async (req: Request) => {
     const insuranceRefund = (!effectiveSuccess && !isDrill && !!insurance)
       ? Number(entry_fee ?? 0) * 0.5
       : 0;
+
+    // Push: insurance payout on bust
+    if (insuranceRefund > 0) {
+      notifyWallet(
+        wallet_address,
+        'Insurance paid out',
+        `You busted — but your insurance refunded ${insuranceRefund.toFixed(4)} SOL back to your wallet.`,
+        '/',
+      );
+    }
+
     const newUnclaimed = !isDrill
       ? Number(profile.unclaimed_sol) + (effectiveSuccess ? effectiveSolAmount : 0) + insuranceRefund
       : Number(profile.unclaimed_sol);
@@ -370,6 +405,16 @@ Deno.serve(async (req: Request) => {
       const raidRoundDate = `${ry}-${String(rm).padStart(2, '0')}-${String(rd).padStart(2, '0')}`;
       const poolContribution = Number(entry_fee) * 0.90;
 
+      // Snapshot top-5 BEFORE this entry so we can detect displacements
+      const { data: prevTop5 } = await supabase
+        .from('round_entries')
+        .select('wallet_address, points')
+        .eq('round_number', raidRoundNum)
+        .eq('round_date', raidRoundDate)
+        .eq('raid_tier', raid_tier || 'GRUNT')
+        .order('points', { ascending: false })
+        .limit(5);
+
       const [poolResult, entryResult] = await Promise.all([
         supabase.rpc('increment_round_pool', {
           p_round_number: raidRoundNum,
@@ -389,6 +434,31 @@ Deno.serve(async (req: Request) => {
 
       if (poolResult.error)  console.error('[round] increment_round_pool error:', poolResult.error.message);
       if (entryResult.error) console.error('[round] upsert_round_entry error:', entryResult.error.message);
+
+      // Push: notify wallets knocked out of the top 5
+      const { data: newTop5 } = await supabase
+        .from('round_entries')
+        .select('wallet_address, points')
+        .eq('round_number', raidRoundNum)
+        .eq('round_date', raidRoundDate)
+        .eq('raid_tier', raid_tier || 'GRUNT')
+        .order('points', { ascending: false })
+        .limit(5);
+
+      const newTop5Wallets = new Set((newTop5 ?? []).map((e: { wallet_address: string }) => e.wallet_address));
+      for (const entry of (prevTop5 ?? []) as { wallet_address: string; points: number }[]) {
+        if (
+          entry.wallet_address !== wallet_address &&
+          !newTop5Wallets.has(entry.wallet_address)
+        ) {
+          notifyWallet(
+            entry.wallet_address,
+            'You\'ve been overtaken',
+            'Someone just pushed you out of the top 5 this round. Raid again to reclaim your spot.',
+            '/',
+          );
+        }
+      }
 
       console.log(`[round] wallet=${wallet_address} round=${raidRoundDate}#${raidRoundNum} pts=${effectivePoints} pool+=${poolContribution}`);
     }
@@ -490,6 +560,26 @@ Deno.serve(async (req: Request) => {
         });
 
         console.log(`[pvp] winner=${winner.wallet_address} grossPot=${grossPot} netPot=${netPot} fee=${platformFeePvp.toFixed(6)}`);
+
+        // Push: notify winner and losers
+        const winnerName = winner.username || winner.wallet_address.slice(0, 8);
+        for (const player of allPlayers) {
+          if (player.wallet_address === winner.wallet_address) {
+            notifyWallet(
+              player.wallet_address,
+              'You won the PvP raid!',
+              `${netPot.toFixed(4)} SOL is on its way to your wallet. Well played.`,
+              '/',
+            );
+          } else {
+            notifyWallet(
+              player.wallet_address,
+              'PvP result: you lost',
+              `${winnerName} beat you this round. Come back and settle it.`,
+              '/',
+            );
+          }
+        }
 
         pvpPayload = {
           pvp_resolved: true,
