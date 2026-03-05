@@ -87,28 +87,6 @@ const AppInner: React.FC = () => {
   const unclaimedRoundWins = roundWins.filter(w => !w.claimed);
   const [roundWinPopupDismissed, setRoundWinPopupDismissed] = React.useState<string | null>(null);
 
-  // Push notifications — prompt once for any visitor (wallet optional)
-  const { status: pushStatus, subscribe: pushSubscribe } = usePushNotifications(walletAddr);
-  const [showPushPrompt, setShowPushPrompt] = useState(false);
-  useEffect(() => {
-    // Wait until disclaimer, onboarding, demo notice, and any raid screen are all clear
-    if (!introComplete || showOnboarding || showDemoNotice) return;
-    if (gameState.currentScreen === Screen.RAID || gameState.currentScreen === Screen.RESULT) return;
-    if (pushStatus !== 'unsubscribed') return;
-    if (localStorage.getItem('solraid-push-prompted')) return;
-    const t = setTimeout(() => setShowPushPrompt(true), 3000);
-    return () => clearTimeout(t);
-  }, [pushStatus, introComplete, showOnboarding, showDemoNotice, gameState.currentScreen]);
-  const handlePushEnable = async () => {
-    const ok = await pushSubscribe();
-    setShowPushPrompt(false);
-    localStorage.setItem('solraid-push-prompted', 'true');
-    return ok;
-  };
-  const handlePushDismiss = () => {
-    setShowPushPrompt(false);
-    localStorage.setItem('solraid-push-prompted', 'true');
-  };
 
   // Screens that are safe to restore on reload (mid-game states are excluded)
   const RESTORABLE_SCREENS = new Set<Screen>([
@@ -683,6 +661,29 @@ const AppInner: React.FC = () => {
   };
 
   const [showDemoNotice, setShowDemoNotice] = useState(false);
+
+  // Push notifications — prompt once for any visitor (wallet optional)
+  // Must be declared AFTER showDemoNotice, showOnboarding, introComplete
+  const { status: pushStatus, subscribe: pushSubscribe } = usePushNotifications(walletAddr);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
+  useEffect(() => {
+    if (!introComplete || showOnboarding || showDemoNotice) return;
+    if (gameState.currentScreen === Screen.RAID || gameState.currentScreen === Screen.RESULT) return;
+    if (pushStatus !== 'unsubscribed') return;
+    if (localStorage.getItem('solraid-push-prompted')) return;
+    const t = setTimeout(() => setShowPushPrompt(true), 3000);
+    return () => clearTimeout(t);
+  }, [pushStatus, introComplete, showOnboarding, showDemoNotice, gameState.currentScreen]);
+  const handlePushEnable = async () => {
+    const ok = await pushSubscribe();
+    setShowPushPrompt(false);
+    localStorage.setItem('solraid-push-prompted', 'true');
+    return ok;
+  };
+  const handlePushDismiss = () => {
+    setShowPushPrompt(false);
+    localStorage.setItem('solraid-push-prompted', 'true');
+  };
 
   const handleOnboardingComplete = () => {
     localStorage.setItem('solraid-onboarding-seen', 'true');
