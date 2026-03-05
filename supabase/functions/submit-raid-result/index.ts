@@ -128,6 +128,7 @@ Deno.serve(async (req: Request) => {
       entry_fee,
       elapsed_sec,
       peak_mult,      // Optional: peak multiplier reached during raid
+      insurance,      // Optional: boolean — player paid +0.01 SOL insurance
       raid_tier,      // Optional: competition tier (GRUNT | ELITE | WHALE), default GRUNT
       room_id,        // Optional: PvP room this raid belongs to
     } = body;
@@ -279,8 +280,12 @@ Deno.serve(async (req: Request) => {
 
     const newSRPoints = Number(profile.sr_points) + totalSREarned;
     // Drill mode: practice only — no SOL payout regardless of outcome
-    const newUnclaimed = effectiveSuccess && !isDrill
-      ? Number(profile.unclaimed_sol) + effectiveSolAmount
+    // Insurance: on bust, refund 50% of entry fee to unclaimed_sol
+    const insuranceRefund = (!effectiveSuccess && !isDrill && !!insurance)
+      ? Number(entry_fee ?? 0) * 0.5
+      : 0;
+    const newUnclaimed = !isDrill
+      ? Number(profile.unclaimed_sol) + (effectiveSuccess ? effectiveSolAmount : 0) + insuranceRefund
       : Number(profile.unclaimed_sol);
 
     await supabase
@@ -522,6 +527,7 @@ Deno.serve(async (req: Request) => {
       new_achievements: newAchievements,
       bounty_awarded: bountyAwarded,
       bounty_id: bountyId,
+      insurance_refund: insuranceRefund,
       server_seed: seedData.server_seed,
       server_seed_hash: seedData.server_seed_hash,
       ...(flagged ? { anti_cheat_flag: reason } : {}),

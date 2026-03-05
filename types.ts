@@ -411,6 +411,7 @@ export interface GameState {
   raidTickets: number;
   lastFreeTicketDate: string | null;  // ISO date string "YYYY-MM-DD"
   ticketBoostActive: boolean;          // true when current raid was entered with a ticket
+  activeRaidInsurance: boolean;        // true when player paid +0.01 SOL insurance for this raid
   // Meta-game progression
   raidStreak: number;                  // consecutive successful raids
   bustTimestamps: number[];            // epoch ms of recent busts (rage-quit protection)

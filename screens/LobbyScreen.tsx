@@ -35,7 +35,7 @@ interface LobbyScreenProps {
   onNavigateRoast?: () => void;
   onNavigateBriefing?: () => void;
   onOpenSuggestions?: () => void;
-  onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier, useTicket?: boolean) => Promise<void>;
+  onEnterRound?: (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier, useTicket?: boolean, useInsurance?: boolean) => Promise<void>;
   onRequestFullscreen?: () => void;
   raidTickets?: number;
   lastFreeRaidDate?: string | null;
@@ -77,6 +77,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const [roundBoosts, setRoundBoosts]           = useState<string[]>([]);
   const [roundTier, setRoundTier]               = useState<RaidTier>(RaidTier.GRUNT);
   const [roundUseTicket, setRoundUseTicket]     = useState(false);
+  const [roundUseInsurance, setRoundUseInsurance] = useState(false);
   const [isDeploying, setIsDeploying]           = useState(false);
   const [toolsDisclaimerDismissed, setToolsDisclaimerDismissed] = useState(false);
 
@@ -100,7 +101,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
     const applyRoundTicket = roundUseTicket && raidTickets > 0;
     try {
       if (onEnterRound) {
-        await onEnterRound(roundDifficulty, roundBoosts, roundCurrency, roundTier, applyRoundTicket);
+        await onEnterRound(roundDifficulty, roundBoosts, roundCurrency, roundTier, applyRoundTicket, roundUseInsurance);
       } else {
         await onEnterRaid(Mode.SOLO, roundDifficulty, roundBoosts, roundCurrency, applyRoundTicket, RAID_TIER_CONFIG[roundTier].entryFee);
       }
@@ -113,7 +114,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const applyRoundTicket   = roundUseTicket && raidTickets > 0;
   const roundFeeBase       = RAID_TIER_CONFIG[roundTier].entryFee;
   const roundBoostCostSol  = roundBoosts.reduce((s, id) => s + (RAID_BOOSTS.find(b => b.id === id)?.cost ?? 0), 0);
-  const roundTotalSol      = (applyRoundTicket ? roundFeeBase * 0.5 : roundFeeBase) + roundBoostCostSol;
+  const INSURANCE_FEE      = 0.01;
+  const roundTotalSol      = (applyRoundTicket ? roundFeeBase * 0.5 : roundFeeBase) + roundBoostCostSol + (roundUseInsurance ? INSURANCE_FEE : 0);
   const roundRate          = rates[roundCurrency];
   const roundPricesLoading = roundCurrency !== Currency.SOL && roundRate === 0;
   const roundTotalDisplay  = roundTotalSol * roundRate;
@@ -755,6 +757,21 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   </div>
                 </button>
               )}
+
+              {/* Insurance toggle */}
+              <button onClick={() => setRoundUseInsurance(p => !p)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border transition-all ${roundUseInsurance ? 'border-[#14F195]/35 bg-[#14F195]/6' : 'border-white/[0.10] bg-white/3'}`}>
+                <div className="flex items-center gap-2">
+                  <i className={`fa-solid fa-shield-halved text-sm ${roundUseInsurance ? 'text-[#14F195]' : 'text-white/50'}`} />
+                  <div>
+                    <p className={`text-[10px] font-semibold ${roundUseInsurance ? 'text-[#14F195]' : 'text-white'}`}>Raid Insurance · +0.01 SOL</p>
+                    <p className="text-[8px] text-white/50">Get 50% entry back if you bust</p>
+                  </div>
+                </div>
+                <div className={`w-8 h-4 rounded-full transition-all relative ${roundUseInsurance ? 'bg-[#14F195]' : 'bg-white/15'}`}>
+                  <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow ${roundUseInsurance ? 'left-[18px]' : 'left-0.5'}`} />
+                </div>
+              </button>
 
               {/* Cost + enter */}
               <div className="flex items-center gap-3">

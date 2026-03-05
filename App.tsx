@@ -101,7 +101,7 @@ const AppInner: React.FC = () => {
         srPoints: 0, isConnected: false, username: '', ownedItemIds: [],
         equippedAvatarId: '', equippedGearIds: [], activeRaidFee: ENTRY_FEES[Mode.SOLO],
         activeRaidDifficulty: Difficulty.MEDIUM, activeRaidBoosts: [], activeRaidIsRound: false, activeRaidTier: RaidTier.GRUNT,
-        raidTickets: 0, lastFreeTicketDate: null, ticketBoostActive: false, raidStreak: 0,
+        raidTickets: 0, lastFreeTicketDate: null, ticketBoostActive: false, activeRaidInsurance: false, raidStreak: 0,
         bustTimestamps: [], lastFreeRaidDate: null, activeStreakBonus: 0, drillCount: 0,
         drillWindowStart: 0, dailyStreak: 0, lastPlayedDate: null, personalBestPoints: 0,
       };
@@ -128,6 +128,7 @@ const AppInner: React.FC = () => {
       raidTickets: 0,
       lastFreeTicketDate: null,
       ticketBoostActive: false,
+      activeRaidInsurance: false,
       raidStreak: 0,
       bustTimestamps: [],
       lastFreeRaidDate: null,
@@ -734,6 +735,7 @@ const AppInner: React.FC = () => {
     setGameState(prev => ({
       ...prev,
       ticketBoostActive: false,
+      activeRaidInsurance: false,
       currentScreen: Screen.RESULT,
       walletBalance: success ? prev.walletBalance : prev.walletBalance - prev.activeRaidFee,
       unclaimedBalance: (success ? prev.unclaimedBalance + netSolAmount : prev.unclaimedBalance) + bankedYield,
@@ -794,6 +796,7 @@ const AppInner: React.FC = () => {
           entry_fee:      gameState.activeRaidFee,
           elapsed_sec:    Math.round(elapsedSec),
           peak_mult:      peakMult ?? 1,
+          insurance:      gameState.activeRaidInsurance,
           raid_tier:      gameState.activeRaidTier,
           ...(isPvp && activeRoomId ? { room_id: activeRoomId } : {}),
         },
@@ -1564,7 +1567,9 @@ const AppInner: React.FC = () => {
     customFeeOverride?: number,
     isRoundEntry: boolean = false,
     tier: RaidTier = RaidTier.GRUNT,
+    useInsurance: boolean = false,
   ) => {
+    const INSURANCE_FEE = 0.01; // SOL extra
     // All SOLO raids are round-based — points ranked 1-5, 90% of pot distributed after round ends
     const effectiveIsRoundEntry = mode === Mode.SOLO ? true : (isRoundEntry || !!currentRound);
     // For round entries, override fee with tier's entry fee (unless customFeeOverride explicitly set)
@@ -1617,7 +1622,8 @@ const AppInner: React.FC = () => {
       const boost = RAID_BOOSTS.find(b => b.id === bId);
       if (boost) boostCost += boost.cost;
     });
-    const totalCostSol = entryFee + boostCost; // SOL equivalent
+    const applyInsurance = useInsurance && !isFreeRaid && mode !== Mode.DRILL;
+    const totalCostSol = entryFee + boostCost + (applyInsurance ? INSURANCE_FEE : 0); // SOL equivalent
     // Streak bonus: 3+ consecutive wins → +0.15x starting multiplier (applied via boosts passthrough)
     const streakBonus = gameState.raidStreak >= 3 ? 0.15 : 0;
 
@@ -1713,6 +1719,7 @@ const AppInner: React.FC = () => {
       // Ticket
       raidTickets: applyTicket ? prev.raidTickets - 1 : prev.raidTickets,
       ticketBoostActive: applyTicket,
+      activeRaidInsurance: applyInsurance,
       // Daily free raid tracking
       lastFreeRaidDate: isFreeRaid ? todayStr : prev.lastFreeRaidDate,
       // Streak bonus stored (used by RaidScreen via activeRaidBoosts or multiplier — pass via dedicated state)
@@ -1762,10 +1769,8 @@ const AppInner: React.FC = () => {
     }
   };
 
-  const enterRoundRaid = async (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier = RaidTier.GRUNT, useTicket = false) => {
-    // effectiveIsRoundEntry in enterRaid auto-enrolls when currentRound is set;
-    // pass isRoundEntry=true explicitly as a fallback for safety
-    await enterRaid(Mode.SOLO, difficulty, boosts, currency, useTicket, undefined, true, tier);
+  const enterRoundRaid = async (difficulty: Difficulty, boosts: string[], currency: Currency, tier: RaidTier = RaidTier.GRUNT, useTicket = false, useInsurance = false) => {
+    await enterRaid(Mode.SOLO, difficulty, boosts, currency, useTicket, undefined, true, tier, useInsurance);
   };
 
   // ── Bounty Board ──────────────────────────────────────────────────────────
