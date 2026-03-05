@@ -10,6 +10,7 @@ import { usePlayerRoundWins } from '../hooks/usePlayerRoundWins';
 import { useAvatarNfts } from '../hooks/useAvatarNfts';
 import { getRoundBoundsFor, formatRoundWindow } from '../hooks/useRoundData';
 import { supabase } from '../lib/supabase';
+import PushBell from '../components/PushBell';
 
 interface ProfileScreenProps {
   balance: number;
@@ -508,6 +509,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             )}
           </div>
         </div>
+
+        {/* Push notifications */}
+        <PushBell walletAddress={walletAddress ?? null} />
 
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">

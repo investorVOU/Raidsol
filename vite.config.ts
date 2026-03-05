@@ -56,6 +56,8 @@ export default defineConfig(({ mode }) => {
           workbox: {
             skipWaiting: true,
             clientsClaim: true,
+            // Import the push notification handler into the generated SW
+            importScripts: ['/push-handler.js'],
             // Exclude static legal pages from the SPA navigation fallback
             // so the SW doesn't serve index.html when users visit /privacy.html etc.
             navigateFallback: 'index.html',
