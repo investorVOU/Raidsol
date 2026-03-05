@@ -21,11 +21,6 @@ const RPC_URLS: string[] = [
 ].filter((u): u is string => typeof u === 'string' && u.startsWith('http'));
 if (RPC_URLS.length === 0) RPC_URLS.push('https://api.mainnet-beta.solana.com');
 
-// ── E. Treasury Protection limits ─────────────────────────────────────────
-// Max SOL per single withdrawal request
-const MAX_SINGLE_PAYOUT_SOL = Number(Deno.env.get('MAX_SINGLE_PAYOUT_SOL') ?? '5');
-// Max SOL withdrawable per wallet per rolling 24 hours
-const MAX_DAILY_PAYOUT_SOL  = Number(Deno.env.get('MAX_DAILY_PAYOUT_SOL')  ?? '20');
 const LAMPORTS_PER_SOL = 1_000_000_000;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -205,13 +200,6 @@ Deno.serve(async (req: Request) => {
       return json({ error: `Signature verification error: ${e}` }, 401, corsH);
     }
 
-    // ── E. Single-withdrawal cap ───────────────────────────────────────
-    if (Number(amount_sol) > MAX_SINGLE_PAYOUT_SOL) {
-      return json({
-        error: `Single withdrawal capped at ${MAX_SINGLE_PAYOUT_SOL} SOL. Split your withdrawal into smaller amounts.`,
-      }, 400, corsH);
-    }
-
     console.log(`[payout] START wallet=${wallet_address} amount=${amount_sol} rpc=${RPC_URLS[0]}`);
 
     // ── Load treasury keypair ─────────────────────────────────────────
@@ -236,39 +224,14 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // ── E. Daily withdrawal limit check ──────────────────────────────
-    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentWithdrawals } = await supabase
-      .from('withdrawals')
-      .select('amount_sol')
-      .eq('wallet_address', wallet_address)
-      .eq('status', 'CONFIRMED')
-      .gte('created_at', since24h);
-
-    const dailyTotal = (recentWithdrawals ?? []).reduce(
-      (sum: number, w: { amount_sol: number }) => sum + Number(w.amount_sol),
-      0,
-    );
-
-    if (dailyTotal + Number(amount_sol) > MAX_DAILY_PAYOUT_SOL) {
-      const remaining = Math.max(0, MAX_DAILY_PAYOUT_SOL - dailyTotal);
-      return json({
-        error: `Daily withdrawal limit (${MAX_DAILY_PAYOUT_SOL} SOL) reached. You have ${remaining.toFixed(4)} SOL remaining today.`,
-      }, 429, corsH);
-    }
-
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('unclaimed_sol, username, last_claim_at, equipped_avatar_id')
+      .select('unclaimed_sol, username')
       .eq('wallet_address', wallet_address)
       .single();
 
     if (profileErr || !profile) {
       return json({ error: 'Profile not found' }, 404, corsH);
-    }
-
-    if (!profile.equipped_avatar_id) {
-      return json({ error: 'Avatar required — equip an avatar before withdrawing.' }, 403, corsH);
     }
 
     const available = Number(profile.unclaimed_sol);
@@ -278,44 +241,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const now = new Date();
-
-    // ── Claim cooldown check ───────────────────────────────────────────
-    const COOLDOWN_MS = 6 * 60 * 60 * 1000;
-    const lastClaimAt = profile.last_claim_at ? new Date(profile.last_claim_at) : null;
-
-    if (lastClaimAt && (now.getTime() - lastClaimAt.getTime() < COOLDOWN_MS)) {
-      const { count: raidsSinceClaim } = await supabase
-        .from('raid_history')
-        .select('*', { count: 'exact', head: true })
-        .eq('wallet_address', wallet_address)
-        .neq('mode', 'DRILL')
-        .gte('created_at', lastClaimAt.toISOString());
-
-      if ((raidsSinceClaim ?? 0) === 0) {
-        const remainingMs = COOLDOWN_MS - (now.getTime() - lastClaimAt.getTime());
-        const remainingH = Math.floor(remainingMs / 3600000);
-        const remainingM = Math.floor((remainingMs % 3600000) / 60000);
-        return json({
-          error: `Claim locked for ${remainingH}h ${remainingM}m. Play a raid to unlock early.`,
-          cooldown_remaining_ms: remainingMs,
-        }, 429, corsH);
-      }
-    }
-
-    // ── Fee decay: count paid raids in last 24h (DRILL excluded) ─────
-    const { count: raids24h } = await supabase
-      .from('raid_history')
-      .select('*', { count: 'exact', head: true })
-      .eq('wallet_address', wallet_address)
-      .neq('mode', 'DRILL')
-      .gte('created_at', new Date(Date.now() - 86400000).toISOString());
-
-    const raidCount = raids24h ?? 0;
-    const feePct = raidCount >= 3 ? 0 : raidCount === 2 ? 0.02 : raidCount === 1 ? 0.05 : 0.08;
-    const feeAmount = actualAmount * feePct;
-    const netAmount = actualAmount - feeAmount;
+    const netAmount = actualAmount; // no fee
     const lamports = Math.round(netAmount * LAMPORTS_PER_SOL);
-    console.log(`[payout] available=${available} actualAmount=${actualAmount} feePct=${feePct} netAmount=${netAmount} lamports=${lamports}`);
+    console.log(`[payout] available=${available} amount=${actualAmount} lamports=${lamports}`);
 
     // ── Atomically deduct first (double-spend guard) ──────────────────
     const { error: deductErr } = await supabase
@@ -418,17 +346,15 @@ Deno.serve(async (req: Request) => {
     });
 
     await supabase.from('profiles')
-      .update({ last_claim_at: now.toISOString(), updated_at: now.toISOString() })
+      .update({ updated_at: now.toISOString() })
       .eq('wallet_address', wallet_address);
 
-    console.log(`[payout] SUCCESS actualAmount=${actualAmount} netAmount=${netAmount} feePct=${feePct} tx=${txSignature}`);
+    console.log(`[payout] SUCCESS amount=${actualAmount} tx=${txSignature}`);
     return json({
       success: true,
       tx_signature: txSignature,
       amount_paid: netAmount,
       amount_claimed: actualAmount,
-      fee_pct: feePct,
-      fee_amount: feeAmount,
     }, 200, corsH);
 
   } catch (err) {

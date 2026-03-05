@@ -39,3 +39,6 @@ supabase/schema.sql
 twa/app/build/
 twa/*.apk
 twa/app/build/outputs/
+
+# Local dev/test pages — never commit
+public/test-refunds.html

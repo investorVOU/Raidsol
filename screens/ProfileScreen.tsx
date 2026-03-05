@@ -69,6 +69,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [lastWithdrawTx, setLastWithdrawTx] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawTab, setWithdrawTab] = useState<'WITHDRAW' | 'REFUND'>('WITHDRAW');
   const [showLockTip, setShowLockTip] = useState(false);
 
   // Default withdraw amount to full balance whenever balance updates
@@ -83,31 +84,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   // Real raid history from Supabase
   const { history: raidHistory, loading: historyLoading } = useRaidHistory(walletAddress ?? null);
 
-  // Fee decay preview — only paid raids count (DRILL excluded)
-  const todayRaidCount = useMemo(() => {
-    const cutoff = Date.now() - 86400000;
-    return raidHistory.filter(r => new Date(r.created_at).getTime() > cutoff && r.mode !== 'DRILL').length;
-  }, [raidHistory]);
-  const feeRate = todayRaidCount >= 3 ? 0 : todayRaidCount === 2 ? 2 : todayRaidCount === 1 ? 5 : 8;
-  const feePreview = parseFloat(withdrawAmount) > 0 ? parseFloat(withdrawAmount) * feeRate / 100 : 0;
-
-  // Cooldown state
-  const [, forceTickCooldown] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => forceTickCooldown(n => n + 1), 30000);
-    return () => clearInterval(t);
-  }, []);
-  const COOLDOWN_MS = 6 * 60 * 60 * 1000;
-  const claimLockedUntil = lastClaimAt ? new Date(lastClaimAt).getTime() + COOLDOWN_MS : null;
-  const playedSinceClaim = lastClaimAt
-    ? raidHistory.some(r => r.mode !== 'DRILL' && new Date(r.created_at).getTime() > new Date(lastClaimAt).getTime())
-    : false;
-  const cooldownActive = claimLockedUntil !== null
-    && Date.now() < claimLockedUntil
-    && !playedSinceClaim;
-  const cooldownRemainingMs = cooldownActive ? (claimLockedUntil! - Date.now()) : 0;
-  const cooldownH = Math.floor(cooldownRemainingMs / 3600000);
-  const cooldownM = Math.floor((cooldownRemainingMs % 3600000) / 60000);
 
   // Round win history
   const { wins: roundWins, loading: roundWinsLoading, refetch: refetchRoundWins } = usePlayerRoundWins(walletAddress ?? null);
@@ -519,97 +495,136 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           {/* Left Column: Wealth, Inventory & Referral */}
           <div className="lg:col-span-7 space-y-8 lg:space-y-12">
             
-            {/* Unclaimed Balance Card */}
-            <div className="bg-[var(--modal-bg)] border-2 border-[#FFB800]/20 p-6 sm:p-10 tech-border relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-5 opacity-5 mono text-2xl sm:text-4xl font-black italic uppercase pointer-events-none group-hover:opacity-10 transition-opacity">
+            {/* Unclaimed Balance Card — Withdraw / Refund tabs */}
+            <div className="bg-[var(--modal-bg)] border-2 border-[#FFB800]/20 tech-border relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-5 opacity-5 mono text-2xl sm:text-4xl font-black italic uppercase pointer-events-none">
                 [STORAGE]
               </div>
               <div className="relative z-10">
-                <p className="text-[10px] text-[#FFB800]/60 font-bold uppercase tracking-wide mb-4">Unclaimed</p>
-                {/* Balance display */}
-                <div className="flex items-baseline gap-2 mb-6">
-                  <p className="mono text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tighter leading-none">
-                    {unclaimedBalance.toFixed(4)}
-                  </p>
-                  <span className="text-sm sm:text-xl text-[#FFB800] font-black italic">SOL</span>
-                </div>
-                {/* Amount selector */}
-                <div className="space-y-3">
-                  {/* Preset chips */}
-                  <div className="flex gap-2">
-                    {([0.25, 0.5, 0.75, 1] as const).map((pct) => {
-                      const label = pct === 1 ? 'MAX' : `${pct * 100}%`;
-                      const val = (unclaimedBalance * pct).toFixed(4);
-                      const active = withdrawAmount === val || (pct === 1 && withdrawAmount === unclaimedBalance.toFixed(4));
-                      return (
-                        <button
-                          key={label}
-                          onClick={() => setWithdrawAmount((unclaimedBalance * pct).toFixed(4))}
-                          disabled={unclaimedBalance <= 0}
-                          className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest tech-border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${active ? 'border-[#FFB800]/60 text-[#FFB800] bg-[#FFB800]/10' : 'border-white/10 text-white hover:border-white/30 hover:text-white'}`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Amount input + withdraw button */}
-                  <div className="flex gap-3">
-                    <div className="flex-1 relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max={unclaimedBalance}
-                        step="0.0001"
-                        value={withdrawAmount}
-                        onChange={(e) => setWithdrawAmount(e.target.value)}
-                        disabled={unclaimedBalance <= 0 || isClaiming}
-                        className="w-full bg-[var(--modal-bg)] border-2 border-white/10 focus:border-[#FFB800]/40 outline-none px-4 py-3 mono text-sm font-black text-white placeholder-white/20 disabled:opacity-30 transition-colors"
-                        placeholder="0.0000"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#FFB800]/60">SOL</span>
-                    </div>
+                {/* Tab bar */}
+                <div className="flex border-b-2 border-white/5">
+                  {(['WITHDRAW', 'REFUND'] as const).map(t => (
                     <button
-                      onClick={handleWithdraw}
-                      disabled={unclaimedBalance <= 0 || isClaiming || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > unclaimedBalance || cooldownActive}
-                      className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? 'active:translate-y-1' : 'bg-white/5 text-white border-white/5 cursor-not-allowed opacity-50'}`}
-                      style={unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance && !cooldownActive ? { background: 'linear-gradient(135deg, #9945FF 0%, #7c2dd6 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
+                      key={t}
+                      onClick={() => setWithdrawTab(t)}
+                      className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                        withdrawTab === t
+                          ? 'text-[#FFB800] border-b-2 border-[#FFB800] -mb-[2px]'
+                          : 'text-white'
+                      }`}
                     >
-                      {isClaiming ? 'Processing...' : 'Withdraw'}
-                    </button>
-                  </div>
-
-                  {/* Fee info */}
-                  {feeRate > 0 && unclaimedBalance > 0 && (
-                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
-                      <span className="text-white">Withdrawal fee</span>
-                      <span className="text-[#9945FF]">
-                        {feeRate}%{feePreview > 0 ? ` (−${feePreview.toFixed(4)} SOL)` : ''}
-                        {' · '}
-                        <span className="text-white">
-                          {todayRaidCount < 3 ? `Play ${3 - todayRaidCount} more to remove` : 'No fee'}
+                      {t === 'WITHDRAW' ? 'Withdraw' : 'Refunds'}
+                      {t === 'REFUND' && roundWins.filter(w => !w.claimed).length > 0 && (
+                        <span className="ml-1.5 px-1 py-0.5 bg-[#9945FF] text-white text-[8px] rounded-sm">
+                          {roundWins.filter(w => !w.claimed).length}
                         </span>
-                      </span>
-                    </div>
-                  )}
-                  {feeRate === 0 && unclaimedBalance > 0 && (
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#FFB800]/60">
-                      ✓ No fee — 3+ raids today
-                    </p>
-                  )}
-
-                  {/* Cooldown info */}
-                  {cooldownActive && (
-                    <div className="bg-[#9945FF]/10 border border-[#9945FF]/30 p-3 text-center">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#9945FF]">
-                        Claim locked — {cooldownH}h {cooldownM}m remaining
-                      </p>
-                      <p className="text-[9px] text-white mt-1 uppercase tracking-wide">
-                        Play any raid to unlock immediately
-                      </p>
-                    </div>
-                  )}
+                      )}
+                    </button>
+                  ))}
                 </div>
+
+                {/* WITHDRAW tab */}
+                {withdrawTab === 'WITHDRAW' && (
+                  <div className="p-6 sm:p-8">
+                    <p className="text-[10px] text-[#FFB800]/60 font-bold uppercase tracking-wide mb-4">Unclaimed Balance</p>
+                    <div className="flex items-baseline gap-2 mb-6">
+                      <p className="mono text-5xl sm:text-6xl font-black text-white tracking-tighter leading-none">
+                        {unclaimedBalance.toFixed(4)}
+                      </p>
+                      <span className="text-sm sm:text-xl text-[#FFB800] font-black italic">SOL</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        {([0.25, 0.5, 0.75, 1] as const).map((pct) => {
+                          const label = pct === 1 ? 'MAX' : `${pct * 100}%`;
+                          const val = (unclaimedBalance * pct).toFixed(4);
+                          const active = withdrawAmount === val || (pct === 1 && withdrawAmount === unclaimedBalance.toFixed(4));
+                          return (
+                            <button
+                              key={label}
+                              onClick={() => setWithdrawAmount((unclaimedBalance * pct).toFixed(4))}
+                              disabled={unclaimedBalance <= 0}
+                              className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-widest tech-border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${active ? 'border-[#FFB800]/60 text-[#FFB800] bg-[#FFB800]/10' : 'border-white/10 text-white hover:border-white/30 hover:text-white'}`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-1 relative">
+                          <input
+                            type="number"
+                            min="0"
+                            max={unclaimedBalance}
+                            step="0.0001"
+                            value={withdrawAmount}
+                            onChange={(e) => setWithdrawAmount(e.target.value)}
+                            disabled={unclaimedBalance <= 0 || isClaiming}
+                            className="w-full bg-[var(--modal-bg)] border-2 border-white/10 focus:border-[#FFB800]/40 outline-none px-4 py-3 mono text-sm font-black text-white placeholder-white/20 disabled:opacity-30 transition-colors"
+                            placeholder="0.0000"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#FFB800]/60">SOL</span>
+                        </div>
+                        <button
+                          onClick={handleWithdraw}
+                          disabled={unclaimedBalance <= 0 || isClaiming || !withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > unclaimedBalance}
+                          className={`px-8 py-3 font-black uppercase tracking-tighter text-sm tech-border transition-all whitespace-nowrap ${unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance ? 'active:translate-y-1' : 'bg-white/5 text-white border-white/5 cursor-not-allowed opacity-50'}`}
+                          style={unclaimedBalance > 0 && !isClaiming && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= unclaimedBalance ? { background: 'linear-gradient(135deg, #9945FF 0%, #7c2dd6 100%)', color: '#fff', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '1.5px' } : undefined}
+                        >
+                          {isClaiming ? 'Processing...' : 'Withdraw'}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-white/40 uppercase tracking-widest">No fees · No limits · Instant</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* REFUND tab */}
+                {withdrawTab === 'REFUND' && (
+                  <div className="p-6 sm:p-8">
+                    <p className="text-[10px] text-[#FFB800]/60 font-bold uppercase tracking-wide mb-1">Round Refunds & Prizes</p>
+                    <p className="text-[9px] text-white/40 mb-5">Rounds that failed to fire give a full refund. Wins are paid to your unclaimed balance.</p>
+                    {roundWinsLoading ? (
+                      <p className="text-white text-xs animate-pulse py-8 text-center">Loading...</p>
+                    ) : roundWins.length === 0 ? (
+                      <div className="py-10 text-center">
+                        <p className="text-white text-xs font-bold">No round entries yet</p>
+                        <p className="text-white/40 text-[10px] mt-1">Enter a round competition to see refunds and prizes here.</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {roundWins.map(w => {
+                          const key = `${w.roundNum}:${w.roundDate}`;
+                          const isClaimingThis = claimingRound === key;
+                          return (
+                            <div key={w.id} className="flex items-center justify-between gap-3 bg-white/[0.02] border border-white/[0.06] p-3">
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-black text-white uppercase tracking-wide">
+                                  Round #{w.roundNum}
+                                  {w.rank > 0 && <span className="ml-2 text-[#FFB800]">Rank #{w.rank}</span>}
+                                  {w.rank === 0 && <span className="ml-2 text-[#9945FF]">Refund</span>}
+                                </p>
+                                <p className="text-[9px] text-white/40 mt-0.5">{w.roundDate} · {Number(w.solAllocation).toFixed(4)} SOL</p>
+                              </div>
+                              {w.claimed ? (
+                                <span className="text-[9px] font-bold text-[#14F195] shrink-0">Claimed</span>
+                              ) : (
+                                <button
+                                  onClick={() => handleClaimRoundWinLocal(w.roundNum, w.roundDate)}
+                                  disabled={isClaimingThis || isClaiming}
+                                  className="shrink-0 text-[9px] font-black uppercase px-3 py-1.5 bg-[#9945FF] text-white hover:bg-[#8833ee] active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                  {isClaimingThis ? '...' : w.rank === 0 ? 'Claim Refund' : 'Claim Prize'}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
