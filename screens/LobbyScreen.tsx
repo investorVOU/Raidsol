@@ -218,7 +218,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           <div className="flex items-center justify-between px-3 py-2 rounded-xl"
             style={{ background: bountyClaimed ? 'rgba(20,241,149,0.06)' : 'rgba(153,69,255,0.08)', border: `1px solid ${bountyClaimed ? 'rgba(20,241,149,0.22)' : 'rgba(153,69,255,0.22)'}` }}>
             <div className="flex items-center gap-2">
-              <span style={{ fontSize: '15px' }}>{bountyClaimed ? '✅' : '🎯'}</span>
+              <div className="w-5 h-5 rounded flex items-center justify-center shrink-0" style={{ background: bountyClaimed ? 'rgba(20,241,149,0.15)' : 'rgba(153,69,255,0.18)' }}>
+                <i className={`fa-solid ${bountyClaimed ? 'fa-check' : 'fa-bolt'} text-[10px]`} style={{ color: bountyClaimed ? '#14F195' : '#9945FF' }} />
+              </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: bountyClaimed ? '#14F195' : '#9945FF' }}>
                   Daily Bounty · {todayBounty.label}
@@ -232,7 +234,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               background: bountyClaimed ? 'rgba(20,241,149,0.15)' : 'rgba(153,69,255,0.18)',
               color: bountyClaimed ? '#14F195' : '#9945FF',
             }}>
-              {bountyClaimed ? 'DONE' : `+${todayBounty.reward} SR`}
+              {bountyClaimed ? '✓ DONE' : `+${todayBounty.reward} SR`}
             </span>
           </div>
         </div>
