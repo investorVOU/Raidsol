@@ -91,11 +91,13 @@ const AppInner: React.FC = () => {
   const { status: pushStatus, subscribe: pushSubscribe } = usePushNotifications(walletAddr);
   const [showPushPrompt, setShowPushPrompt] = useState(false);
   useEffect(() => {
+    // Wait until disclaimer, onboarding, and demo notice are all gone
+    if (!introComplete || showOnboarding || showDemoNotice) return;
     if (pushStatus !== 'unsubscribed') return;
     if (localStorage.getItem('solraid-push-prompted')) return;
-    const t = setTimeout(() => setShowPushPrompt(true), 4000);
+    const t = setTimeout(() => setShowPushPrompt(true), 3000);
     return () => clearTimeout(t);
-  }, [pushStatus]);
+  }, [pushStatus, introComplete, showOnboarding, showDemoNotice]);
   const handlePushEnable = async () => {
     const ok = await pushSubscribe();
     setShowPushPrompt(false);
