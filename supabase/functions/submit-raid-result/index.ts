@@ -408,11 +408,11 @@ Deno.serve(async (req: Request) => {
       // Snapshot top-5 BEFORE this entry so we can detect displacements
       const { data: prevTop5 } = await supabase
         .from('round_entries')
-        .select('wallet_address, points')
+        .select('wallet_address, best_points')
         .eq('round_number', raidRoundNum)
         .eq('round_date', raidRoundDate)
         .eq('raid_tier', raid_tier || 'GRUNT')
-        .order('points', { ascending: false })
+        .order('best_points', { ascending: false })
         .limit(5);
 
       const [poolResult, entryResult] = await Promise.all([
@@ -438,15 +438,15 @@ Deno.serve(async (req: Request) => {
       // Push: notify wallets knocked out of the top 5
       const { data: newTop5 } = await supabase
         .from('round_entries')
-        .select('wallet_address, points')
+        .select('wallet_address, best_points')
         .eq('round_number', raidRoundNum)
         .eq('round_date', raidRoundDate)
         .eq('raid_tier', raid_tier || 'GRUNT')
-        .order('points', { ascending: false })
+        .order('best_points', { ascending: false })
         .limit(5);
 
       const newTop5Wallets = new Set((newTop5 ?? []).map((e: { wallet_address: string }) => e.wallet_address));
-      for (const entry of (prevTop5 ?? []) as { wallet_address: string; points: number }[]) {
+      for (const entry of (prevTop5 ?? []) as { wallet_address: string; best_points: number }[]) {
         if (
           entry.wallet_address !== wallet_address &&
           !newTop5Wallets.has(entry.wallet_address)

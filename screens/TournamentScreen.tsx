@@ -4,7 +4,8 @@ import { ENTRY_FEES, Mode, Difficulty, Currency } from '../types';
 import type { LivePrices } from '../hooks/usePrices';
 import { useLeaderboard, LeaderboardPeriod } from '../hooks/useLeaderboard';
 import { useRoundHistory } from '../hooks/useRoundHistory';
-import { formatRoundWindow } from '../hooks/useRoundData';
+import { formatRoundWindow, formatCountdown } from '../hooks/useRoundData';
+import type { CurrentRoundInfo } from '../hooks/useRoundData';
 
 type RoundsTier = 'GRUNT' | 'ELITE' | 'WHALE';
 
@@ -18,6 +19,7 @@ interface TournamentScreenProps {
   srPoints: number;
   walletAddress?: string;
   currencyRates?: LivePrices['currencyRates'];
+  currentRound?: CurrentRoundInfo | null;
 }
 
 const CURRENCY_LABELS: Record<Currency, string> = {
@@ -53,7 +55,7 @@ function AvatarImg({ src, size }: { src: string | null; size: number }) {
 
 const TournamentScreen: React.FC<TournamentScreenProps> = ({
   onEnterRaid, walletBalance, usdcBalance, skrBalance,
-  rankLevel, rankTitle, srPoints, walletAddress, currencyRates,
+  rankLevel, rankTitle, srPoints, walletAddress, currencyRates, currentRound,
 }) => {
   const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
   const [mainTab,    setMainTab]   = useState<'leaderboard' | 'rounds'>('leaderboard');
@@ -329,6 +331,58 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                 </button>
               ))}
             </div>
+
+            {/* Live current round — always shown first */}
+            {currentRound && currentRound.isActive && (
+              <div className="rounded-2xl border-2 overflow-hidden" style={{ borderColor: 'rgba(153,69,255,0.40)', background: 'rgba(153,69,255,0.04)' }}>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[#9945FF]/15">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#9945FF] animate-pulse" style={{ boxShadow: '0 0 6px rgba(153,69,255,0.7)' }} />
+                    <span className="text-xs font-black text-[#9945FF] uppercase tracking-wide">Live — Round {currentRound.roundNum}</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] text-white font-bold">Closes in</p>
+                    <p className="mono text-xs font-black text-white">{formatCountdown(currentRound.timeRemainingMs)}</p>
+                  </div>
+                </div>
+
+                {currentRound.currentLeaders.length === 0 ? (
+                  <div className="px-4 py-5 text-center">
+                    <p className="text-xs text-white/50">No entries yet — be first to raid</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-white/5">
+                    {currentRound.currentLeaders.map(e => {
+                      const isMe = walletAddress === e.walletAddress;
+                      const r0 = e.rank - 1;
+                      return (
+                        <div key={e.walletAddress} className={`flex items-center gap-3 px-4 py-2.5 ${isMe ? 'bg-[#9945FF]/8' : ''}`}>
+                          <span className={`shrink-0 text-base w-6 text-center ${RANK_COLORS[r0] ?? 'text-white'}`}>
+                            {e.rank <= 3 ? RANK_MEDALS[r0] : `#${e.rank}`}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="font-bold text-sm text-white truncate">{e.username}</p>
+                              {isMe && <span className="text-[8px] font-bold text-[#9945FF] bg-[#9945FF]/10 rounded-full px-1.5 shrink-0">you</span>}
+                            </div>
+                            <p className="text-[9px] text-white/50">{ALLOC_PCT[r0] ?? 0}% of pool</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-xs font-bold text-white">{e.pointsScored.toLocaleString()} <span className="text-[9px] text-white/50">pts</span></p>
+                            <p className="text-xs font-black text-[#FFB800]">{e.allocationSol.toFixed(4)} <span className="text-[9px] text-[#FFB800]/60">SOL</span></p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between px-4 py-2 border-t border-[#9945FF]/10">
+                  <span className="text-[9px] text-white/50 font-bold">Prize pool</span>
+                  <span className="mono text-sm font-black text-[#FFB800]">{currentRound.poolSol.toFixed(4)} SOL</span>
+                </div>
+              </div>
+            )}
 
             {roundsLoading ? (
               <div className="space-y-3">

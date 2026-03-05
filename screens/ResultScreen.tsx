@@ -360,9 +360,27 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
           })()}
 
           {/* ── ROUND STANDING ── */}
-          {isRoundEntry && roundInfo && (() => {
-            const myEntry = roundInfo.currentLeaders.find(e => e.walletAddress === result.userWallet);
-            const roundClosed = roundInfo.timeRemainingMs <= 0;
+          {isRoundEntry && (() => {
+            // Build an optimistic leaderboard immediately from result.points,
+            // merging with roundInfo leaders (which may arrive slightly after render).
+            const baseLeaders = roundInfo?.currentLeaders ?? [];
+            const alreadyIn = baseLeaders.some(e => e.walletAddress === result.userWallet);
+            const optimisticLeaders = result.points > 0 && !alreadyIn
+              ? [...baseLeaders, {
+                  rank: 0,
+                  walletAddress: result.userWallet,
+                  username: 'You',
+                  pointsScored: result.points,
+                  allocationSol: 0,
+                }]
+                  .sort((a, b) => b.pointsScored - a.pointsScored)
+                  .slice(0, 5)
+                  .map((e, i) => ({ ...e, rank: i + 1 }))
+              : baseLeaders;
+
+            const myEntry = optimisticLeaders.find(e => e.walletAddress === result.userWallet);
+            const poolSol = roundInfo?.poolSol ?? 0;
+            const roundClosed = roundInfo ? roundInfo.timeRemainingMs <= 0 : false;
             return (
               <div className="bg-black border-2 p-6 tech-border relative overflow-hidden" style={{ borderColor: 'rgba(153,69,255,0.40)' }}>
                 <div className="absolute top-0 right-0 p-4 opacity-5 mono text-2xl font-black text-[#9945FF]">ROUND</div>
@@ -374,7 +392,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                     <h3 className="text-xs font-bold uppercase tracking-wide text-[#9945FF]">Round Standing</h3>
                   </div>
                   <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: 'rgba(153,69,255,0.12)', color: '#9945FF', border: '1px solid rgba(153,69,255,0.30)' }}>
-                    R{roundInfo.roundNum} / 4
+                    {roundInfo ? `R${roundInfo.roundNum} / 4` : 'ROUND'}
                   </span>
                 </div>
 
@@ -404,7 +422,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                       <span className="text-[10px] font-bold text-white">{myEntry.rank === 1 ? '🥇' : myEntry.rank === 2 ? '🥈' : myEntry.rank === 3 ? '🥉' : `#${myEntry.rank}`}</span>
                     </div>
                     <p className="text-[11px] text-white">
-                      Est. allocation: <span className="font-bold text-white">{(roundInfo.poolSol * ROUND_ALLOCATION[myEntry.rank - 1]).toFixed(4)} SOL</span>
+                      Est. allocation: <span className="font-bold text-white">{(poolSol * ROUND_ALLOCATION[myEntry.rank - 1]).toFixed(4)} SOL</span>
                     </p>
                     {!result.success && (
                       <p className="text-[10px] mt-1" style={{ color: '#FFB800' }}>You're in top 5 — even after busting!</p>
@@ -421,10 +439,10 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                 )}
 
                 {/* Top 5 leaderboard — live, rotates as scores update */}
-                {roundInfo.currentLeaders.length > 0 && (
+                {optimisticLeaders.length > 0 && (
                   <div className="space-y-1 mb-4">
                     <p className="text-[9px] text-white uppercase tracking-wider font-bold mb-2">Live top 5</p>
-                    {roundInfo.currentLeaders.slice(0, 5).map(e => {
+                    {optimisticLeaders.slice(0, 5).map(e => {
                       const isMe = e.walletAddress === result.userWallet;
                       return (
                         <div key={e.rank} className={`flex items-center justify-between py-1.5 border-b ${isMe ? 'border-[#9945FF]/20' : 'border-white/5'}`}
@@ -444,7 +462,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                 {/* Pool + countdown */}
                 <div className="flex items-center justify-between py-2 border-t border-white/5">
                   <span className="text-[10px] text-white uppercase tracking-wide font-bold">Prize pool</span>
-                  <span className="mono text-sm font-black text-[#FFB800]">{roundInfo.poolSol.toFixed(4)} SOL</span>
+                  <span className="mono text-sm font-black text-[#FFB800]">{poolSol > 0 ? poolSol.toFixed(4) : '—'} SOL</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-t border-white/5">
                   <span className="text-[10px] text-white uppercase tracking-wide font-bold">
@@ -453,7 +471,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
                   {roundClosed ? (
                     <span className="text-[10px] font-bold text-[#9945FF]">Closed — claim in Profile</span>
                   ) : (
-                    <span className="mono text-xs font-bold text-white">{formatCountdown(roundInfo.timeRemainingMs)}</span>
+                    <span className="mono text-xs font-bold text-white">{roundInfo ? formatCountdown(roundInfo.timeRemainingMs) : '—'}</span>
                   )}
                 </div>
 

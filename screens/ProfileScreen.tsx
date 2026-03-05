@@ -6,9 +6,8 @@ import { Edit, Check, X, Lock, Wallet, ExternalLink } from 'lucide-react';
 import { useAchievements } from '../hooks/useAchievements';
 import { useRaidHistory } from '../hooks/useRaidHistory';
 import { useWithdrawalHistory } from '../hooks/useWithdrawalHistory';
-import { usePlayerRoundWins } from '../hooks/usePlayerRoundWins';
+import { useRoundEntries } from '../hooks/useRoundEntries';
 import { useAvatarNfts } from '../hooks/useAvatarNfts';
-import { getRoundBoundsFor, formatRoundWindow } from '../hooks/useRoundData';
 import { supabase } from '../lib/supabase';
 import PushBell from '../components/PushBell';
 
@@ -85,8 +84,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const { history: raidHistory, loading: historyLoading } = useRaidHistory(walletAddress ?? null);
 
 
-  // Round win history
-  const { wins: roundWins, loading: roundWinsLoading, refetch: refetchRoundWins } = usePlayerRoundWins(walletAddress ?? null);
+  // All round entries with cross-referenced win/refund status
+  const { entries: roundEntries, loading: roundEntriesLoading, refetch: refetchRoundEntries } = useRoundEntries(walletAddress ?? null);
   const [claimingRound, setClaimingRound] = useState<string | null>(null); // "roundNum:roundDate" key
 
   const handleClaimRoundWinLocal = async (roundNum: number, roundDate: string) => {
@@ -95,7 +94,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     setClaimingRound(key);
     try {
       const ok = await onClaimRoundWin(roundNum, roundDate);
-      if (ok) refetchRoundWins();
+      if (ok) refetchRoundEntries();
     } finally {
       setClaimingRound(null);
     }
@@ -514,9 +513,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                       }`}
                     >
                       {t === 'WITHDRAW' ? 'Withdraw' : 'Refunds'}
-                      {t === 'REFUND' && roundWins.filter(w => !w.claimed).length > 0 && (
+                      {t === 'REFUND' && roundEntries.filter(e => (e.status === 'WIN' || e.status === 'REFUND') && !e.claimed).length > 0 && (
                         <span className="ml-1.5 px-1 py-0.5 bg-[#9945FF] text-white text-[8px] rounded-sm">
-                          {roundWins.filter(w => !w.claimed).length}
+                          {roundEntries.filter(e => (e.status === 'WIN' || e.status === 'REFUND') && !e.claimed).length}
                         </span>
                       )}
                     </button>
@@ -583,41 +582,58 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 {/* REFUND tab */}
                 {withdrawTab === 'REFUND' && (
                   <div className="p-6 sm:p-8">
-                    <p className="text-[10px] text-[#FFB800]/60 font-bold uppercase tracking-wide mb-1">Round Refunds & Prizes</p>
-                    <p className="text-[9px] text-white/40 mb-5">Rounds that failed to fire give a full refund. Wins are paid to your unclaimed balance.</p>
-                    {roundWinsLoading ? (
+                    <p className="text-[10px] text-[#FFB800]/60 font-bold uppercase tracking-wide mb-1">Round History</p>
+                    <p className="text-[9px] text-white/40 mb-5">All rounds you entered. Wins and refunds are paid to your unclaimed balance — claim them here.</p>
+                    {roundEntriesLoading ? (
                       <p className="text-white text-xs animate-pulse py-8 text-center">Loading...</p>
-                    ) : roundWins.length === 0 ? (
+                    ) : roundEntries.length === 0 ? (
                       <div className="py-10 text-center">
                         <p className="text-white text-xs font-bold">No round entries yet</p>
-                        <p className="text-white/40 text-[10px] mt-1">Enter a round competition to see refunds and prizes here.</p>
+                        <p className="text-white/40 text-[10px] mt-1">Enter a round competition to see your history here.</p>
                       </div>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        {roundWins.map(w => {
-                          const key = `${w.roundNum}:${w.roundDate}`;
-                          const isClaimingThis = claimingRound === key;
+                        {roundEntries.map(e => {
+                          const claimKey = `${e.roundNum}:${e.roundDate}`;
+                          const isClaimingThis = claimingRound === claimKey;
+                          const canClaim = (e.status === 'WIN' || e.status === 'REFUND') && !e.claimed;
                           return (
-                            <div key={w.id} className="flex items-center justify-between gap-3 bg-white/[0.02] border border-white/[0.06] p-3">
-                              <div className="min-w-0">
+                            <div key={e.key} className="flex items-center justify-between gap-3 bg-white/[0.02] border border-white/[0.06] p-3">
+                              <div className="min-w-0 flex-1">
                                 <p className="text-[10px] font-black text-white uppercase tracking-wide">
-                                  Round #{w.roundNum}
-                                  {w.rank > 0 && <span className="ml-2 text-[#FFB800]">Rank #{w.rank}</span>}
-                                  {w.rank === 0 && <span className="ml-2 text-[#9945FF]">Refund</span>}
+                                  Round #{e.roundNum}
+                                  {e.status === 'WIN' && e.rank != null && (
+                                    <span className="ml-2 text-[#FFB800]">Rank #{e.rank}</span>
+                                  )}
+                                  {e.status === 'REFUND' && (
+                                    <span className="ml-2 text-[#9945FF]">Refund</span>
+                                  )}
+                                  {e.status === 'PENDING' && (
+                                    <span className="ml-2 text-white/30">In Progress</span>
+                                  )}
                                 </p>
-                                <p className="text-[9px] text-white/40 mt-0.5">{w.roundDate} · {Number(w.solAllocation).toFixed(4)} SOL</p>
+                                <p className="text-[9px] text-white/40 mt-0.5">
+                                  {e.roundDate}
+                                  {e.raidTier !== 'GRUNT' && <span className="ml-1.5 uppercase">{e.raidTier}</span>}
+                                  {e.points > 0 && <span className="ml-1.5">{e.points.toLocaleString()} pts</span>}
+                                  {e.solAllocation != null && (
+                                    <span className="ml-1.5 text-[#FFB800]">{e.solAllocation.toFixed(4)} SOL</span>
+                                  )}
+                                </p>
                               </div>
-                              {w.claimed ? (
+                              {e.status === 'PENDING' ? (
+                                <span className="text-[9px] font-bold text-white/30 shrink-0">Pending</span>
+                              ) : e.claimed ? (
                                 <span className="text-[9px] font-bold text-[#14F195] shrink-0">Claimed</span>
-                              ) : (
+                              ) : canClaim ? (
                                 <button
-                                  onClick={() => handleClaimRoundWinLocal(w.roundNum, w.roundDate)}
+                                  onClick={() => handleClaimRoundWinLocal(e.roundNum, e.roundDate)}
                                   disabled={isClaimingThis || isClaiming}
                                   className="shrink-0 text-[9px] font-black uppercase px-3 py-1.5 bg-[#9945FF] text-white hover:bg-[#8833ee] active:scale-95 transition-all disabled:opacity-50"
                                 >
-                                  {isClaimingThis ? '...' : w.rank === 0 ? 'Claim Refund' : 'Claim Prize'}
+                                  {isClaimingThis ? '...' : e.status === 'REFUND' ? 'Claim Refund' : 'Claim Prize'}
                                 </button>
-                              )}
+                              ) : null}
                             </div>
                           );
                         })}
@@ -763,7 +779,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             {/* Tab bar */}
             <div className="flex gap-1 flex-wrap">
               {(['RAIDS', 'ROUNDS', 'WITHDRAWALS', 'ACHIEVEMENTS'] as const).map(tab => {
-                const unclaimedCount = tab === 'ROUNDS' ? roundWins.filter(w => !w.claimed).length : 0;
+                const unclaimedCount = tab === 'ROUNDS' ? roundEntries.filter(e => (e.status === 'WIN' || e.status === 'REFUND') && !e.claimed).length : 0;
                 const earnedCount = tab === 'ACHIEVEMENTS' ? earnedAchievements.size : 0;
                 return (
                   <button
@@ -840,96 +856,120 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               </div>
             )}
 
-            {/* ── ROUND WINS ───────────────────────────────────── */}
+            {/* ── ROUND HISTORY ────────────────────────────────── */}
             {rightTab === 'ROUNDS' && (
               <div className="space-y-3">
-                {roundWinsLoading ? (
+                {roundEntriesLoading ? (
                   [...Array(3)].map((_, i) => (
                     <div key={i} className="bg-[var(--modal-bg)] border-2 border-white/5 p-5 tech-border animate-pulse">
                       <div className="h-4 bg-white/5 rounded w-3/4" />
                     </div>
                   ))
-                ) : roundWins.length === 0 ? (
+                ) : roundEntries.length === 0 ? (
                   <div className="py-12 text-center space-y-2">
                     <div className="text-4xl mb-3">🏆</div>
-                    <p className="text-white font-bold text-xs">No round wins yet</p>
+                    <p className="text-white font-bold text-xs">No round entries yet</p>
                     <p className="text-white text-[10px] leading-relaxed">
                       Top 5 extractors in each 6-hour round share the pool.<br />
                       Raid hard to claim your place.
                     </p>
                   </div>
                 ) : (
-                  roundWins.map((w) => {
-                    const { start, end } = getRoundBoundsFor(w.roundNum, w.roundDate);
-                    const dateLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).toUpperCase();
-                    const claimKey = `${w.roundNum}:${w.roundDate}`;
-                    const isClaiming = claimingRound === claimKey;
-                    const medals = ['🥇', '🥈', '🥉', '4th', '5th'];
+                  roundEntries.map((e) => {
+                    const isWin = e.status === 'WIN';
+                    const isRefund = e.status === 'REFUND';
+                    const isPending = e.status === 'PENDING';
+                    const claimKey = `${e.roundNum}:${e.roundDate}`;
+                    const isClaimingThis = claimingRound === claimKey;
+                    const medals = ['🥇', '🥈', '🥉', '', ''];
                     const rankColors = ['text-yellow-400', 'text-white', 'text-orange-400', 'text-white', 'text-white'];
-                    const borderColors = ['border-yellow-500/40', 'border-white/15', 'border-orange-500/30', 'border-white/10', 'border-white/8'];
-                    const glowColors = ['shadow-[0_0_20px_rgba(234,179,8,0.08)]', '', 'shadow-[0_0_15px_rgba(249,115,22,0.06)]', '', ''];
+                    const borderColor = isWin && e.rank === 1
+                      ? 'border-yellow-500/40'
+                      : isWin
+                      ? 'border-white/15'
+                      : isRefund
+                      ? 'border-[#9945FF]/30'
+                      : 'border-white/5';
+                    const accentColor = isWin && e.rank === 1
+                      ? 'bg-yellow-400'
+                      : isWin && e.rank === 3
+                      ? 'bg-orange-400'
+                      : isWin
+                      ? 'bg-white/30'
+                      : isRefund
+                      ? 'bg-[#9945FF]/50'
+                      : 'bg-white/10';
 
                     return (
                       <div
-                        key={w.id}
-                        className={`relative bg-[var(--modal-bg)] border-2 ${borderColors[w.rank - 1]} ${glowColors[w.rank - 1]} tech-border overflow-hidden`}
+                        key={e.key}
+                        className={`relative bg-[var(--modal-bg)] border-2 ${borderColor} tech-border overflow-hidden`}
                       >
-                        {/* Top accent bar */}
-                        <div className={`h-0.5 w-full ${w.rank === 1 ? 'bg-yellow-400' : w.rank === 2 ? 'bg-white/30' : w.rank === 3 ? 'bg-orange-400' : 'bg-white/15'}`} />
+                        <div className={`h-0.5 w-full ${accentColor}`} />
 
                         <div className="p-4">
-                          {/* Round header */}
                           <div className="flex items-start justify-between mb-3">
                             <div>
                               <div className="flex items-center gap-2 mb-0.5">
-                                <span className="text-lg leading-none">{w.rank <= 3 ? medals[w.rank - 1] : ''}</span>
-                                <span className={`text-xs font-black uppercase tracking-tight ${rankColors[w.rank - 1]}`}>
-                                  #{w.rank} · Round {w.roundNum}
+                                {isWin && e.rank != null && e.rank <= 3 && (
+                                  <span className="text-lg leading-none">{medals[e.rank - 1]}</span>
+                                )}
+                                <span className={`text-xs font-black uppercase tracking-tight ${
+                                  isWin && e.rank != null ? rankColors[Math.min(e.rank - 1, 4)] : isRefund ? 'text-[#9945FF]' : 'text-white/40'
+                                }`}>
+                                  {isWin && e.rank != null ? `#${e.rank} · Round ${e.roundNum}` : isRefund ? `Refund · Round ${e.roundNum}` : `Round ${e.roundNum}`}
                                 </span>
+                                {isPending && (
+                                  <span className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-white/5 border border-white/10 text-white/30">In Progress</span>
+                                )}
                               </div>
-                              <p className="text-[9px] font-bold text-white uppercase tracking-wider">
-                                {dateLabel} · {formatRoundWindow(w.roundNum)}
+                              <p className="text-[9px] font-bold text-white/50 uppercase tracking-wider">
+                                {e.roundDate}
+                                {e.raidTier !== 'GRUNT' && ` · ${e.raidTier}`}
+                                {e.points > 0 && ` · ${e.points.toLocaleString()} pts`}
                               </p>
                             </div>
                             <div className="text-right shrink-0 ml-3">
-                              {w.claimed ? (
-                                <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 border border-white/15 text-white">
-                                  Claimed
-                                </span>
+                              {isPending ? (
+                                <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 border border-white/10 text-white/30">Pending</span>
+                              ) : e.claimed ? (
+                                <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 border border-white/15 text-[#14F195]">Claimed</span>
                               ) : (
                                 <button
-                                  onClick={() => handleClaimRoundWinLocal(w.roundNum, w.roundDate)}
-                                  disabled={isClaiming}
+                                  onClick={() => handleClaimRoundWinLocal(e.roundNum, e.roundDate)}
+                                  disabled={isClaimingThis || isClaiming}
                                   className="text-[9px] font-black uppercase px-3 py-1.5 bg-[#9945FF] text-white hover:bg-[#8833ee] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  {isClaiming ? 'Claiming…' : 'Claim'}
+                                  {isClaimingThis ? 'Claiming…' : isRefund ? 'Claim Refund' : 'Claim Prize'}
                                 </button>
                               )}
                             </div>
                           </div>
 
-                          {/* Stats row */}
-                          <div className="grid grid-cols-3 gap-2 bg-white/3 border border-white/5 p-2.5">
-                            <div>
-                              <p className="text-[8px] text-white font-bold uppercase mb-0.5">Score</p>
-                              <p className="text-sm font-black mono text-white">{w.pointsScored.toLocaleString()}</p>
-                              <p className="text-[8px] text-white font-bold">pts</p>
+                          {/* Stats row — only shown when finalized */}
+                          {!isPending && e.solAllocation != null && e.poolSol != null && (
+                            <div className="grid grid-cols-3 gap-2 bg-white/3 border border-white/5 p-2.5">
+                              <div>
+                                <p className="text-[8px] text-white font-bold uppercase mb-0.5">Score</p>
+                                <p className="text-sm font-black mono text-white">{e.points.toLocaleString()}</p>
+                                <p className="text-[8px] text-white font-bold">pts</p>
+                              </div>
+                              <div className="border-x border-white/5 px-2">
+                                <p className="text-[8px] text-white font-bold uppercase mb-0.5">Pool</p>
+                                <p className="text-sm font-black mono text-white">{e.poolSol.toFixed(3)}</p>
+                                <p className="text-[8px] text-[#FFB800] font-bold">SOL</p>
+                              </div>
+                              <div>
+                                <p className="text-[8px] text-white font-bold uppercase mb-0.5">Allocated</p>
+                                <p className="text-sm font-black mono text-yellow-400">{e.solAllocation.toFixed(4)}</p>
+                                <p className="text-[8px] text-yellow-400/60 font-bold">SOL</p>
+                              </div>
                             </div>
-                            <div className="border-x border-white/5 px-2">
-                              <p className="text-[8px] text-white font-bold uppercase mb-0.5">Pool</p>
-                              <p className="text-sm font-black mono text-white">{w.poolSol.toFixed(3)}</p>
-                              <p className="text-[8px] text-[#FFB800] font-bold">SOL</p>
-                            </div>
-                            <div>
-                              <p className="text-[8px] text-white font-bold uppercase mb-0.5">Allocated</p>
-                              <p className="text-sm font-black mono text-yellow-400">{w.solAllocation.toFixed(4)}</p>
-                              <p className="text-[8px] text-yellow-400/60 font-bold">SOL</p>
-                            </div>
-                          </div>
+                          )}
 
-                          {w.claimed && w.claimedAt && (
-                            <p className="text-[8px] text-white font-bold mt-1.5 text-right">
-                              Claimed {new Date(w.claimedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          {e.claimed && e.claimedAt && (
+                            <p className="text-[8px] text-white/40 font-bold mt-1.5 text-right">
+                              Claimed {new Date(e.claimedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </p>
                           )}
                         </div>

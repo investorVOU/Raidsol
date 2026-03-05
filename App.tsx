@@ -829,6 +829,9 @@ const AppInner: React.FC = () => {
       });
 
       if (data && !error) {
+        // Refresh round data immediately so ResultScreen shows the updated leaderboard
+        refetchRound();
+
         // Patch with server-computed authoritative values
         setGameState(prev => ({
           ...prev,
@@ -1944,6 +1947,7 @@ const AppInner: React.FC = () => {
             srPoints={gameState.srPoints}
             onEnterRaid={enterRaid}
             currencyRates={liveCurrencyRates}
+            currentRound={currentRound}
           />
         );
       case Screen.RESULT:
