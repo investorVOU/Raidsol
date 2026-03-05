@@ -7,6 +7,7 @@ import type { LivePrices } from '../hooks/usePrices';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
 import { formatCountdown, formatRoundWindow } from '../hooks/useRoundData';
 import { useActivityFeed } from '../hooks/useActivityFeed';
+import PushBell from '../components/PushBell';
 
 const INTER:  React.CSSProperties = { fontFamily: "'Inter', system-ui, sans-serif" };
 const SG_H1:  React.CSSProperties = { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, letterSpacing: '0.8px', lineHeight: 1.1 };
@@ -47,6 +48,7 @@ interface LobbyScreenProps {
   dailyStreak?: number;
   todayBounty?: DailyBountyDef | null;
   bountyClaimed?: boolean;
+  walletAddress?: string | null;
 }
 
 const DIFF_CONFIG = {
@@ -65,6 +67,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   drillCount = 0, drillWindowStart = 0,
   currencyRates, pricesFailed = false, currentRound, dailyStreak = 0,
   todayBounty, bountyClaimed = false,
+  walletAddress = null,
 }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -426,6 +429,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <p className="text-[10px] text-white" style={{ ...INTER, fontWeight: 400 }}>Daily cipher · +SR</p>
           </button>
         </div>
+
+        {/* ── Push notifications ── */}
+        <PushBell walletAddress={walletAddress} />
 
         {/* ── X (Twitter) follow button ── */}
         <a

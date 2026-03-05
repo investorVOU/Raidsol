@@ -1875,6 +1875,7 @@ const AppInner: React.FC = () => {
             dailyStreak={gameState.dailyStreak}
             todayBounty={todayBounty}
             bountyClaimed={bountyClaimed}
+            walletAddress={walletAddr}
           />
         );
       case Screen.RAID:
@@ -2098,6 +2099,7 @@ const AppInner: React.FC = () => {
             onEnterRound={enterRoundRaid}
             onRequestFullscreen={enterFullscreen}
             dailyStreak={gameState.dailyStreak}
+            walletAddress={walletAddr}
           />
         );
     }
@@ -2145,7 +2147,7 @@ const AppInner: React.FC = () => {
                   Got it — show me the demo
                 </button>
                 <button
-                  onClick={handleDismissDemoNotice}
+                  onClick={() => handleDismissDemoNotice(false)}
                   className="w-full py-2 text-[11px] font-bold text-white uppercase tracking-wider"
                   style={{ opacity: 0.45 }}
                 >
