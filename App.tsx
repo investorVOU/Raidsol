@@ -38,6 +38,7 @@ import { useDomainName } from './hooks/useDomainName';
 import { usePrices } from './hooks/usePrices';
 import { useRoundData } from './hooks/useRoundData';
 import { usePlayerRoundWins } from './hooks/usePlayerRoundWins';
+import { useDailyBounty } from './hooks/useDailyBounty';
 import { supabase } from './lib/supabase';
 
 // USDC mint — mainnet by default (VITE_USDC_MINT), falls back to devnet Circle mint
@@ -80,6 +81,7 @@ const AppInner: React.FC = () => {
   const { currencyRates: liveCurrencyRates, pricesReady, pricesFailed: livePricesFailed } = usePrices();
   const { info: currentRound, refetch: refetchRound } = useRoundData();
   const { wins: roundWins } = usePlayerRoundWins(walletAddr);
+  const { bounty: todayBounty, claimed: bountyClaimed, refresh: refreshBounty } = useDailyBounty(walletAddr);
   const unclaimedRoundWins = roundWins.filter(w => !w.claimed);
   const [roundWinPopupDismissed, setRoundWinPopupDismissed] = React.useState<string | null>(null);
 
@@ -791,6 +793,7 @@ const AppInner: React.FC = () => {
           difficulty:     gameState.activeRaidDifficulty,
           entry_fee:      gameState.activeRaidFee,
           elapsed_sec:    Math.round(elapsedSec),
+          peak_mult:      peakMult ?? 1,
           raid_tier:      gameState.activeRaidTier,
           ...(isPvp && activeRoomId ? { room_id: activeRoomId } : {}),
         },
@@ -823,6 +826,15 @@ const AppInner: React.FC = () => {
             setAchievementToast(`${def.icon} ${def.name} unlocked!`);
             setTimeout(() => setAchievementToast(null), 4000);
           }
+        }
+
+        // Show bounty completion toast
+        if (data.bounty_awarded && Number(data.bounty_awarded) > 0) {
+          refreshBounty();
+          setTimeout(() => {
+            setAchievementToast(`DAILY BOUNTY · +${data.bounty_awarded} SR`);
+            setTimeout(() => setAchievementToast(null), 4000);
+          }, data.new_achievements?.length > 0 ? 4500 : 0);
         }
 
         // If this player's submission resolved the PvP match, show winner modal immediately
@@ -1856,6 +1868,8 @@ const AppInner: React.FC = () => {
             onEnterRound={enterRoundRaid}
             onRequestFullscreen={enterFullscreen}
             dailyStreak={gameState.dailyStreak}
+            todayBounty={todayBounty}
+            bountyClaimed={bountyClaimed}
           />
         );
       case Screen.RAID:

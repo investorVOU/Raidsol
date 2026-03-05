@@ -488,3 +488,34 @@ export const SCOUT_NODES: ScoutNode[] = [
 export interface LootDrop {
   type: 'SKR_SHARD' | 'SR_BURST'; amount: number;
 }
+
+// ── Daily Bounties ────────────────────────────────────────────────────────────
+export type BountyCondition =
+  | 'extracted'           // any successful extract on a real raid
+  | 'points_gte'          // score >= conditionValue
+  | 'difficulty_eq'       // extracted on difficulty === conditionLabel
+  | 'elapsed_lte'         // extracted in <= conditionValue seconds
+  | 'peak_mult_gte';      // peak multiplier >= conditionValue
+
+export interface DailyBountyDef {
+  id: number;
+  label: string;          // short name shown in UI
+  task: string;           // "Extract at 2.0× or higher"
+  reward: number;         // SR awarded on completion
+  condition: BountyCondition;
+  conditionValue?: number;   // numeric threshold
+  conditionLabel?: string;   // difficulty string e.g. 'HARD'
+}
+
+export const DAILY_BOUNTIES: DailyBountyDef[] = [
+  { id: 0, label: 'Clean Exit',    task: 'Extract on any real raid',              reward: 300,  condition: 'extracted' },
+  { id: 1, label: 'High Roller',   task: 'Extract at 2.0× multiplier or higher',  reward: 500,  condition: 'peak_mult_gte', conditionValue: 2.0 },
+  { id: 2, label: 'Elite Score',   task: 'Score 3,000+ points on a real raid',    reward: 600,  condition: 'points_gte',    conditionValue: 3000 },
+  { id: 3, label: 'Speed Run',     task: 'Extract in under 35 seconds',           reward: 400,  condition: 'elapsed_lte',   conditionValue: 35 },
+  { id: 4, label: 'Hard Target',   task: 'Extract on Hard difficulty',            reward: 700,  condition: 'difficulty_eq', conditionLabel: 'HARD' },
+  { id: 5, label: 'Peak Hunter',   task: 'Extract at 3.0× multiplier or higher',  reward: 800,  condition: 'peak_mult_gte', conditionValue: 3.0 },
+  { id: 6, label: 'Degen Run',     task: 'Extract on Degen difficulty',           reward: 1200, condition: 'difficulty_eq', conditionLabel: 'DEGEN' },
+  { id: 7, label: 'Score Padder',  task: 'Score 1,500+ points on a real raid',    reward: 350,  condition: 'points_gte',    conditionValue: 1500 },
+  { id: 8, label: 'Quick Hands',   task: 'Extract in under 50 seconds',           reward: 300,  condition: 'elapsed_lte',   conditionValue: 50 },
+  { id: 9, label: 'Multiplier+',   task: 'Extract at 1.5× multiplier or higher',  reward: 250,  condition: 'peak_mult_gte', conditionValue: 1.5 },
+];

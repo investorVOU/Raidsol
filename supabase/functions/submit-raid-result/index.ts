@@ -127,6 +127,7 @@ Deno.serve(async (req: Request) => {
       difficulty,
       entry_fee,
       elapsed_sec,
+      peak_mult,      // Optional: peak multiplier reached during raid
       raid_tier,      // Optional: competition tier (GRUNT | ELITE | WHALE), default GRUNT
       room_id,        // Optional: PvP room this raid belongs to
     } = body;
@@ -214,6 +215,66 @@ Deno.serve(async (req: Request) => {
     if (!isDrill) {
       const streakBonus = 1 + Math.min(newStreak - 1, 4) * 0.10;
       totalSREarned = Math.round(totalSREarned * streakBonus);
+    }
+
+    // ── Daily bounty check ─────────────────────────────────────────────
+    // Only applies to paid, non-drill, non-pvp extractions
+    let bountyAwarded = 0;
+    let bountyId: number | null = null;
+    if (!isDrill && effectiveSuccess && Number(entry_fee) > 0) {
+      const DAILY_BOUNTIES = [
+        { id: 0, condition: 'extracted'      },
+        { id: 1, condition: 'peak_mult_gte',  conditionValue: 2.0 },
+        { id: 2, condition: 'points_gte',     conditionValue: 3000 },
+        { id: 3, condition: 'elapsed_lte',    conditionValue: 35   },
+        { id: 4, condition: 'difficulty_eq',  conditionLabel: 'HARD' },
+        { id: 5, condition: 'peak_mult_gte',  conditionValue: 3.0 },
+        { id: 6, condition: 'difficulty_eq',  conditionLabel: 'DEGEN' },
+        { id: 7, condition: 'points_gte',     conditionValue: 1500 },
+        { id: 8, condition: 'elapsed_lte',    conditionValue: 50   },
+        { id: 9, condition: 'peak_mult_gte',  conditionValue: 1.5 },
+      ];
+      const BOUNTY_SR = [300, 500, 600, 400, 700, 800, 1200, 350, 300, 250];
+
+      const dayIndex = Math.floor(Date.now() / 86_400_000);
+      const todayBounty = DAILY_BOUNTIES[dayIndex % DAILY_BOUNTIES.length] as {
+        id: number; condition: string; conditionValue?: number; conditionLabel?: string;
+      };
+
+      // Check if already claimed today
+      const { data: existingClaim } = await supabase
+        .from('daily_bounty_claims')
+        .select('id')
+        .eq('wallet_address', wallet_address)
+        .eq('day_index', dayIndex)
+        .maybeSingle();
+
+      if (!existingClaim) {
+        const diff = (difficulty ?? 'MEDIUM').toUpperCase();
+        const pm   = Number(peak_mult ?? 0);
+        const el   = rawElapsed;
+        const pts  = effectivePoints;
+
+        let met = false;
+        if (todayBounty.condition === 'extracted')     met = true;
+        if (todayBounty.condition === 'peak_mult_gte') met = pm >= (todayBounty.conditionValue ?? 0);
+        if (todayBounty.condition === 'points_gte')    met = pts >= (todayBounty.conditionValue ?? 0);
+        if (todayBounty.condition === 'elapsed_lte')   met = el <= (todayBounty.conditionValue ?? 999);
+        if (todayBounty.condition === 'difficulty_eq') met = diff === (todayBounty.conditionLabel ?? '');
+
+        if (met) {
+          bountyAwarded = BOUNTY_SR[todayBounty.id] ?? 0;
+          bountyId = todayBounty.id;
+          totalSREarned += bountyAwarded;
+          await supabase.from('daily_bounty_claims').insert({
+            wallet_address,
+            bounty_id: todayBounty.id,
+            day_index: dayIndex,
+            sr_awarded: bountyAwarded,
+          });
+          console.log(`[bounty] wallet=${wallet_address} bounty=${todayBounty.id} sr=${bountyAwarded}`);
+        }
+      }
     }
 
     const newSRPoints = Number(profile.sr_points) + totalSREarned;
@@ -459,6 +520,8 @@ Deno.serve(async (req: Request) => {
       new_unclaimed: newUnclaimed,
       daily_streak: isDrill ? (profile.daily_streak ?? 0) : newStreak,
       new_achievements: newAchievements,
+      bounty_awarded: bountyAwarded,
+      bounty_id: bountyId,
       server_seed: seedData.server_seed,
       server_seed_hash: seedData.server_seed_hash,
       ...(flagged ? { anti_cheat_flag: reason } : {}),

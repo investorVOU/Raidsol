@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../components/ThemeContext';
-import { Mode, Difficulty, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, RaidTier, RAID_TIER_CONFIG, RAID_TIER_ALLOCATION, ROUND_MIN_PARTICIPANTS } from '../types';
+import { Mode, Difficulty, GEAR_ITEMS, RAID_BOOSTS, AVATAR_ITEMS, Currency, RaidTier, RAID_TIER_CONFIG, RAID_TIER_ALLOCATION, ROUND_MIN_PARTICIPANTS, DailyBountyDef } from '../types';
 import type { LivePrices } from '../hooks/usePrices';
 import type { CurrentRoundInfo } from '../hooks/useRoundData';
 import { formatCountdown, formatRoundWindow } from '../hooks/useRoundData';
@@ -45,6 +45,8 @@ interface LobbyScreenProps {
   pricesFailed?: boolean;
   currentRound?: CurrentRoundInfo | null;
   dailyStreak?: number;
+  todayBounty?: DailyBountyDef | null;
+  bountyClaimed?: boolean;
 }
 
 const DIFF_CONFIG = {
@@ -62,6 +64,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   raidTickets = 0, lastFreeRaidDate = null,
   drillCount = 0, drillWindowStart = 0,
   currencyRates, pricesFailed = false, currentRound, dailyStreak = 0,
+  todayBounty, bountyClaimed = false,
 }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -208,6 +211,32 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           )}
         </div>
       </div>
+
+      {/* ── DAILY BOUNTY ── */}
+      {todayBounty && (
+        <div className="relative z-10 shrink-0 px-4 pb-1">
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl"
+            style={{ background: bountyClaimed ? 'rgba(20,241,149,0.06)' : 'rgba(153,69,255,0.08)', border: `1px solid ${bountyClaimed ? 'rgba(20,241,149,0.22)' : 'rgba(153,69,255,0.22)'}` }}>
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: '15px' }}>{bountyClaimed ? '✅' : '🎯'}</span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: bountyClaimed ? '#14F195' : '#9945FF' }}>
+                  Daily Bounty · {todayBounty.label}
+                </p>
+                <p className="text-[10px] text-white mt-0.5" style={{ opacity: bountyClaimed ? 0.5 : 0.8 }}>
+                  {bountyClaimed ? 'Completed — come back tomorrow' : todayBounty.task}
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-black px-2 py-0.5 rounded-full shrink-0" style={{
+              background: bountyClaimed ? 'rgba(20,241,149,0.15)' : 'rgba(153,69,255,0.18)',
+              color: bountyClaimed ? '#14F195' : '#9945FF',
+            }}>
+              {bountyClaimed ? 'DONE' : `+${todayBounty.reward} SR`}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── SCROLLABLE CONTENT ── */}
       {/* ── RECENT WINS TICKER ── */}
