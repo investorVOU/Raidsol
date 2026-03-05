@@ -12,18 +12,32 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
 export type PushStatus = 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'loading';
 
+// Resolves serviceWorker.ready with a timeout so we never stay in 'loading' forever
+// (e.g. in dev mode or when the SW fails to activate).
+function swReady(timeoutMs = 5000): Promise<ServiceWorkerRegistration | null> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), timeoutMs);
+    navigator.serviceWorker.ready.then((reg) => { clearTimeout(timer); resolve(reg); }).catch(() => { clearTimeout(timer); resolve(null); });
+  });
+}
+
 export function usePushNotifications(walletAddress: string | null) {
   const [status, setStatus] = useState<PushStatus>('loading');
 
   const checkStatus = useCallback(async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !VAPID_PUBLIC_KEY) {
+    // Only 'unsupported' when the browser itself lacks the APIs
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
       setStatus('unsupported');
       return;
     }
     const perm = Notification.permission;
     if (perm === 'denied') { setStatus('denied'); return; }
 
-    const reg = await navigator.serviceWorker.ready;
+    // If VAPID key not configured, still show button so user can enable permission
+    if (!VAPID_PUBLIC_KEY) { setStatus('unsubscribed'); return; }
+
+    const reg = await swReady();
+    if (!reg) { setStatus('unsubscribed'); return; }
     const existing = await reg.pushManager.getSubscription();
     setStatus(existing ? 'subscribed' : 'unsubscribed');
   }, []);
@@ -31,12 +45,16 @@ export function usePushNotifications(walletAddress: string | null) {
   useEffect(() => { checkStatus(); }, [checkStatus]);
 
   const subscribe = useCallback(async (): Promise<boolean> => {
-    if (!VAPID_PUBLIC_KEY || !walletAddress) return false;
+    if (!walletAddress) return false;
     try {
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') { setStatus('denied'); return false; }
 
-      const reg = await navigator.serviceWorker.ready;
+      // If no VAPID key, permission was granted but we can't create a push subscription
+      if (!VAPID_PUBLIC_KEY) { setStatus('unsubscribed'); return false; }
+
+      const reg = await swReady();
+      if (!reg) return false;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
@@ -61,7 +79,8 @@ export function usePushNotifications(walletAddress: string | null) {
   }, [walletAddress]);
 
   const unsubscribe = useCallback(async () => {
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await swReady();
+    if (!reg) return;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return;
     const { endpoint } = sub.toJSON() as { endpoint: string };

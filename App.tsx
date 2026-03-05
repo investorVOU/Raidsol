@@ -27,6 +27,7 @@ const PvpWinnerModal = lazy(() => import('./components/PvpWinnerModal'));
 const DisclaimerModal = lazy(() => import('./components/DisclaimerModal'));
 const OnboardingFlow  = lazy(() => import('./components/OnboardingFlow'));
 const SuggestionModal = lazy(() => import('./components/SuggestionModal'));
+const PushPromptModal = lazy(() => import('./components/PushPromptModal'));
 import { SolanaWalletContext } from './components/SolanaWalletContext';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -34,6 +35,7 @@ import { LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey, Connection } f
 import { getRpcList, makeConnection } from './lib/rpc';
 import { getAssociatedTokenAddressSync, createTransferInstruction, createAssociatedTokenAccountIdempotentInstruction } from '@solana/spl-token';
 import { useProfile } from './hooks/useProfile';
+import { usePushNotifications } from './hooks/usePushNotifications';
 import { useDomainName } from './hooks/useDomainName';
 import { usePrices } from './hooks/usePrices';
 import { useRoundData } from './hooks/useRoundData';
@@ -84,6 +86,26 @@ const AppInner: React.FC = () => {
   const { bounty: todayBounty, claimed: bountyClaimed, refresh: refreshBounty } = useDailyBounty(walletAddr);
   const unclaimedRoundWins = roundWins.filter(w => !w.claimed);
   const [roundWinPopupDismissed, setRoundWinPopupDismissed] = React.useState<string | null>(null);
+
+  // Push notifications — prompt once after wallet connect
+  const { status: pushStatus, subscribe: pushSubscribe } = usePushNotifications(walletAddr);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
+  useEffect(() => {
+    if (!connected || pushStatus !== 'unsubscribed') return;
+    if (localStorage.getItem('solraid-push-prompted')) return;
+    const t = setTimeout(() => setShowPushPrompt(true), 3000);
+    return () => clearTimeout(t);
+  }, [connected, pushStatus]);
+  const handlePushEnable = async () => {
+    const ok = await pushSubscribe();
+    setShowPushPrompt(false);
+    localStorage.setItem('solraid-push-prompted', 'true');
+    return ok;
+  };
+  const handlePushDismiss = () => {
+    setShowPushPrompt(false);
+    localStorage.setItem('solraid-push-prompted', 'true');
+  };
 
   // Screens that are safe to restore on reload (mid-game states are excluded)
   const RESTORABLE_SCREENS = new Set<Screen>([
@@ -2202,6 +2224,11 @@ const AppInner: React.FC = () => {
           result={gameState.pvpWinnerResult}
           onClose={() => setGameState(prev => ({ ...prev, pvpWinnerResult: null }))}
         />
+      )}
+      {showPushPrompt && (
+        <Suspense fallback={null}>
+          <PushPromptModal onEnable={handlePushEnable} onDismiss={handlePushDismiss} />
+        </Suspense>
       )}
       {achievementToast && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] pointer-events-none animate-in slide-in-from-top-2 duration-300">
