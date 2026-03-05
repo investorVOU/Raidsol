@@ -512,7 +512,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                           : 'text-white'
                       }`}
                     >
-                      {t === 'WITHDRAW' ? 'Withdraw' : 'Refunds'}
+                      {t === 'WITHDRAW' ? 'Withdraw' : 'ROUNDS'}
                       {t === 'REFUND' && roundEntries.filter(e => (e.status === 'WIN' || e.status === 'REFUND') && !e.claimed).length > 0 && (
                         <span className="ml-1.5 px-1 py-0.5 bg-[#9945FF] text-white text-[8px] rounded-sm">
                           {roundEntries.filter(e => (e.status === 'WIN' || e.status === 'REFUND') && !e.claimed).length}

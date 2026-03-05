@@ -182,27 +182,38 @@ Deno.serve(async (req: Request) => {
         return json({ error: 'Entry fee transaction signature required' }, 422, corsH);
       }
 
-      const rpcUrl = Deno.env.get('SOLANA_RPC_URL') ?? 'https://api.mainnet-beta.solana.com';
+      const RPC_URLS = [
+        Deno.env.get('HELIUS_RPC_URL'),
+        Deno.env.get('ALCHEMY_RPC_URL'),
+        Deno.env.get('SOLANA_RPC_URL'),
+        'https://api.mainnet-beta.solana.com',
+      ].filter((u): u is string => typeof u === 'string' && u.startsWith('http'));
       const TREASURY = Deno.env.get('TREASURY_ADDRESS') ?? '';
       const LAMPORTS_PER_SOL = 1_000_000_000;
       const expectedLamports = Math.round(feeNum * LAMPORTS_PER_SOL);
 
       try {
-        // Retry up to 6× with 1.5s gap — tx may not be indexed yet
+        // Retry across all RPC endpoints (up to 6 attempts total) with 1s gap
         let txData: any = null;
-        for (let attempt = 0; attempt < 6; attempt++) {
-          if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
-          const rpcRes = await fetch(rpcUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0', id: 1,
-              method: 'getTransaction',
-              params: [entry_tx_sig, { encoding: 'jsonParsed', commitment: 'confirmed', maxSupportedTransactionVersion: 0 }],
-            }),
-          });
-          const rpcJson = await rpcRes.json();
-          if (rpcJson.result) { txData = rpcJson.result; break; }
+        let attempt = 0;
+        outer: for (let round = 0; round < 3; round++) {
+          for (const rpcUrl of RPC_URLS) {
+            if (attempt > 0) await new Promise(r => setTimeout(r, 1000));
+            attempt++;
+            try {
+              const rpcRes = await fetch(rpcUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  jsonrpc: '2.0', id: 1,
+                  method: 'getTransaction',
+                  params: [entry_tx_sig, { encoding: 'jsonParsed', commitment: 'confirmed', maxSupportedTransactionVersion: 0 }],
+                }),
+              });
+              const rpcJson = await rpcRes.json();
+              if (rpcJson.result) { txData = rpcJson.result; break outer; }
+            } catch { /* try next endpoint */ }
+          }
         }
 
         if (!txData) {
@@ -490,6 +501,20 @@ Deno.serve(async (req: Request) => {
       const raidRoundDate = `${ry}-${String(rm).padStart(2, '0')}-${String(rd).padStart(2, '0')}`;
       const poolContribution = Number(entry_fee) * 0.90;
 
+      // Check if this wallet has already entered this round/tier window.
+      // Each wallet contributes to the prize pool exactly ONCE per round —
+      // subsequent attempts only update their best score, not the pool.
+      const { data: existingEntry } = await supabase
+        .from('round_entries')
+        .select('id')
+        .eq('wallet_address', wallet_address)
+        .eq('round_number', raidRoundNum)
+        .eq('round_date', raidRoundDate)
+        .eq('raid_tier', raid_tier || 'GRUNT')
+        .maybeSingle();
+
+      const isFirstEntry = !existingEntry;
+
       // Snapshot top-5 BEFORE this entry so we can detect displacements
       const { data: prevTop5 } = await supabase
         .from('round_entries')
@@ -500,13 +525,8 @@ Deno.serve(async (req: Request) => {
         .order('best_points', { ascending: false })
         .limit(5);
 
-      const [poolResult, entryResult] = await Promise.all([
-        supabase.rpc('increment_round_pool', {
-          p_round_number: raidRoundNum,
-          p_round_date:   raidRoundDate,
-          p_amount:       poolContribution,
-          p_raid_tier:    raid_tier || 'GRUNT',
-        }),
+      // Only increment pool on first entry — prevents same wallet from inflating the prize pool
+      const ops: Promise<any>[] = [
         supabase.rpc('upsert_round_entry', {
           p_round_number: raidRoundNum,
           p_round_date:   raidRoundDate,
@@ -515,10 +535,21 @@ Deno.serve(async (req: Request) => {
           p_username:     profile.username,
           p_points:       effectivePoints,
         }),
-      ]);
+      ];
+      if (isFirstEntry) {
+        ops.push(supabase.rpc('increment_round_pool', {
+          p_round_number: raidRoundNum,
+          p_round_date:   raidRoundDate,
+          p_amount:       poolContribution,
+          p_raid_tier:    raid_tier || 'GRUNT',
+        }));
+      }
 
-      if (poolResult.error)  console.error('[round] increment_round_pool error:', poolResult.error.message);
-      if (entryResult.error) console.error('[round] upsert_round_entry error:', entryResult.error.message);
+      const [entryResult, poolResult] = await Promise.all(ops);
+
+      if (entryResult?.error) console.error('[round] upsert_round_entry error:', entryResult.error.message);
+      if (poolResult?.error)  console.error('[round] increment_round_pool error:', poolResult.error.message);
+      console.log(`[round] wallet=${wallet_address} round=${raidRoundNum} isFirstEntry=${isFirstEntry} poolContrib=${isFirstEntry ? poolContribution : 0}`);
 
       // Push: notify wallets knocked out of the top 5
       const { data: newTop5 } = await supabase

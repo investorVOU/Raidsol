@@ -483,39 +483,55 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               {[
                 {
                   q: 'What is Sol Raid?',
-                  a: 'On-chain extraction game on Solana. Pay the entry fee, pick a difficulty, score as many points as you can before you get busted. Cash out at the right moment — risk escalates every second.',
+                  a: 'An on-chain extraction game on Solana. Pay an entry fee, pick your difficulty, and score as many points as possible before getting busted. Extract at the right moment — risk escalates every second you stay in.',
                 },
                 {
                   q: 'How does scoring work?',
-                  a: 'Your score is based on how long you hold and your active difficulty multiplier. The higher your multiplier when you extract, the more points you bank. Only your best score this round counts.',
+                  a: 'Points accumulate while you hold. The higher your multiplier when you extract, the more points you bank. Bust = zero payout but your points still count toward round standings. Only your best score per round window is used.',
                 },
                 {
                   q: 'How do Raid Rounds work?',
-                  a: '4 rounds per day (UTC), 6 hours each. GRUNT = 0.026 SOL · ELITE = 0.05 SOL · WHALE = 0.25 SOL. Your top score this round competes. After close, 100% of all fees split across top 5. Under 3 entrants — full refund.',
+                  a: '4 rounds per day (UTC), 6 hours each. Entry fees: GRUNT = 0.026 SOL · ELITE = 0.05 SOL · WHALE = 0.25 SOL. You can raid as many times as you like — only your best score for that round is used. The top 5 wallets by score split the full prize pool when the round closes.',
                 },
                 {
-                  q: 'How do I claim round winnings?',
-                  a: 'Profile → Round Wins. Hit Claim on any eligible round. SOL lands in your unclaimed balance — withdraw to your wallet from there.',
+                  q: 'How is the prize pool built?',
+                  a: '90% of each unique wallet\'s first entry fee in a round goes into the prize pool. Re-entries don\'t add to the pool — you pay to improve your score, not to inflate the pot.',
+                },
+                {
+                  q: 'How does the prize split work?',
+                  a: 'Top 5 wallets split the pool: 1st gets 40%, 2nd 25%, 3rd 18%, 4th 11%, 5th 6%. Allocations go straight to your unclaimed SOL balance the moment the round is finalized.',
+                },
+                {
+                  q: 'Where do I see if I won?',
+                  a: 'Go to your Profile → Rounds tab after the round closes. Each round you entered will show your rank, points, and SOL allocation. Hit "Claim Prize" to move winnings to your unclaimed balance, then withdraw to your wallet from the Withdraw tab.',
+                },
+                {
+                  q: 'What if fewer than 3 players enter a round?',
+                  a: 'The round is cancelled and every entrant gets a full refund. Refunds are credited to your unclaimed SOL balance automatically. Go to Profile → Rounds tab, find the cancelled round, and hit "Claim Refund" to confirm the credit.',
+                },
+                {
+                  q: 'How do I withdraw my SOL?',
+                  a: 'Profile → Withdraw tab. Enter the amount and confirm. Your SOL is sent on-chain within seconds. No fees, no limits, no cooldowns.',
                 },
                 {
                   q: 'Is it provably fair?',
-                  a: 'Yes. SHA-256 server seed committed before each raid, revealed after. Verify the RNG yourself. Seed history in your profile.',
+                  a: 'Yes. A SHA-256 server seed is committed before each raid and revealed after. You can verify the RNG outcome yourself. Full seed history is visible in your Profile.',
                 },
                 {
                   q: 'What is the house edge?',
-                  a: 'Base win rate ~18–22% with no gear. Gear and boosts can push it toward 36%. Risk drift is the mechanic — the longer you hold, the harder it gets. There is also a 20s cashout lock at the start of each raid.',
+                  a: 'Base win rate ~18–22% with no gear. Gear and boosts can raise it toward 36%. There is a 20-second cashout lock at the start — you cannot extract in the first 20s. Risk drift is the core mechanic: the longer you hold, the harder it gets.',
                 },
                 {
                   q: 'What are Raid Passes?',
-                  a: '50% off entry fee + 10% win boost. 1 free ticket per day, max 3 stockpiled. Buy more with SKR in the Store.',
+                  a: '50% off entry fee + 10% win boost per raid. You get 1 free pass per day (max 3 stockpiled). Buy more with SKR in the Store.',
                 },
                 {
                   q: 'What is SKR?',
-                  a: 'Seeker token on Solana. Buy gear, passes, and avatars in the Store. Also accepted as raid entry payment alongside SOL and USDC.',
+                  a: 'Seeker — a Solana SPL token. Used to buy gear, passes, and avatars in the Store. Also accepted as a raid entry fee alongside SOL and USDC.',
                 },
                 {
                   q: 'What is PvP Arena?',
-                  a: 'Stake against real players in a shared room. Same RNG seed, same clock. Highest score on extract wins the pot. SOL, USDC, or SKR.',
+                  a: 'Create or join a room and stake against real players. Everyone plays the same round with the same RNG seed and clock. Highest score on extract wins the full pot minus a 10% platform fee.',
                 },
               ].map(({ q, a }, i) => (
                 <div key={i} className="rounded-xl bg-white/[0.025] border border-white/[0.12] p-4">
@@ -567,18 +583,33 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="flex-1 overflow-y-auto min-h-0 px-5 pb-2 space-y-4">
 
               {/* How it works */}
-              <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-1">
-                <p className="text-[9px] text-white uppercase tracking-wider font-medium mb-2">Rules</p>
+              <div className="rounded-xl bg-white/3 border border-white/7 px-4 py-3 space-y-2">
+                <p className="text-[9px] text-white uppercase tracking-wider font-medium mb-2">How It Works</p>
                 {[
-                  'Entry fee goes 100% into the prize pool',
-                  'Score points — your best raid counts',
-                  'Top 5 wallets split the pool when the round closes',
-                  `${roundTier} split: ${RAID_TIER_ALLOCATION[roundTier].map((a, i) => `${['1st','2nd','3rd','4th','5th'][i]} ${Math.round(a*100)}%`).join(' · ')}`,
-                  `Under ${ROUND_MIN_PARTICIPANTS} entrants — round cancelled, full refund`,
-                ].map((line, i) => (
+                  { text: 'Pay the entry fee to join this round\'s prize pool', accent: false },
+                  { text: 'Raid as many times as you like — only your best score counts', accent: false },
+                  { text: 'Top 5 wallets by score split the pool when the round closes', accent: false },
+                  { text: `Prize split — ${RAID_TIER_ALLOCATION[roundTier].map((a, i) => `${['1st','2nd','3rd','4th','5th'][i]}: ${Math.round(a*100)}%`).join(' · ')}`, accent: false },
+                ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: i === 4 ? '#FFB800' : '#9945FF' }}>{i === 4 ? '!' : `${i + 1}.`}</span>
-                    <p className="text-[10px] font-medium leading-snug" style={{ color: i === 4 ? 'rgba(255,184,0,0.65)' : 'var(--text-45)' }}>{line}</p>
+                    <span className="text-[9px] font-black shrink-0 mt-0.5" style={{ color: '#9945FF' }}>{i + 1}.</span>
+                    <p className="text-[10px] font-medium leading-snug" style={{ color: 'var(--text-50)' }}>{item.text}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Claim & Refund info */}
+              <div className="rounded-xl border px-4 py-3 space-y-2.5" style={{ background: 'rgba(255,184,0,0.04)', borderColor: 'rgba(255,184,0,0.18)' }}>
+                <p className="text-[9px] text-[#FFB800] uppercase tracking-wider font-bold mb-1">Results & Refunds</p>
+                {[
+                  { icon: '🏆', text: 'After the round closes, go to Profile → Rounds tab to see your rank and allocation.' },
+                  { icon: '💰', text: 'Hit "Claim Prize" if you placed top 5. SOL lands in your unclaimed balance — withdraw from the Withdraw tab.' },
+                  { icon: '↩', text: `If fewer than ${ROUND_MIN_PARTICIPANTS} players enter, the round is cancelled and everyone gets a full refund — same Rounds tab, hit "Claim Refund".` },
+                  { icon: '⚡', text: 'Refunds and prizes are credited instantly on-chain once you claim. No waiting period.' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="text-sm shrink-0 leading-none mt-0.5">{item.icon}</span>
+                    <p className="text-[10px] font-medium leading-snug" style={{ color: 'rgba(255,184,0,0.70)' }}>{item.text}</p>
                   </div>
                 ))}
               </div>
