@@ -8,7 +8,7 @@ const USDC_MINT    = import.meta.env.VITE_USDC_MINT ?? 'EPjFWdd5AufqSSqeM2qN1xzy
 const SKR_MINT     = import.meta.env.VITE_SKR_MINT  ?? 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
 const RPC_URL      = import.meta.env.VITE_HELIUS_RPC_URL ?? import.meta.env.VITE_SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
 
-type Tab = 'OVERVIEW' | 'STATS' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS' | 'FEEDBACK';
+type Tab = 'OVERVIEW' | 'STATS' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS' | 'FEEDBACK' | 'PUSH';
 
 interface RaidRow   { raid_id: string; wallet_address: string; difficulty: string; success: boolean; points: number; sol_amount: number; elapsed_sec: number; created_at: string; }
 interface UserRow   { wallet_address: string; username: string; sr_points: number; unclaimed_sol: number; raid_tickets: number; created_at: string; }
@@ -157,6 +157,16 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [finalizing, setFinalizing]     = useState(false);
   const [finalizeMsg, setFinalizeMsg]   = useState<string | null>(null);
   const [raidFilter, setRaidFilter]     = useState<'ALL' | 'WIN' | 'BUST'>('ALL');
+  const [userSort, setUserSort]         = useState<'SR' | 'DATE'>('DATE');
+
+  // Push compose state
+  const [pushTarget, setPushTarget]   = useState<'ALL' | 'WALLET'>('ALL');
+  const [pushWallet, setPushWallet]   = useState('');
+  const [pushTitle, setPushTitle]     = useState('');
+  const [pushBody, setPushBody]       = useState('');
+  const [pushUrl, setPushUrl]         = useState('/');
+  const [pushSending, setPushSending] = useState(false);
+  const [pushResult, setPushResult]   = useState<{ ok: boolean; msg: string } | null>(null);
 
   const load = useCallback(async (t: Tab) => {
     setLoading(true);
@@ -183,7 +193,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         setRaids((data ?? []) as RaidRow[]);
       }
       if (t === 'USERS') {
-        const { data } = await supabase.from('profiles').select('wallet_address, username, sr_points, unclaimed_sol, raid_tickets, created_at').order('sr_points', { ascending: false }).limit(200);
+        const { data } = await supabase.from('profiles').select('wallet_address, username, sr_points, unclaimed_sol, raid_tickets, created_at').order('created_at', { ascending: false }).limit(200);
         setUsers((data ?? []) as UserRow[]);
       }
       if (t === 'CLAIMS') {
@@ -290,11 +300,40 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     } finally { setFinalizing(false); }
   };
 
+  const handleSendPush = async () => {
+    if (!pushTitle.trim()) return;
+    if (pushTarget === 'WALLET' && !pushWallet.trim()) return;
+    setPushSending(true);
+    setPushResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-push', {
+        body: {
+          wallet_address: pushTarget === 'ALL' ? 'ALL' : pushWallet.trim(),
+          title: pushTitle.trim(),
+          body: pushBody.trim(),
+          url: pushUrl.trim() || '/',
+        },
+      });
+      if (error || data?.error) {
+        setPushResult({ ok: false, msg: `Error: ${data?.error ?? error?.message ?? 'Unknown'}` });
+      } else {
+        setPushResult({ ok: true, msg: `Sent to ${data?.sent ?? 0} device${data?.sent !== 1 ? 's' : ''}` });
+        setPushTitle(''); setPushBody(''); setPushWallet(''); setPushUrl('/');
+      }
+    } catch (e) {
+      setPushResult({ ok: false, msg: `Error: ${e instanceof Error ? e.message : String(e)}` });
+    } finally { setPushSending(false); }
+  };
+
   const filteredRaids = raidFilter === 'ALL' ? raids
     : raidFilter === 'WIN' ? raids.filter(r => r.success)
     : raids.filter(r => !r.success);
 
-  const TABS: Tab[] = ['OVERVIEW', 'STATS', 'RAIDS', 'USERS', 'CLAIMS', 'ROUNDS', 'FEEDBACK'];
+  const sortedUsers = userSort === 'DATE'
+    ? [...users].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    : [...users].sort((a, b) => Number(b.sr_points) - Number(a.sr_points));
+
+  const TABS: Tab[] = ['OVERVIEW', 'STATS', 'RAIDS', 'USERS', 'CLAIMS', 'ROUNDS', 'FEEDBACK', 'PUSH'];
 
   const diffColor = (d: string) =>
     d === 'DEGEN' ? 'text-[#9945FF]' : d === 'HARD' ? 'text-orange-400' : d === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400';
@@ -520,32 +559,46 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
         {/* ── USERS ── */}
         {!loading && tab === 'USERS' && (
-          <div className="overflow-x-auto">
-            <p className="text-[9px] text-white mb-2">{users.length} users — sorted by SR</p>
-            <table className="w-full text-[10px] border-collapse">
-              <thead>
-                <tr className="text-white border-b border-white/[0.06]">
-                  <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
-                  <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Username</th>
-                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SR</th>
-                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Unclaimed SOL</th>
-                  <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Tickets</th>
-                  <th className="text-right py-2 font-bold uppercase tracking-wider">Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.wallet_address} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                    <WalletCell address={u.wallet_address} />
-                    <td className="py-1.5 pr-3 text-white">{u.username || <span className="text-white">—</span>}</td>
-                    <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(u.sr_points).toLocaleString()}</td>
-                    <td className="py-1.5 pr-3 text-right font-mono text-white">{Number(u.unclaimed_sol).toFixed(4)}</td>
-                    <td className="py-1.5 pr-3 text-right text-white">{u.raid_tickets}</td>
-                    <td className="py-1.5 text-right text-white">{new Date(u.created_at).toLocaleDateString()}</td>
-                  </tr>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[9px] text-white">{users.length} users</p>
+              <div className="flex gap-1">
+                {(['DATE', 'SR'] as const).map(s => (
+                  <button key={s} onClick={() => setUserSort(s)}
+                    className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border transition-all ${
+                      userSort === s ? 'border-[#9945FF]/50 text-[#9945FF] bg-[#9945FF]/10' : 'border-white/10 text-white'
+                    }`}>
+                    {s === 'DATE' ? 'Newest first' : 'Top SR'}
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[10px] border-collapse">
+                <thead>
+                  <tr className="text-white border-b border-white/[0.06]">
+                    <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
+                    <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Username</th>
+                    <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">SR</th>
+                    <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Unclaimed SOL</th>
+                    <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Tickets</th>
+                    <th className="text-right py-2 font-bold uppercase tracking-wider">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedUsers.map(u => (
+                    <tr key={u.wallet_address} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                      <WalletCell address={u.wallet_address} />
+                      <td className="py-1.5 pr-3 text-white">{u.username || <span className="text-white">—</span>}</td>
+                      <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(u.sr_points).toLocaleString()}</td>
+                      <td className="py-1.5 pr-3 text-right font-mono text-white">{Number(u.unclaimed_sol).toFixed(4)}</td>
+                      <td className="py-1.5 pr-3 text-right text-white">{u.raid_tickets}</td>
+                      <td className="py-1.5 text-right text-white">{new Date(u.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -626,6 +679,92 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── PUSH ── */}
+        {!loading && tab === 'PUSH' && (
+          <div className="flex flex-col gap-4 max-w-lg">
+            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 flex flex-col gap-4">
+              <p className="text-[9px] text-white uppercase tracking-widest font-bold">Compose Push Notification</p>
+
+              {/* Target */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] text-white uppercase tracking-wider">Target</label>
+                <div className="flex gap-1.5">
+                  {(['ALL', 'WALLET'] as const).map(t => (
+                    <button key={t} onClick={() => setPushTarget(t)}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase border transition-all ${
+                        pushTarget === t ? 'border-[#9945FF]/50 text-[#9945FF] bg-[#9945FF]/10' : 'border-white/10 text-white'
+                      }`}>
+                      {t === 'ALL' ? 'All subscribers' : 'Specific wallet'}
+                    </button>
+                  ))}
+                </div>
+                {pushTarget === 'WALLET' && (
+                  <input
+                    value={pushWallet}
+                    onChange={e => setPushWallet(e.target.value)}
+                    placeholder="Wallet address (base58)"
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-[11px] font-mono text-white placeholder:text-white/30 focus:outline-none focus:border-[#9945FF]/50"
+                  />
+                )}
+              </div>
+
+              {/* Title */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] text-white uppercase tracking-wider">Title <span className="text-[#9945FF]">*</span></label>
+                <input
+                  value={pushTitle}
+                  onChange={e => setPushTitle(e.target.value)}
+                  placeholder="e.g. Round Competition Starting!"
+                  maxLength={80}
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#9945FF]/50"
+                />
+              </div>
+
+              {/* Body */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] text-white uppercase tracking-wider">Message</label>
+                <textarea
+                  value={pushBody}
+                  onChange={e => setPushBody(e.target.value)}
+                  placeholder="Notification body text…"
+                  rows={3}
+                  maxLength={200}
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#9945FF]/50 resize-none"
+                />
+              </div>
+
+              {/* URL */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] text-white uppercase tracking-wider">Deep link URL</label>
+                <input
+                  value={pushUrl}
+                  onChange={e => setPushUrl(e.target.value)}
+                  placeholder="/ (default) or /?screen=raid"
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-[11px] font-mono text-white placeholder:text-white/30 focus:outline-none focus:border-[#9945FF]/50"
+                />
+              </div>
+
+              <button
+                onClick={handleSendPush}
+                disabled={pushSending || !pushTitle.trim() || (pushTarget === 'WALLET' && !pushWallet.trim())}
+                className="w-full py-3 rounded-xl bg-[#9945FF] text-white font-black text-xs uppercase tracking-wider disabled:opacity-40 active:scale-95 transition-all"
+              >
+                {pushSending
+                  ? 'Sending...'
+                  : pushTarget === 'ALL'
+                    ? 'Broadcast to all subscribers'
+                    : 'Send to wallet'}
+              </button>
+
+              {pushResult && (
+                <p className={`text-[11px] font-bold text-center ${pushResult.ok ? 'text-[#14F195]' : 'text-[#9945FF]'}`}>
+                  {pushResult.ok ? <><i className="fa-solid fa-check mr-1" />{pushResult.msg}</> : pushResult.msg}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

@@ -39,10 +39,11 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    const { data: subs } = await supabase
-      .from('push_subscriptions')
-      .select('endpoint, p256dh, auth')
-      .eq('wallet_address', wallet_address);
+    // wallet_address='ALL' → broadcast to every subscribed device
+    const query = supabase.from('push_subscriptions').select('endpoint, p256dh, auth');
+    const { data: subs } = wallet_address === 'ALL'
+      ? await query
+      : await query.eq('wallet_address', wallet_address);
 
     if (!subs || subs.length === 0) return json({ sent: 0 }, 200, cors);
 
@@ -55,10 +56,9 @@ Deno.serve(async (req: Request) => {
           await webpush.sendNotification(
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
             payload,
-            { TTL: 60 * 60 * 24 }, // 24-hour TTL
+            { TTL: 60 * 60 * 24 },
           );
         } catch (err: unknown) {
-          // 410 Gone / 404 = subscription expired, remove it
           if (err && typeof err === 'object' && 'statusCode' in err &&
               (err.statusCode === 410 || err.statusCode === 404)) {
             stale.push(s.endpoint);
@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
 
     if (stale.length > 0) {
       await supabase.from('push_subscriptions').delete().in('endpoint', stale);
-      console.log(`[send-push] removed ${stale.length} stale subscriptions for ${wallet_address}`);
+      console.log(`[send-push] removed ${stale.length} stale subs (broadcast=${wallet_address === 'ALL'})`);
     }
 
     return json({ sent: subs.length - stale.length }, 200, cors);
