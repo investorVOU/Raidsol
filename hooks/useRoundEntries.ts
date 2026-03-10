@@ -50,7 +50,19 @@ export function useRoundEntries(walletAddress: string | null) {
     if (entriesRes.error) console.error('[useRoundEntries] entries error:', entriesRes.error.message);
     if (winsRes.error) console.error('[useRoundEntries] wins error:', winsRes.error.message);
 
-    const rawRounds = rawEntries.map(e => ({
+    const normalizeDate = (d: string) => d.length > 10 ? d.slice(0, 10) : d;
+    const normalizedEntries = rawEntries.map(e => ({
+      ...e,
+      round_date: normalizeDate(String(e.round_date)),
+      raid_tier: e.raid_tier ?? 'GRUNT',
+    }));
+    const normalizedWins = rawWins.map(w => ({
+      ...w,
+      round_date: normalizeDate(String(w.round_date)),
+      raid_tier: w.raid_tier ?? 'GRUNT',
+    }));
+
+    const rawRounds = normalizedEntries.map(e => ({
       round_number: e.round_number,
       round_date: e.round_date,
       raid_tier: e.raid_tier ?? 'GRUNT',
@@ -77,7 +89,7 @@ export function useRoundEntries(walletAddress: string | null) {
 
     // round_winners keyed by "roundNum:roundDate:raidTier"
     const winMap = new Map<string, typeof rawWins[0]>();
-    for (const w of rawWins) {
+    for (const w of normalizedWins) {
       const tier = (w.raid_tier ?? 'GRUNT') as string;
       winMap.set(`${w.round_number}:${w.round_date}:${tier}`, w);
     }
@@ -85,10 +97,12 @@ export function useRoundEntries(walletAddress: string | null) {
     // round_finalizations keyed by "roundNum:roundDate:raidTier"
     const finalMap = new Map<string, typeof finalizations[0]>();
     for (const f of finalizations) {
-      finalMap.set(`${f.round_number}:${f.round_date}:${f.raid_tier}`, f);
+      const dateStr = normalizeDate(String(f.round_date));
+      finalMap.set(`${f.round_number}:${dateStr}:${f.raid_tier}`, { ...f, round_date: dateStr });
     }
 
-    const result: RoundEntry[] = rawEntries.map(e => {
+
+    const result: RoundEntry[] = normalizedEntries.map(e => {
       const tier = e.raid_tier ?? 'GRUNT';
       const winKey = `${e.round_number}:${e.round_date}:${tier}`;
       const win = winMap.get(winKey);
@@ -111,7 +125,7 @@ export function useRoundEntries(walletAddress: string | null) {
         poolSol: win ? Number(win.pool_sol) : null,
         solAllocation: win ? Number(win.sol_allocation) : null,
         // Refunds are credited directly in finalize-round; treat as claimed.
-        claimed: win?.claimed ?? (fin?.refunded ?? false),
+        claimed: win?.claimed ?? (fin?.refunded ? true : false),
         claimedAt: win?.claimed_at ?? null,
         status,
       };

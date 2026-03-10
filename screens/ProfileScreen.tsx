@@ -583,7 +583,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 {withdrawTab === 'REFUND' && (
                   <div className="p-6 sm:p-8">
                     <p className="text-[10px] text-[#FFB800]/60 font-bold uppercase tracking-wide mb-1">Round History</p>
-                    <p className="text-[9px] text-white/40 mb-5">All rounds you entered. Wins and refunds are paid to your unclaimed balance — claim them here.</p>
+                    <p className="text-[9px] text-white/40 mb-2">All rounds you entered. Wins and refunds are paid to your unclaimed balance — claim them here.</p>
+                    <p className="text-[9px] text-white/35 mb-5">Refunds are auto‑credited to your unclaimed balance when a round is cancelled. Use the Withdraw tab to transfer SOL to your wallet.</p>
                     {roundEntriesLoading ? (
                       <p className="text-white text-xs animate-pulse py-8 text-center">Loading...</p>
                     ) : roundEntries.length === 0 ? (

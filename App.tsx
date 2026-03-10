@@ -997,6 +997,7 @@ const AppInner: React.FC = () => {
     }
   };
 
+
   // ── cNFT Avatar Minting ──────────────────────────────────────────────────
   const handleMintAvatar = async (avatarId: string): Promise<boolean> => {
     if (!walletAddr || !signTransaction) return false;

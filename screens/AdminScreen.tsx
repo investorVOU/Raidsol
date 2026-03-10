@@ -178,6 +178,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [finalizeRoundDate, setFinalizeRoundDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [roundsPage, setRoundsPage] = useState(0);
   const ROUNDS_PAGE_SIZE = 12;
+  const [roundParticipants, setRoundParticipants] = useState<Record<string, number>>({});
 
   const load = useCallback(async (t: Tab) => {
     setLoading(true);
@@ -227,6 +228,28 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const fetchRoundParticipants = useCallback(async (rounds: { roundNum: number; dateStr: string }[]) => {
+    if (rounds.length === 0) return;
+    const roundNums = [...new Set(rounds.map(r => r.roundNum))];
+    const roundDates = [...new Set(rounds.map(r => r.dateStr))];
+    const { data, error } = await supabase
+      .from('round_entries')
+      .select('round_number, round_date, raid_tier, wallet_address')
+      .in('round_number', roundNums)
+      .in('round_date', roundDates)
+      .limit(5000);
+    if (error) return;
+    const map: Record<string, Set<string>> = {};
+    for (const row of data ?? []) {
+      const key = `${row.round_number}:${row.round_date}:${row.raid_tier}`;
+      if (!map[key]) map[key] = new Set();
+      map[key].add(row.wallet_address);
+    }
+    const counts: Record<string, number> = {};
+    for (const [k, set] of Object.entries(map)) counts[k] = set.size;
+    setRoundParticipants(counts);
   }, []);
 
   const loadStats = useCallback(async () => {
@@ -404,6 +427,11 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     return out;
   };
   const recentRounds = buildRecentRounds(roundsPage, ROUNDS_PAGE_SIZE);
+
+  useEffect(() => {
+    if (tab !== 'ROUNDS') return;
+    fetchRoundParticipants(recentRounds);
+  }, [tab, roundsPage, fetchRoundParticipants]);
 
   return (
     <div className="h-full text-white flex flex-col" style={{ backgroundColor: 'var(--app-bg)' }}>
@@ -959,6 +987,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                       <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">GRUNT</th>
                       <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">ELITE</th>
                       <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">WHALE</th>
+                      <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">Participants</th>
                       <th className="text-right py-2 font-bold uppercase tracking-wider">Action</th>
                     </tr>
                   </thead>
@@ -980,6 +1009,12 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                           ? <span className="text-[#14F195] font-bold">REFUND</span>
                           : <span className="text-white font-bold">OK</span>;
                       };
+                      const participantsForTier = (tier: string) =>
+                        roundParticipants[`${r.roundNum}:${r.dateStr}:${tier}`] ?? 0;
+                      const totalParticipants =
+                        participantsForTier('GRUNT') +
+                        participantsForTier('ELITE') +
+                        participantsForTier('WHALE');
                       return (
                         <tr key={key} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
                           <td className="py-1.5 pr-3 font-bold text-[#9945FF]">R{r.roundNum}</td>
@@ -993,6 +1028,11 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                           <td className="py-1.5 pr-3 text-center">{renderTier('GRUNT')}</td>
                           <td className="py-1.5 pr-3 text-center">{renderTier('ELITE')}</td>
                           <td className="py-1.5 pr-3 text-center">{renderTier('WHALE')}</td>
+                          <td className="py-1.5 pr-3 text-center text-white">
+                            {totalParticipants}
+                            <span className="text-white/40"> · </span>
+                            <span className="text-white/60">G{participantsForTier('GRUNT')} E{participantsForTier('ELITE')} W{participantsForTier('WHALE')}</span>
+                          </td>
                           <td className="py-1.5 text-right">
                             {canFinalize ? (
                               <button
