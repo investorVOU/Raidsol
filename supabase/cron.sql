@@ -14,8 +14,10 @@ as $$
   select net.http_post(
     'https://ujioyhtyfekfdmmblrdy.supabase.co/functions/v1/finalize-round',
     jsonb_build_object(
-      'round_number', (floor(extract(hour from (now() at time zone 'UTC' - interval '1 minute')) / 6) + 1)::int,
-      'round_date', to_char((now() at time zone 'UTC' - interval '1 minute'), 'YYYY-MM-DD')
+      -- Use a 2-minute offset so we never land exactly on the round boundary (e.g., 12:00),
+      -- which would incorrectly resolve to the *next* round.
+      'round_number', (floor(extract(hour from (now() at time zone 'UTC' - interval '2 minutes')) / 6) + 1)::int,
+      'round_date', to_char((now() at time zone 'UTC' - interval '2 minutes'), 'YYYY-MM-DD')
     ),
     null,
     jsonb_build_object(

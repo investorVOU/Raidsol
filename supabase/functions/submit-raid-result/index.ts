@@ -534,6 +534,7 @@ Deno.serve(async (req: Request) => {
           p_wallet:       wallet_address,
           p_username:     profile.username,
           p_points:       effectivePoints,
+          p_entry_fee:    Number(entry_fee) || 0,
         }),
       ];
       if (isFirstEntry) {

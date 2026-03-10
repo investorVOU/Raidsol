@@ -29,7 +29,7 @@ export function useRoundEntries(walletAddress: string | null) {
     if (!walletAddress) { setEntries([]); return; }
     setLoading(true);
 
-    const [entriesRes, winsRes] = await Promise.all([
+    const [entriesRes, winsRes, refundsRes] = await Promise.all([
       supabase
         .from('round_entries')
         .select('round_number, round_date, raid_tier, best_points, entry_count')
@@ -42,13 +42,20 @@ export function useRoundEntries(walletAddress: string | null) {
         .select('id, round_number, round_date, raid_tier, rank, pool_sol, sol_allocation, claimed, claimed_at')
         .eq('wallet_address', walletAddress)
         .limit(50),
+      supabase
+        .from('round_refund_logs')
+        .select('round_number, round_date, raid_tier, amount_sol, created_at')
+        .eq('wallet_address', walletAddress)
+        .limit(200),
     ]);
 
     const rawEntries = entriesRes.data ?? [];
     const rawWins = winsRes.data ?? [];
+    const rawRefunds = refundsRes.data ?? [];
 
     if (entriesRes.error) console.error('[useRoundEntries] entries error:', entriesRes.error.message);
     if (winsRes.error) console.error('[useRoundEntries] wins error:', winsRes.error.message);
+    if (refundsRes.error) console.error('[useRoundEntries] refunds error:', refundsRes.error.message);
 
     const normalizeDate = (d: string) => d.length > 10 ? d.slice(0, 10) : d;
     const normalizedEntries = rawEntries.map(e => ({
@@ -60,6 +67,11 @@ export function useRoundEntries(walletAddress: string | null) {
       ...w,
       round_date: normalizeDate(String(w.round_date)),
       raid_tier: w.raid_tier ?? 'GRUNT',
+    }));
+    const normalizedRefunds = rawRefunds.map(r => ({
+      ...r,
+      round_date: normalizeDate(String(r.round_date)),
+      raid_tier: r.raid_tier ?? 'GRUNT',
     }));
 
     const rawRounds = normalizedEntries.map(e => ({
@@ -101,17 +113,27 @@ export function useRoundEntries(walletAddress: string | null) {
       finalMap.set(`${f.round_number}:${dateStr}:${f.raid_tier}`, { ...f, round_date: dateStr });
     }
 
+    // round_refund_logs keyed by "roundNum:roundDate:raidTier"
+    const refundMap = new Map<string, typeof normalizedRefunds[0]>();
+    for (const r of normalizedRefunds) {
+      refundMap.set(`${r.round_number}:${r.round_date}:${r.raid_tier}`, r);
+    }
 
     const result: RoundEntry[] = normalizedEntries.map(e => {
       const tier = e.raid_tier ?? 'GRUNT';
       const winKey = `${e.round_number}:${e.round_date}:${tier}`;
       const win = winMap.get(winKey);
       const fin = finalMap.get(winKey);
+      const refund = refundMap.get(winKey);
       const entryKey = `${e.round_number}:${e.round_date}:${e.raid_tier}`;
 
       let status: RoundEntryStatus = 'PENDING';
       if (win) status = win.rank === 0 ? 'REFUND' : 'WIN';
       else if (fin?.refunded) status = 'REFUND';
+
+      const isRefund = status === 'REFUND';
+      const claimed = isRefund ? !!refund : (win?.claimed ?? false);
+      const claimedAt = isRefund ? (refund?.created_at ?? null) : (win?.claimed_at ?? null);
 
       return {
         key: entryKey,
@@ -124,9 +146,8 @@ export function useRoundEntries(walletAddress: string | null) {
         rank: win ? win.rank : null,
         poolSol: win ? Number(win.pool_sol) : null,
         solAllocation: win ? Number(win.sol_allocation) : null,
-        // Refunds are credited directly in finalize-round; treat as claimed.
-        claimed: win?.claimed ?? (fin?.refunded ? true : false),
-        claimedAt: win?.claimed_at ?? null,
+        claimed,
+        claimedAt,
         status,
       };
     });

@@ -31,6 +31,7 @@ interface ProfileScreenProps {
   referralSREarned?: number;
   onNavigateStore?: (tab?: 'GEAR' | 'AVATAR' | 'PASS') => void;
   onClaimRoundWin?: (roundNum: number, roundDate: string) => Promise<boolean>;
+  onClaimRoundRefund?: (roundNum: number, roundDate: string, raidTier: string) => Promise<boolean>;
   onMintAvatar?: (avatarId: string) => Promise<boolean>;
   lastClaimAt?: string | null;
   dailyStreak?: number;
@@ -56,6 +57,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   referralSREarned = 0,
   onNavigateStore,
   onClaimRoundWin,
+  onClaimRoundRefund,
   onMintAvatar,
   lastClaimAt,
   dailyStreak = 0,
@@ -86,14 +88,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   // All round entries with cross-referenced win/refund status
   const { entries: roundEntries, loading: roundEntriesLoading, refetch: refetchRoundEntries } = useRoundEntries(walletAddress ?? null);
-  const [claimingRound, setClaimingRound] = useState<string | null>(null); // "roundNum:roundDate" key
+  const [claimingRound, setClaimingRound] = useState<string | null>(null); // "roundNum:roundDate:raidTier" key
 
-  const handleClaimRoundWinLocal = async (roundNum: number, roundDate: string) => {
+  const buildClaimKey = (roundNum: number, roundDate: string, raidTier?: string) =>
+    `${roundNum}:${roundDate}:${raidTier ?? 'GRUNT'}`;
+
+  const handleClaimRoundWinLocal = async (roundNum: number, roundDate: string, raidTier?: string) => {
     if (!onClaimRoundWin) return;
-    const key = `${roundNum}:${roundDate}`;
+    const key = buildClaimKey(roundNum, roundDate, raidTier);
     setClaimingRound(key);
     try {
       const ok = await onClaimRoundWin(roundNum, roundDate);
+      if (ok) refetchRoundEntries();
+    } finally {
+      setClaimingRound(null);
+    }
+  };
+
+  const handleClaimRoundRefundLocal = async (roundNum: number, roundDate: string, raidTier: string) => {
+    if (!onClaimRoundRefund) return;
+    const key = buildClaimKey(roundNum, roundDate, raidTier);
+    setClaimingRound(key);
+    try {
+      const ok = await onClaimRoundRefund(roundNum, roundDate, raidTier);
       if (ok) refetchRoundEntries();
     } finally {
       setClaimingRound(null);
@@ -584,7 +601,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   <div className="p-6 sm:p-8">
                     <p className="text-[10px] text-[#FFB800]/60 font-bold uppercase tracking-wide mb-1">Round History</p>
                     <p className="text-[9px] text-white/40 mb-2">All rounds you entered. Wins and refunds are paid to your unclaimed balance — claim them here.</p>
-                    <p className="text-[9px] text-white/35 mb-5">Refunds are auto‑credited to your unclaimed balance when a round is cancelled. Use the Withdraw tab to transfer SOL to your wallet.</p>
+                    <p className="text-[9px] text-white/35 mb-5">If a round is cancelled, claim your refund here. Claimed refunds move to your unclaimed balance (Withdraw tab).</p>
                     {roundEntriesLoading ? (
                       <p className="text-white text-xs animate-pulse py-8 text-center">Loading...</p>
                     ) : roundEntries.length === 0 ? (
@@ -595,7 +612,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     ) : (
                       <div className="flex flex-col gap-2">
                         {roundEntries.map(e => {
-                          const claimKey = `${e.roundNum}:${e.roundDate}`;
+                          const claimKey = buildClaimKey(e.roundNum, e.roundDate, e.raidTier);
                           const isClaimingThis = claimingRound === claimKey;
                           const canClaim = (e.status === 'WIN' || e.status === 'REFUND') && !e.claimed;
                           return (
@@ -628,7 +645,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                                 <span className="text-[9px] font-bold text-[#14F195] shrink-0">Claimed</span>
                               ) : canClaim ? (
                                 <button
-                                  onClick={() => handleClaimRoundWinLocal(e.roundNum, e.roundDate)}
+                                  onClick={() =>
+                                    e.status === 'REFUND'
+                                      ? handleClaimRoundRefundLocal(e.roundNum, e.roundDate, e.raidTier)
+                                      : handleClaimRoundWinLocal(e.roundNum, e.roundDate, e.raidTier)
+                                  }
                                   disabled={isClaimingThis || isClaiming}
                                   className="shrink-0 text-[9px] font-black uppercase px-3 py-1.5 bg-[#9945FF] text-white hover:bg-[#8833ee] active:scale-95 transition-all disabled:opacity-50"
                                 >
@@ -880,7 +901,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     const isWin = e.status === 'WIN';
                     const isRefund = e.status === 'REFUND';
                     const isPending = e.status === 'PENDING';
-                    const claimKey = `${e.roundNum}:${e.roundDate}`;
+                    const claimKey = buildClaimKey(e.roundNum, e.roundDate, e.raidTier);
                     const isClaimingThis = claimingRound === claimKey;
                     const medals = ['🥇', '🥈', '🥉', '', ''];
                     const rankColors = ['text-yellow-400', 'text-white', 'text-orange-400', 'text-white', 'text-white'];
@@ -937,7 +958,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                                 <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 border border-white/15 text-[#14F195]">Claimed</span>
                               ) : (
                                 <button
-                                  onClick={() => handleClaimRoundWinLocal(e.roundNum, e.roundDate)}
+                                  onClick={() =>
+                                    isRefund
+                                      ? handleClaimRoundRefundLocal(e.roundNum, e.roundDate, e.raidTier)
+                                      : handleClaimRoundWinLocal(e.roundNum, e.roundDate, e.raidTier)
+                                  }
                                   disabled={isClaimingThis || isClaiming}
                                   className="text-[9px] font-black uppercase px-3 py-1.5 bg-[#9945FF] text-white hover:bg-[#8833ee] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >

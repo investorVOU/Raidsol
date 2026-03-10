@@ -997,6 +997,42 @@ const AppInner: React.FC = () => {
     }
   };
 
+  const handleClaimRoundRefund = async (roundNum: number, roundDate: string, raidTier: RaidTier): Promise<boolean> => {
+    if (!walletAddr) return false;
+    try {
+      const { data, error } = await supabase.functions.invoke('claim-round-refund', {
+        body: { round_number: roundNum, round_date: roundDate, raid_tier: raidTier, wallet_address: walletAddr },
+      });
+      if (error || !data?.success) {
+        let msg: string = data?.error ?? '';
+        if (!msg && error) {
+          try {
+            const ctx = (error as any).context;
+            if (ctx && typeof ctx.json === 'function') {
+              const body = await ctx.json();
+              msg = body?.error || body?.detail || '';
+            }
+          } catch { /* ignore parse failure */ }
+          if (!msg) msg = (error as any).message ?? String(error);
+        }
+        alert('Refund claim failed: ' + (msg || 'Unknown error'));
+        return false;
+      }
+      const credited = Number(data.amount_sol ?? 0);
+      if (credited > 0) {
+        setGameState(prev => ({
+          ...prev,
+          unclaimedBalance: prev.unclaimedBalance + credited,
+        }));
+      }
+      refetchRound();
+      return true;
+    } catch (err) {
+      alert('Refund claim failed: ' + String(err));
+      return false;
+    }
+  };
+
 
   // ── cNFT Avatar Minting ──────────────────────────────────────────────────
   const handleMintAvatar = async (avatarId: string): Promise<boolean> => {
@@ -2019,6 +2055,7 @@ const AppInner: React.FC = () => {
             referralSREarned={profile?.referral_sr_earned ?? 0}
             onNavigateStore={(tab) => { setGameState(prev => ({ ...prev, storeInitialTab: tab })); navigateTo(Screen.STORE); }}
             onClaimRoundWin={handleClaimRoundWin}
+            onClaimRoundRefund={handleClaimRoundRefund}
             onMintAvatar={handleMintAvatar}
             lastClaimAt={profile?.last_claim_at ?? null}
             dailyStreak={gameState.dailyStreak}
