@@ -13,7 +13,8 @@ type Tab = 'OVERVIEW' | 'STATS' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS' | 'FEE
 interface RaidRow   { raid_id: string; wallet_address: string; difficulty: string; success: boolean; points: number; sol_amount: number; elapsed_sec: number; created_at: string; }
 interface UserRow   { wallet_address: string; username: string; sr_points: number; unclaimed_sol: number; raid_tickets: number; created_at: string; }
 interface ClaimRow  { id: string; wallet_address: string; action_type: string; reward_sr: number; twitter_handle: string | null; created_at: string; }
-interface WinnerRow      { id: string; round_number: number; round_date: string; rank: number; wallet_address: string; prize_sol: number; claimed: boolean; }
+interface WinnerRow      { id: string; round_number: number; round_date: string; raid_tier?: string; rank: number; wallet_address: string; prize_sol: number; claimed: boolean; }
+interface FinalizationRow { round_number: number; round_date: string; raid_tier: string; refunded: boolean; pool_sol: number; }
 interface SuggestionRow  { id: number; wallet_address: string | null; category: string; suggestion_text: string; created_at: string; }
 interface PushSubRow    { endpoint: string; wallet_address: string | null; created_at: string; }
 
@@ -152,6 +153,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [users, setUsers]         = useState<UserRow[]>([]);
   const [claims, setClaims]       = useState<ClaimRow[]>([]);
   const [winners, setWinners]     = useState<WinnerRow[]>([]);
+  const [finalizations, setFinalizations] = useState<FinalizationRow[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestionRow[]>([]);
   const [loading, setLoading]     = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -172,6 +174,10 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [pushUrl, setPushUrl]         = useState('/');
   const [pushSending, setPushSending] = useState(false);
   const [pushResult, setPushResult]   = useState<{ ok: boolean; msg: string } | null>(null);
+  const [finalizeRoundNum, setFinalizeRoundNum] = useState(() => Math.floor(new Date().getUTCHours() / 6) + 1);
+  const [finalizeRoundDate, setFinalizeRoundDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [roundsPage, setRoundsPage] = useState(0);
+  const ROUNDS_PAGE_SIZE = 12;
 
   const load = useCallback(async (t: Tab) => {
     setLoading(true);
@@ -206,8 +212,13 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         setClaims((data ?? []) as ClaimRow[]);
       }
       if (t === 'ROUNDS') {
-        const { data } = await supabase.from('round_winners').select('*').order('round_date', { ascending: false }).order('rank').limit(100);
+        const [winnersRes, finalRes] = await Promise.all([
+          supabase.from('round_winners').select('*').order('round_date', { ascending: false }).order('rank').limit(150),
+          supabase.from('round_finalizations').select('round_number, round_date, raid_tier, refunded, pool_sol').order('round_date', { ascending: false }).order('round_number', { ascending: false }).limit(200),
+        ]);
+        const { data } = winnersRes;
         setWinners((data ?? []) as WinnerRow[]);
+        setFinalizations((finalRes.data ?? []) as FinalizationRow[]);
       }
       if (t === 'FEEDBACK') {
         const { data } = await supabase.from('suggestions').select('*').order('created_at', { ascending: false }).limit(500);
@@ -300,18 +311,29 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     else load(tab);
   }, [tab, load, loadStats, loadPushSubs]);
 
-  const handleFinalizeRound = async () => {
+  const formatFinalizeResult = (data: { results?: Record<string, { refunded?: boolean; already_finalized?: boolean }> }) => {
+    const results = data?.results ?? {};
+    const tiers = Object.keys(results);
+    if (tiers.length === 0) return 'Finalized.';
+    const refunded = tiers.filter(t => results[t]?.refunded).length;
+    const already = tiers.filter(t => results[t]?.already_finalized).length;
+    if (refunded === tiers.length) return `Finalized — refund issued for all tiers.`;
+    if (already === tiers.length) return `Already finalized.`;
+    return `Finalized — ${tiers.length - already} tier(s) updated${refunded ? `, ${refunded} refunded` : ''}.`;
+  };
+
+  const handleFinalizeRound = async (roundNum?: number, roundDate?: string) => {
     setFinalizing(true);
     setFinalizeMsg(null);
     try {
       const now = new Date();
-      const roundNum  = Math.floor(now.getUTCHours() / 6) + 1;
-      const roundDate = now.toISOString().slice(0, 10);
+      const rn  = roundNum ?? Math.floor(now.getUTCHours() / 6) + 1;
+      const rd  = roundDate ?? now.toISOString().slice(0, 10);
       const { data, error } = await supabase.functions.invoke('finalize-round', {
-        body: { round_number: roundNum, round_date: roundDate },
+        body: { round_number: rn, round_date: rd },
       });
       if (error || data?.error) setFinalizeMsg(`Error: ${data?.error ?? error?.message ?? 'Unknown'}`);
-      else { setFinalizeMsg(`R${roundNum} finalized — ${data?.winners_inserted ?? 0} winners recorded`); load('ROUNDS'); }
+      else { setFinalizeMsg(`R${rn} ${rd} — ${formatFinalizeResult(data)}`); load('ROUNDS'); }
     } catch (e) {
       setFinalizeMsg(`Error: ${e instanceof Error ? e.message : String(e)}`);
     } finally { setFinalizing(false); }
@@ -354,6 +376,34 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
   const diffColor = (d: string) =>
     d === 'DEGEN' ? 'text-[#9945FF]' : d === 'HARD' ? 'text-orange-400' : d === 'MEDIUM' ? 'text-cyan-400' : 'text-green-400';
+
+  const TIERS = ['GRUNT', 'ELITE', 'WHALE'] as const;
+  const finalByRound = new Map<string, FinalizationRow[]>();
+  for (const f of finalizations) {
+    const key = `${f.round_number}:${f.round_date}`;
+    const arr = finalByRound.get(key) ?? [];
+    arr.push(f);
+    finalByRound.set(key, arr);
+  }
+  const nowUtc = new Date();
+  const buildRecentRounds = (page: number, pageSize: number) => {
+    const y = nowUtc.getUTCFullYear();
+    const m = nowUtc.getUTCMonth();
+    const d = nowUtc.getUTCDate();
+    const currentRoundNum = Math.floor(nowUtc.getUTCHours() / 6) + 1;
+    const currentStart = new Date(Date.UTC(y, m, d, (currentRoundNum - 1) * 6));
+    const out: { roundNum: number; dateStr: string; end: Date }[] = [];
+    const offset = page * pageSize;
+    for (let i = offset; i < offset + pageSize; i++) {
+      const dt = new Date(currentStart.getTime() - i * 6 * 60 * 60 * 1000);
+      const dateStr = dt.toISOString().slice(0, 10);
+      const roundNum = Math.floor(dt.getUTCHours() / 6) + 1;
+      const end = new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate(), roundNum * 6));
+      out.push({ roundNum, dateStr, end });
+    }
+    return out;
+  };
+  const recentRounds = buildRecentRounds(roundsPage, ROUNDS_PAGE_SIZE);
 
   return (
     <div className="h-full text-white flex flex-col" style={{ backgroundColor: 'var(--app-bg)' }}>
@@ -845,16 +895,123 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           <div className="flex flex-col gap-4">
             <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
               <p className="text-[9px] text-white uppercase tracking-widest mb-2">Finalize Round</p>
-              <p className="text-[10px] text-white mb-3">
-                Manually finalize the current active round. Only run after a round ends (every 6h UTC). Idempotent — safe to re-run.
-              </p>
-              <button onClick={handleFinalizeRound} disabled={finalizing}
-                className="w-full py-2.5 rounded-xl bg-[#9945FF]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
-                {finalizing ? 'Finalizing...' : 'Finalize Current Round'}
-              </button>
+              <p className="text-[10px] text-white mb-3">Finalize any past round (UTC). Idempotent — safe to re-run.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+                <div>
+                  <label className="text-[9px] text-white/60 uppercase tracking-wider">Round Date (UTC)</label>
+                  <input
+                    type="date"
+                    value={finalizeRoundDate}
+                    onChange={e => setFinalizeRoundDate(e.target.value)}
+                    className="mt-1 w-full bg-[var(--modal-bg)] border border-white/10 px-3 py-2 text-[10px] text-white uppercase tracking-wider"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] text-white/60 uppercase tracking-wider">Round #</label>
+                  <select
+                    value={finalizeRoundNum}
+                    onChange={e => setFinalizeRoundNum(Number(e.target.value))}
+                    className="mt-1 w-full bg-[var(--modal-bg)] border border-white/10 px-3 py-2 text-[10px] text-white uppercase tracking-wider"
+                  >
+                    {[1, 2, 3, 4].map(n => <option key={n} value={n}>Round {n}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button onClick={() => handleFinalizeRound(finalizeRoundNum, finalizeRoundDate)} disabled={finalizing}
+                    className="w-full py-2.5 rounded-xl bg-[#9945FF]/90 text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all">
+                    {finalizing ? 'Finalizing...' : 'Finalize Selected'}
+                  </button>
+                </div>
+              </div>
               {finalizeMsg && (
                 <p className={`text-[10px] font-bold mt-2 ${finalizeMsg.startsWith('Error') ? 'text-[#9945FF]' : 'text-[#14F195]'}`}>{finalizeMsg}</p>
               )}
+            </div>
+
+            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+              <p className="text-[9px] text-white uppercase tracking-widest mb-2">Recent Rounds (UTC)</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[9px] text-white/60">Page {roundsPage + 1}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setRoundsPage(p => Math.max(0, p - 1))}
+                    disabled={roundsPage === 0}
+                    className="px-2.5 py-1 rounded-lg border border-white/10 text-white text-[9px] font-bold uppercase tracking-wider disabled:opacity-40"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setRoundsPage(p => p + 1)}
+                    className="px-2.5 py-1 rounded-lg border border-white/10 text-white text-[9px] font-bold uppercase tracking-wider"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[10px] border-collapse">
+                  <thead>
+                    <tr className="text-white border-b border-white/[0.06]">
+                      <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Round</th>
+                      <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Date</th>
+                      <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Ends</th>
+                      <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">Status</th>
+                      <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">GRUNT</th>
+                      <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">ELITE</th>
+                      <th className="text-center py-2 pr-3 font-bold uppercase tracking-wider">WHALE</th>
+                      <th className="text-right py-2 font-bold uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentRounds.map(r => {
+                      const key = `${r.roundNum}:${r.dateStr}`;
+                      const finals = finalByRound.get(key) ?? [];
+                      const byTier = new Map<string, FinalizationRow>();
+                      for (const f of finals) byTier.set(f.raid_tier, f);
+                      const ended = r.end.getTime() <= nowUtc.getTime();
+                      const finalizedCount = finals.length;
+                      const refundedCount = finals.filter(f => f.refunded).length;
+                      const status = !ended ? 'ACTIVE' : finalizedCount === 0 ? 'OPEN' : finalizedCount < TIERS.length ? 'PARTIAL' : refundedCount === TIERS.length ? 'REFUNDED' : 'FINALIZED';
+                      const canFinalize = ended && finalizedCount < TIERS.length;
+                      const renderTier = (tier: string) => {
+                        const f = byTier.get(tier);
+                        if (!f) return <span className="text-white/40">—</span>;
+                        return f.refunded
+                          ? <span className="text-[#14F195] font-bold">REFUND</span>
+                          : <span className="text-white font-bold">OK</span>;
+                      };
+                      return (
+                        <tr key={key} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                          <td className="py-1.5 pr-3 font-bold text-[#9945FF]">R{r.roundNum}</td>
+                          <td className="py-1.5 pr-3 text-white">{r.dateStr}</td>
+                          <td className="py-1.5 pr-3 text-white">{r.end.toISOString().slice(11, 16)} UTC</td>
+                          <td className="py-1.5 pr-3 text-center">
+                            <span className={`font-bold ${status === 'ACTIVE' ? 'text-white' : status === 'OPEN' ? 'text-orange-400' : status === 'REFUNDED' ? 'text-[#14F195]' : 'text-white'}`}>
+                              {status}
+                            </span>
+                          </td>
+                          <td className="py-1.5 pr-3 text-center">{renderTier('GRUNT')}</td>
+                          <td className="py-1.5 pr-3 text-center">{renderTier('ELITE')}</td>
+                          <td className="py-1.5 pr-3 text-center">{renderTier('WHALE')}</td>
+                          <td className="py-1.5 text-right">
+                            {canFinalize ? (
+                              <button
+                                onClick={() => handleFinalizeRound(r.roundNum, r.dateStr)}
+                                disabled={finalizing}
+                                className="px-3 py-1.5 rounded-lg bg-[#9945FF]/80 text-white font-black text-[9px] uppercase tracking-wider disabled:opacity-50 active:scale-95 transition-all"
+                              >
+                                Finalize
+                              </button>
+                            ) : (
+                              <span className="text-white/40">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="overflow-x-auto">

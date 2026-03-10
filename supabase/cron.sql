@@ -5,8 +5,10 @@
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
+drop function if exists public.finalize_round_cron_call();
+
 create or replace function public.finalize_round_cron_call()
-returns void
+returns bigint
 language sql
 as $$
   select net.http_post(
@@ -15,9 +17,11 @@ as $$
       'round_number', (floor(extract(hour from (now() at time zone 'UTC' - interval '1 minute')) / 6) + 1)::int,
       'round_date', to_char((now() at time zone 'UTC' - interval '1 minute'), 'YYYY-MM-DD')
     ),
+    null,
     jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaW95aHR5ZmVrZmRtbWJscmR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTM2OTI3OCwiZXhwIjoyMDg2OTQ1Mjc4fQ.Yyla7-m9Q7s-k72JuJ_Im2pz5s2Y0M78zzsDIj74rk4'
+      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaW95aHR5ZmVrZmRtbWJscmR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTM2OTI3OCwiZXhwIjoyMDg2OTQ1Mjc4fQ.Yyla7-m9Q7s-k72JuJ_Im2pz5s2Y0M78zzsDIj74rk4',
+      'apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaW95aHR5ZmVrZmRtbWJscmR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTM2OTI3OCwiZXhwIjoyMDg2OTQ1Mjc4fQ.Yyla7-m9Q7s-k72JuJ_Im2pz5s2Y0M78zzsDIj74rk4'
     )
   );
 $$;
