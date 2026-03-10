@@ -193,6 +193,13 @@ Deno.serve(async (req: Request) => {
 
         if (!refundFinalizeErr) {
           // Credit each participant's entry fees back to unclaimed_sol
+          const refundLogRows: Array<{
+            round_number: number;
+            round_date: string;
+            raid_tier: string;
+            wallet_address: string;
+            amount_sol: number;
+          }> = [];
           for (const [wallet, feeTotal] of feesByWallet.entries()) {
             const { data: p } = await supabaseAdmin
               .from('profiles')
@@ -204,6 +211,21 @@ Deno.serve(async (req: Request) => {
                 .from('profiles')
                 .update({ unclaimed_sol: Number(p.unclaimed_sol) + feeTotal, updated_at: new Date().toISOString() })
                 .eq('wallet_address', wallet);
+              refundLogRows.push({
+                round_number,
+                round_date,
+                raid_tier: tier,
+                wallet_address: wallet,
+                amount_sol: feeTotal,
+              });
+            }
+          }
+          if (refundLogRows.length > 0) {
+            const { error: logErr } = await supabaseAdmin
+              .from('round_refund_logs')
+              .upsert(refundLogRows, { onConflict: 'round_number,round_date,raid_tier,wallet_address' });
+            if (logErr) {
+              throw new Error(`Refund log insert failed for tier ${tier}: ${logErr.message}`);
             }
           }
           console.log(`[finalize-round] Refunded ${uniqueEntrants} wallet(s) for tier ${tier}, total: ${totalFees.toFixed(4)} SOL`);

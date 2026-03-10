@@ -15,6 +15,15 @@ interface UserRow   { wallet_address: string; username: string; sr_points: numbe
 interface ClaimRow  { id: string; wallet_address: string; action_type: string; reward_sr: number; twitter_handle: string | null; created_at: string; }
 interface WinnerRow      { id: string; round_number: number; round_date: string; raid_tier?: string; rank: number; wallet_address: string; prize_sol: number; claimed: boolean; }
 interface FinalizationRow { round_number: number; round_date: string; raid_tier: string; refunded: boolean; pool_sol: number; }
+interface RefundLogRow {
+  id: string;
+  round_number: number;
+  round_date: string;
+  raid_tier: string;
+  wallet_address: string;
+  amount_sol: number;
+  created_at: string;
+}
 interface SuggestionRow  { id: number; wallet_address: string | null; category: string; suggestion_text: string; created_at: string; }
 interface PushSubRow    { endpoint: string; wallet_address: string | null; created_at: string; }
 
@@ -154,6 +163,12 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [claims, setClaims]       = useState<ClaimRow[]>([]);
   const [winners, setWinners]     = useState<WinnerRow[]>([]);
   const [finalizations, setFinalizations] = useState<FinalizationRow[]>([]);
+  const [refundLogs, setRefundLogs] = useState<RefundLogRow[]>([]);
+  const [refundLogsLoading, setRefundLogsLoading] = useState(false);
+  const [refundFilterRound, setRefundFilterRound] = useState('');
+  const [refundFilterDate, setRefundFilterDate] = useState('');
+  const [refundFilterTier, setRefundFilterTier] = useState<'ALL' | 'GRUNT' | 'ELITE' | 'WHALE'>('ALL');
+  const [refundFilterWallet, setRefundFilterWallet] = useState('');
   const [suggestions, setSuggestions] = useState<SuggestionRow[]>([]);
   const [loading, setLoading]     = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -317,6 +332,25 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     }
   }, []);
 
+  const loadRefundLogs = useCallback(async () => {
+    setRefundLogsLoading(true);
+    try {
+      let q = supabase
+        .from('round_refund_logs')
+        .select('id, round_number, round_date, raid_tier, wallet_address, amount_sol, created_at')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (refundFilterRound.trim()) q = q.eq('round_number', Number(refundFilterRound));
+      if (refundFilterDate.trim()) q = q.eq('round_date', refundFilterDate.trim());
+      if (refundFilterTier !== 'ALL') q = q.eq('raid_tier', refundFilterTier);
+      if (refundFilterWallet.trim()) q = q.ilike('wallet_address', `${refundFilterWallet.trim()}%`);
+      const { data } = await q;
+      setRefundLogs((data ?? []) as RefundLogRow[]);
+    } finally {
+      setRefundLogsLoading(false);
+    }
+  }, [refundFilterRound, refundFilterDate, refundFilterTier, refundFilterWallet]);
+
   const loadPushSubs = useCallback(async () => {
     setPushSubsLoading(true);
     try {
@@ -332,7 +366,8 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     if (tab === 'STATS') loadStats();
     else if (tab === 'PUSH') loadPushSubs();
     else load(tab);
-  }, [tab, load, loadStats, loadPushSubs]);
+    if (tab === 'ROUNDS') loadRefundLogs();
+  }, [tab, load, loadStats, loadPushSubs, loadRefundLogs]);
 
   const formatFinalizeResult = (data: { results?: Record<string, { refunded?: boolean; already_finalized?: boolean }> }) => {
     const results = data?.results ?? {};
@@ -1084,6 +1119,84 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[9px] text-white uppercase tracking-widest font-bold">Refund Logs</p>
+                <button onClick={loadRefundLogs}
+                  className="text-[9px] text-white hover:text-white font-bold uppercase tracking-wider transition-colors">
+                  <i className="fa-solid fa-rotate-right text-[9px]" /> Refresh
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">
+                <input
+                  type="number"
+                  min={1}
+                  max={4}
+                  placeholder="Round #"
+                  value={refundFilterRound}
+                  onChange={e => setRefundFilterRound(e.target.value)}
+                  className="bg-[var(--modal-bg)] border border-white/10 px-2 py-1.5 text-[10px] text-white uppercase tracking-wider"
+                />
+                <input
+                  type="date"
+                  value={refundFilterDate}
+                  onChange={e => setRefundFilterDate(e.target.value)}
+                  className="bg-[var(--modal-bg)] border border-white/10 px-2 py-1.5 text-[10px] text-white uppercase tracking-wider"
+                />
+                <select
+                  value={refundFilterTier}
+                  onChange={e => setRefundFilterTier(e.target.value as any)}
+                  className="bg-[var(--modal-bg)] border border-white/10 px-2 py-1.5 text-[10px] text-white uppercase tracking-wider"
+                >
+                  <option value="ALL">All tiers</option>
+                  <option value="GRUNT">GRUNT</option>
+                  <option value="ELITE">ELITE</option>
+                  <option value="WHALE">WHALE</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Wallet prefix"
+                  value={refundFilterWallet}
+                  onChange={e => setRefundFilterWallet(e.target.value)}
+                  className="bg-[var(--modal-bg)] border border-white/10 px-2 py-1.5 text-[10px] text-white uppercase tracking-wider"
+                />
+              </div>
+              {refundLogsLoading ? (
+                <p className="text-white text-xs animate-pulse py-6 text-center">Loading...</p>
+              ) : refundLogs.length === 0 ? (
+                <p className="text-white text-xs py-6 text-center">No refund logs yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[10px] border-collapse">
+                    <thead>
+                      <tr className="text-white border-b border-white/[0.06]">
+                        <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Round</th>
+                        <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Date</th>
+                        <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Tier</th>
+                        <th className="text-left py-2 pr-3 font-bold uppercase tracking-wider">Wallet</th>
+                        <th className="text-right py-2 pr-3 font-bold uppercase tracking-wider">Amount</th>
+                        <th className="text-right py-2 font-bold uppercase tracking-wider">When</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {refundLogs.map((r) => (
+                        <tr key={r.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                          <td className="py-1.5 pr-3 font-bold text-[#9945FF]">R{r.round_number}</td>
+                          <td className="py-1.5 pr-3 text-white">{r.round_date}</td>
+                          <td className="py-1.5 pr-3 text-white">{r.raid_tier}</td>
+                          <WalletCell address={r.wallet_address} />
+                          <td className="py-1.5 pr-3 text-right font-bold text-[#FFB800]">{Number(r.amount_sol).toFixed(4)} SOL</td>
+                          <td className="py-1.5 text-right text-white/70">
+                            {new Date(r.created_at).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}
