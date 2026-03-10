@@ -39,7 +39,7 @@ export function useRoundEntries(walletAddress: string | null) {
         .limit(50),
       supabase
         .from('round_winners')
-        .select('id, round_number, round_date, rank, pool_sol, sol_allocation, claimed, claimed_at')
+        .select('id, round_number, round_date, raid_tier, rank, pool_sol, sol_allocation, claimed, claimed_at')
         .eq('wallet_address', walletAddress)
         .limit(50),
     ]);
@@ -50,32 +50,68 @@ export function useRoundEntries(walletAddress: string | null) {
     if (entriesRes.error) console.error('[useRoundEntries] entries error:', entriesRes.error.message);
     if (winsRes.error) console.error('[useRoundEntries] wins error:', winsRes.error.message);
 
-    // round_winners keyed by "roundNum:roundDate" (no tier — winners table has no tier column)
+    const rawRounds = rawEntries.map(e => ({
+      round_number: e.round_number,
+      round_date: e.round_date,
+      raid_tier: e.raid_tier ?? 'GRUNT',
+    }));
+
+    // Fetch finalizations for any rounds the wallet entered to detect refunds.
+    // Supabase doesn't support composite IN, so we IN each field (may overfetch).
+    const roundNums = [...new Set(rawRounds.map(r => r.round_number))];
+    const roundDates = [...new Set(rawRounds.map(r => r.round_date))];
+    const tiers = [...new Set(rawRounds.map(r => r.raid_tier))];
+
+    let finalizations: Array<{ round_number: number; round_date: string; raid_tier: string; refunded: boolean }> = [];
+    if (roundNums.length && roundDates.length && tiers.length) {
+      const { data: finalsRes, error: finalsErr } = await supabase
+        .from('round_finalizations')
+        .select('round_number, round_date, raid_tier, refunded')
+        .in('round_number', roundNums)
+        .in('round_date', roundDates)
+        .in('raid_tier', tiers)
+        .limit(200);
+      if (finalsErr) console.error('[useRoundEntries] finalizations error:', finalsErr.message);
+      finalizations = finalsRes ?? [];
+    }
+
+    // round_winners keyed by "roundNum:roundDate:raidTier"
     const winMap = new Map<string, typeof rawWins[0]>();
     for (const w of rawWins) {
-      winMap.set(`${w.round_number}:${w.round_date}`, w);
+      const tier = (w.raid_tier ?? 'GRUNT') as string;
+      winMap.set(`${w.round_number}:${w.round_date}:${tier}`, w);
+    }
+
+    // round_finalizations keyed by "roundNum:roundDate:raidTier"
+    const finalMap = new Map<string, typeof finalizations[0]>();
+    for (const f of finalizations) {
+      finalMap.set(`${f.round_number}:${f.round_date}:${f.raid_tier}`, f);
     }
 
     const result: RoundEntry[] = rawEntries.map(e => {
-      const winKey = `${e.round_number}:${e.round_date}`;
+      const tier = e.raid_tier ?? 'GRUNT';
+      const winKey = `${e.round_number}:${e.round_date}:${tier}`;
       const win = winMap.get(winKey);
+      const fin = finalMap.get(winKey);
       const entryKey = `${e.round_number}:${e.round_date}:${e.raid_tier}`;
 
       let status: RoundEntryStatus = 'PENDING';
       if (win) status = win.rank === 0 ? 'REFUND' : 'WIN';
+      else if (fin?.refunded) status = 'REFUND';
 
       return {
         key: entryKey,
         roundNum: e.round_number,
         roundDate: e.round_date,
-        raidTier: e.raid_tier ?? 'GRUNT',
+        raidTier: tier,
         points: Number(e.best_points ?? 0),
         entryCount: Number(e.entry_count ?? 1),
         winnerId: win?.id ?? null,
         rank: win ? win.rank : null,
         poolSol: win ? Number(win.pool_sol) : null,
         solAllocation: win ? Number(win.sol_allocation) : null,
-        claimed: win?.claimed ?? false,
+        // Refunds are credited directly in finalize-round; treat as claimed.
+        claimed: win?.claimed ?? (fin?.refunded ?? false),
         claimedAt: win?.claimed_at ?? null,
         status,
       };
