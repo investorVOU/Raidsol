@@ -65,10 +65,10 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
   }, [addr, connection]);
 
   const explorerUrl = addr
-    ? `https://explorer.solana.com/address/${addr}?cluster=devnet`
-    : 'https://explorer.solana.com?cluster=devnet';
+    ? `https://explorer.solana.com/address/${addr}`
+    : 'https://explorer.solana.com';
   const solscanUrl = addr
-    ? `https://solscan.io/account/${addr}?cluster=devnet`
+    ? `https://solscan.io/account/${addr}`
     : 'https://solscan.io';
   const displayAddr = addr
     ? `${addr.slice(0, 6)}...${addr.slice(-6)}`
@@ -115,7 +115,7 @@ const TreasuryScreen: React.FC<TreasuryScreenProps> = ({ onBack }) => {
                 live · on-chain
               </span>
             </div>
-            <p className="text-[10px] text-white mt-1">devnet</p>
+            <p className="text-[10px] text-white mt-1">mainnet</p>
           </div>
 
           <div className="bg-[#0c0c20] border-2 border-white/10 p-8 tech-border">

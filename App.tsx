@@ -1637,7 +1637,7 @@ const AppInner: React.FC = () => {
     useInsurance: boolean = false,
   ) => {
     const INSURANCE_FEE = 0.01; // SOL extra
-    // All SOLO raids are round-based — points ranked 1-5, 90% of pot distributed after round ends
+    // All SOLO raids are round-based — points ranked 1-5, 100% of pot distributed after round ends
     const effectiveIsRoundEntry = mode === Mode.SOLO ? true : (isRoundEntry || !!currentRound);
     // For round entries, override fee with tier's entry fee (unless customFeeOverride explicitly set)
     const effectiveTierFee = effectiveIsRoundEntry && customFeeOverride === undefined
@@ -2394,6 +2394,7 @@ const AppInner: React.FC = () => {
         <RaidLoadingScreen
           mode={gameState.currentScreen === Screen.MULTIPLAYER_GAME ? 'PVP' : 'SOLO'}
           onComplete={() => setGameState(prev => ({ ...prev, isRaidLoading: false }))}
+          serverSeedHash={gameState.activeServerSeedHash ?? null}
         />
       )}
     </div>

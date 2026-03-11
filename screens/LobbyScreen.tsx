@@ -313,7 +313,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>4</p>
                 </div>
                 <div className="flex-1 text-center">
-                  <p className="text-[8px] text-white uppercase tracking-wider mb-0.5" style={INTER}>Prize pool</p>
+                  <p className="text-[8px] text-white uppercase tracking-wider mb-0.5" style={INTER}>Pool share</p>
                   <p className="text-[11px] font-black tabular-nums text-white" style={SG_NUM}>100%</p>
                 </div>
                 <div className="flex-1 text-center">
@@ -491,15 +491,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 },
                 {
                   q: 'How do Raid Rounds work?',
-                  a: '4 rounds per day (UTC), 6 hours each. Entry fees: GRUNT = 0.026 SOL · ELITE = 0.05 SOL · WHALE = 0.25 SOL. You can raid as many times as you like — only your best score for that round is used. The top 5 wallets by score split the full prize pool when the round closes.',
+                  a: '4 rounds per day (UTC), 6 hours each. Entry fees: GRUNT = 0.026 SOL · ELITE = 0.05 SOL · WHALE = 0.25 SOL. You can raid as many times as you like — only your best score for that round is used. The top 5 wallets by score split the prize pool by tier when the round closes.',
                 },
                 {
                   q: 'How is the prize pool built?',
-                  a: '90% of each unique wallet\'s first entry fee in a round goes into the prize pool. Re-entries don\'t add to the pool — you pay to improve your score, not to inflate the pot.',
+                  a: '100% of every entry fee goes into the prize pool.',
                 },
                 {
                   q: 'How does the prize split work?',
-                  a: 'Top 5 wallets split the pool: 1st gets 40%, 2nd 25%, 3rd 18%, 4th 11%, 5th 6%. Allocations go straight to your unclaimed SOL balance the moment the round is finalized.',
+                  a: 'Top 5 wallets split the pool by tier. See the tier table for exact percentages. Allocations go straight to your unclaimed SOL balance the moment the round is finalized.',
                 },
                 {
                   q: 'Where do I see if I won?',
@@ -515,7 +515,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 },
                 {
                   q: 'Is it provably fair?',
-                  a: 'Yes. A SHA-256 server seed is committed before each raid and revealed after. You can verify the RNG outcome yourself. Full seed history is visible in your Profile.',
+                  a: 'Yes. A SHA-256 server seed hash is shown before the raid starts and the full seed is revealed after. You can verify the RNG outcome yourself. Full seed history is visible in your Profile.',
                 },
                 {
                   q: 'What is the house edge?',
@@ -588,7 +588,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 {[
                   { text: 'Pay the entry fee to join this round\'s prize pool', accent: false },
                   { text: 'Raid as many times as you like — only your best score counts', accent: false },
-                  { text: 'Top 5 wallets by score split the pool when the round closes', accent: false },
+                  { text: 'Top 5 wallets by score split the pool by tier when the round closes', accent: false },
                   { text: `Prize split — ${RAID_TIER_ALLOCATION[roundTier].map((a, i) => `${['1st','2nd','3rd','4th','5th'][i]}: ${Math.round(a*100)}%`).join(' · ')}`, accent: false },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
@@ -840,3 +840,5 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 };
 
 export default LobbyScreen;
+
+

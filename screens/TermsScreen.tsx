@@ -34,10 +34,10 @@ const TermsScreen: React.FC<TermsScreenProps> = ({ onBack }) => {
         <section>
           <div className="flex items-center gap-4 mb-4">
              <div className="px-4 py-1.5 bg-purple-500/10 border border-purple-500/20 text-xs font-black text-purple-400 uppercase italic">_01</div>
-             <h3 className="text-sm font-black uppercase tracking-widest text-white">NO_REFUNDS</h3>
+             <h3 className="text-sm font-black uppercase tracking-widest text-white">REFUNDS_POLICY</h3>
           </div>
           <p className="text-sm text-white leading-relaxed italic font-medium">
-            The entry fee is used to initialize the protocol connection on the blockchain. Once the transaction is signed and broadcast, there are no reversals or refunds, even if your connection fails.
+            Entry transactions are final once signed and broadcast. However, if a round is cancelled due to insufficient unique entrants, all entry fees for that round are refunded in full to the player's unclaimed balance.
           </p>
         </section>
 

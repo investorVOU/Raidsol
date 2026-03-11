@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 interface RaidLoadingScreenProps {
   onComplete: () => void;
   mode?: 'SOLO' | 'PVP';
+  serverSeedHash?: string | null;
 }
 
 const SOLO_STATUSES = [
@@ -26,7 +27,7 @@ const PVP_STATUSES = [
 const DURATION_MS = 2500;
 const TICK_MS = 50;
 
-const RaidLoadingScreen: React.FC<RaidLoadingScreenProps> = ({ onComplete, mode = 'SOLO' }) => {
+const RaidLoadingScreen: React.FC<RaidLoadingScreenProps> = ({ onComplete, mode = 'SOLO', serverSeedHash = null }) => {
   const [progress, setProgress] = useState(0);
   const statuses = mode === 'PVP' ? PVP_STATUSES : SOLO_STATUSES;
   const statusIdx = Math.min(
@@ -98,6 +99,18 @@ const RaidLoadingScreen: React.FC<RaidLoadingScreenProps> = ({ onComplete, mode 
             <span className="text-white animate-pulse">{statuses[statusIdx]}</span>
           </div>
         </div>
+
+        {/* Pre-raid seed hash */}
+        {mode === 'SOLO' && (
+          <div className="w-full border border-white/10 bg-black/40 px-3 py-2">
+            <p className="text-[8px] font-black uppercase tracking-[0.3em] text-white/60">
+              SERVER SEED HASH (PRE-RAID)
+            </p>
+            <p className="mono text-[9px] text-white truncate">
+              {serverSeedHash ?? 'FETCHING...'}
+            </p>
+          </div>
+        )}
 
         {/* Hex grid decoration */}
         <div className="flex gap-1.5 flex-wrap justify-center opacity-20">

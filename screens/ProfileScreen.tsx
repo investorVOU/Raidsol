@@ -142,7 +142,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   };
 
   const solscanTx = (sig: string | null) =>
-    sig ? `https://solscan.io/tx/${sig}?cluster=devnet` : '#';
+    sig ? `https://solscan.io/tx/${sig}` : '#';
 
   // Domain name is resolved in App.tsx (once) and passed as prop
   const domain = domainName ?? null;

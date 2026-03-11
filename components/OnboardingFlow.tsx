@@ -9,7 +9,7 @@ const SLIDES = [
     num: '01',
     tag: 'BRIEFING_01',
     title: 'WHAT IS A RAID?',
-    body: 'Every raid is a round-based competition. Pay an entry fee, score points, and your best result for the round competes on the leaderboard. The top 5 wallets split the entire prize pool when the round closes.',
+    body: 'Every raid is a round-based competition. Pay an entry fee, score points, and your best result for the round competes on the leaderboard. The top 5 wallets split the prize pool based on the selected tier when the round closes.',
   },
   {
     num: '02',
@@ -21,7 +21,7 @@ const SLIDES = [
     num: '03',
     tag: 'BRIEFING_03',
     title: 'PRIZE POOL SPLIT',
-    body: '100% of entry fees go into the prize pool. Top 5 split it: 1st 40% · 2nd 28% · 3rd 18% · 4th 10% · 5th 4%. Rounds run 4× daily. Claim from Profile → Round Wins after each round closes.',
+    body: '100% of entry fees go into the prize pool. Top 5 splits vary by tier. Rounds run 4x daily. Claim from Profile -> Round Wins after each round closes.',
   },
   {
     num: '04',
@@ -150,3 +150,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 };
 
 export default OnboardingFlow;
+
+
+

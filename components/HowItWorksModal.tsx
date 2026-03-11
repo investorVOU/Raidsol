@@ -76,7 +76,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               <div className="p-4 border border-white/10 bg-white/[0.03]">
                 <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-2" style={INTER}>What is a Raid?</h3>
                 <p className="text-[11px] text-white leading-relaxed">
-                  Every raid is a <span className="text-white">round-based competition</span>. Pay an entry fee, score as many points as possible, then extract before your risk hits 100%. Your best score in the 6-hour round window competes on the leaderboard. The <span className="text-[#FFB800]">top 5 wallets split the entire prize pool</span> when the round closes.
+                  Every raid is a <span className="text-white">round-based competition</span>. Pay an entry fee, score as many points as possible, then extract before your risk hits 100%. Your best score in the 6-hour round window competes on the leaderboard. The <span className="text-[#FFB800]">top 5 wallets split the prize pool by tier</span> when the round closes.
                 </p>
               </div>
 
@@ -298,7 +298,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               <div className="p-4 border border-[#FFB800]/30 bg-[#FFB800]/5">
                 <h3 className="text-base font-black text-[#FFB800] uppercase mb-2" style={BN}>100% goes to the pool</h3>
                 <p className="text-[11px] text-white leading-relaxed" style={INTER}>
-                  Every entry fee paid into a round goes directly into the prize pool — no platform cut taken upfront. Your best score across all your raids in the 6-hour window is your submission. <span className="text-white">Top 5 wallets</span> split the pool when the round closes.
+                  Every entry fee paid into a round goes directly into the prize pool. Your best score across all your raids in the 6-hour window is your submission. <span className="text-white">Top 5 wallets</span> split the pool by tier when the round closes.
                 </p>
               </div>
 
@@ -378,7 +378,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
               <div className="p-4 border border-white/10 bg-white/[0.03]">
                 <h3 className="text-xs font-bold text-white uppercase tracking-wide mb-1.5" style={INTER}>Provably fair RNG</h3>
                 <p className="text-[11px] text-white leading-relaxed" style={INTER}>
-                  Before every raid a server seed is committed as a SHA-256 hash shown to you pre-entry. After the raid the full seed is revealed. You can verify on-chain that the RNG was fixed before play and never altered.
+                  Before every raid a server seed hash is shown before the raid starts (loading screen). After the raid the full seed is revealed so you can verify the RNG outcome yourself.
                 </p>
               </div>
 
@@ -478,3 +478,6 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
 };
 
 export default HowItWorksModal;
+
+
+

@@ -560,7 +560,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ result, entryFee, raidEvent
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-bold text-white uppercase tracking-wide">TX sig</span>
                 <a
-                  href={`https://solscan.io/tx/${result.txSignature}?cluster=devnet`}
+                  href={`https://solscan.io/tx/${result.txSignature}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mono text-xs text-cyan-400 underline hover:text-cyan-300 truncate w-32 text-right"
