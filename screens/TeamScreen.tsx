@@ -10,6 +10,7 @@ interface TeamScreenProps {
   walletBalance?: number;
   usdcBalance?: number;
   skrBalance?: number;
+  raidBalance?: number;
   currencyRates?: LivePrices['currencyRates'];
 }
 
@@ -29,6 +30,7 @@ const CURRENCY_META: Record<Currency, { label: string; color: string; decimals: 
   [Currency.SOL]:  { label: 'SOL',  color: 'border-[#14F195] text-[#14F195]', decimals: 3 },
   [Currency.USDC]: { label: 'USDC', color: 'border-blue-400 text-blue-400',   decimals: 2 },
   [Currency.SKR]:  { label: 'SKR',  color: 'border-orange-400 text-orange-400', decimals: 0 },
+  [Currency.RAID]: { label: 'RAID', color: 'border-[#00E5FF] text-[#00E5FF]',  decimals: 0 },
 };
 
 const TeamScreen: React.FC<TeamScreenProps> = ({
@@ -38,9 +40,10 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
   walletBalance = 0,
   usdcBalance = 0,
   skrBalance = 0,
+  raidBalance = 0,
   currencyRates,
 }) => {
-  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
+  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0, [Currency.RAID]: 0 };
   const [selectedRole, setSelectedRole] = useState<Role>('Breacher');
   const [currency, setCurrency] = useState<Currency>(Currency.SOL);
 
@@ -54,6 +57,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     [Currency.SOL]:  walletBalance,
     [Currency.USDC]: usdcBalance,
     [Currency.SKR]:  skrBalance,
+    [Currency.RAID]: raidBalance,
   };
 
   const fee = SQUAD_FEE_SOL * rates[currency];
@@ -203,7 +207,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
         <div>
           <p className="text-[9px] text-white uppercase tracking-wide mb-1.5">Pay with</p>
           <div className="grid grid-cols-3 gap-1.5">
-            {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
+            {([Currency.SOL, Currency.SKR, Currency.RAID] as Currency[]).map(c => {
               const m = CURRENCY_META[c];
               const bal = balances[c];
               const f = SQUAD_FEE_SOL * rates[c];
@@ -219,7 +223,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 >
                   <p className="text-[10px] font-bold uppercase">{m.label}</p>
                   <p className={`text-[9px] mono mt-0.5 ${ok ? 'text-white' : 'text-[#9945FF]/60'}`}>
-                    {bal.toFixed(c === Currency.SKR ? 0 : 2)}
+                    {bal.toFixed(c === Currency.SOL ? 2 : 0)}
                   </p>
                 </button>
               );

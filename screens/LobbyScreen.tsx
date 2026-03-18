@@ -24,6 +24,7 @@ interface LobbyScreenProps {
   walletBalance: number;
   usdcBalance: number;
   skrBalance: number;
+  raidBalance: number;
   equippedGearIds: string[];
   equippedAvatarId?: string;
   ownedItemIds: string[];
@@ -59,7 +60,7 @@ const DIFF_CONFIG = {
 
 const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onEnterRaid, isConnected, onConnect, currentLevel,
-  walletBalance, usdcBalance, skrBalance,
+  walletBalance, usdcBalance, skrBalance, raidBalance,
   equippedGearIds, equippedAvatarId, ownedItemIds,
   onToggleGear, onNavigateTreasury, onNavigateStore, onNavigateBounty, onNavigateRoast, onNavigateBriefing, onEnterRound, onRequestFullscreen, onOpenSuggestions,
   raidTickets = 0, lastFreeRaidDate = null,
@@ -70,7 +71,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 }) => {
   const { t } = useTranslation();
   const { isDark } = useTheme();
-  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
+  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0, [Currency.RAID]: 0 };
 
   // Round raid modal
   const [showRoundModal, setShowRoundModal]     = useState(false);
@@ -121,9 +122,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const roundRate          = rates[roundCurrency];
   const roundPricesLoading = roundCurrency !== Currency.SOL && roundRate === 0;
   const roundTotalDisplay  = roundTotalSol * roundRate;
-  const roundCurSymbol     = roundCurrency === Currency.SOL ? 'SOL' : roundCurrency === Currency.USDC ? 'USDC' : 'SKR';
-  const roundCurDecimals   = roundCurrency === Currency.SOL ? 3 : roundCurrency === Currency.USDC ? 2 : 0;
-  const roundBalance       = roundCurrency === Currency.SOL ? walletBalance : roundCurrency === Currency.USDC ? usdcBalance : skrBalance;
+  const roundCurSymbol     = roundCurrency === Currency.SOL ? 'SOL' : roundCurrency === Currency.SKR ? 'SKR' : 'RAID';
+  const roundCurDecimals   = roundCurrency === Currency.SOL ? 3 : 0;
+  const roundBalance       = roundCurrency === Currency.SOL ? walletBalance : roundCurrency === Currency.SKR ? skrBalance : raidBalance;
 
   // Gear stats
   const equippedGear   = GEAR_ITEMS.filter(g => equippedGearIds.includes(g.id));
@@ -757,18 +758,18 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="shrink-0 border-t border-white/5 p-4 bg-[var(--modal-bg)] rounded-b-3xl sm:rounded-b-2xl space-y-3">
               {/* Currency */}
               <div className="grid grid-cols-3 gap-2">
-                {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
-                  const bal = c === Currency.SOL ? walletBalance : c === Currency.USDC ? usdcBalance : skrBalance;
-                  const sym = c === Currency.SOL ? 'SOL' : c === Currency.USDC ? 'USDC' : 'SKR';
+                {([Currency.SOL, Currency.SKR, Currency.RAID] as Currency[]).map(c => {
+                  const bal = c === Currency.SOL ? walletBalance : c === Currency.SKR ? skrBalance : raidBalance;
+                  const sym = c === Currency.SOL ? 'SOL' : c === Currency.SKR ? 'SKR' : 'RAID';
                   const colActive = c === Currency.SOL ? 'border-white/40 bg-white/8 text-white'
-                    : c === Currency.USDC ? 'border-blue-400/45 bg-blue-400/8 text-blue-400'
-                    : 'border-orange-400/45 bg-orange-400/8 text-orange-400';
+                    : c === Currency.SKR ? 'border-orange-400/45 bg-orange-400/8 text-orange-400'
+                    : 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]';
                   const active = roundCurrency === c;
                   return (
                     <button key={c} onClick={() => setRoundCurrency(c)}
                       className={`py-2.5 rounded-xl border-2 transition-all text-center ${active ? colActive : 'border-white/7 text-white bg-white/3 hover:border-white/18'}`}>
                       <p className="text-[10px] font-semibold">{sym}</p>
-                      <p className="text-[9px] text-white mt-0.5">{bal.toFixed(c === Currency.SKR ? 0 : 2)}</p>
+                      <p className="text-[9px] text-white mt-0.5">{bal.toFixed(c === Currency.SOL ? 2 : 0)}</p>
                     </button>
                   );
                 })}
@@ -813,7 +814,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   <p className="text-xl font-bold text-white leading-none">
                     {roundPricesLoading
                       ? <span className="text-white text-sm animate-pulse">{t('common.loading')}</span>
-                      : <>{roundTotalDisplay.toFixed(roundCurDecimals)}<span className={`text-sm ml-1 font-semibold ${roundCurrency === Currency.SOL ? 'text-white' : roundCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400'}`}>{roundCurSymbol}</span></>
+                      : <>{roundTotalDisplay.toFixed(roundCurDecimals)}<span className={`text-sm ml-1 font-semibold ${roundCurrency === Currency.SOL ? 'text-white' : roundCurrency === Currency.SKR ? 'text-orange-400' : 'text-[#00E5FF]'}`}>{roundCurSymbol}</span></>
                     }
                   </p>
                   {applyRoundTicket && <p className="text-[9px] text-amber-400 font-semibold mt-0.5">{t('lobby.ticketApplied')}</p>}

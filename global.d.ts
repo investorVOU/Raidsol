@@ -7,3 +7,12 @@ declare module 'react/jsx-runtime' {
     interface IntrinsicElements extends ThreeElements {}
   }
 }
+
+declare global {
+  interface Window {
+    Jupiter?: {
+      init: (config: any) => void;
+    };
+    __jupSwapInited?: boolean;
+  }
+}

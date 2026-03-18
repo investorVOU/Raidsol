@@ -152,8 +152,8 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { token: 'SOL',  color: 'text-[#FFB800]', desc: 'Native Solana' },
-                    { token: 'USDC', color: 'text-blue-400',  desc: 'USD Stablecoin' },
-                    { token: 'SKR',  color: 'text-[#FFB800]', desc: 'Seeker Token' },
+                  { token: 'SKR',  color: 'text-[#FFB800]', desc: 'Seeker Token' },
+                  { token: 'RAID', color: 'text-[#00E5FF]', desc: '$RAID Token' },
                   ].map(c => (
                     <div key={c.token} className="text-center p-2.5 border border-white/10">
                       <span className={`text-sm font-black block ${c.color}`} style={BN}>{c.token}</span>
@@ -250,7 +250,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose, onNa
                   {
                     n: '01',
                     title: 'Create a room',
-                    body: 'Host sets the stake amount and currency (SOL, USDC, or SKR). Choose a preset or enter a custom amount. Share your room code or QR link.',
+                    body: 'Host sets the stake amount and currency (SOL, SKR, or RAID). Choose a preset or enter a custom amount. Share your room code or QR link.',
                   },
                   {
                     n: '02',

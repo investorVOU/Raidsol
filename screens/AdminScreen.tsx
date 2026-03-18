@@ -5,7 +5,7 @@ const ADMIN_PWD    = import.meta.env.VITE_ADMIN_PWD ?? '';
 const SESSION_KEY  = '__sr_admin';
 const TREASURY     = import.meta.env.VITE_TREASURY_ADDRESS ?? '';
 const USDC_MINT    = import.meta.env.VITE_USDC_MINT ?? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-const SKR_MINT     = import.meta.env.VITE_SKR_MINT  ?? 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
+const SKR_MINT     = import.meta.env.VITE_SKR_MINT  ?? 'J8sMGxWB5kT8SqgmeTa3TfW6mpmucYK8xpMkmPCbBAGS';
 const RPC_URL      = import.meta.env.VITE_HELIUS_RPC_URL ?? import.meta.env.VITE_SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
 
 type Tab = 'OVERVIEW' | 'STATS' | 'RAIDS' | 'USERS' | 'CLAIMS' | 'ROUNDS' | 'FEEDBACK' | 'PUSH';

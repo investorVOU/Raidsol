@@ -52,7 +52,13 @@ const USDC_MINT = new PublicKey(
 const SKR_MINT = new PublicKey(
   import.meta.env.VITE_SKR_MINT ?? 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3'
 );
-const SKR_DECIMALS = 6;
+const SKR_DECIMALS = Number(import.meta.env.VITE_SKR_DECIMALS ?? 6);
+
+// $RAID token mint (Bags)
+const RAID_MINT = new PublicKey(
+  import.meta.env.VITE_RAID_MINT ?? 'J8sMGxWB5kT8SqgmeTa3TfW6mpmucYK8xpMkmPCbBAGS'
+);
+const RAID_DECIMALS = Number(import.meta.env.VITE_RAID_DECIMALS ?? 6);
 
 
 const AppInner: React.FC = () => {
@@ -100,7 +106,7 @@ const AppInner: React.FC = () => {
     if (window.location.pathname === '/rushtik') {
       return {
         currentScreen: Screen.ADMIN,
-        walletBalance: 0, usdcBalance: 0, skrBalance: 0, unclaimedBalance: 0,
+        walletBalance: 0, usdcBalance: 0, skrBalance: 0, raidBalance: 0, unclaimedBalance: 0,
         srPoints: 0, isConnected: false, username: '', ownedItemIds: [],
         equippedAvatarId: '', equippedGearIds: [], activeRaidFee: ENTRY_FEES[Mode.SOLO],
         activeRaidDifficulty: Difficulty.MEDIUM, activeRaidBoosts: [], activeRaidIsRound: false, activeRaidTier: RaidTier.GRUNT,
@@ -116,6 +122,7 @@ const AppInner: React.FC = () => {
       walletBalance: 0,
       usdcBalance: 0,
       skrBalance: 0,
+      raidBalance: 0,
       unclaimedBalance: 0,
       srPoints: 0,
       isConnected: false,
@@ -249,6 +256,25 @@ const AppInner: React.FC = () => {
       }
     };
     fetchSkrBalance();
+    return () => { mounted = false; };
+  }, [publicKey, connection]);
+
+  // Fetch on-chain $RAID token balance on connect / publicKey change
+  useEffect(() => {
+    let mounted = true;
+    const fetchRaidBalance = async () => {
+      if (!publicKey) return;
+      try {
+        const ata = getAssociatedTokenAddressSync(RAID_MINT, publicKey);
+        const bal = await connection.getTokenAccountBalance(ata);
+        if (!mounted) return;
+        setGameState(prev => ({ ...prev, raidBalance: Number(bal.value.uiAmount ?? 0) }));
+      } catch {
+        // ATA not found = 0 RAID
+        if (mounted) setGameState(prev => ({ ...prev, raidBalance: 0 }));
+      }
+    };
+    fetchRaidBalance();
     return () => { mounted = false; };
   }, [publicKey, connection]);
 
@@ -1101,9 +1127,11 @@ const AppInner: React.FC = () => {
       return false;
     }
 
-    if (currency === Currency.SOL && gameState.walletBalance < price) return false;
-    if (currency === Currency.USDC && gameState.usdcBalance < price) return false;
-    if (currency === Currency.SKR && gameState.skrBalance < price) return false;
+    if (currency === Currency.SOL  && gameState.walletBalance < price) return false;
+    if (currency === Currency.USDC && gameState.usdcBalance   < price) return false;
+    if (currency === Currency.SKR  && gameState.skrBalance    < price) return false;
+    if (currency === Currency.RAID && gameState.raidBalance   < price) return false;
+    if (currency === Currency.RAID && gameState.raidBalance   < price) return false;
 
     try {
       let tx: Transaction;
@@ -1127,13 +1155,22 @@ const AppInner: React.FC = () => {
           createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, USDC_MINT),
           createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(expectedUnits)),
         );
-      } else {
+      } else if (currency === Currency.SKR) {
         // SKR Seeker token SPL transfer
         expectedUnits = Math.round(price * Math.pow(10, SKR_DECIMALS));
         const sourceATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
         const destATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
         tx = new Transaction().add(
           createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, SKR_MINT),
+          createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(expectedUnits)),
+        );
+      } else {
+        // RAID token SPL transfer
+        expectedUnits = Math.round(price * Math.pow(10, RAID_DECIMALS));
+        const sourceATA = getAssociatedTokenAddressSync(RAID_MINT, publicKey!);
+        const destATA = getAssociatedTokenAddressSync(RAID_MINT, TREASURY_PUBKEY);
+        tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, RAID_MINT),
           createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(expectedUnits)),
         );
       }
@@ -1167,6 +1204,7 @@ const AppInner: React.FC = () => {
           walletBalance:    currency === Currency.SOL  ? prev.walletBalance - price : prev.walletBalance,
           usdcBalance:      currency === Currency.USDC ? prev.usdcBalance - price   : prev.usdcBalance,
           skrBalance:       currency === Currency.SKR  ? prev.skrBalance - price    : prev.skrBalance,
+          raidBalance:      currency === Currency.RAID ? prev.raidBalance - price   : prev.raidBalance,
           ownedItemIds:     data.owned_item_ids ?? [...prev.ownedItemIds, itemId],
           srPoints:         data.new_sr_points  ?? prev.srPoints,
           // Auto-equip avatar on purchase
@@ -1227,12 +1265,19 @@ const AppInner: React.FC = () => {
           createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, USDC_MINT),
           createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(Math.round(price * 1_000_000))),
         );
-      } else {
+      } else if (currency === Currency.SKR) {
         const sourceATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
         const destATA   = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
         tx = new Transaction().add(
           createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, SKR_MINT),
           createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(Math.round(price * Math.pow(10, SKR_DECIMALS)))),
+        );
+      } else {
+        const sourceATA = getAssociatedTokenAddressSync(RAID_MINT, publicKey!);
+        const destATA   = getAssociatedTokenAddressSync(RAID_MINT, TREASURY_PUBKEY);
+        tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, destATA, TREASURY_PUBKEY, RAID_MINT),
+          createTransferInstruction(sourceATA, destATA, publicKey!, BigInt(Math.round(price * Math.pow(10, RAID_DECIMALS)))),
         );
       }
 
@@ -1248,6 +1293,7 @@ const AppInner: React.FC = () => {
         walletBalance: currency === Currency.SOL  ? prev.walletBalance - price : prev.walletBalance,
         usdcBalance:   currency === Currency.USDC ? prev.usdcBalance   - price : prev.usdcBalance,
         skrBalance:    currency === Currency.SKR  ? prev.skrBalance    - price : prev.skrBalance,
+        raidBalance:   currency === Currency.RAID ? prev.raidBalance   - price : prev.raidBalance,
       }));
       return true;
     } catch (err: any) {
@@ -1312,6 +1358,7 @@ const AppInner: React.FC = () => {
     if (currency === Currency.SOL  && gameState.walletBalance < stake) { alert(`INSUFFICIENT SOL TO STAKE (need ${stake} SOL)`); return; }
     if (currency === Currency.USDC && gameState.usdcBalance   < stake) { alert(`INSUFFICIENT USDC TO STAKE (need ${stake} USDC)`); return; }
     if (currency === Currency.SKR  && gameState.skrBalance    < stake) { alert(`INSUFFICIENT SKR TO STAKE (need ${stake} SKR)`);  return; }
+    if (currency === Currency.RAID && gameState.raidBalance   < stake) { alert(`INSUFFICIENT RAID TO STAKE (need ${stake} RAID)`); return; }
 
     if (!TREASURY_PUBKEY) {
       alert('Treasury address not configured. Set VITE_TREASURY_ADDRESS in .env');
@@ -1338,12 +1385,20 @@ const AppInner: React.FC = () => {
           createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, USDC_MINT),
           createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
         );
-      } else {
+      } else if (currency === Currency.SKR) {
         const atoms = Math.round(stake * Math.pow(10, SKR_DECIMALS));
         const srcATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
         const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
         tx = new Transaction().add(
           createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, SKR_MINT),
+          createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+        );
+      } else {
+        const atoms = Math.round(stake * Math.pow(10, RAID_DECIMALS));
+        const srcATA = getAssociatedTokenAddressSync(RAID_MINT, publicKey!);
+        const dstATA = getAssociatedTokenAddressSync(RAID_MINT, TREASURY_PUBKEY);
+        tx = new Transaction().add(
+          createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, RAID_MINT),
           createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
         );
       }
@@ -1403,6 +1458,7 @@ const AppInner: React.FC = () => {
       walletBalance: currency === Currency.SOL  ? prev.walletBalance - stake : prev.walletBalance,
       usdcBalance:   currency === Currency.USDC ? prev.usdcBalance   - stake : prev.usdcBalance,
       skrBalance:    currency === Currency.SKR  ? prev.skrBalance    - stake : prev.skrBalance,
+      raidBalance:   currency === Currency.RAID ? prev.raidBalance   - stake : prev.raidBalance,
       activeRoom: newRoom,
       currentScreen: Screen.MULTIPLAYER_SETUP,
     }));
@@ -1501,6 +1557,7 @@ const AppInner: React.FC = () => {
       if (currency === Currency.SOL  && gameState.walletBalance < stake) { alert(`INSUFFICIENT SOL — room requires ${stake} SOL`);   return; }
       if (currency === Currency.USDC && gameState.usdcBalance   < stake) { alert(`INSUFFICIENT USDC — room requires ${stake} USDC`); return; }
       if (currency === Currency.SKR  && gameState.skrBalance    < stake) { alert(`INSUFFICIENT SKR — room requires ${stake} SKR`);   return; }
+      if (currency === Currency.RAID && gameState.raidBalance   < stake) { alert(`INSUFFICIENT RAID — room requires ${stake} RAID`); return; }
 
       if (!TREASURY_PUBKEY) {
         alert('Treasury address not configured. Set VITE_TREASURY_ADDRESS in .env');
@@ -1527,15 +1584,23 @@ const AppInner: React.FC = () => {
             createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, USDC_MINT),
             createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
           );
-        } else {
-          const atoms = Math.round(stake * Math.pow(10, SKR_DECIMALS));
-          const srcATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
-          const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
-          tx = new Transaction().add(
-            createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, SKR_MINT),
-            createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
-          );
-        }
+          } else if (currency === Currency.SKR) {
+            const atoms = Math.round(stake * Math.pow(10, SKR_DECIMALS));
+            const srcATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
+            const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
+            tx = new Transaction().add(
+              createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, SKR_MINT),
+              createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+            );
+          } else {
+            const atoms = Math.round(stake * Math.pow(10, RAID_DECIMALS));
+            const srcATA = getAssociatedTokenAddressSync(RAID_MINT, publicKey!);
+            const dstATA = getAssociatedTokenAddressSync(RAID_MINT, TREASURY_PUBKEY);
+            tx = new Transaction().add(
+              createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, RAID_MINT),
+              createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+            );
+          }
         const { sig: _joinSig, conn: _joinConn } = await sendWithFallback(tx);
         stakeTxSig = _joinSig;
         await _joinConn.confirmTransaction(stakeTxSig, 'confirmed');
@@ -1563,6 +1628,7 @@ const AppInner: React.FC = () => {
         walletBalance: currency === Currency.SOL  ? prev.walletBalance - stake : prev.walletBalance,
         usdcBalance:   currency === Currency.USDC ? prev.usdcBalance   - stake : prev.usdcBalance,
         skrBalance:    currency === Currency.SKR  ? prev.skrBalance    - stake : prev.skrBalance,
+        raidBalance:   currency === Currency.RAID ? prev.raidBalance   - stake : prev.raidBalance,
       }));
     }
     // ── (Re)join: fetch all current players and restore state ────────────
@@ -1705,19 +1771,20 @@ const AppInner: React.FC = () => {
       setGameState(prev => ({ ...prev, dailyStreak: newDailyStreak, lastPlayedDate: todayDateStr }));
     }
 
-    // Prices must be loaded before paying in USDC/SKR
+    // Prices must be loaded before paying in USDC/SKR/RAID
     if (currency !== Currency.SOL && !pricesReady) {
       alert('Prices still loading — please wait a moment, then try again.');
       return;
     }
 
     // Convert to chosen currency for balance check
-    const rate = liveCurrencyRates[currency]; // SKR/USDC per SOL
+    const rate = liveCurrencyRates[currency]; // token per SOL
     const totalCostCurrency = totalCostSol * rate;
 
-    if (currency === Currency.SOL  && gameState.walletBalance < totalCostSol)     { alert('INSUFFICIENT SOL FOR DEPLOYMENT');  return; }
+    if (currency === Currency.SOL  && gameState.walletBalance < totalCostSol)      { alert('INSUFFICIENT SOL FOR DEPLOYMENT');  return; }
     if (currency === Currency.USDC && gameState.usdcBalance   < totalCostCurrency) { alert('INSUFFICIENT USDC FOR DEPLOYMENT'); return; }
     if (currency === Currency.SKR  && gameState.skrBalance    < totalCostCurrency) { alert('INSUFFICIENT SKR FOR DEPLOYMENT');  return; }
+    if (currency === Currency.RAID && gameState.raidBalance   < totalCostCurrency) { alert('INSUFFICIENT RAID FOR DEPLOYMENT'); return; }
 
     // ── On-chain entry fee payment ──────────────────────────────────────
     let entryTxSig: string | undefined;
@@ -1744,13 +1811,22 @@ const AppInner: React.FC = () => {
             createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, USDC_MINT),
             createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
           );
-        } else {
+        } else if (currency === Currency.SKR) {
           // SKR Seeker token
           const atoms = Math.round(totalCostCurrency * Math.pow(10, SKR_DECIMALS));
           const srcATA = getAssociatedTokenAddressSync(SKR_MINT, publicKey!);
           const dstATA = getAssociatedTokenAddressSync(SKR_MINT, TREASURY_PUBKEY);
           tx = new Transaction().add(
             createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, SKR_MINT),
+            createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
+          );
+        } else {
+          // RAID token
+          const atoms = Math.round(totalCostCurrency * Math.pow(10, RAID_DECIMALS));
+          const srcATA = getAssociatedTokenAddressSync(RAID_MINT, publicKey!);
+          const dstATA = getAssociatedTokenAddressSync(RAID_MINT, TREASURY_PUBKEY);
+          tx = new Transaction().add(
+            createAssociatedTokenAccountIdempotentInstruction(publicKey!, dstATA, TREASURY_PUBKEY, RAID_MINT),
             createTransferInstruction(srcATA, dstATA, publicKey!, BigInt(atoms)),
           );
         }
@@ -1780,6 +1856,7 @@ const AppInner: React.FC = () => {
       walletBalance: currency === Currency.SOL  ? prev.walletBalance - totalCostSol      : prev.walletBalance,
       usdcBalance:   currency === Currency.USDC ? prev.usdcBalance   - totalCostCurrency : prev.usdcBalance,
       skrBalance:    currency === Currency.SKR  ? prev.skrBalance    - totalCostCurrency : prev.skrBalance,
+      raidBalance:   currency === Currency.RAID ? prev.raidBalance   - totalCostCurrency : prev.raidBalance,
       activeRaidDifficulty: difficulty,
       activeRaidBoosts: boosts,
       activeRaidIsRound: effectiveIsRoundEntry,
@@ -1924,6 +2001,8 @@ const AppInner: React.FC = () => {
             walletBalance={gameState.walletBalance}
             usdcBalance={gameState.usdcBalance}
             skrBalance={gameState.skrBalance}
+            raidBalance={gameState.raidBalance}
+            raidBalance={gameState.raidBalance}
             currentLevel={currentRank.level}
             equippedGearIds={gameState.equippedGearIds}
             equippedAvatarId={gameState.equippedAvatarId}
@@ -1976,6 +2055,7 @@ const AppInner: React.FC = () => {
             walletBalance={gameState.walletBalance}
             usdcBalance={gameState.usdcBalance}
             skrBalance={gameState.skrBalance}
+            raidBalance={gameState.raidBalance}
             currencyRates={liveCurrencyRates}
           />
         );
@@ -2067,6 +2147,7 @@ const AppInner: React.FC = () => {
             walletBalance={gameState.walletBalance}
             usdcBalance={gameState.usdcBalance}
             skrBalance={gameState.skrBalance}
+            raidBalance={gameState.raidBalance}
             ownedItemIds={gameState.ownedItemIds}
             onPurchase={handlePurchase}
             currentLevel={currentRank.level}
@@ -2129,6 +2210,7 @@ const AppInner: React.FC = () => {
             currentWalletBalance={gameState.walletBalance}
             currentUsdcBalance={gameState.usdcBalance}
             currentSkrBalance={gameState.skrBalance}
+            currentRaidBalance={gameState.raidBalance}
             walletAddress={walletAddr}
             joinNotification={joinNotification}
             initialRoomCode={incomingJoinCode ?? undefined}

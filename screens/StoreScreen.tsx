@@ -8,6 +8,7 @@ interface StoreScreenProps {
   walletBalance: number;
   usdcBalance: number;
   skrBalance: number;
+  raidBalance: number;
   ownedItemIds: string[];
   onPurchase: (itemId: string, price: number, currency: Currency) => boolean | Promise<boolean>;
   currentLevel: number;
@@ -26,9 +27,16 @@ interface PurchasePopup {
   y: number;
 }
 
-const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, onForgeGear, initialTab, currencyRates, passDiscountPct = 0 }) => {
+const CURRENCY_LABELS: Record<Currency, string> = {
+  [Currency.SOL]: 'SOL',
+  [Currency.USDC]: 'USDC',
+  [Currency.SKR]: 'SKR',
+  [Currency.RAID]: 'RAID',
+};
+
+const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, skrBalance, raidBalance, ownedItemIds, onPurchase, currentLevel, raidTickets = 0, onBuyPass, onForgeGear, initialTab, currencyRates, passDiscountPct = 0 }) => {
   const { t } = useTranslation();
-  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
+  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0, [Currency.RAID]: 0 };
   const [activeTab, setActiveTab] = useState<'GEAR' | 'AVATAR' | 'PASS' | 'FORGE'>(initialTab ?? 'GEAR');
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(Currency.SKR);
   const pricesLoading = selectedCurrency !== Currency.SOL && rates[selectedCurrency] === 0;
@@ -161,8 +169,20 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
     }
   };
 
-  const currentBalance = selectedCurrency === Currency.SOL ? walletBalance : selectedCurrency === Currency.USDC ? usdcBalance : skrBalance;
-  const currencyColor = selectedCurrency === Currency.SOL ? 'text-white' : selectedCurrency === Currency.USDC ? 'text-blue-400' : 'text-orange-400';
+  const currentBalance = selectedCurrency === Currency.SOL
+    ? walletBalance
+    : selectedCurrency === Currency.USDC
+      ? usdcBalance
+      : selectedCurrency === Currency.SKR
+        ? skrBalance
+        : raidBalance;
+  const currencyColor = selectedCurrency === Currency.SOL
+    ? 'text-white'
+    : selectedCurrency === Currency.USDC
+      ? 'text-blue-400'
+      : selectedCurrency === Currency.SKR
+        ? 'text-orange-400'
+        : 'text-[#00E5FF]';
 
   return (
     <div className="h-full flex flex-col p-3 sm:p-6 lg:p-12 animate-in slide-in-from-bottom-4 duration-300 overflow-y-auto scrollbar-hide pb-24 relative" style={{ backgroundColor: 'var(--app-bg)' }}>
@@ -200,19 +220,19 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
               <p className="text-[9px] text-white font-bold uppercase tracking-wide mb-0.5">Balance</p>
               <div className="flex items-baseline justify-between gap-2">
                 <p className="mono text-lg sm:text-3xl font-black text-white">{selectedCurrency === Currency.SOL ? currentBalance.toFixed(3) : Math.floor(currentBalance).toLocaleString()}</p>
-                <span className={`text-xs font-black ${currencyColor}`}>{selectedCurrency}</span>
+                <span className={`text-xs font-black ${currencyColor}`}>{CURRENCY_LABELS[selectedCurrency]}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-1 w-full">
               <p className="col-span-3 text-[9px] font-bold text-white uppercase tracking-wide mb-0.5">Buy with</p>
-              {[Currency.SOL, Currency.USDC, Currency.SKR].map(curr => (
+              {[Currency.SOL, Currency.SKR].map(curr => (
                 <button
                   key={curr}
                   onClick={() => setSelectedCurrency(curr)}
                   className={`py-2 text-[10px] font-bold uppercase tracking-wide border tech-border transition-all text-center ${selectedCurrency === curr ? 'bg-white/10 border-white/40 text-white' : 'bg-[var(--modal-bg)] border-white/20 text-white hover:text-white hover:border-white/40'}`}
                 >
-                  {curr}
+                  {CURRENCY_LABELS[curr]}
                 </button>
               ))}
             </div>
@@ -373,11 +393,11 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                           <div>
                             {displayFull && (
                               <p className="text-xs font-black text-white mono line-through leading-none">
-                                {displayFull} <span className="text-[9px]">{selectedCurrency}</span>
+                                {displayFull} <span className="text-[9px]">{CURRENCY_LABELS[selectedCurrency]}</span>
                               </p>
                             )}
                             <p className={`text-base font-black mono leading-none ${isLoading ? 'text-white animate-pulse' : skrDiscount ? 'text-orange-400' : 'text-white'}`}>
-                              {displayPrice} <span className={`text-xs ${skrDiscount ? 'text-orange-400' : currencyColor}`}>{selectedCurrency}</span>
+                              {displayPrice} <span className={`text-xs ${skrDiscount ? 'text-orange-400' : currencyColor}`}>{CURRENCY_LABELS[selectedCurrency]}</span>
                             </p>
                           </div>
                           <button
@@ -630,7 +650,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ walletBalance, usdcBalance, s
                   <div className="mono flex flex-col">
                      <span className="text-[9px] font-bold text-white uppercase tracking-wide mb-1">Cost</span>
                      <span className={`text-base font-black ${isOwned ? 'text-white line-through' : 'text-white'}`}>
-                        {displayPrice} <span className={`text-xs ${isOwned ? 'text-white' : currencyColor}`}>{selectedCurrency}</span>
+                        {displayPrice} <span className={`text-xs ${isOwned ? 'text-white' : currencyColor}`}>{CURRENCY_LABELS[selectedCurrency]}</span>
                      </span>
                   </div>
                   

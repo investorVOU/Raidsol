@@ -14,6 +14,7 @@ interface TournamentScreenProps {
   walletBalance: number;
   usdcBalance: number;
   skrBalance: number;
+  raidBalance: number;
   rankLevel: number;
   rankTitle: string;
   srPoints: number;
@@ -23,7 +24,7 @@ interface TournamentScreenProps {
 }
 
 const CURRENCY_LABELS: Record<Currency, string> = {
-  [Currency.SOL]: 'SOL', [Currency.USDC]: 'USDC', [Currency.SKR]: 'SKR',
+  [Currency.SOL]: 'SOL', [Currency.USDC]: 'USDC', [Currency.SKR]: 'SKR', [Currency.RAID]: 'RAID',
 };
 const TOURNAMENT_FEE = ENTRY_FEES[Mode.TOURNAMENT];
 const TOURNAMENT_MIN_LEVEL = 15;
@@ -54,10 +55,10 @@ function AvatarImg({ src, size }: { src: string | null; size: number }) {
 }
 
 const TournamentScreen: React.FC<TournamentScreenProps> = ({
-  onEnterRaid, walletBalance, usdcBalance, skrBalance,
+  onEnterRaid, walletBalance, usdcBalance, skrBalance, raidBalance,
   rankLevel, rankTitle, srPoints, walletAddress, currencyRates, currentRound,
 }) => {
-  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0 };
+  const rates = currencyRates ?? { [Currency.SOL]: 1, [Currency.USDC]: 0, [Currency.SKR]: 0, [Currency.RAID]: 0 };
   const [mainTab,    setMainTab]   = useState<'leaderboard' | 'rounds'>('leaderboard');
   const [period,     setPeriod]    = useState<LeaderboardPeriod>('alltime');
   const [showEntry,  setShowEntry] = useState(false);
@@ -79,7 +80,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
   const feeInCurrency  = TOURNAMENT_FEE * rates[currency];
   const pricesLoading  = currency !== Currency.SOL && rates[currency] === 0;
   const balanceMap: Record<Currency, number> = {
-    [Currency.SOL]: walletBalance, [Currency.USDC]: usdcBalance, [Currency.SKR]: skrBalance,
+    [Currency.SOL]: walletBalance, [Currency.USDC]: usdcBalance, [Currency.SKR]: skrBalance, [Currency.RAID]: raidBalance,
   };
   const currentBalance = balanceMap[currency];
   const canAfford      = !pricesLoading && currentBalance >= feeInCurrency;
@@ -127,7 +128,7 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                 <div>
                   <p className="text-xs text-white font-bold uppercase mb-2">Pay with</p>
                   <div className="grid grid-cols-3 gap-2">
-                    {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
+                    {([Currency.SOL, Currency.SKR, Currency.RAID] as Currency[]).map(c => {
                       const bal = balanceMap[c];
                       const cFee = TOURNAMENT_FEE * rates[c];
                       const cLoading = c !== Currency.SOL && rates[c] === 0;
@@ -136,14 +137,14 @@ const TournamentScreen: React.FC<TournamentScreenProps> = ({
                         <button key={c} onClick={() => setCurrency(c)}
                           className={`py-2.5 rounded-xl font-bold text-xs border-2 transition-all flex flex-col items-center gap-0.5 ${currency === c ? 'bg-[#9945FF]/12 border-[#9945FF]/50 text-white' : 'bg-white/3 border-white/10 text-white hover:border-white/25'}`}>
                           <span>{CURRENCY_LABELS[c]}</span>
-                          <span className={`text-[9px] font-bold ${cLoading ? 'text-white animate-pulse' : ok ? 'text-white' : 'text-[#9945FF]/60'}`}>{cLoading ? '…' : bal.toFixed(c === Currency.SOL ? 3 : 1)}</span>
+                          <span className={`text-[9px] font-bold ${cLoading ? 'text-white animate-pulse' : ok ? 'text-white' : 'text-[#9945FF]/60'}`}>{cLoading ? '…' : bal.toFixed(c === Currency.SOL ? 3 : 0)}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
                 <div className="rounded-xl bg-white/3 border border-white/5 p-3 space-y-1.5 text-sm">
-                  <div className="flex justify-between"><span className="text-white">Your balance</span><span className={currentBalance < feeInCurrency ? 'text-[#9945FF] font-bold' : 'text-white'}>{currentBalance.toFixed(currency === Currency.SOL ? 4 : 2)} {CURRENCY_LABELS[currency]}</span></div>
+                  <div className="flex justify-between"><span className="text-white">Your balance</span><span className={currentBalance < feeInCurrency ? 'text-[#9945FF] font-bold' : 'text-white'}>{currentBalance.toFixed(currency === Currency.SOL ? 4 : 0)} {CURRENCY_LABELS[currency]}</span></div>
                   <div className="flex justify-between"><span className="text-white">Entry cost</span><span className="text-[#FFB800] font-bold">{pricesLoading ? <span className="animate-pulse text-white">…</span> : <>{feeInCurrency.toFixed(3)} {CURRENCY_LABELS[currency]}</>}</span></div>
                   {!pricesLoading && !canAfford && <p className="text-xs text-[#9945FF] font-bold text-right">Insufficient funds</p>}
                 </div>

@@ -10,7 +10,7 @@ interface MultiplayerRaidScreenProps {
 }
 
 const CURRENCY_LABELS: Record<string, string> = {
-  SOL: 'SOL', USDC: 'USDC', SKR: 'SKR',
+  SOL: 'SOL', USDC: 'USDC', SKR: 'SKR', RAID: 'RAID',
 };
 
 const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equippedGearIds, walletAddress, onFinish }) => {
@@ -140,7 +140,7 @@ const MultiplayerRaidScreen: React.FC<MultiplayerRaidScreenProps> = ({ room, equ
         <div className="px-3 py-2 sm:px-5 sm:py-3 text-center">
           <p className="text-[8px] sm:text-[9px] font-bold text-white">Pot</p>
           <p className="text-xl sm:text-2xl font-black mono text-yellow-500 leading-none">
-            {totalPot.toFixed(ccy === 'SKR' ? 0 : 2)}<span className="text-xs ml-0.5 text-yellow-500/60">{CURRENCY_LABELS[ccy] ?? ccy}</span>
+            {totalPot.toFixed(ccy === 'SOL' ? 2 : 0)}<span className="text-xs ml-0.5 text-yellow-500/60">{CURRENCY_LABELS[ccy] ?? ccy}</span>
           </p>
         </div>
         <div className="px-3 py-2 sm:px-5 sm:py-3 text-center">

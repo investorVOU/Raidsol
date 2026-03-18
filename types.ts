@@ -60,7 +60,8 @@ export const DIFFICULTY_MAX_WIN: Record<Difficulty, number> = {
 export enum Currency {
   SOL = 'SOL',
   USDC = 'USDC',
-  SKR = 'SKR'
+  SKR = 'SKR',
+  RAID = 'RAID'
 }
 
 // Currency rates are fetched live via usePrices hook — no hardcoded fallback
@@ -68,6 +69,7 @@ export const CURRENCY_RATES: Record<Currency, number> = {
   [Currency.SOL]:  1,
   [Currency.USDC]: 0,
   [Currency.SKR]:  0,
+  [Currency.RAID]: 0,
 };
 
 // ── Raid Pass (ticket system) ─────────────────────────────────────────────────
@@ -359,6 +361,7 @@ export interface GameState {
   walletBalance: number;
   usdcBalance: number;
   skrBalance: number;
+  raidBalance: number;
   unclaimedBalance: number;
   srPoints: number;
   isConnected: boolean;

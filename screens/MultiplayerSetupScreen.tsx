@@ -32,6 +32,7 @@ interface MultiplayerSetupScreenProps {
   currentWalletBalance: number;
   currentUsdcBalance: number;
   currentSkrBalance: number;
+  currentRaidBalance: number;
   walletAddress?: string | null;
   joinNotification?: string | null;
   initialRoomCode?: string;
@@ -41,12 +42,14 @@ const CURRENCY_LABELS: Record<Currency, string> = {
   [Currency.SOL]:  'SOL',
   [Currency.USDC]: 'USDC',
   [Currency.SKR]:  'SKR',
+  [Currency.RAID]: 'RAID',
 };
 
 const STAKE_OPTIONS: Record<Currency, number[]> = {
   [Currency.SOL]:  [0.05, 0.1, 0.5, 1.0],
   [Currency.USDC]: [1, 5, 10, 25],
   [Currency.SKR]:  [100, 500, 1000, 5000],
+  [Currency.RAID]: [100, 500, 1000, 5000],
 };
 
 const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
@@ -60,6 +63,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   currentWalletBalance,
   currentUsdcBalance,
   currentSkrBalance,
+  currentRaidBalance,
   walletAddress,
   joinNotification,
   initialRoomCode,
@@ -238,7 +242,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
   const totalPot = activeRoom ? (activeRoom.stakePerPlayer * players.length) : 0;
 
   const balanceFor = (c: Currency) =>
-    c === Currency.SOL ? currentWalletBalance : c === Currency.USDC ? currentUsdcBalance : currentSkrBalance;
+    c === Currency.SOL ? currentWalletBalance : c === Currency.USDC ? currentUsdcBalance : c === Currency.SKR ? currentSkrBalance : currentRaidBalance;
   const balanceFmt = (c: Currency) =>
     c === Currency.SOL ? balanceFor(c).toFixed(4) : c === Currency.USDC ? balanceFor(c).toFixed(2) : balanceFor(c).toFixed(0);
 
@@ -307,7 +311,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                     </div>
                     <div className="bg-[var(--modal-bg)] border border-white/8 p-3 text-center">
                       <p className="text-[9px] text-white font-bold mb-0.5">Pot</p>
-                      <p className="text-lg font-black text-yellow-500 mono">{totalPot.toFixed(roomCcy === Currency.SKR ? 0 : 2)} <span className="text-sm">{CURRENCY_LABELS[roomCcy]}</span></p>
+                      <p className="text-lg font-black text-yellow-500 mono">{totalPot.toFixed(roomCcy === Currency.SOL ? 2 : 0)} <span className="text-sm">{CURRENCY_LABELS[roomCcy]}</span></p>
                     </div>
                   </div>
                 </div>
@@ -534,11 +538,11 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
               <div>
                 <p className="text-[10px] font-bold text-white mb-2">01 · Stake currency</p>
                 <div className="grid grid-cols-3 gap-2">
-                  {([Currency.SOL, Currency.USDC, Currency.SKR] as Currency[]).map(c => {
+                  {([Currency.SOL, Currency.SKR, Currency.RAID] as Currency[]).map(c => {
                     const active = stakeCurrency === c;
                     const col = c === Currency.SOL ? 'border-[#9945FF] text-[#9945FF] bg-[#9945FF]/10'
-                              : c === Currency.USDC ? 'border-blue-400 text-blue-400 bg-blue-400/10'
-                              : 'border-orange-400 text-orange-400 bg-orange-400/10';
+                              : c === Currency.SKR ? 'border-orange-400 text-orange-400 bg-orange-400/10'
+                              : 'border-[#00E5FF] text-[#00E5FF] bg-[#00E5FF]/10';
                     return (
                       <button
                         key={c}
@@ -571,7 +575,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                   <input
                     type="number"
                     min="0.001"
-                    step={stakeCurrency === Currency.SKR ? '1' : '0.01'}
+                    step={stakeCurrency === Currency.SKR || stakeCurrency === Currency.RAID ? '1' : '0.01'}
                     placeholder={`Custom amount`}
                     className="flex-1 bg-[var(--modal-bg)] border border-white/15 px-3 py-2.5 text-sm font-black text-white placeholder-white/20 outline-none focus:border-[#9945FF]/50 mono transition-colors"
                     onChange={(e) => {
@@ -609,7 +613,7 @@ const MultiplayerSetupScreen: React.FC<MultiplayerSetupScreenProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-bold text-white">Max total pot</span>
                   <span className="text-2xl font-black text-yellow-500 mono">
-                    {(stakeAmount * maxPlayers).toFixed(stakeCurrency === Currency.SKR ? 0 : 2)}
+                    {(stakeAmount * maxPlayers).toFixed(stakeCurrency === Currency.SOL ? 2 : 0)}
                     <span className="text-sm ml-1 text-yellow-500/60">{CURRENCY_LABELS[stakeCurrency]}</span>
                   </span>
                 </div>
