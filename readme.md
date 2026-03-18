@@ -1,126 +1,233 @@
+# Solana Raid — Mobile-First On-Chain Game
 
-# ⚡ SOLANA RAID: DEGEN PROTOCOL
+![Solana](https://img.shields.io/badge/Solana-Mainnet-9945FF?style=for-the-badge&logo=solana&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Edge-3ECF8E?style=for-the-badge&logo=supabase&logoColor=black)
 
-![Solana Raid](https://img.shields.io/badge/SOLANA-NETWORK-14F195?style=for-the-badge&logo=solana&logoColor=white)
-![Degen Protocol](https://img.shields.io/badge/PROTOCOL-DEGEN-9945FF?style=for-the-badge)
-![PvP Enabled](https://img.shields.io/badge/MODE-PVP_LIVE-EF4444?style=for-the-badge)
+> High-stakes, skill-based raiding game on Solana. Connect your wallet, enter a raid, extract your yield before risk spikes — or lose it all. Real SOL in, real SOL out.
 
-A high-stakes, mobile-first survival game built for the Solana ecosystem. Enter raids, harvest data packets, manage terminal risk, and extract before the protocol collapses. Now featuring a deep progression system, Black Market loadouts, and **Private PvP Lobbies**.
-
----
-
-## 🛡️ TRUST & VERIFICATION
-
-We operate on absolute transparency. The blockchain doesn't lie, and neither do we.
-
-*   **PUBLIC TREASURY**: A live feed of the protocol's solvency. View the Treasury Balance and Total Payouts directly on-chain via Solscan. *"Funds are visible. No funny business."*
-*   **VERIFIABLE ROUNDS**: Every raid generates a cryptographic proof.
-    *   **Raid ID**: Unique session identifier.
-    *   **Server Seed**: Hashed seed used for RNG.
-    *   **TX Signature**: The on-chain record of your entry and exit.
-    *   *Verify your round on the Result Screen immediately after extraction.*
+**Live:** [solraid.app](https://solraid.app) · **Token:** [$RAID on Bags.fm](https://bags.fm/J8sMGxWB5kT8SqgmeTa3TfW6mpmucYK8xpMkmPCbBAGS) · **X:** [@solraid_app](https://x.com/solraid_app)
 
 ---
 
-## ⚔️ MULTIPLAYER: PRIVATE PVP ROOMS (NEW)
+## What is Solana Raid?
 
-Compete directly against friends in high-stakes, winner-takes-all private lobbies.
+Solana Raid is a **mobile-first browser game** where players connect a Solana wallet and compete in real-time raids for on-chain SOL rewards. Every raid is a tension-filled extraction — a rising multiplier, a creeping risk meter, and a cashout window that rewards conviction and punishes greed.
 
-*   **HOST & INVITE**: Create a custom room, set the entry stake (e.g., 0.1 - 1.0 SOL), and share the unique **RAID-CODE** with friends.
-*   **SYNCED SEED**: All players in the room face the exact same RNG conditions. Same risk spikes, same tick timing. Pure skill differentiation.
-*   **HIGHEST EXTRACT WINS**: Survival isn't enough. The player who extracts with the **highest score** takes the **ENTIRE POT**.
-*   **LIVE OPPONENT FEED**: Track your opponents' status (Active, Busted, Extracted) in real-time. See their scores lock in as they exit.
+No fake tokens. No simulated rewards. Real SOL in, real SOL out.
 
 ---
 
-## 🎮 CORE GAMEPLAY: THE RAID
+## Gameplay Loop
 
-The "Raid" is a high-pressure survival loop designed to test your greed against mathematical certainty.
+```
+Connect wallet
+  → Choose difficulty (EASY / MEDIUM / HARD / DEGEN)
+  → Pay entry fee (SOL / USDC / $RAID)
+  → 90-second raid begins
+  → Multiplier rises as risk drifts upward
+  → Cash out before risk hits 100% → earn SOL
+  → Bust at 100% → lose your stake
+```
 
-1.  **ENTRY & DEPLOYMENT**:
-    *   **Deploy Stake**: Choose your mode (Solo, Team, Tournament, PvP).
-    *   **Tactical Boosts**: Purchase optional pre-raid advantages:
-        *   🛡️ **Risk Shield**: Reduces risk drift speed by 15% (Cost: 0.005 SOL).
-        *   ⚡ **Score Overclock**: Starts the raid with a +0.5x Multiplier (Cost: 0.01 SOL).
-    *   **Active Loadout**: Verify your equipped Gear and Avatar before initialization.
-2.  **HARVEST**: As you stay in the raid, your score and potential SOL payout increase via a dynamic multiplier.
-3.  **RISK ENGINE**: A central "Risk Meter" drifts upwards. Reaching 100% risk results in a **PROTOCOL BUST**—total loss of stake.
-4.  **ACTIONS**:
-    *   **ATTACK**: Aggressively boost your multiplier and score at the cost of significantly increased risk.
-    *   **DEFEND**: Slow down the harvest to stabilize the link and reduce current risk.
-    *   **EXIT & CASH OUT**: The ultimate decision. Terminate the link and secure your harvested SOL before it's too late.
+- **20-second cashout lock** — no instant exits, builds real tension
+- **Gear loadout** — TIME_BOOST, MULT_BOOST, RISK_REDUCTION items change your odds
+- **Raid passes** — buy ticket bundles with $RAID for 50% entry fee discount + 1.1× reward boost
+- **Daily streak** — play consecutive days for up to +40% SR point bonus
+- **Provably fair** — SHA-256 server seed committed before raid, revealed on exit
 
----
+### Max Winnings per Raid
 
-## 📈 PROGRESSION: THE $SR XP SYSTEM
-
-**$SR (Social Reputation)** serves as your Experience Points (XP). Your total $SR determines your Level and Rank within the Degen Protocol.
-
-*   **EARNING XP**:
-    *   **Mission Success**: Large $SR payouts for successful extractions.
-    *   **Aggression Bonus**: Using `ATTACK` or high-risk maneuvers triggers bonus $SR popups.
-    *   **Participation**: Even on a **BUST**, users earn minimal $SR to ensure progression.
-    *   **Spending**: Every 1 SOL spent in the Black Market yields 1,000 $SR.
-*   **RANK UP**: Reaching specific $SR milestones triggers a **LEVEL UP** event, unlocking permanent protocol privileges.
+| Difficulty | Max Win | Entry |
+|---|---|---|
+| EASY | 0.03 SOL | Low |
+| MEDIUM | 0.07 SOL | Mid |
+| HARD | 0.20 SOL | High |
+| DEGEN | 0.60 SOL | Degen |
 
 ---
 
-## 🏆 PROTOCOL RANKS & PERKS
+## Multiplayer PvP
 
-Progress through 6 distinct Ranks, each offering tangible gameplay advantages:
-
-| Rank | Level | SR Milestone | Perks |
-| :--- | :--- | :--- | :--- |
-| **RECRUIT** | 1 | 0 | Basic Solo Access |
-| **RAIDER** | 5 | 1,000 | **Unlocks TEAM_MODE**, 5% Bonus $SR |
-| **OPERATIVE**| 10 | 3,000 | Reduced RISK Drift, 5% Store Discount |
-| **COMMANDER**| 15 | 7,000 | **Unlocks TOURNAMENT_MODE**, 10% Yield Boost |
-| **GHOST** | 20 | 15,000 | Exclusive GHOST Gear Access, 20% $SR Bonus |
-| **GOD** | 50 | 50,000 | Admin Terminal Access, Zero Fee Thursdays |
+- Create or join rooms with SOL / USDC / $RAID stakes
+- Head-to-head raids — highest score takes the pot
+- Real-time room state via Supabase Realtime channels
+- Share invite link: `solraid.app?join=RAID-XXXX`
+- PvP tournament rounds tracked on leaderboard
 
 ---
 
-## 🛠 THE BLACK MARKET
+## Features
 
-The depot for tactical hardware and identity masking.
-
-*   **BATTLE TOOLS (Gear)**: 20 unique items across **STANDARD**, **LIMITED**, and **EXCLUSIVE** rarities. Items provide passive buffs to Multipliers, Risk Reduction, or Raid Time.
-*   **IDENTITY CORES (Avatars)**: 20 high-fidelity pixel personas. Equip new cores to refresh your protocol signature (and earn a 50 $SR equipment bonus).
-*   **LEVEL GATING**: High-tier gear and elite avatars are locked behind Level requirements to prevent "pay-to-win" dynamics at early stages.
+| Feature | Detail |
+|---|---|
+| **Wallets** | Phantom, Solflare, Backpack, Coinbase, Trust, Nightly, Ledger, Mobile (Seeker) |
+| **Currencies** | SOL, USDC, $RAID for entry fees and store purchases |
+| **In-App Swap** | Buy $RAID with SOL or USDC via Jupiter Ultra API, no redirect |
+| **3D Arena** | Two robot characters face off using React Three Fiber |
+| **Leaderboard** | Top players by SR points, live ranks, .skr domain badges |
+| **Achievements** | 20+ milestone badges, granted via edge function after raids |
+| **Daily Briefing** | Caesar-cipher puzzle — 1000 SR first solve, resets every day |
+| **Wallet Roast** | On-chain analysis of your wallet history, shareable card |
+| **Referral System** | Unique referral codes, SR points for successful referrals |
+| **Anti-cheat** | Server validates elapsed time, max possible points, and sol_amount |
 
 ---
 
-## 📁 PROJECT STRUCTURE
+## Tech Stack
 
-```text
-/
-├── components/           # Reusable UI components
-│   ├── Header.tsx        # HUD displaying SOL/SR balances & Rank
-│   ├── Navigation.tsx    # Responsive side/bottom nav
-│   ├── LevelUpModal.tsx  # High-impact rank-up celebration
-│   └── Disclaimer.tsx    # Entry gate for first-time users
-├── screens/              # Main application views
-│   ├── LobbyScreen.tsx   # Deployment hub with mode gating & Treasury
-│   ├── RaidScreen.tsx    # The core risk engine & XP popups
-│   ├── ProfileScreen.tsx # Responsive user dashboard, progress & history
-│   ├── StoreScreen.tsx   # Black Market (Gear/Avatars with Level locks)
-│   ├── MultiplayerSetupScreen.tsx # PvP Lobby Creation & Joining
-│   ├── MultiplayerRaidScreen.tsx  # PvP Game Interface with Live Feed
-│   └── ...
-├── types.ts              # TypeScript interfaces, Ranks, and Item database
-└── App.tsx               # Root state management & Level-up logic
+**Frontend**
+- React 18 + Vite + TypeScript
+- Tailwind CSS — mobile-first, `bottom-16` nav clearance on iOS
+- React Three Fiber + Three.js — 3D raid arena with robot animations
+- `@solana/wallet-adapter-react` — 9+ wallet adapters
+- `i18next` — multi-language support
+
+**Backend**
+- Supabase — PostgreSQL, Realtime subscriptions, Edge Functions (Deno)
+- Solana mainnet-beta RPC — on-chain SOL/SPL transfers
+- Jupiter Ultra API — in-app token swaps (`lite-api.jup.ag/ultra/v1`)
+
+**On-chain**
+- Native SOL transfers for entry fees and payouts
+- SPL token transfers for USDC and $RAID
+- Treasury keypair signs payouts server-side with double-spend protection
+
+---
+
+## Screens
+
+| Screen | Description |
+|---|---|
+| `LOBBY` | Entry hub — gear loadout, difficulty picker, daily cards |
+| `RAID` | Live game — 3D arena, multiplier, risk meter, cashout button |
+| `RESULT` | Payout summary — SR earned, streak, achievements, redeploy |
+| `STORE` | Gear + raid pass shop (SOL / USDC / $RAID) |
+| `PROFILE` | Stats, badges, referral code, raid history |
+| `TOURNAMENT` | Leaderboard, .skr domain rankings, PvP rounds |
+| `TEAM` | Squad view — 4-player slots, matchmaking |
+| `MULTIPLAYER_SETUP` | Create or join PvP room with stake preview |
+| `MULTIPLAYER_GAME` | Live PvP raid with opponent score feed |
+| `BRIEFING` | Daily cipher puzzle with SR reward |
+| `ROAST` | Wallet analysis + shareable card |
+
+---
+
+## Edge Functions
+
+| Function | Purpose |
+|---|---|
+| `raid-seed` | SHA-256 server seed commitment before raid |
+| `submit-raid-result` | Records result, updates profile + treasury, reveals seed |
+| `process-payout` | Signs and sends on-chain SOL from treasury (rate-limited) |
+| `verify-payment` | Confirms on-chain tx for store purchases, retries 8× |
+| `check-briefing` | Validates daily cipher answer server-side |
+| `jup-proxy` | Proxies Jupiter Ultra API (quote + execute) to bypass CORS |
+
+---
+
+## Database Schema
+
+```
+profiles          — wallet stats, gear, tickets, streaks, referrals
+raid_history      — every raid result with provably-fair seed pair
+raid_seeds        — server seed commitments
+treasury_stats    — single-row treasury balance tracker
+activity_feed     — real-time global activity stream
+rooms             — multiplayer room state + stake currency
+room_players      — per-room player records
+withdrawals       — payout audit trail (double-spend guard)
+store_purchases   — purchase audit trail (tx replay protection)
+daily_briefings   — cipher puzzle definitions (30-puzzle rotation)
+briefing_claims   — who solved today's puzzle
+achievements      — milestone badge grants
 ```
 
 ---
 
-## ⚠️ PROTOCOL WARNING
+## Local Setup
 
-**THIS IS A HIGH-STAKES SIMULATION.** 
-1.  **NO REFUNDS**: Protocol initialization fees are final.
-2.  **NETWORK LAG**: We are not responsible for MEV exploits or network latency affecting extraction speed.
-3.  **AGE REQUIREMENT**: You must be 18+ to interact with the Degen Protocol.
+```bash
+# Clone
+git clone https://github.com/investorVOU/Raidsol.git
+cd Raidsol
+
+# Install
+npm install
+
+# Create .env
+cp .env.example .env
+# Fill in your Supabase URL, anon key, RPC URL, and mint addresses
+
+# Run
+npm run dev
+```
+
+**.env variables**
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+VITE_USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+VITE_SKR_MINT=SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3
+VITE_RAID_MINT=J8sMGxWB5kT8SqgmeTa3TfW6mpmucYK8xpMkmPCbBAGS
+```
+
+**Deploy edge functions**
+
+```bash
+npx supabase functions deploy raid-seed
+npx supabase functions deploy submit-raid-result
+npx supabase functions deploy process-payout
+npx supabase functions deploy verify-payment
+npx supabase functions deploy check-briefing
+npx supabase functions deploy jup-proxy
+
+# Secrets
+npx supabase secrets set TREASURY_ADDRESS=your_pubkey
+npx supabase secrets set TREASURY_WALLET_KEYPAIR='[1,2,3,...]'
+npx supabase secrets set SOLANA_RPC_URL=https://your-rpc.com
+npx supabase secrets set JUPITER_API_KEY=your_jup_key
+```
 
 ---
 
-*Built for the Solana Global Hackathon — May 2025*
-*Terminal Status: [STABLE]*
+## Game Math
+
+- **Base time:** 90s + gear bonus
+- **House edge:** 1.85×
+- **Win rate:** ~18–22% base, up to ~36% with full gear
+- **Reward:** `(points / 5000) × DIFFICULTY_MAX_WIN × bonuses × (1 − fee)`
+- **Risk drift:** escalates after 30s flat zone, random spikes 12%, firewall save 4%
+- **Greed factor:** 2.1× above mult 1.5, 2.8× above mult 2.0
+
+---
+
+## Security
+
+- **On-chain verification** — fee payer must match wallet, tx age ≤ 5 min, replay protection via tx signature dedup
+- **Payout limits** — max 5 SOL single / 20 SOL per rolling 24h window
+- **Wallet signature** — `signMessage` required before payout invoke
+- **Anti-cheat** — `submit-raid-result` rejects impossible point/time/difficulty combos
+- **CORS** — restricted to `solraid.app` in production edge functions
+
+---
+
+## $RAID Token
+
+| Field | Value |
+|---|---|
+| Mint | `J8sMGxWB5kT8SqgmeTa3TfW6mpmucYK8xpMkmPCbBAGS` |
+| Supply | 1,000,000,000 |
+| Decimals | 9 |
+| Launchpad | [Bags.fm](https://bags.fm/J8sMGxWB5kT8SqgmeTa3TfW6mpmucYK8xpMkmPCbBAGS) |
+
+Use $RAID to pay entry fees, buy raid passes, and reduce fees by 50% with ticket boosts.
+
+---
+
+## License
+
+MIT © 2026 Solana Raid

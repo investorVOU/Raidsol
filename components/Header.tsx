@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Rank } from '../types';
+import SwapModal from './SwapModal';
 
 interface HeaderProps {
   balance: number;
@@ -37,6 +38,7 @@ const Header: React.FC<HeaderProps> = ({
   isLobby = false,
 }) => {
   const { t } = useTranslation();
+  const [swapOpen, setSwapOpen] = useState(false);
   const domain = domainName ?? null;
   const shortAddress = walletAddress
     ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
@@ -45,6 +47,48 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="px-4 pt-3 pb-2 shrink-0 z-50">
+
+      {/* -- TOP STRIP: Bags promo -- */}
+      <div
+        className="mb-2.5 px-3 py-2.5 flex items-center justify-between gap-3"
+        style={{
+          borderRadius: 14,
+          background:
+            'linear-gradient(120deg, rgba(255,184,0,0.18) 0%, rgba(255,184,0,0.05) 35%, rgba(153,69,255,0.18) 100%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: 'inset 0 0 18px rgba(255,255,255,0.04), 0 6px 24px rgba(0,0,0,0.25)',
+        }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-[0.2em] text-black"
+            style={{ background: '#FFB800', boxShadow: '0 0 10px rgba(255,184,0,0.45)' }}
+          >
+            BAGS
+          </span>
+          <span
+            className="text-[11px] font-black uppercase tracking-[0.14em] text-white truncate"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            BUY $RAID NOW
+          </span>
+          <span className="text-[10px] text-white/60 uppercase tracking-[0.2em]" style={BN}>
+            ON BAGS.FM
+          </span>
+        </div>
+        <button
+          onClick={() => setSwapOpen(true)}
+          className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.22em] transition-all active:scale-95"
+          style={{
+            background: 'linear-gradient(135deg, #FFB800 0%, #FF7A00 100%)',
+            border: '1px solid rgba(0,0,0,0.25)',
+            color: '#1A1200',
+          }}
+        >
+          BUY NOW
+        </button>
+      </div>
+
 
       {/* ── ROW 1: wallet pill + action buttons ── */}
       <div className="flex items-center justify-between mb-2.5">
@@ -125,6 +169,13 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </div>
       </div>
+
+
+      <SwapModal
+        isOpen={swapOpen}
+        onClose={() => setSwapOpen(false)}
+        outputMint={import.meta.env.VITE_RAID_MINT ?? 'J8sMGxWB5kT8SqgmeTa3TfW6mpmucYK8xpMkmPCbBAGS'}
+      />
 
       {/* ── ROW 2: stat chips (connected only) ── */}
       {isConnected && (
