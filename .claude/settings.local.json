@@ -26,7 +26,10 @@
       "Bash(grep:*)",
       "Bash(sed:*)",
       "Bash(do:*)",
-      "Bash(/c/Users/Admin/documents/solana-raid/supabase/schema.sql:*)"
+      "Bash(/c/Users/Admin/documents/solana-raid/supabase/schema.sql:*)",
+      "Bash(npx supabase:*)",
+      "Bash(curl:*)",
+      "Bash(git:*)"
     ]
   }
 }
