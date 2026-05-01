@@ -42,3 +42,6 @@ twa/app/build/outputs/
 
 # Local dev/test pages — never commit
 public/test-refunds.html
+
+# Local Claude agent settings — machine-specific and may contain sensitive tokens
+.claude/settings.local.json
