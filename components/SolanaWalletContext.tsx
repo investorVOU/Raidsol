@@ -16,6 +16,14 @@ export const SolanaWalletContext: FC<{ children: ReactNode }> = ({ children }) =
     const network = WalletAdapterNetwork.Mainnet;
     const endpoint = useMemo(() => getPrimaryRpc(), []);
 
+    // MWA launches an Android intent (and may request loopback-network access).
+    // Letting wallet-adapter auto-connect after render loses the user gesture
+    // Chrome requires for that launch in a Trusted Web Activity.
+    const isSeekerTwa =
+        typeof document !== 'undefined' &&
+        document.referrer.startsWith('android-app://') &&
+        /android/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '');
+
     const wallets = useMemo(
         () => [
             new PhantomWalletAdapter(),
@@ -28,7 +36,7 @@ export const SolanaWalletContext: FC<{ children: ReactNode }> = ({ children }) =
 
     return (
         <ConnectionProvider endpoint={endpoint}>
-            <WalletProvider wallets={wallets} autoConnect>
+            <WalletProvider wallets={wallets} autoConnect={!isSeekerTwa}>
                 <WalletModalProvider>{children}</WalletModalProvider>
             </WalletProvider>
         </ConnectionProvider>

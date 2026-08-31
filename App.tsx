@@ -21,10 +21,15 @@ import { SolanaWalletContext } from './components/SolanaWalletContext';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { SolanaMobileWalletAdapterWalletName } from '@solana-mobile/wallet-standard-mobile';
 
+const isSeekerTwa = () =>
+  typeof document !== 'undefined' &&
+  document.referrer.startsWith('android-app://') &&
+  /android/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '');
 
 const AppInner: React.FC = () => {
-  const { connected, disconnect, publicKey } = useWallet();
+  const { connected, disconnect, publicKey, wallets, select } = useWallet();
   const { setVisible } = useWalletModal();
   const [introComplete, setIntroComplete] = useState(false);
 
@@ -117,13 +122,37 @@ const AppInner: React.FC = () => {
     setGameState(prev => ({ ...prev, currentScreen: screen }));
   };
 
-  const handleConnect = () => setVisible(true);
+  const handleConnect = () => {
+    if (!isSeekerTwa()) {
+      setVisible(true);
+      return;
+    }
+
+    const mobileWallet = wallets.find(
+      ({ adapter }) => adapter.name === SolanaMobileWalletAdapterWalletName,
+    );
+
+    if (!mobileWallet) {
+      // This should not occur when registerMwa() ran before React mounted, but
+      // retain the normal desktop picker as a safe fallback.
+      setVisible(true);
+      return;
+    }
+
+    // Both operations start in this click handler. Calling the MWA adapter
+    // directly avoids WalletProvider's post-render auto-connect effect, which
+    // loses the user activation required for Android intent navigation in a TWA.
+    select(mobileWallet.adapter.name);
+    void mobileWallet.adapter.connect().catch((error: unknown) => {
+      console.error('Mobile Wallet Adapter connection failed', error);
+    });
+  };
   const handleDisconnect = () => disconnect();
 
   // Require wallet helper: returns true if connected, otherwise opens connect modal and returns false
   const requireWallet = (): boolean => {
     if (!connected) {
-      setVisible(true);
+      handleConnect();
       return false;
     }
     return true;
