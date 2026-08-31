@@ -22,6 +22,7 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { SolanaMobileWalletAdapterWalletName } from '@solana-mobile/wallet-standard-mobile';
+import { useRoundData } from './hooks/useRoundData';
 
 const isSeekerTwa = () =>
   typeof document !== 'undefined' &&
@@ -31,6 +32,7 @@ const isSeekerTwa = () =>
 const AppInner: React.FC = () => {
   const { connected, disconnect, publicKey, wallets, select } = useWallet();
   const { setVisible } = useWalletModal();
+  const { info: currentRound } = useRoundData();
   const [introComplete, setIntroComplete] = useState(false);
 
   const [gameState, setGameState] = useState<GameState>({
@@ -377,6 +379,7 @@ const AppInner: React.FC = () => {
             isConnected={gameState.isConnected}
             onConnect={handleConnect}
             onEnterRaid={enterRaid}
+            currentRound={currentRound}
             currentLevel={currentRank.level}
             equippedGearIds={gameState.equippedGearIds}
             equippedAvatarId={gameState.equippedAvatarId}
@@ -485,6 +488,7 @@ const AppInner: React.FC = () => {
             isConnected={gameState.isConnected}
             onConnect={handleConnect}
             onEnterRaid={enterRaid}
+            currentRound={currentRound}
             currentLevel={currentRank.level}
             equippedGearIds={gameState.equippedGearIds}
             equippedAvatarId={gameState.equippedAvatarId}
