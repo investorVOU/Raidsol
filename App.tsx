@@ -40,6 +40,7 @@ const AppInner: React.FC = () => {
     walletBalance: 1.45,
     usdcBalance: 250.50,
     skrBalance: 5000,
+    raidBalance: 0,
     unclaimedBalance: 0,
     srPoints: 250,
     isConnected: false,
@@ -381,6 +382,10 @@ const AppInner: React.FC = () => {
             onEnterRaid={enterRaid}
             currentRound={currentRound}
             currentLevel={currentRank.level}
+            walletBalance={gameState.walletBalance}
+            usdcBalance={gameState.usdcBalance}
+            skrBalance={gameState.skrBalance}
+            raidBalance={gameState.raidBalance}
             equippedGearIds={gameState.equippedGearIds}
             equippedAvatarId={gameState.equippedAvatarId}
             ownedItemIds={gameState.ownedItemIds}
@@ -490,6 +495,10 @@ const AppInner: React.FC = () => {
             onEnterRaid={enterRaid}
             currentRound={currentRound}
             currentLevel={currentRank.level}
+            walletBalance={gameState.walletBalance}
+            usdcBalance={gameState.usdcBalance}
+            skrBalance={gameState.skrBalance}
+            raidBalance={gameState.raidBalance}
             equippedGearIds={gameState.equippedGearIds}
             equippedAvatarId={gameState.equippedAvatarId}
             ownedItemIds={gameState.ownedItemIds}
