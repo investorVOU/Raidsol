@@ -1,12 +1,21 @@
 import { Connection } from '@solana/web3.js';
+import { isDevnet } from './solanaCluster';
 
 const MAINNET_PUBLIC = 'https://api.mainnet-beta.solana.com';
+const DEVNET_PUBLIC = 'https://api.devnet.solana.com';
 
 /**
  * Ordered RPC list: Helius → Alchemy → VITE_SOLANA_RPC_URL → public mainnet.
  * Public mainnet is always the last-resort fallback (rate-limits / 403s on browser origin).
  */
 export function getRpcList(): string[] {
+  if (isDevnet()) {
+    const configured = import.meta.env.VITE_SOLANA_RPC_URL;
+    return configured && configured.startsWith('http')
+      ? [configured, DEVNET_PUBLIC]
+      : [DEVNET_PUBLIC];
+  }
+
   const candidates = [
     import.meta.env.VITE_HELIUS_RPC_URL,
     import.meta.env.VITE_ALCHEMY_RPC_URL,
@@ -28,6 +37,10 @@ export function getRpcList(): string[] {
 
 /** Best single endpoint for ConnectionProvider (Helius > Alchemy > public). */
 export function getPrimaryRpc(): string {
+  if (isDevnet()) {
+    return import.meta.env.VITE_SOLANA_RPC_URL || DEVNET_PUBLIC;
+  }
+
   return (
     import.meta.env.VITE_HELIUS_RPC_URL ||
     import.meta.env.VITE_ALCHEMY_RPC_URL ||

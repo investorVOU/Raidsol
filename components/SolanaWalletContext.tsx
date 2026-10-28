@@ -9,11 +9,12 @@ import {
 } from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { getPrimaryRpc } from '../lib/rpc';
+import { isDevnet } from '../lib/solanaCluster';
 
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 export const SolanaWalletContext: FC<{ children: ReactNode }> = ({ children }) => {
-    const network = WalletAdapterNetwork.Mainnet;
+    const network = isDevnet() ? WalletAdapterNetwork.Devnet : WalletAdapterNetwork.Mainnet;
     const endpoint = useMemo(() => getPrimaryRpc(), []);
 
     // MWA launches an Android intent (and may request loopback-network access).

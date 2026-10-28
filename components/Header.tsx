@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Rank } from '../types';
+import { isDevnet } from '../lib/solanaCluster';
 
 interface HeaderProps {
   balance: number;
@@ -15,6 +16,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ balance, srPoints, currentRank, isConnected, onConnect, onDisconnect, onOpenHowItWorks, walletAddress }) => {
   const shortAddress = walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : null;
+  const devnet = isDevnet();
   return (
     <header className="px-6 pt-6 pb-2 flex justify-between items-center z-50 shrink-0">
       <div className="flex items-center gap-4">
@@ -60,6 +62,11 @@ const Header: React.FC<HeaderProps> = ({ balance, srPoints, currentRank, isConne
       </div>
       
       <div className="flex items-center gap-2">
+        {devnet && (
+          <span className="px-2 py-1 border border-[#FFB800]/60 bg-[#FFB800]/10 text-[9px] font-black tracking-widest text-[#FFB800]">
+            DEVNET TEST
+          </span>
+        )}
         <button 
           onClick={onOpenHowItWorks}
           className="px-3 py-1.5 border tech-border border-white/10 text-xs font-black uppercase tracking-widest text-white/40 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"

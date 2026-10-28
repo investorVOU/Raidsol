@@ -14,6 +14,7 @@ import {
   createDefaultChainSelector,
   createDefaultWalletNotFoundHandler,
 } from '@solana-mobile/wallet-standard-mobile';
+import { isDevnet } from './lib/solanaCluster';
 
 if (typeof window !== 'undefined') {
   registerMwa({
@@ -23,7 +24,7 @@ if (typeof window !== 'undefined') {
       icon: '/icon-192.png',
     },
     authorizationCache: createDefaultAuthorizationCache(),
-    chains: ['solana:mainnet', 'solana:mainnet-beta'],
+    chains: isDevnet() ? ['solana:devnet'] : ['solana:mainnet', 'solana:mainnet-beta'],
     chainSelector: createDefaultChainSelector(),
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
   });

@@ -20,9 +20,10 @@ import IntroOverlay from './components/IntroOverlay';
 import { SolanaWalletContext } from './components/SolanaWalletContext';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { SolanaMobileWalletAdapterWalletName } from '@solana-mobile/wallet-standard-mobile';
 import { useRoundData } from './hooks/useRoundData';
+import { getSolanaCluster, getTreasuryAddress } from './lib/solanaCluster';
 
 const isSeekerTwa = () =>
   typeof document !== 'undefined' &&
@@ -30,7 +31,7 @@ const isSeekerTwa = () =>
   /android/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '');
 
 const AppInner: React.FC = () => {
-  const { connected, disconnect, publicKey, wallets, select } = useWallet();
+  const { connected, disconnect, publicKey, wallets, select, sendTransaction } = useWallet();
   const { setVisible } = useWalletModal();
   const { info: currentRound } = useRoundData();
   const [introComplete, setIntroComplete] = useState(false);
@@ -172,13 +173,15 @@ const AppInner: React.FC = () => {
 
     const raidId = 'RAID-' + Math.random().toString(36).substr(2, 9).toUpperCase();
     const serverSeedHash = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-    const txSignature = Array.from({ length: 88 }, () => Math.floor(Math.random() * 36).toString(36)).join('');
-    const userWallet = "8xP...3k9";
+    const txSignature = gameState.activeEntryTxSig ?? '';
+    const userWallet = publicKey?.toBase58() ?? 'WALLET_UNAVAILABLE';
 
     setGameState(prev => ({
       ...prev,
       currentScreen: Screen.RESULT,
-      walletBalance: success ? prev.walletBalance : prev.walletBalance - prev.activeRaidFee,
+      // The entry fee has already been transferred and confirmed before the
+      // raid begins. Never charge a second time when a player loses.
+      walletBalance: prev.walletBalance,
       unclaimedBalance: success ? prev.unclaimedBalance + solAmount : prev.unclaimedBalance,
       srPoints: prev.srPoints + totalSREarned,
       lastResult: {
@@ -196,15 +199,78 @@ const AppInner: React.FC = () => {
     }));
   };
 
-  const handleClaim = (amount?: number) => {
-    const toClaim = amount !== undefined ? amount : gameState.unclaimedBalance;
-    if (toClaim <= 0) return;
+  const handleClaim = async (_amount?: number): Promise<string | null> => {
+    // A payout needs a treasury signer or an on-chain program. Do not present
+    // a local balance update as though SOL was sent to a user's wallet.
+    alert('Withdrawals are not enabled yet. No SOL has been transferred.');
+    return null;
+  };
 
-    setGameState(prev => ({
-      ...prev,
-      walletBalance: prev.walletBalance + toClaim,
-      unclaimedBalance: Math.max(0, prev.unclaimedBalance - toClaim)
-    }));
+  const paySolToTreasury = async (amountSol: number, purpose: string): Promise<string | null> => {
+    if (!requireWallet() || !publicKey) return null;
+    if (!Number.isFinite(amountSol) || amountSol <= 0) return null;
+    if (gameState.walletBalance < amountSol) {
+      alert('INSUFFICIENT SOL FOR THIS ENTRY');
+      return null;
+    }
+
+    const treasuryAddress = getTreasuryAddress();
+    if (!treasuryAddress) {
+      alert(getSolanaCluster() === 'devnet'
+        ? 'DEVNET TEST MODE NEEDS VITE_DEVNET_TREASURY_ADDRESS.'
+        : 'TREASURY ADDRESS IS NOT CONFIGURED.');
+      return null;
+    }
+
+    let treasury: PublicKey;
+    try {
+      treasury = new PublicKey(treasuryAddress);
+    } catch {
+      alert('TREASURY ADDRESS IS INVALID.');
+      return null;
+    }
+
+    const lamports = Math.round(amountSol * LAMPORTS_PER_SOL);
+    if (!Number.isSafeInteger(lamports) || lamports <= 0) {
+      alert('INVALID ENTRY AMOUNT.');
+      return null;
+    }
+
+    try {
+      const latest = await connection.getLatestBlockhash('confirmed');
+      const transaction = new Transaction({
+        feePayer: publicKey,
+        recentBlockhash: latest.blockhash,
+      }).add(SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: treasury,
+        lamports,
+      }));
+
+      // Wallet Adapter selects the compatible mobile signing capability. In
+      // particular this lets MWA wallets use sign-and-send when available.
+      const signature = await sendTransaction(transaction, connection, {
+        preflightCommitment: 'confirmed',
+        maxRetries: 3,
+      });
+      const confirmation = await connection.confirmTransaction({
+        signature,
+        blockhash: latest.blockhash,
+        lastValidBlockHeight: latest.lastValidBlockHeight,
+      }, 'confirmed');
+
+      if (confirmation.value.err) {
+        throw new Error('Transaction was not confirmed by Solana.');
+      }
+      return signature;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown wallet error';
+      const rejected = /reject|cancel|declin/i.test(message);
+      alert(rejected
+        ? 'TRANSACTION REJECTED IN WALLET. RAID NOT STARTED.'
+        : `${purpose.toUpperCase()} PAYMENT FAILED. RAID NOT STARTED.`);
+      return null;
+    }
   };
 
   const handlePurchase = (itemId: string, price: number, currency: Currency): boolean => {
@@ -258,12 +324,15 @@ const AppInner: React.FC = () => {
     });
   };
 
-  const handleCreateRoom = (stake: number, maxPlayers: number) => {
+  const handleCreateRoom = async (stake: number, maxPlayers: number) => {
     if (!requireWallet()) return;
     if (gameState.walletBalance < stake) {
       alert("INSUFFICIENT FUNDS TO STAKE");
       return;
     }
+
+    const signature = await paySolToTreasury(stake, 'Room stake');
+    if (!signature) return;
 
     const roomId = 'RM-' + Math.floor(Math.random() * 10000);
     const code = 'RAID-' + Math.random().toString(36).substr(2, 4).toUpperCase();
@@ -288,7 +357,7 @@ const AppInner: React.FC = () => {
     }));
   };
 
-  const handleJoinRoom = (code: string) => {
+  const handleJoinRoom = async (code: string) => {
     if (!requireWallet()) return;
     if (!code.startsWith("RAID-")) {
       alert("INVALID INVITE CODE");
@@ -301,6 +370,9 @@ const AppInner: React.FC = () => {
       alert("INSUFFICIENT FUNDS TO MATCH STAKE (0.1 SOL)");
       return;
     }
+
+    const signature = await paySolToTreasury(stake, 'Room stake');
+    if (!signature) return;
 
     const mockRoom: Room = {
       id: 'RM-' + Math.floor(Math.random() * 9999),
@@ -337,14 +409,27 @@ const AppInner: React.FC = () => {
     }));
   };
 
-  const enterRaid = (mode: Mode, difficulty: Difficulty = Difficulty.MEDIUM, boosts: string[] = []) => {
-    if (!requireWallet()) return;
+  const enterRaid = async (
+    mode: Mode,
+    difficulty: Difficulty = Difficulty.MEDIUM,
+    boosts: string[] = [],
+    currency: Currency = Currency.SOL,
+    _useTicket = false,
+    customFeeOverride?: number,
+  ) => {
+    const isFreeDrill = mode === Mode.DRILL && customFeeOverride === 0;
+    if (!isFreeDrill && !requireWallet()) return;
     if (mode === Mode.PVP) {
       setGameState(prev => ({ ...prev, currentScreen: Screen.MULTIPLAYER_SETUP }));
       return;
     }
 
-    const entryFee = ENTRY_FEES[mode];
+    if (!isFreeDrill && currency !== Currency.SOL) {
+      alert('ONLY SOL ENTRY FEES ARE CURRENTLY AVAILABLE.');
+      return;
+    }
+
+    const entryFee = customFeeOverride ?? ENTRY_FEES[mode];
 
     let boostCost = 0;
     boosts.forEach(bId => {
@@ -354,17 +439,21 @@ const AppInner: React.FC = () => {
 
     const totalCost = entryFee + boostCost;
 
-    if (gameState.walletBalance < totalCost) {
+    if (!isFreeDrill && gameState.walletBalance < totalCost) {
       alert("INSUFFICIENT FUNDS FOR DEPLOYMENT");
       return;
     }
 
+    const signature = isFreeDrill ? null : await paySolToTreasury(totalCost, 'Raid entry');
+    if (!isFreeDrill && !signature) return;
+
     setGameState(prev => ({
       ...prev,
       activeRaidFee: entryFee,
-      walletBalance: prev.walletBalance - totalCost,
+      walletBalance: isFreeDrill ? prev.walletBalance : prev.walletBalance - totalCost,
       activeRaidDifficulty: difficulty,
-      activeRaidBoosts: boosts
+      activeRaidBoosts: boosts,
+      activeEntryTxSig: signature ?? undefined,
     }));
 
     if (mode === Mode.TEAM) navigateTo(Screen.TEAM);

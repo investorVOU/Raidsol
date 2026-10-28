@@ -170,10 +170,23 @@ npm run dev
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
 VITE_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+VITE_TREASURY_ADDRESS=mainnet_treasury_public_key
 VITE_USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
 VITE_SKR_MINT=SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3
 VITE_RAID_MINT=J8sMGxWB5kT8SqgmeTa3TfW6mpmucYK8xpMkmPCbBAGS
 ```
+
+For an isolated Mobile Wallet Adapter signing test, build with devnet only:
+
+```env
+VITE_SOLANA_CLUSTER=devnet
+VITE_SOLANA_RPC_URL=https://api.devnet.solana.com
+VITE_DEVNET_TREASURY_ADDRESS=devnet_treasury_public_key
+```
+
+Fund the test wallet with devnet SOL. A devnet build never uses the production
+treasury address; it requires `VITE_DEVNET_TREASURY_ADDRESS` before an entry
+transaction can be requested.
 
 **Deploy edge functions**
 
